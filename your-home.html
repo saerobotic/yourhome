@@ -400,6 +400,13 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
 .modal-price-row{display:flex;justify-content:space-between;align-items:center;padding-top:18px;border-top:1px solid var(--grey-l)}
 .modal-price{font-family:'Playfair Display',serif;font-size:1.8rem;color:var(--terracotta);font-weight:600}
 .modal-price small{font-family:'Poppins',sans-serif;font-size:.75rem;color:var(--grey);display:block;font-weight:400}
+.modal-booking-form{margin-top:18px;padding:16px;background:var(--cream);border-radius:var(--radius-sm);display:grid;gap:12px}
+.modal-booking-form h4{font-family:'Poppins',sans-serif;font-size:.95rem;color:var(--coffee-d);margin:0}
+.modal-booking-fields{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.modal-booking-form label{display:flex;flex-direction:column;gap:5px;color:var(--grey);font-size:.72rem;font-weight:600;letter-spacing:.05em;text-transform:uppercase}
+.modal-booking-form input{width:100%;border:1.5px solid var(--grey-l);border-radius:var(--radius-sm);padding:10px 11px;background:var(--white);color:var(--coffee-d);font:inherit}
+.modal-booking-form input:focus{outline:none;border-color:var(--terracotta)}
+.modal-booking-submit{width:100%;justify-content:center}
 
 /* ============== RESPONSIVE ============== */
 @media (max-width: 1024px){
@@ -438,6 +445,7 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
   .about-features{grid-template-columns:1fr}
   .footer-grid{grid-template-columns:1fr}
   .footer-bottom{flex-direction:column;text-align:center}
+  .modal-booking-fields{grid-template-columns:1fr}
 }
 
 /* fade-in animation */
@@ -914,6 +922,7 @@ const properties = [
 /* ============== RENDER PROPERTIES ============== */
 const propsGrid = document.getElementById('propsGrid');
 const formatPrice = (p) => 'Rp ' + p.toLocaleString('id-ID');
+let selectedBooking = null;
 
 function renderProperties(filter='all'){
   const list = filter === 'all' ? properties : properties.filter(p => p.cat === filter);
@@ -992,9 +1001,40 @@ function openModal(id){
     <p class="modal-desc">${p.desc}</p>
     <div class="modal-price-row">
       <div class="modal-price">${formatPrice(p.price)}<small>per malam</small></div>
-      <a href="#booking" class="btn btn-primary" onclick="closeModal()">Booking Sekarang</a>
+      <span style="font-size:.8rem;color:var(--grey)">Isi data di bawah</span>
+    </div>
+    <form class="modal-booking-form" id="modalBookingForm">
+      <h4>Pesan ${p.name}</h4>
+      <div class="modal-booking-fields">
+        <label>Tanggal check-in<input type="date" id="modalCheckin" required /></label>
+        <label>Tanggal check-out<input type="date" id="modalCheckout" required /></label>
+        <label>Nama pemesan<input type="text" id="modalGuestName" placeholder="Nama lengkap" required /></label>
+        <label>Email<input type="email" id="modalGuestEmail" placeholder="nama@email.com" required /></label>
+        <label>No. WhatsApp<input type="tel" id="modalGuestPhone" placeholder="08xxxxxxxxxx" required /></label>
+      </div>
+      <button type="submit" class="btn btn-primary modal-booking-submit">Booking via WhatsApp</button>
+    </form>
     </div>
   `;
+  const modalCheckin = document.getElementById('modalCheckin');
+  const modalCheckout = document.getElementById('modalCheckout');
+  const todayDate = new Date().toISOString().split('T')[0];
+  modalCheckin.min = todayDate;
+  modalCheckout.min = todayDate;
+  modalCheckin.addEventListener('change', () => { modalCheckout.min = modalCheckin.value; });
+  document.getElementById('modalBookingForm').addEventListener('submit', (event) => {
+    event.preventDefault();
+    if(modalCheckout.value < modalCheckin.value){
+      alert('Tanggal check-out harus setelah tanggal check-in.');
+      return;
+    }
+    const guestName = document.getElementById('modalGuestName').value.trim();
+    const guestEmail = document.getElementById('modalGuestEmail').value.trim();
+    const guestPhone = document.getElementById('modalGuestPhone').value.trim();
+    const formatBookingDate = (value) => new Date(`${value}T00:00:00`).toLocaleDateString('id-ID');
+    const message = `Halo YOUR HOME, saya ingin melakukan booking.%0A%0AProperti: ${encodeURIComponent(p.name)}%0AHarga: ${encodeURIComponent(formatPrice(p.price))}/malam%0ACheck-in: ${encodeURIComponent(formatBookingDate(modalCheckin.value))}%0ACheck-out: ${encodeURIComponent(formatBookingDate(modalCheckout.value))}%0ANama: ${encodeURIComponent(guestName)}%0AEmail: ${encodeURIComponent(guestEmail)}%0ANo. WhatsApp: ${encodeURIComponent(guestPhone)}%0A%0AMohon konfirmasi ketersediaan dan total harganya. Terima kasih.`;
+    window.open(`https://wa.me/6288276788800?text=${message}`, '_blank', 'noopener,noreferrer');
+  });
   modalOverlay.classList.add('active');
   document.body.style.overflow = 'hidden';
 }

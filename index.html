@@ -427,6 +427,13 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
 .modal-price-row{display:flex;justify-content:space-between;align-items:center;padding-top:18px;border-top:1px solid var(--grey-l)}
 .modal-price{font-family:'Playfair Display',serif;font-size:1.8rem;color:var(--terracotta);font-weight:600}
 .modal-price small{font-family:'Poppins',sans-serif;font-size:.75rem;color:var(--grey);display:block;font-weight:400}
+.modal-booking-form{margin-top:18px;padding:16px;background:var(--cream);border-radius:var(--radius-sm);display:grid;gap:12px}
+.modal-booking-form h4{font-family:'Poppins',sans-serif;font-size:.95rem;color:var(--coffee-d);margin:0}
+.modal-booking-fields{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.modal-booking-form label{display:flex;flex-direction:column;gap:5px;color:var(--grey);font-size:.72rem;font-weight:600;letter-spacing:.05em;text-transform:uppercase}
+.modal-booking-form input{width:100%;border:1.5px solid var(--grey-l);border-radius:var(--radius-sm);padding:10px 11px;background:var(--white);color:var(--coffee-d);font:inherit}
+.modal-booking-form input:focus{outline:none;border-color:var(--terracotta)}
+.modal-booking-submit{width:100%;justify-content:center}
 
 /* ============== RESPONSIVE ============== */
 @media (max-width: 1024px){
@@ -471,6 +478,7 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
   .about-features{grid-template-columns:1fr}
   .footer-grid{grid-template-columns:1fr}
   .footer-bottom{flex-direction:column;text-align:center}
+  .modal-booking-fields{grid-template-columns:1fr}
 }
 
 /* fade-in animation */
@@ -2199,7 +2207,8 @@ Hal-hal yang PERLU diketahui sebelum booking:
 • Property ini berada di AREA PEMUKIMAN, jadi dilarang melakukan aktivitas ilegal. Harap jaga ketenangan dan hindari kebisingan, terutama di malam hari.` },
   { id:'gh-sumba', name:'Guest House Tatar Banyak Sumba', cat:'guesthouse', catLabel:'Guest House',
     loc:'Tatar Banyak Sumba, Kota Baru Parahyangan', beds:3, baths:1, guests:6, price:1414000,
-    mapQuery:'https://maps.app.goo.gl/PKCkCCPowqv6pzfh7',
+    mapQuery:'-6.8745939,107.4685032',
+    mapLink:'https://maps.app.goo.gl/cf1RpSVop89NW2p59',
     img:'https://images.unsplash.com/photo-1484154218962-a197022b5858?auto=format&fit=crop&w=800&q=80',
     desc:`Tatar Banyak Sumba – KOTA BARU PARAHYANGAN
 
@@ -2462,7 +2471,19 @@ function openModal(id){
     </div>
     <div class="modal-price-row">
       <div class="modal-price" id="modalPrice">${formatPrice(initialPrice)}<small>${pricePeriod}</small></div>
-      <a href="#booking" class="btn btn-primary" id="modalBooking">Booking Sekarang</a>
+      <span style="font-size:.8rem;color:var(--grey)">Isi data di bawah</span>
+    </div>
+    <form class="modal-booking-form" id="modalBookingForm">
+      <h4>Pesan ${p.name}</h4>
+      <div class="modal-booking-fields">
+        <label>Tanggal check-in<input type="date" id="modalCheckin" required /></label>
+        <label>Tanggal check-out<input type="date" id="modalCheckout" required /></label>
+        <label>Nama pemesan<input type="text" id="modalGuestName" placeholder="Nama lengkap" required /></label>
+        <label>Email<input type="email" id="modalGuestEmail" placeholder="nama@email.com" required /></label>
+        <label>No. WhatsApp<input type="tel" id="modalGuestPhone" placeholder="08xxxxxxxxxx" required /></label>
+      </div>
+      <button type="submit" class="btn btn-primary modal-booking-submit">Booking via WhatsApp</button>
+    </form>
     </div>
   `;
   const roomSelect = document.getElementById('modalRoomSelect');
@@ -2481,8 +2502,26 @@ function openModal(id){
     selectedBooking = null;
     document.getElementById('bookingSelection').hidden = true;
   }
-  document.getElementById('modalBooking').addEventListener('click', () => {
-    if(p.cat === 'kos') document.getElementById('propType').value = p.cat;
+  const modalCheckin = document.getElementById('modalCheckin');
+  const modalCheckout = document.getElementById('modalCheckout');
+  const todayDate = new Date().toISOString().split('T')[0];
+  modalCheckin.min = todayDate;
+  modalCheckout.min = todayDate;
+  modalCheckin.addEventListener('change', () => { modalCheckout.min = modalCheckin.value; });
+  document.getElementById('modalBookingForm').addEventListener('submit', (event) => {
+    event.preventDefault();
+    if(modalCheckout.value < modalCheckin.value){
+      alert('Tanggal check-out harus setelah tanggal check-in.');
+      return;
+    }
+    const room = p.roomOptions ? p.roomOptions[Number(document.getElementById('modalRoomSelect').value)] : null;
+    const guestName = document.getElementById('modalGuestName').value.trim();
+    const guestEmail = document.getElementById('modalGuestEmail').value.trim();
+    const guestPhone = document.getElementById('modalGuestPhone').value.trim();
+    const displayBookingDate = (value) => displayDate(value);
+    const roomLine = room ? `%0APilihan kamar: ${encodeURIComponent(room.name)}%0AHarga: ${encodeURIComponent(formatPrice(room.price))}/bulan` : `%0AHarga: ${encodeURIComponent(formatPrice(p.price))}/malam`;
+    const message = `Halo YOUR HOME, saya ingin melakukan booking.%0A%0AProperti: ${encodeURIComponent(p.name)}${roomLine}%0ACheck-in: ${encodeURIComponent(displayBookingDate(modalCheckin.value))}%0ACheck-out: ${encodeURIComponent(displayBookingDate(modalCheckout.value))}%0ANama: ${encodeURIComponent(guestName)}%0AEmail: ${encodeURIComponent(guestEmail)}%0ANo. WhatsApp: ${encodeURIComponent(guestPhone)}%0A%0AMohon konfirmasi ketersediaan dan total harganya. Terima kasih.`;
+    window.open(`https://wa.me/6288276788800?text=${message}`, '_blank', 'noopener,noreferrer');
   });
   modalOverlay.classList.add('active');
   document.body.style.overflow = 'hidden';
