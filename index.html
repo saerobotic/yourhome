@@ -391,10 +391,13 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
 .modal-body{padding:28px}
 .modal-body h3{margin-bottom:6px}
 .modal-loc{color:var(--grey);font-size:.88rem;margin-bottom:18px;display:flex;align-items:center;gap:6px}
+.modal-map-wrap{margin:18px 0 22px;border:1px solid var(--grey-l);border-radius:var(--radius-sm);overflow:hidden;background:var(--cream)}
+.modal-map-label{padding:12px 14px 10px;font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;font-weight:700;color:var(--terracotta)}
+.modal-map-frame{display:block;width:100%;height:220px;border:0;background:#f8fafc}
 .modal-features{display:flex;gap:18px;flex-wrap:wrap;padding:16px;background:var(--cream);border-radius:var(--radius-sm);margin-bottom:18px}
 .modal-features span{display:flex;align-items:center;gap:6px;font-size:.85rem;color:var(--coffee);font-weight:500}
 .modal-features svg{width:16px;height:16px;fill:var(--terracotta)}
-.modal-desc{font-size:.92rem;color:var(--coffee);margin-bottom:20px;line-height:1.7}
+.modal-desc{font-size:.92rem;color:var(--coffee);margin-bottom:20px;line-height:1.7;white-space:pre-line}
 .modal-price-row{display:flex;justify-content:space-between;align-items:center;padding-top:18px;border-top:1px solid var(--grey-l)}
 .modal-price{font-family:'Playfair Display',serif;font-size:1.8rem;color:var(--terracotta);font-weight:600}
 .modal-price small{font-family:'Poppins',sans-serif;font-size:.75rem;color:var(--grey);display:block;font-weight:400}
@@ -410,6 +413,7 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
   .footer-grid{grid-template-columns:1fr 1fr;gap:32px}
   .about-grid{grid-template-columns:1fr;gap:60px}
   .about-imgs{height:480px}
+  .booking-section-wrap{grid-template-columns:1fr}
   .booking-widget{grid-template-columns:1fr 1fr;gap:14px}
   .bw-submit{grid-column:1/-1;justify-self:start}
 }
@@ -535,7 +539,7 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
     </div>
     <div class="featured-grid">
       <div class="feat-card" data-id="villa-aurum">
-        <img src="https://images.unsplash.com/photo-1564013799919-ab600027ffc6?auto=format&fit=crop&w=1200&q=80" alt="Villa Aurum" />
+        <img src="https://ik.imagekit.io/o1hnx31yy/Aurum.png?updatedAt=1790155916889" alt="Villa Aurum" />
         <span class="feat-price">Rp 2.5jt / malam</span>
         <div class="feat-info">
           <span class="feat-tag">Villa Mewah</span>
@@ -543,8 +547,17 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
           <p>Lembang, Bandung — Kapasitas 12 tamu dengan pemandangan pegunungan</p>
         </div>
       </div>
+      <div class="feat-card" data-id="villa-putih">
+        <img src="https://ik.imagekit.io/o1hnx31yy/Villa%20putih.png?updatedAt=1790155915297" alt="Villa Putih" />
+        <span class="feat-price">Rp 2.2jt / malam</span>
+        <div class="feat-info">
+          <span class="feat-tag">Villa Putih</span>
+          <h3>Villa Putih</h3>
+          <p>Lembang, Bandung — Kapasitas 8 tamu dengan suasana tenang dan nyaman</p>
+        </div>
+      </div>
       <div class="feat-card" data-id="sudirman-18">
-        <img src="https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?auto=format&fit=crop&w=800&q=80" alt="Sudirman Suites" />
+        <img src="https://ik.imagekit.io/o1hnx31yy/appart%2018.jpg?updatedAt=1790155903507" alt="Lantai 18 Sudirman Suites" />
         <span class="feat-price">Rp 850rb / malam</span>
         <div class="feat-info">
           <span class="feat-tag">Apartemen</span>
@@ -553,7 +566,7 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
         </div>
       </div>
       <div class="feat-card" data-id="villa-alam-12">
-        <img src="https://images.unsplash.com/photo-1518733057094-95b53143d2a7?auto=format&fit=crop&w=800&q=80" alt="Villa Alam" />
+        <img src="https://ik.imagekit.io/o1hnx31yy/Alam%201&2.jpeg?updatedAt=1790156623926" alt="Villa Alam 1 & 2" />
         <span class="feat-price">Rp 1.8jt / malam</span>
         <div class="feat-info">
           <span class="feat-tag">Villa Alam</span>
@@ -562,7 +575,7 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
         </div>
       </div>
       <div class="feat-card" data-id="villa-de-bukit">
-        <img src="https://images.unsplash.com/photo-1613977258367-862d7ad4aaaa?auto=format&fit=crop&w=800&q=80" alt="Villa De Bukit Dago" />
+        <img src="https://ik.imagekit.io/o1hnx31yy/Dago.JPG?updatedAt=1790155909539" alt="Villa De Bukit Dago" />
         <span class="feat-price">Rp 3.2jt / malam</span>
         <div class="feat-info">
           <span class="feat-tag">Villa Eksklusif</span>
@@ -830,75 +843,147 @@ const properties = [
   // Apartemen (5)
   { id:'sudirman-7', name:'Lantai 7 Sudirman Suites', cat:'apartment', catLabel:'Apartemen',
     loc:'Sudirman Suites, Bandung', beds:2, baths:1, guests:4, price:650000,
-    img:'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=800&q=80',
+    img:'https://ik.imagekit.io/o1hnx31yy/Appart%207.JPG?updatedAt=1790155916946',
     desc:'Apartemen cozy di lantai 7 Sudirman Suites dengan fasilitas modern. Cocok untuk staycation maupun bisnis. Dekat dengan pusat perbelanjaan dan kuliner Bandung.' },
   { id:'sudirman-11', name:'Lantai 11 Sudirman Suites', cat:'apartment', catLabel:'Apartemen',
     loc:'Sudirman Suites, Bandung', beds:2, baths:1, guests:4, price:750000,
-    img:'https://images.unsplash.com/photo-1631049307264-da0ec9d70304?auto=format&fit=crop&w=800&q=80',
+    img:'https://ik.imagekit.io/o1hnx31yy/appart%2011.jpg?updatedAt=1790155909751',
     desc:'Unit di lantai 11 dengan pemandangan kota yang lebih luas. Dilengkapi dapur lengkap, AC, WiFi cepat, dan area kerja untuk Anda yang produktif.' },
   { id:'sudirman-18', name:'Lantai 18 Sudirman Suites', cat:'apartment', catLabel:'Apartemen',
     loc:'Sudirman Suites, Bandung', beds:2, baths:1, guests:4, price:850000,
-    img:'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?auto=format&fit=crop&w=800&q=80',
+    img:'https://ik.imagekit.io/o1hnx31yy/appart%2018.jpg?updatedAt=1790155903507',
     desc:'Premium unit di lantai 18 dengan view kota Bandung yang memukau. Interior elegan dengan sentuhan modern tropical yang hangat.' },
   { id:'sudirman-19', name:'Lantai 19 Sudirman Suites', cat:'apartment', catLabel:'Apartemen',
     loc:'Sudirman Suites, Bandung', beds:2, baths:1, guests:4, price:950000,
-    img:'https://images.unsplash.com/photo-1493809842364-78817add7ffb?auto=format&fit=crop&w=800&q=80',
+    img:'https://ik.imagekit.io/o1hnx31yy/appart%2019.jpeg?updatedAt=1790155907863',
     desc:'Unit tertinggi di Sudirman Suites dengan panorama 360° kota Bandung. Pengalaman menginap premium dengan fasilitas lengkap.' },
   { id:'galeri-ciumbuleuit', name:'Apartment Galeri Ciumbuleuit', cat:'apartment', catLabel:'Apartemen',
     loc:'Ciumbuleuit, Bandung', beds:1, baths:1, guests:2, price:550000,
-    img:'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?auto=format&fit=crop&w=800&q=80',
-    desc:'Apartemen strategis di kawasan Ciumbuleuit, dekat denganuniversitas dan pusat kuliner. Pilihan tepat untuk pasangan atau solo traveler.' },
+    img:'https://ik.imagekit.io/o1hnx31yy/appart%20GCA.JPG?updatedAt=1790157278364',
+    desc:`Tentang tempat ini
+
+Aurora Villa - Lembang by Your Home
+
+Berlokasi di dataran tinggi Lembang yang sejuk, dekat dengan:
+
+• Floating Market Lembang ± 1,5 km
+• Farmhouse Susu Lembang ± 3 km
+• The Great Asia Africa ± 3,2 km
+• Lembang Park & Zoo ± 4,5 km
+• Observatorium Bosscha ± 2 km
+• Pusat Kota Bandung ± 12 km
+
+Dikelilingi udara segar dan alam hijau, cocok untuk liburan keluarga atau santai di akhir pekan.
+
+Dan banyak lagi.
+
+Tempat
+
+Deskripsi Ruangan & Area:
+• Luas Area 1000m²
+• Bisa menampung hingga 26 orang dengan kasur tambahan
+• 5 kamar tidur dengan 1 tempat tidur queen
+• 1 kamar tidur dengan 3 tempat tidur Single
+• 1 kamar tidur dengan 4 tempat tidur Single
+• Tersedia hingga 9 Extra Bed, dengan biaya Rp75.000,- / pcs (Mohon konfirmasi terlebih dahulu, paling lambat pukul 17:00)
+• WIFI SUPER CEPAT UNLIMITED 80 MBPS
+• 43" LED TV
+
+Kamar Mandi & Kenyamanan:
+• Shower & air panas
+• Lemari pakaian, meja rias, dan cermin besar
+• Pengering Rambut
+
+Dapur & Ruang Makan:
+• Meja makan + perlengkapan makan
+• Kompor dan peralatan masak basic
+• Kulkas
+• Air Mineral Galon tersedia
+
+Akses tamu
+
+Fasilitas Aurora 1st Pentagon:
+• Keamanan 24 jam di dalam area kompleks
+• Lingkungan hijau, tenang, dan bebas bising kendaraan
+• Udara pegunungan yang sejuk, ideal untuk bersantai
+• Cocok untuk staycation, liburan keluarga, dan work from home
+• Halaman/area terbuka hijau yang asri
+• Akses kendaraan mudah di lingkungan yang tenang
+• Area parkir pribadi yang aman
+
+Akses & Fasilitas Pendukung Terdekat:
+• Minimarket & toko kelontong terdekat (berkendara singkat)
+• Kafe & resto hits khas Lembang di sekitar akomodasi
+• Akses cepat dan mudah ke Floating Market & Farmhouse
+• Jalur alternatif yang mudah menuju pusat kota Bandung
+
+Hal lain yang perlu diperhatikan
+
+Hal-hal yang perlu diketahui sebelum booking:
+• Cara Check In akan diinfo hari H setelah villa sudah dalam kondisi siap
+• Jika Anda membutuhkan extrabed, mohon konfirmasi paling lambat sebelum waktu maksimal pengantaran pukul 17:00.
+• DILARANG MEMBAWA HEWAN PELIHARAAN.
+• DILARANG MEROKOK. Terdapat area outdoor untuk bersantai dan merokok. Mohon untuk tidak merokok di dalam villa.
+• Property ini berada di AREA PEMUKIMAN, jadi dilarang melakukan aktivitas ilegal. Harap jaga ketenangan dan hindari kebisingan, terutama di malam hari.` },
 
   // Villa (10)
   { id:'villa-aurum', name:'Villa Aurum', cat:'villa', catLabel:'Villa',
     loc:'Lembang, Bandung', beds:6, baths:4, guests:12, price:2500000,
-    img:'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?auto=format&fit=crop&w=800&q=80',
+    img:'https://ik.imagekit.io/o1hnx31yy/Aurum.png?updatedAt=1790155916889',
     desc:'Villa mewah di Lembang dengan kapasitas 12 tamu. Pemandangan pegunungan langsung, kolam pribadi, dan ruang serbaguna untuk acara keluarga maupun corporate.' },
+  { id:'villa-putih', name:'Villa Putih', cat:'villa', catLabel:'Villa',
+    loc:'Lembang, Bandung', beds:4, baths:3, guests:8, price:2200000,
+    img:'https://ik.imagekit.io/o1hnx31yy/Villa%20putih.png?updatedAt=1790155915297',
+    desc:'Villa putih modern dengan suasana tenang di Lembang. Cocok untuk keluarga, staycation, maupun gathering santai bersama teman.' },
   { id:'villa-alam-1', name:'Villa Alam 1', cat:'villa', catLabel:'Villa',
     loc:'Lembang, Bandung', beds:3, baths:2, guests:6, price:1200000,
-    img:'https://images.unsplash.com/photo-1518733057094-95b53143d2a7?auto=format&fit=crop&w=800&q=80',
+    img:'https://ik.imagekit.io/o1hnx31yy/Alam%201.jpeg?updatedAt=1790155908980',
     desc:'Villa alam pertama dengan konsep natural di Lembang. Cocok untuk keluarga yang ingin menikmati sejuknya udara pegunungan dengan fasilitas lengkap.' },
   { id:'villa-alam-2', name:'Villa Alam 2', cat:'villa', catLabel:'Villa',
     loc:'Lembang, Bandung', beds:3, baths:2, guests:6, price:1200000,
-    img:'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&w=800&q=80',
+    img:'https://ik.imagekit.io/o1hnx31yy/Alam%202.jpeg?updatedAt=1790155909449',
     desc:'Villa alam kedua dengan desain serupa. Pilihan tepat untuk retret kecil bersama sahabat atau keluarga inti.' },
   { id:'villa-alam-12', name:'Villa Alam 1 & 2', cat:'villa', catLabel:'Villa',
     loc:'Lembang, Bandung', beds:6, baths:4, guests:12, price:1800000,
-    img:'https://images.unsplash.com/photo-1520250497591-112f2f40a3f7?auto=format&fit=crop&w=800&q=80',
+    img:'https://ik.imagekit.io/o1hnx31yy/Alam%201&2.jpeg?updatedAt=1790156623926',
     desc:'Gabungan Villa Alam 1 & 2 untuk acara besar atau gathering keluarga besar. Kapasitas hingga 12 tamu dengan dua ruang tamu terpisah.' },
   { id:'villa-trinity', name:'Villa Trinity Garden Villa', cat:'villa', catLabel:'Villa',
     loc:'Lembang, Bandung', beds:4, baths:3, guests:10, price:2200000,
-    img:'https://images.unsplash.com/photo-1600596542815-3723b63d4f85?auto=format&fit=crop&w=800&q=80',
+    img:'https://ik.imagekit.io/o1hnx31yy/X4.JPG?updatedAt=1790155917669',
     desc:'Villa dengan taman luas dan konsep garden living. Ruang terbuka hijau yang sempurna untuk bersantai, BBQ, dan menikmati suasana alam Lembang.' },
   { id:'villa-x4', name:'Villa X4', cat:'villa', catLabel:'Villa',
     loc:'Dago Atas, Bandung', beds:4, baths:3, guests:8, price:2000000,
-    img:'https://images.unsplash.com/photo-1613977258367-862d7ad4aaaa?auto=format&fit=crop&w=800&q=80',
+    img:'https://ik.imagekit.io/o1hnx31yy/X4.JPG?updatedAt=1790155917669',
     desc:'Villa modern di Dago Atas dengan arsitektur kontemporer. View kota Bandung dari ketinggian dan fasilitas eksklusif untuk pengalaman menginap berkelas.' },
   { id:'villa-x7', name:'Villa X7', cat:'villa', catLabel:'Villa',
     loc:'Dago Atas, Bandung', beds:5, baths:4, guests:12, price:2800000,
-    img:'https://images.unsplash.com/photo-1564501049412-61c2a3083791?auto=format&fit=crop&w=800&q=80',
+    img:'https://ik.imagekit.io/o1hnx31yy/X7.jpg?updatedAt=1790155904283',
     desc:'Villa flagship seri X dengan 5 kamar tidur dan kolam infinity. Solusi akomodasi premium untuk group besar yang ingin liburan mewah di Bandung.' },
   { id:'villa-awn', name:'Villa AWN', cat:'villa', catLabel:'Villa',
     loc:'Lembang, Bandung', beds:3, baths:2, guests:8, price:1500000,
-    img:'https://images.unsplash.com/photo-1571896349842-33c89424de2d?auto=format&fit=crop&w=800&q=80',
+    img:'https://ik.imagekit.io/o1hnx31yy/AWN.png?updatedAt=1790155914282',
     desc:'Villa hangat dengan fireplace indoor dan konsep cozy modern. Pilihan favorit untuk liburan akhir tahun di Lembang yang sejuk.' },
   { id:'villa-casa-kemilau', name:'Villa Casa Kemilau Bintang', cat:'villa', catLabel:'Villa',
     loc:'Lembang, Bandung', beds:4, baths:3, guests:10, price:2400000,
-    img:'https://images.unsplash.com/photo-1605538883669-825200433431?auto=format&fit=crop&w=800&q=80',
+    img:'https://ik.imagekit.io/o1hnx31yy/Cabin.png?updatedAt=1790155916198',
     desc:'Villa dengan deck stargazing untuk menikmati langit malam Lembang yang berbintang. Pengalaman romantis untuk pasangan atau keluarga.' },
   { id:'villa-casa-bliss', name:'Villa Casa Bliss', cat:'villa', catLabel:'Villa',
     loc:'Lembang, Bandung', beds:3, baths:2, guests:6, price:1600000,
-    img:'https://images.unsplash.com/photo-1583845112203-29329902332e?auto=format&fit=crop&w=800&q=80',
+    img:'https://ik.imagekit.io/o1hnx31yy/Cassa.jpeg?updatedAt=1790155914013',
     desc:'Villa tropical modern dengan kolam pribadi dan taman eksotis. Suasana blissful yang membuat liburan Anda terasa seperti di surga.' },
   { id:'villa-de-bukit', name:'Villa De Bukit Dago', cat:'villa', catLabel:'Villa',
     loc:'Dago Atas, Bandung', beds:5, baths:4, guests:12, price:3200000,
-    img:'https://images.unsplash.com/photo-1600585154526-990dced4db0d?auto=format&fit=crop&w=800&q=80',
+    img:'https://ik.imagekit.io/o1hnx31yy/Dago.JPG?updatedAt=1790155909539',
     desc:'Villa eksklusif di bukit Dago dengan pemandangan kota Bandung yang spektakuler. Layak jadi pilihan untuk perayaan momen spesial Anda.' },
+  { id:'villa-ferrum', name:'Villa Ferrum', cat:'villa', catLabel:'Villa',
+    loc:'Lembang, Bandung', beds:4, baths:3, guests:8, price:2600000,
+    img:'https://ik.imagekit.io/o1hnx31yy/Ferrum.JPG?updatedAt=1790155917429',
+    desc:'Villa Ferrum di Lembang menawarkan suasana tenang dan eksklusif dengan nuansa alam yang sejuk dan nyaman untuk staycation keluarga.' },
 
   // Guest House (3)
   { id:'gh-parahyangan', name:'Guest House Kota Baru Parahyangan', cat:'guesthouse', catLabel:'Guest House',
     loc:'Kota Baru Parahyangan, Bandung', beds:3, baths:2, guests:8, price:900000,
-    img:'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=800&q=80',
+    img:'https://ik.imagekit.io/o1hnx31yy/Davion.JPG?updatedAt=1790155914130',
     desc:'Guest house luas di kawasan Kota Baru Parahyangan. Lingkungan tenang dan asri, cocok untuk retreat keluarga atau acara korporat.' },
   { id:'gh-sumba', name:'Guest House Tatar Banyak Sumba', cat:'guesthouse', catLabel:'Guest House',
     loc:'Tatar Banyak Sumba, Bandung', beds:2, baths:1, guests:5, price:650000,
@@ -978,6 +1063,11 @@ function openModal(id){
   if(!p) return;
   modalImg.src = p.img;
   modalImg.alt = p.name;
+  const cleanDescription = (text) => text
+    .replace(/##\s*/g, '')
+    .replace(/^- /gm, '• ')
+    .replace(/\n{3,}/g, '\n\n');
+
   modalBody.innerHTML = `
     <span class="prop-cat" style="position:static;display:inline-block;margin-bottom:8px">${p.catLabel}</span>
     <h3>${p.name}</h3>
@@ -990,7 +1080,17 @@ function openModal(id){
       <span><svg viewBox="0 0 24 24"><path d="M9 2v6H7v2h2v10h2V10h2V8h-2V2m4 0v10h2v6h2v-6h2V2z"/></svg>${p.baths} Kamar Mandi</span>
       <span><svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>${p.guests} Tamu</span>
     </div>
-    <p class="modal-desc">${p.desc}</p>
+    <p class="modal-desc">${cleanDescription(p.desc)}</p>
+    <div class="modal-map-wrap">
+      <div class="modal-map-label">Lokasi</div>
+      <iframe
+        class="modal-map-frame"
+        src="https://www.google.com/maps?q=${encodeURIComponent(p.loc)}&output=embed"
+        allowfullscreen=""
+        loading="lazy"
+        referrerpolicy="no-referrer-when-downgrade">
+      </iframe>
+    </div>
     <div class="modal-price-row">
       <div class="modal-price">${formatPrice(p.price)}<small>per malam</small></div>
       <a href="#booking" class="btn btn-primary" onclick="closeModal()">Booking Sekarang</a>
