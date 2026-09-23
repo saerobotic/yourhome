@@ -1,0 +1,964 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#059669" />
+  <title>Absensi Crew Apartemen</title>
+
+  <!-- Tailwind CSS via CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Konfigurasi tema Tailwind: warna utama hijau emerald, mobile-first -->
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#ecfdf5', 100: '#d1fae5', 200: '#a7f3d0',
+              500: '#10b981', 600: '#059669', 700: '#047857',
+              800: '#065f46', 900: '#064e3b'
+            }
+          },
+          fontFamily: {
+            sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif']
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* ===== Custom styles di luar Tailwind ===== */
+    html, body { -webkit-tap-highlight-color: transparent; }
+    body { font-family: 'Inter', system-ui, -apple-system, sans-serif; }
+
+    /* Animasi loading spinner */
+    .spinner {
+      border: 4px solid rgba(255, 255, 255, 0.3);
+      border-top: 4px solid #fff;
+      border-radius: 50%;
+      width: 28px;
+      height: 28px;
+      animation: spin 0.8s linear infinite;
+      display: inline-block;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Toast notification slide-in */
+    #toast {
+      transition: transform 0.3s ease, opacity 0.3s ease;
+    }
+    .toast-hidden { transform: translateY(-120%); opacity: 0; }
+
+    /* Smooth fade between screens */
+    .screen { animation: fadeIn 0.25s ease; }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Thumbnail foto di riwayat */
+    .thumb {
+      width: 56px; height: 56px; object-fit: cover; border-radius: 8px;
+      border: 2px solid #d1fae5;
+    }
+
+    /* Sembunyikan scroll bar horizontal pada navigasi tab */
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+  </style>
+</head>
+
+<body class="bg-gray-50 text-gray-800 min-h-screen">
+
+  <!-- ============================================================
+       TOAST NOTIFICATION (sukses / error / info)
+       ============================================================ -->
+  <div id="toast"
+       class="fixed top-4 left-1/2 -translate-x-1/2 z-50 px-5 py-3 rounded-xl shadow-lg text-white text-sm font-medium max-w-[90%] text-center toast-hidden">
+  </div>
+
+  <!-- ============================================================
+       LOADING OVERLAY (saat ambil GPS / simpan data)
+       ============================================================ -->
+  <div id="loadingOverlay" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center">
+    <div class="bg-white rounded-2xl px-6 py-5 flex flex-col items-center gap-3 max-w-[80%]">
+      <div class="spinner" style="border-color: rgba(16,185,129,0.3); border-top-color:#059669;"></div>
+      <p id="loadingText" class="text-sm text-gray-600 font-medium">Mengambil lokasi GPS…</p>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       HALAMAN LOGIN
+       ============================================================ -->
+  <section id="loginScreen" class="screen min-h-screen flex items-center justify-center p-6 bg-gradient-to-br from-brand-600 to-brand-800">
+    <div class="w-full max-w-sm bg-white rounded-3xl shadow-2xl p-7">
+      <!-- Logo / Title -->
+      <div class="text-center mb-6">
+        <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-brand-100 mb-3">
+          <!-- Icon: building -->
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-9 h-9 text-brand-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3 21h18M5 21V5a2 2 0 012-2h6a2 2 0 012 2v16M13 21v-6h4a2 2 0 012 2v4M9 9h0M9 13h0M9 17h0" />
+          </svg>
+        </div>
+        <h1 class="text-2xl font-bold text-gray-800">Absensi Crew</h1>
+        <p class="text-sm text-gray-500">Sistem Check-in Crew Sewa Apartemen</p>
+      </div>
+
+      <!-- Form Login -->
+      <div class="space-y-4">
+        <div>
+          <label for="crewSelect" class="block text-sm font-semibold text-gray-700 mb-1.5">Pilih Nama Crew</label>
+          <select id="crewSelect"
+                  class="w-full px-4 py-3.5 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition text-base">
+            <option value="">— Pilih crew —</option>
+            <!-- 6 nama crew default, gampang diganti di JS -->
+            <option value="Crew 1">Crew 1</option>
+            <option value="Crew 2">Crew 2</option>
+            <option value="Crew 3">Crew 3</option>
+            <option value="Crew 4">Crew 4</option>
+            <option value="Crew 5">Crew 5</option>
+            <option value="Crew 6">Crew 6</option>
+          </select>
+        </div>
+
+        <button id="loginBtn"
+                class="w-full bg-brand-600 hover:bg-brand-700 active:scale-[0.98] text-white font-bold py-4 rounded-xl text-base shadow-lg shadow-brand-600/30 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled>
+          Masuk
+        </button>
+
+        <!-- Tombol masuk mode Admin (PIN) -->
+        <button id="adminEntryBtn"
+                class="w-full text-sm text-gray-400 hover:text-brand-600 py-2 transition">
+          Mode Admin
+        </button>
+      </div>
+
+      <p class="text-xs text-gray-400 text-center mt-6 leading-relaxed">
+        Data tersimpan di perangkat ini (localStorage).<br>
+        Tidak ada server, aman & offline-ready.
+      </p>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       HALAMAN UTAMA (setelah login)
+       ============================================================ -->
+  <section id="mainApp" class="hidden screen min-h-screen pb-28">
+
+    <!-- Header -->
+    <header class="bg-gradient-to-r from-brand-600 to-brand-700 text-white px-5 pt-6 pb-5 rounded-b-3xl shadow-lg">
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="text-xs text-brand-100">Halo, selamat datang</p>
+          <h2 id="greetingCrew" class="text-xl font-bold">Crew</h2>
+        </div>
+        <div class="flex gap-2">
+          <button id="adminBtn" title="Mode Admin"
+                  class="w-10 h-10 rounded-xl bg-white/15 hover:bg-white/25 flex items-center justify-center transition">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+            </svg>
+          </button>
+          <button id="logoutBtn" title="Keluar"
+                  class="w-10 h-10 rounded-xl bg-white/15 hover:bg-white/25 flex items-center justify-center transition">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Statistik ringkas -->
+      <div class="mt-5 grid grid-cols-2 gap-3">
+        <div class="bg-white/15 backdrop-blur rounded-2xl p-3.5">
+          <p class="text-xs text-brand-100">Total Check-in Hari Ini</p>
+          <p id="statTotal" class="text-2xl font-bold">0</p>
+        </div>
+        <div class="bg-white/15 backdrop-blur rounded-2xl p-3.5">
+          <p class="text-xs text-brand-100">Total Unit Dikunjungi</p>
+          <p id="statUnits" class="text-2xl font-bold">0</p>
+        </div>
+      </div>
+      <p id="todayDate" class="text-xs text-brand-100 mt-3"></p>
+    </header>
+
+    <!-- ===========================================================
+         FORM CHECK-IN
+         =========================================================== -->
+    <div class="px-5 -mt-3">
+      <div class="bg-white rounded-2xl shadow-md border border-gray-100 p-5">
+        <h3 class="font-bold text-gray-800 mb-4 flex items-center gap-2">
+          <span class="w-1.5 h-5 bg-brand-600 rounded-full"></span>
+          Form Check-in
+        </h3>
+
+        <!-- Tombol Check-in Sekarang (BESAR) -->
+        <button id="getLocationBtn"
+                class="w-full bg-brand-600 hover:bg-brand-700 active:scale-[0.98] text-white font-bold py-5 rounded-2xl text-lg shadow-lg shadow-brand-600/30 transition flex items-center justify-center gap-2">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+          </svg>
+          Check-in Sekarang
+        </button>
+
+        <!-- Info GPS setelah diambil -->
+        <div id="gpsInfo" class="hidden mt-4 bg-brand-50 border border-brand-200 rounded-xl p-4 text-sm">
+          <div class="flex items-start justify-between mb-2">
+            <span class="font-semibold text-brand-700">Lokasi GPS</span>
+            <span id="gpsAccuracyBadge" class="text-xs px-2 py-0.5 rounded-full bg-brand-200 text-brand-800"></span>
+          </div>
+          <div class="space-y-1 text-gray-600 text-xs">
+            <p>Latitude: <span id="gpsLat" class="font-mono font-semibold text-gray-800">-</span></p>
+            <p>Longitude: <span id="gpsLng" class="font-mono font-semibold text-gray-800">-</span></p>
+            <p>Akurasi: <span id="gpsAccuracy" class="font-semibold text-gray-800">-</span></p>
+          </div>
+          <a id="gpsMapLink" href="#" target="_blank" rel="noopener"
+             class="mt-2 inline-flex items-center gap-1 text-xs text-brand-700 underline hover:text-brand-800">
+            Buka di Google Maps ↗
+          </a>
+        </div>
+
+        <!-- Peringatan akurasi rendah -->
+        <div id="gpsWarning" class="hidden mt-2 bg-amber-50 border border-amber-300 rounded-xl p-3 text-xs text-amber-800 flex items-start gap-2">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01M5.07 19h13.86c1.54 0 2.5-1.67 1.73-3L13.73 4a2 2 0 00-3.46 0L3.34 16c-.77 1.33.19 3 1.73 3z" />
+          </svg>
+          <span>Akurasi GPS &gt; 100 meter. Disarankan mencari sinyal lebih baik atau keluar ke area terbuka.</span>
+        </div>
+
+        <!-- Upload Foto -->
+        <div class="mt-4">
+          <label class="block text-sm font-semibold text-gray-700 mb-1.5">Foto Bukti <span class="text-red-500">*</span></label>
+          <div class="flex items-center gap-3">
+            <div id="photoPreview" class="w-20 h-20 rounded-xl bg-gray-100 border-2 border-dashed border-gray-300 flex items-center justify-center overflow-hidden flex-shrink-0">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+            </div>
+            <label for="photoInput" class="flex-1 cursor-pointer bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold py-3.5 rounded-xl text-center text-sm transition">
+              Ambil / Pilih Foto
+            </label>
+            <input type="file" id="photoInput" accept="image/*" capture="environment" class="hidden" />
+          </div>
+          <p class="text-xs text-gray-400 mt-1">Kamera belakang HP akan terbuka otomatis.</p>
+        </div>
+
+        <!-- Input Nomor Unit -->
+        <div class="mt-4">
+          <label for="unitInput" class="block text-sm font-semibold text-gray-700 mb-1.5">Nomor Unit / Nama Properti <span class="text-red-500">*</span></label>
+          <input type="text" id="unitInput" placeholder="Contoh: Tower A - Unit 1205"
+                 class="w-full px-4 py-3.5 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition text-base" />
+        </div>
+
+        <!-- Dropdown Jenis Pekerjaan -->
+        <div class="mt-4">
+          <label for="jobTypeSelect" class="block text-sm font-semibold text-gray-700 mb-1.5">Jenis Pekerjaan <span class="text-red-500">*</span></label>
+          <select id="jobTypeSelect"
+                  class="w-full px-4 py-3.5 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition text-base">
+            <option value="">— Pilih jenis —</option>
+            <option value="Check-in Tamu">Check-in Tamu</option>
+            <option value="Cleaning">Cleaning</option>
+            <option value="Maintenance">Maintenance</option>
+            <option value="Laundry">Laundry</option>
+            <option value="Lainnya">Lainnya</option>
+          </select>
+        </div>
+
+        <!-- Tombol Simpan -->
+        <button id="saveCheckinBtn"
+                class="w-full mt-5 bg-gray-800 hover:bg-gray-900 active:scale-[0.98] text-white font-bold py-4 rounded-xl text-base shadow-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled>
+          Simpan Check-in
+        </button>
+      </div>
+    </div>
+
+    <!-- ===========================================================
+         RIWAYAT CHECK-IN HARI INI
+         =========================================================== -->
+    <div class="px-5 mt-6">
+      <div class="flex items-center justify-between mb-3">
+        <h3 class="font-bold text-gray-800 flex items-center gap-2">
+          <span class="w-1.5 h-5 bg-brand-600 rounded-full"></span>
+          Riwayat Check-in Hari Ini
+        </h3>
+        <button id="refreshHistoryBtn" class="text-xs text-brand-600 hover:underline">Refresh</button>
+      </div>
+
+      <div id="historyList" class="space-y-3">
+        <!-- Item riwayat dirender dinamis oleh JS -->
+      </div>
+
+      <div id="historyEmpty" class="hidden text-center py-10 text-gray-400">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-12 h-12 mx-auto mb-2 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+        </svg>
+        <p class="text-sm">Belum ada check-in hari ini</p>
+        <p class="text-xs">Mulai check-in pertama Anda di atas</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================================
+       MODAL ADMIN (PIN + Dashboard)
+       ============================================================ -->
+  <div id="adminModal" class="hidden fixed inset-0 bg-black/50 z-40 flex items-end sm:items-center justify-center">
+    <div class="bg-white w-full sm:max-w-md rounded-t-3xl sm:rounded-3xl shadow-2xl max-h-[90vh] overflow-y-auto">
+
+      <!-- Header modal -->
+      <div class="sticky top-0 bg-white border-b border-gray-100 px-5 py-4 flex items-center justify-between">
+        <h3 class="font-bold text-gray-800 flex items-center gap-2">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-brand-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+          </svg>
+          <span id="adminTitle">Mode Admin</span>
+        </h3>
+        <button id="closeAdminBtn" class="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-500 transition">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+
+      <!-- Konten admin -->
+      <div class="p-5">
+
+        <!-- Input PIN -->
+        <div id="adminPinSection">
+          <p class="text-sm text-gray-500 mb-3">Masukkan PIN Admin untuk melihat data semua crew.</p>
+          <div class="flex gap-2">
+            <input type="password" id="adminPinInput" inputmode="numeric" maxlength="4" placeholder="••••"
+                   class="flex-1 px-4 py-3.5 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-brand-500 outline-none transition text-center text-2xl tracking-[0.5em]" />
+            <button id="adminPinSubmit"
+                    class="bg-brand-600 hover:bg-brand-700 text-white font-bold px-5 rounded-xl transition">
+              OK
+            </button>
+          </div>
+          <p class="text-xs text-gray-400 mt-2">Default PIN: <code class="bg-gray-100 px-1.5 py-0.5 rounded">1234</code></p>
+        </div>
+
+        <!-- Dashboard admin (muncul setelah PIN benar) -->
+        <div id="adminDashboard" class="hidden space-y-5">
+
+          <!-- Tombol clear data -->
+          <div class="flex gap-2">
+            <button id="clearTodayBtn"
+                    class="flex-1 bg-red-50 hover:bg-red-100 text-red-700 font-semibold py-2.5 rounded-xl text-sm transition border border-red-200">
+              Clear Data Hari Ini
+            </button>
+            <button id="clearAllBtn"
+                    class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold py-2.5 rounded-xl text-sm transition">
+              Clear Semua Data
+            </button>
+          </div>
+
+          <!-- Statistik per crew -->
+          <div>
+            <h4 class="text-sm font-bold text-gray-700 mb-2">Total Unit per Crew (Hari Ini)</h4>
+            <div id="adminCrewStats" class="space-y-2">
+              <!-- diisi dinamis -->
+            </div>
+          </div>
+
+          <!-- Semua check-in hari ini -->
+          <div>
+            <h4 class="text-sm font-bold text-gray-700 mb-2">Semua Check-in Hari Ini</h4>
+            <div id="adminAllList" class="space-y-2">
+              <!-- diisi dinamis -->
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       JAVASCRIPT
+       ============================================================ -->
+  <script>
+  /* ============================================================
+     KONFIGURASI
+     ============================================================ */
+  const CONFIG = {
+    ADMIN_PIN: '1234',
+    // Daftar 6 crew, bisa diganti di sini
+    CREW_LIST: ['Crew 1', 'Crew 2', 'Crew 3', 'Crew 4', 'Crew 5', 'Crew 6'],
+    // Key utama di localStorage
+    STORAGE_KEY: 'absensi_crew_data',
+    // Batas akurasi GPS (meter) untuk memunculkan peringatan
+    ACCURACY_THRESHOLD: 100,
+    // Durasi simpan foto dalam localStorage (compress max)
+    PHOTO_MAX_WIDTH: 640
+  };
+
+  /* ============================================================
+     STATE APLIKASI
+     ============================================================ */
+  let state = {
+    currentCrew: null,
+    gpsData: null,       // { lat, lng, accuracy }
+    photoData: null,     // base64 string
+    today: new Date().toISOString().slice(0, 10) // YYYY-MM-DD
+  };
+
+  /* ============================================================
+     UTIL: ambil data dari localStorage (per hari)
+     ============================================================ */
+  function loadData() {
+    try {
+      const raw = localStorage.getItem(CONFIG.STORAGE_KEY);
+      if (!raw) return {};
+      const parsed = JSON.parse(raw);
+      // Auto-reset: hapus data hari kemarin (simpan hanya hari ini & opsional arsip)
+      const todayKey = state.today;
+      // Filter hanya data hari ini (opsional: keep semua untuk histori)
+      // Untuk versi ini kita simpan semua, tapi UI hanya tampilkan hari ini
+      if (!parsed[todayKey]) parsed[todayKey] = [];
+      return parsed;
+    } catch (e) {
+      console.error('Gagal load data:', e);
+      return {};
+    }
+  }
+
+  function saveData(data) {
+    try {
+      localStorage.setItem(CONFIG.STORAGE_KEY, JSON.stringify(data));
+    } catch (e) {
+      console.error('Gagal simpan data:', e);
+      showToast('Gagal menyimpan data. Penyimpanan mungkin penuh.', 'error');
+    }
+  }
+
+  function getTodayRecords() {
+    const data = loadData();
+    return data[state.today] || [];
+  }
+
+  function addRecord(record) {
+    const data = loadData();
+    if (!data[state.today]) data[state.today] = [];
+    data[state.today].push(record);
+    saveData(data);
+  }
+
+  function clearTodayData() {
+    const data = loadData();
+    data[state.today] = [];
+    saveData(data);
+  }
+
+  function clearAllData() {
+    localStorage.removeItem(CONFIG.STORAGE_KEY);
+  }
+
+  /* ============================================================
+     UTIL: Toast notifikasi
+     ============================================================ */
+  const toast = document.getElementById('toast');
+  let toastTimer = null;
+  function showToast(message, type = 'info') {
+    clearTimeout(toastTimer);
+    const colors = {
+      success: 'bg-brand-600',
+      error: 'bg-red-500',
+      info: 'bg-gray-800',
+      warning: 'bg-amber-500'
+    };
+    toast.className = `fixed top-4 left-1/2 -translate-x-1/2 z-50 px-5 py-3 rounded-xl shadow-lg text-white text-sm font-medium max-w-[90%] text-center ${colors[type] || colors.info}`;
+    toast.textContent = message;
+    toast.classList.remove('toast-hidden');
+    toastTimer = setTimeout(() => toast.classList.add('toast-hidden'), 3500);
+  }
+
+  /* ============================================================
+     UTIL: Loading overlay
+     ============================================================ */
+  const loadingOverlay = document.getElementById('loadingOverlay');
+  const loadingText = document.getElementById('loadingText');
+  function showLoading(text = 'Memuat…') {
+    loadingText.textContent = text;
+    loadingOverlay.classList.remove('hidden');
+  }
+  function hideLoading() { loadingOverlay.classList.add('hidden'); }
+
+  /* ============================================================
+     UTIL: format waktu & tanggal
+     ============================================================ */
+  function formatTime(iso) {
+    const d = new Date(iso);
+    return d.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+  }
+  function formatToday() {
+    const d = new Date();
+    return d.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+  }
+
+  /* ============================================================
+     UTIL: Compress foto ke base64 (atur ukuran)
+     ============================================================ */
+  function compressImage(file, callback) {
+    const reader = new FileReader();
+    reader.onload = function (e) {
+      const img = new Image();
+      img.onload = function () {
+        // Hitung ulang dimensi
+        let { width, height } = img;
+        if (width > CONFIG.PHOTO_MAX_WIDTH) {
+          height = (height * CONFIG.PHOTO_MAX_WIDTH) / width;
+          width = CONFIG.PHOTO_MAX_WIDTH;
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+        // Kompres dengan quality 0.7
+        const compressed = canvas.toDataURL('image/jpeg', 0.7);
+        callback(compressed);
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  }
+
+  /* ============================================================
+     INISIALISASI: cek apakah crew masih login (session)
+     ============================================================ */
+  function init() {
+    // Render tanggal hari ini
+    document.getElementById('todayDate').textContent = '📅 ' + formatToday();
+
+    // Cek session crew (localStorage juga simpan siapa yang lagi login)
+    const savedCrew = sessionStorage.getItem('current_crew') || localStorage.getItem('current_crew');
+    if (savedCrew) {
+      state.currentCrew = savedCrew;
+      showMainApp();
+    } else {
+      showLogin();
+    }
+
+    bindEvents();
+    renderHistory();
+  }
+
+  /* ============================================================
+     NAVIGASI antar screen
+     ============================================================ */
+  function showLogin() {
+    document.getElementById('loginScreen').classList.remove('hidden');
+    document.getElementById('mainApp').classList.add('hidden');
+  }
+  function showMainApp() {
+    document.getElementById('loginScreen').classList.add('hidden');
+    document.getElementById('mainApp').classList.remove('hidden');
+    document.getElementById('mainApp').classList.add('screen');
+    document.getElementById('greetingCrew').textContent = state.currentCrew;
+    renderHistory();
+    updateStats();
+  }
+
+  /* ============================================================
+     EVENT BINDING
+     ============================================================ */
+  function bindEvents() {
+    // --- LOGIN ---
+    const crewSelect = document.getElementById('crewSelect');
+    const loginBtn = document.getElementById('loginBtn');
+    crewSelect.addEventListener('change', () => {
+      loginBtn.disabled = !crewSelect.value;
+    });
+    loginBtn.addEventListener('click', () => {
+      if (!crewSelect.value) return;
+      state.currentCrew = crewSelect.value;
+      localStorage.setItem('current_crew', state.currentCrew);
+      sessionStorage.setItem('current_crew', state.currentCrew);
+      showMainApp();
+      showToast(`Selamat datang, ${state.currentCrew}!`, 'success');
+    });
+
+    // --- LOGOUT ---
+    document.getElementById('logoutBtn').addEventListener('click', () => {
+      localStorage.removeItem('current_crew');
+      sessionStorage.removeItem('current_crew');
+      state.currentCrew = null;
+      // Reset form
+      resetForm();
+      showLogin();
+      showToast('Berhasil keluar.', 'info');
+    });
+
+    // --- ADMIN ENTRY (dari halaman login) ---
+    document.getElementById('adminEntryBtn').addEventListener('click', () => openAdminModal());
+
+    // --- ADMIN (dari halaman utama) ---
+    document.getElementById('adminBtn').addEventListener('click', () => openAdminModal());
+    document.getElementById('closeAdminBtn').addEventListener('click', () => closeAdminModal());
+
+    // --- ADMIN PIN submit ---
+    document.getElementById('adminPinSubmit').addEventListener('click', handleAdminLogin);
+    document.getElementById('adminPinInput').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') handleAdminLogin();
+    });
+
+    // --- Clear data ---
+    document.getElementById('clearTodayBtn').addEventListener('click', () => {
+      if (confirm('Hapus SEMUA check-in hari ini dari SEMUA crew? Tindakan ini tidak bisa dibatalkan.')) {
+        clearTodayData();
+        renderAdminDashboard();
+        showToast('Data hari ini dihapus.', 'success');
+      }
+    });
+    document.getElementById('clearAllBtn').addEventListener('click', () => {
+      if (confirm('Hapus SEMUA data absensi (termasuk hari sebelumnya)? Tindakan ini tidak bisa dibatalkan.')) {
+        clearAllData();
+        renderAdminDashboard();
+        renderHistory();
+        updateStats();
+        showToast('Semua data dihapus.', 'success');
+      }
+    });
+
+    // --- CHECK-IN: ambil GPS ---
+    document.getElementById('getLocationBtn').addEventListener('click', getLocation);
+
+    // --- CHECK-IN: upload foto ---
+    document.getElementById('photoInput').addEventListener('change', handlePhotoUpload);
+
+    // --- CHECK-IN: validasi form real-time ---
+    ['unitInput', 'jobTypeSelect'].forEach(id => {
+      document.getElementById(id).addEventListener('input', validateForm);
+      document.getElementById(id).addEventListener('change', validateForm);
+    });
+
+    // --- CHECK-IN: simpan ---
+    document.getElementById('saveCheckinBtn').addEventListener('click', saveCheckin);
+
+    // --- Refresh riwayat ---
+    document.getElementById('refreshHistoryBtn').addEventListener('click', () => {
+      renderHistory();
+      updateStats();
+      showToast('Riwayat diperbarui.', 'info');
+    });
+  }
+
+  /* ============================================================
+     GPS: ambil lokasi real-time
+     ============================================================ */
+  function getLocation() {
+    if (!navigator.geolocation) {
+      showToast('Browser tidak mendukung GPS.', 'error');
+      return;
+    }
+    showLoading('Mengambil lokasi GPS…');
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        hideLoading();
+        const { latitude, longitude, accuracy } = position.coords;
+        state.gpsData = { lat: latitude, lng: longitude, accuracy };
+
+        // Tampilkan info GPS
+        const gpsInfo = document.getElementById('gpsInfo');
+        gpsInfo.classList.remove('hidden');
+        document.getElementById('gpsLat').textContent = latitude.toFixed(6);
+        document.getElementById('gpsLng').textContent = longitude.toFixed(6);
+        document.getElementById('gpsAccuracy').textContent = Math.round(accuracy) + ' m';
+
+        // Badge akurasi
+        const badge = document.getElementById('gpsAccuracyBadge');
+        if (accuracy <= 30) {
+          badge.textContent = 'Sangat Presisi';
+          badge.className = 'text-xs px-2 py-0.5 rounded-full bg-brand-200 text-brand-800';
+        } else if (accuracy <= 100) {
+          badge.textContent = 'Presisi Cukup';
+          badge.className = 'text-xs px-2 py-0.5 rounded-full bg-yellow-200 text-yellow-800';
+        } else {
+          badge.textContent = 'Akurasi Rendah';
+          badge.className = 'text-xs px-2 py-0.5 rounded-full bg-red-200 text-red-800';
+        }
+
+        // Link Google Maps
+        const link = document.getElementById('gpsMapLink');
+        link.href = `https://www.google.com/maps?q=${latitude},${longitude}`;
+
+        // Peringatan jika akurasi > threshold
+        const warning = document.getElementById('gpsWarning');
+        if (accuracy > CONFIG.ACCURACY_THRESHOLD) {
+          warning.classList.remove('hidden');
+        } else {
+          warning.classList.add('hidden');
+        }
+
+        validateForm();
+        showToast('Lokasi GPS berhasil diambil.', 'success');
+      },
+      (error) => {
+        hideLoading();
+        let msg = 'Gagal mengambil lokasi GPS.';
+        if (error.code === 1) msg = 'Akses lokasi ditolak. Aktifkan izin lokasi di browser.';
+        else if (error.code === 2) msg = 'Lokasi tidak tersedia. Coba keluar ke area terbuka.';
+        else if (error.code === 3) msg = 'Timeout. Coba lagi.';
+        showToast(msg, 'error');
+        console.error('GPS error:', error);
+      },
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+    );
+  }
+
+  /* ============================================================
+     FOTO: handle upload
+     ============================================================ */
+  function handlePhotoUpload(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    showLoading('Memproses foto…');
+    compressImage(file, (dataUrl) => {
+      hideLoading();
+      state.photoData = dataUrl;
+      // Tampilkan preview
+      const preview = document.getElementById('photoPreview');
+      preview.innerHTML = `<img src="${dataUrl}" class="w-full h-full object-cover" alt="foto" />`;
+      preview.classList.remove('border-dashed', 'border-gray-300', 'bg-gray-100');
+      preview.classList.add('border-solid', 'border-brand-500');
+      validateForm();
+      showToast('Foto siap.', 'success');
+    });
+  }
+
+  /* ============================================================
+     VALIDASI: cek apakah semua input sudah lengkap
+     ============================================================ */
+  function validateForm() {
+    const hasGps = !!state.gpsData;
+    const hasPhoto = !!state.photoData;
+    const hasUnit = document.getElementById('unitInput').value.trim() !== '';
+    const hasJob = document.getElementById('jobTypeSelect').value !== '';
+    document.getElementById('saveCheckinBtn').disabled = !(hasGps && hasPhoto && hasUnit && hasJob);
+  }
+
+  /* ============================================================
+     SIMPAN CHECK-IN
+     ============================================================ */
+  function saveCheckin() {
+    const unit = document.getElementById('unitInput').value.trim();
+    const jobType = document.getElementById('jobTypeSelect').value;
+    if (!state.gpsData || !state.photoData || !unit || !jobType) {
+      showToast('Lengkapi semua data terlebih dahulu.', 'error');
+      return;
+    }
+    const record = {
+      crew: state.currentCrew,
+      timestamp: new Date().toISOString(),
+      time: formatTime(new Date().toISOString()),
+      unit: unit,
+      jobType: jobType,
+      lat: state.gpsData.lat,
+      lng: state.gpsData.lng,
+      accuracy: state.gpsData.accuracy,
+      photo: state.photoData
+    };
+    addRecord(record);
+    showToast('Check-in berhasil disimpan! ✅', 'success');
+    resetForm();
+    renderHistory();
+    updateStats();
+  }
+
+  /* ============================================================
+     RESET FORM setelah simpan
+     ============================================================ */
+  function resetForm() {
+    state.gpsData = null;
+    state.photoData = null;
+    document.getElementById('gpsInfo').classList.add('hidden');
+    document.getElementById('gpsWarning').classList.add('hidden');
+    document.getElementById('photoInput').value = '';
+    const preview = document.getElementById('photoPreview');
+    preview.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" /></svg>`;
+    preview.classList.add('border-dashed', 'border-gray-300', 'bg-gray-100');
+    preview.classList.remove('border-solid', 'border-brand-500');
+    document.getElementById('unitInput').value = '';
+    document.getElementById('jobTypeSelect').value = '';
+    document.getElementById('saveCheckinBtn').disabled = true;
+  }
+
+  /* ============================================================
+     RENDER: riwayat hari ini (khusus crew yang login)
+     ============================================================ */
+  function renderHistory() {
+    const list = document.getElementById('historyList');
+    const empty = document.getElementById('historyEmpty');
+    if (!state.currentCrew) return;
+
+    const allRecords = getTodayRecords();
+    const myRecords = allRecords.filter(r => r.crew === state.currentCrew);
+
+    if (myRecords.length === 0) {
+      list.innerHTML = '';
+      empty.classList.remove('hidden');
+      return;
+    }
+    empty.classList.add('hidden');
+
+    // Urutkan dari yang paling baru
+    myRecords.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+    list.innerHTML = myRecords.map(r => `
+      <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 flex gap-3">
+        <img src="${r.photo}" class="thumb flex-shrink-0" alt="foto" />
+        <div class="flex-1 min-w-0">
+          <div class="flex items-start justify-between gap-2">
+            <div class="min-w-0">
+              <p class="font-bold text-gray-800 truncate">${escapeHtml(r.unit)}</p>
+              <p class="text-xs text-brand-600 font-semibold">${r.jobType}</p>
+            </div>
+            <span class="text-xs text-gray-400 flex-shrink-0">${r.time}</span>
+          </div>
+          <div class="flex items-center gap-2 mt-2 text-xs text-gray-500">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 text-brand-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+            <span class="font-mono">${r.lat.toFixed(5)}, ${r.lng.toFixed(5)}</span>
+            <span class="text-gray-300">·</span>
+            <span>±${Math.round(r.accuracy)}m</span>
+          </div>
+          <a href="https://www.google.com/maps?q=${r.lat},${r.lng}" target="_blank" rel="noopener"
+             class="inline-flex items-center gap-1 mt-1.5 text-xs text-brand-600 hover:underline font-medium">
+            Buka di Google Maps ↗
+          </a>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  /* ============================================================
+     UPDATE STATISTIK di header
+     ============================================================ */
+  function updateStats() {
+    if (!state.currentCrew) return;
+    const records = getTodayRecords().filter(r => r.crew === state.currentCrew);
+    document.getElementById('statTotal').textContent = records.length;
+    // Total unit unik (case-insensitive, trimmed)
+    const uniqueUnits = new Set(records.map(r => r.unit.trim().toLowerCase()));
+    document.getElementById('statUnits').textContent = uniqueUnits.size;
+  }
+
+  /* ============================================================
+     ADMIN MODAL
+     ============================================================ */
+  function openAdminModal() {
+    document.getElementById('adminModal').classList.remove('hidden');
+    document.getElementById('adminPinSection').classList.remove('hidden');
+    document.getElementById('adminDashboard').classList.add('hidden');
+    document.getElementById('adminPinInput').value = '';
+    setTimeout(() => document.getElementById('adminPinInput').focus(), 100);
+  }
+  function closeAdminModal() {
+    document.getElementById('adminModal').classList.add('hidden');
+  }
+
+  function handleAdminLogin() {
+    const pin = document.getElementById('adminPinInput').value;
+    if (pin === CONFIG.ADMIN_PIN) {
+      document.getElementById('adminPinSection').classList.add('hidden');
+      document.getElementById('adminDashboard').classList.remove('hidden');
+      renderAdminDashboard();
+      showToast('Selamat datang, Admin!', 'success');
+    } else {
+      showToast('PIN salah. Coba lagi.', 'error');
+      document.getElementById('adminPinInput').value = '';
+      document.getElementById('adminPinInput').focus();
+    }
+  }
+
+  /* ============================================================
+     RENDER: dashboard admin (semua crew)
+     ============================================================ */
+  function renderAdminDashboard() {
+    const records = getTodayRecords();
+
+    // --- Statistik per crew ---
+    const crewStatsEl = document.getElementById('adminCrewStats');
+    const stats = {};
+    CONFIG.CREW_LIST.forEach(c => stats[c] = { total: 0, units: new Set() });
+    records.forEach(r => {
+      if (stats[r.crew]) {
+        stats[r.crew].total++;
+        stats[r.crew].units.add(r.unit.trim().toLowerCase());
+      }
+    });
+
+    crewStatsEl.innerHTML = CONFIG.CREW_LIST.map(c => {
+      const s = stats[c];
+      const unitCount = s.units.size;
+      return `
+        <div class="flex items-center justify-between bg-gray-50 rounded-xl px-4 py-3 border border-gray-100">
+          <span class="font-semibold text-gray-700 text-sm">${c}</span>
+          <div class="flex gap-4 text-sm">
+            <div class="text-center">
+              <p class="text-xs text-gray-400">Check-in</p>
+              <p class="font-bold text-gray-800">${s.total}</p>
+            </div>
+            <div class="text-center">
+              <p class="text-xs text-gray-400">Unit</p>
+              <p class="font-bold text-brand-600">${unitCount}</p>
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    // --- Semua check-in hari ini ---
+    const allListEl = document.getElementById('adminAllList');
+    if (records.length === 0) {
+      allListEl.innerHTML = `<p class="text-sm text-gray-400 text-center py-4">Belum ada check-in hari ini.</p>`;
+      return;
+    }
+    // Urutkan dari terbaru
+    records.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+    allListEl.innerHTML = records.map(r => `
+      <div class="bg-gray-50 rounded-xl p-3 border border-gray-100 flex gap-3">
+        <img src="${r.photo}" class="thumb flex-shrink-0" alt="foto" />
+        <div class="flex-1 min-w-0">
+          <div class="flex items-start justify-between gap-2">
+            <p class="font-bold text-gray-800 text-sm truncate">${escapeHtml(r.unit)}</p>
+            <span class="text-xs text-gray-400 flex-shrink-0">${r.time}</span>
+          </div>
+          <p class="text-xs text-brand-600 font-semibold">${r.crew} · ${r.jobType}</p>
+          <a href="https://www.google.com/maps?q=${r.lat},${r.lng}" target="_blank" rel="noopener"
+             class="inline-flex items-center gap-1 mt-1 text-xs text-brand-600 hover:underline">
+            Maps ↗ (${r.lat.toFixed(5)}, ${r.lng.toFixed(5)})
+          </a>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  /* ============================================================
+     UTIL: escape HTML untuk mencegah XSS
+     ============================================================ */
+  function escapeHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  /* ============================================================
+     JALANKAN APLIKASI
+     ============================================================ */
+  document.addEventListener('DOMContentLoaded', init);
+
+  // Catatan: untuk penggunaan PWA / installable di HP,
+  // Anda bisa menambahkan manifest.json + service worker terpisah.
+  // Untuk versi single-file ini, cukup "Add to Home Screen" manual.
+  </script>
+</body>
+</html>
