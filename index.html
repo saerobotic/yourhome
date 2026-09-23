@@ -157,7 +157,7 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
   background:var(--white);border-radius:var(--radius);
   box-shadow:var(--shadow-lg);
   padding:28px;margin:-70px auto 0;max-width:var(--max);
-  display:grid;grid-template-columns:repeat(4,1fr) auto;gap:18px;align-items:end;
+  display:grid;grid-template-columns:repeat(4,1fr) 1.4fr auto;gap:18px;align-items:end;
 }
 .bw-field{display:flex;flex-direction:column;gap:.4rem}
 .bw-field label{font-size:.72rem;letter-spacing:.15em;text-transform:uppercase;color:var(--grey);font-weight:600}
@@ -168,6 +168,27 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
 }
 .bw-field input:focus, .bw-field select:focus{outline:none;border-color:var(--terracotta);background:var(--white)}
 .bw-submit{padding:13px 28px;height:48px}
+.date-range-picker{position:relative}
+.date-range-trigger{width:100%;text-align:left;border:1.5px solid var(--grey-l);border-radius:var(--radius-sm);padding:11px 14px;font-family:inherit;font-size:.92rem;color:var(--coffee-d);background:var(--cream);white-space:nowrap}
+.date-range-trigger.active,.date-range-trigger:focus{outline:none;border-color:var(--terracotta);background:var(--white)}
+.date-range-popover{position:absolute;top:calc(100% + 10px);left:0;width:320px;z-index:20;background:var(--white);border:1px solid var(--grey-l);border-radius:var(--radius-sm);box-shadow:var(--shadow-lg);padding:16px}
+.date-range-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.date-range-nav button{width:30px;height:30px;border-radius:50%;color:var(--coffee-d);font-size:1.1rem}
+.date-range-nav button:hover{background:var(--cream-deep);color:var(--terracotta)}
+.date-month-label{text-align:center;font-weight:700;color:var(--coffee-d);font-size:.9rem}
+.date-weekdays,.date-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.date-weekdays{margin-bottom:5px;color:var(--grey);font-size:.67rem;text-align:center;font-weight:700}
+.date-day{height:32px;border-radius:7px;color:var(--coffee);font-size:.8rem}
+.date-day:hover:not(:disabled){background:var(--cream-deep)}
+.date-day:disabled{color:#c9c3bb;cursor:not-allowed}
+.date-day.is-start,.date-day.is-end{background:var(--terracotta);color:var(--white);font-weight:700}
+.date-day.is-between{background:#f1d8c8;color:var(--coffee-d);border-radius:0}
+.date-range-hint{margin:12px 0 0;color:var(--grey);font-size:.72rem;text-align:center}
+.bw-price-range{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.bw-price-range input{width:100%;accent-color:var(--terracotta);cursor:pointer}
+.price-range-value{display:block;color:var(--terracotta);font-size:.72rem;font-weight:600;white-space:nowrap;margin-top:3px}
+.booking-selection{grid-column:1/-1;color:var(--coffee);font-size:.85rem;background:var(--cream-deep);padding:10px 14px;border-radius:var(--radius-sm)}
+.booking-selection strong{color:var(--terracotta)}
 
 /* ============== FEATURED ============== */
 .featured{padding-top:120px}
@@ -394,6 +415,9 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
 .modal-map-wrap{margin:18px 0 22px;border:1px solid var(--grey-l);border-radius:var(--radius-sm);overflow:hidden;background:var(--cream)}
 .modal-map-label{padding:12px 14px 10px;font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;font-weight:700;color:var(--terracotta)}
 .modal-map-frame{display:block;width:100%;height:220px;border:0;background:#f8fafc}
+.modal-room-choice{margin:18px 0;padding:14px;background:var(--cream);border-radius:var(--radius-sm)}
+.modal-room-choice label{display:block;margin-bottom:7px;font-size:.75rem;letter-spacing:.08em;text-transform:uppercase;font-weight:700;color:var(--terracotta)}
+.modal-room-choice select{width:100%;border:1.5px solid var(--grey-l);border-radius:var(--radius-sm);padding:10px 12px;background:var(--white);color:var(--coffee-d);font:inherit}
 .modal-features{display:flex;gap:18px;flex-wrap:wrap;padding:16px;background:var(--cream);border-radius:var(--radius-sm);margin-bottom:18px}
 .modal-features span{display:flex;align-items:center;gap:6px;font-size:.85rem;color:var(--coffee);font-weight:500}
 .modal-features svg{width:16px;height:16px;fill:var(--terracotta)}
@@ -497,12 +521,22 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
   <div class="container">
     <form class="booking-widget" id="bookingForm">
       <div class="bw-field">
-        <label>Check-in</label>
-        <input type="date" id="checkin" required />
-      </div>
-      <div class="bw-field">
-        <label>Check-out</label>
-        <input type="date" id="checkout" required />
+        <label>Tanggal</label>
+        <div class="date-range-picker" id="dateRangePicker">
+          <button type="button" class="date-range-trigger" id="dateRangeTrigger">dd/mm/yyyy - dd/mm/yyyy</button>
+          <div class="date-range-popover" id="dateRangePopover" hidden>
+            <div class="date-range-nav">
+              <button type="button" id="datePrev" aria-label="Bulan sebelumnya">&#8249;</button>
+              <span class="date-month-label" id="dateMonthLabel"></span>
+              <button type="button" id="dateNext" aria-label="Bulan berikutnya">&#8250;</button>
+            </div>
+            <div class="date-weekdays"><span>Min</span><span>Sen</span><span>Sel</span><span>Rab</span><span>Kam</span><span>Jum</span><span>Sab</span></div>
+            <div class="date-grid" id="dateGrid"></div>
+            <p class="date-range-hint" id="dateRangeHint">Pilih tanggal check-in</p>
+          </div>
+        </div>
+        <input type="hidden" id="checkin" />
+        <input type="hidden" id="checkout" />
       </div>
       <div class="bw-field">
         <label>Tamu</label>
@@ -524,6 +558,15 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
           <option value="kos">Kosan</option>
         </select>
       </div>
+      <div class="bw-field">
+        <label>Rentang Harga</label>
+        <div class="bw-price-range">
+          <input type="range" id="minPrice" min="506000" max="11000000" step="1000" value="506000" aria-label="Harga terendah" />
+          <input type="range" id="maxPrice" min="506000" max="11000000" step="1000" value="11000000" aria-label="Harga tertinggi" />
+        </div>
+        <output class="price-range-value" id="priceRangeValue">Rp 506.000 - Rp 11.000.000</output>
+      </div>
+      <div class="booking-selection" id="bookingSelection" hidden></div>
       <button type="submit" class="btn btn-primary bw-submit">Cari</button>
     </form>
   </div>
@@ -842,7 +885,7 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
 const properties = [
   // Apartemen (5)
   { id:'sudirman-7', name:'Lantai 7 Sudirman Suites', cat:'apartment', catLabel:'Apartemen',
-    loc:'Sudirman Suites, Bandung', beds:2, baths:1, guests:4, price:650000,
+    loc:'Sudirman Suites, Bandung', beds:2, baths:1, guests:4, price:618000,
     img:'https://ik.imagekit.io/o1hnx31yy/Appart%207.JPG?updatedAt=1790155916946',
     desc:`Tentang tempat ini
 
@@ -917,7 +960,7 @@ Hal-hal yang perlu diketahui sebelum booking:
 Contoh: Parkir selama 3 jam, tamu membayar biaya biasa Rp 9.000.
 Untuk 17 jam, cukup bayar Rp 50.000 (Tarif Maksimum diterapkan secara otomatis).` },
   { id:'sudirman-11', name:'Lantai 11 Sudirman Suites', cat:'apartment', catLabel:'Apartemen',
-    loc:'Sudirman Suites, Bandung', beds:3, baths:2, guests:8, price:750000,
+    loc:'Sudirman Suites, Bandung', beds:3, baths:2, guests:8, price:955000,
     img:'https://ik.imagekit.io/o1hnx31yy/appart%2011.jpg?updatedAt=1790155909751',
     desc:`Tentang tempat ini
 
@@ -989,7 +1032,7 @@ Hal lain yang perlu diperhatikan
 Contoh: Parkir selama 3 jam, tamu membayar biaya biasa Rp 9.000.
 Untuk 17 jam, cukup bayar Rp 50.000 (Tarif Maksimum diterapkan secara otomatis).` },
   { id:'sudirman-18', name:'Lantai 18 Sudirman Suites', cat:'apartment', catLabel:'Apartemen',
-    loc:'Sudirman Suites, Bandung', beds:2, baths:2, guests:6, price:850000,
+    loc:'Sudirman Suites, Bandung', beds:2, baths:2, guests:6, price:668000,
     img:'https://ik.imagekit.io/o1hnx31yy/appart%2018.jpg?updatedAt=1790155903507',
     desc:`Tentang tempat ini
 
@@ -1061,7 +1104,7 @@ Hal lain yang perlu diperhatikan
 Contoh: Parkir selama 3 jam, tamu membayar biaya biasa Rp 9.000.
 Untuk 17 jam, cukup bayar Rp 50.000 (Tarif Maksimum diterapkan secara otomatis).` },
   { id:'sudirman-19', name:'Lantai 19 Sudirman Suites', cat:'apartment', catLabel:'Apartemen',
-    loc:'Sudirman Suites, Bandung', beds:3, baths:2, guests:12, price:950000,
+    loc:'Sudirman Suites, Bandung', beds:3, baths:2, guests:12, price:909000,
     img:'https://ik.imagekit.io/o1hnx31yy/appart%2019.jpeg?updatedAt=1790155907863',
     desc:`Tentang tempat ini
 
@@ -1135,7 +1178,7 @@ Untuk 17 jam, cukup bayar Rp 50.000 (Tarif Maksimum diterapkan secara otomatis).
   { id:'galeri-ciumbuleuit', name:'Apartment Galeri Ciumbuleuit 3', cat:'apartment', catLabel:'Apartemen',
     loc:'Jl. Ciumbuleuit No.67, Hegarmanah, Kec. Cidadap, Kota Bandung, Jawa Barat 40142, Indonesia',
     mapQuery:'Apartment Galeri Ciumbuleuit 3 4J93+97 Hegarmanah, Kota Bandung, Jawa Barat, Indonesia',
-    beds:2, baths:1, guests:4, price:550000,
+    beds:2, baths:1, guests:4, price:506000,
     img:'https://ik.imagekit.io/o1hnx31yy/appart%20GCA.JPG?updatedAt=1790157278364',
     desc:`Tentang tempat ini
 
@@ -1197,7 +1240,7 @@ Beritahu kami sebelum melakukan reservasi untuk memeriksa ketersediaan kami.` },
   { id:'villa-aurum', name:'Villa Aurum', cat:'villa', catLabel:'Villa',
     loc:'Komplek Villa Triniti No.Kav M-27, Jl. Sersan Bajuri No.Km 47, Cigugur Girang, Kec. Parongpong, Kabupaten Bandung, Jawa Barat 40559',
     mapQuery:'Villa Triniti M-27, Komplek Villa Triniti No.Kav M-27, Jl. Sersan Bajuri No.Km 47, Cigugur Girang, Kec. Parongpong, Kabupaten Bandung, Jawa Barat 40559, Indonesia',
-    beds:6, baths:4, guests:12, price:2500000,
+    beds:6, baths:4, guests:12, price:8899000,
     img:'https://ik.imagekit.io/o1hnx31yy/Aurum.png?updatedAt=1790155916889',
     desc:`Tentang tempat ini
 
@@ -1278,7 +1321,7 @@ WAJIB DIBACA SEBELUM BOOKING:
 • Untuk acara seperti ulang tahun, tunangan, atau pernikahan, mohon informasikan kepada kami terlebih dahulu agar persiapan dan pengaturan dapat dilakukan dengan baik.
 • Mohon menjaga kebersihan dan fasilitas villa selama menginap agar tetap nyaman untuk semua tamu.` },
   { id:'villa-putih', name:'Villa Putih', cat:'villa', catLabel:'Villa',
-    loc:'Graha Puspa, Lembang, Bandung', beds:4, baths:3, guests:8, price:2200000,
+    loc:'Graha Puspa, Lembang, Bandung', beds:4, baths:3, guests:8, price:2899000,
     mapQuery:'5HMX+M7Q Komplek Graha Puspa, Jl. Sersan Bajuri, Cihideung, Parongpong, West Bandung Regency, West Java 40559',
     img:'https://ik.imagekit.io/o1hnx31yy/Villa%20putih.png?updatedAt=1790155915297',
     desc:`VILLA PUTIH
@@ -1518,7 +1561,7 @@ Selamat datang di Vila kami. Demi kenyamanan dan keamanan bersama, mohon mematuh
 
 Terima kasih atas kerja samanya. Semoga Anda menikmati masa menginap di Villa Alam.` },
   { id:'villa-alam-12', name:'Villa Alam 1 & 2', cat:'villa', catLabel:'Villa',
-    loc:'Lembang, Bandung', beds:6, baths:4, guests:12, price:1800000,
+    loc:'Lembang, Bandung', beds:6, baths:4, guests:12, price:4999999,
     mapQuery:'5HMX+VC Sukajaya, Kabupaten Bandung Barat, Jawa Barat',
     img:'https://ik.imagekit.io/o1hnx31yy/Alam%201&2.jpeg?updatedAt=1790156623926',
     desc:`Villa Alam – Komplek Graha Puspa by Your Home
@@ -1599,7 +1642,7 @@ Selamat datang di Vila kami. Demi kenyamanan dan keamanan bersama, mohon mematuh
 
 Terima kasih atas kerja samanya. Semoga Anda menikmati masa menginap di Villa Alam.` },
   { id:'villa-trinity', name:'Villa Trinity Garden Villa', cat:'villa', catLabel:'Villa',
-    loc:'Cihideung, Parongpong, Lembang', beds:4, baths:3, guests:10, price:2200000,
+    loc:'Cihideung, Parongpong, Lembang', beds:4, baths:3, guests:10, price:7899000,
     mapQuery:'https://maps.app.goo.gl/axmY92pc2N8JFPiD9',
     img:'https://ik.imagekit.io/o1hnx31yy/X4.JPG?updatedAt=1790155917669',
     desc:`Villa Trinity Garden – Parongpong
@@ -1897,7 +1940,7 @@ WAJIB DIBACA SEBELUM BOOKING:
 • DILARANG MEROKOK DI DALAM VILLA. Merokok hanya diperbolehkan di area outdoor yang telah disediakan. Mohon tidak merokok di dalam villa.
 • Villa berada di area hunian yang tenang, sehingga aktivitas ilegal tidak diperbolehkan. Mohon menjaga ketenangan, terutama pada malam hari, menghormati tetangga sekitar, dan mengikuti jam tenang serta peraturan villa.` },
   { id:'villa-casa-kemilau', name:'Villa Casa Kemilau Bintang', cat:'villa', catLabel:'Villa',
-    loc:'Lembang, Bandung', beds:4, baths:3, guests:10, price:2400000,
+    loc:'Lembang, Bandung', beds:4, baths:3, guests:10, price:3321000,
     mapQuery:'https://maps.app.goo.gl/4as6GS6gkFJoRED68',
     img:'https://ik.imagekit.io/o1hnx31yy/Cabin.png?updatedAt=1790155916198',
     desc:`Cabin Villa | Komplek Villa Trinity | Lembang
@@ -1953,7 +1996,7 @@ Hal-hal yang PERLU diketahui sebelum booking:
 • DILARANG MEROKOK. Terdapat area outdoor dimana Anda bisa bersantai dan merokok. Maka mohon untuk tidak merokok di dalam villa.
 • Property ini berada di AREA PEMUKIMAN, jadi dilarang melakukan aktivitas ilegal. Harap jaga ketenangan dan hindari kebisingan, terutama di malam hari.` },
   { id:'villa-casa-bliss', name:'Villa Casa Bliss', cat:'villa', catLabel:'Villa',
-    loc:'Aurora 1st Pentagon, Lembang, Bandung', beds:3, baths:2, guests:6, price:1600000,
+    loc:'Aurora 1st Pentagon, Lembang, Bandung', beds:3, baths:2, guests:6, price:6899000,
     mapQuery:'Villa Casa Bliss Aurora 1st Pentagon, Lembang, Bandung',
     mapLink:'https://maps.app.goo.gl/BWmogzbSbRB52L8V6',
     img:'https://ik.imagekit.io/o1hnx31yy/Cassa.jpeg?updatedAt=1790155914013',
@@ -2083,7 +2126,7 @@ Hal-hal yang PERLU diketahui sebelum booking:
 • DILARANG MEROKOK. Terdapat area outdoor dimana Anda bisa bersantai dan merokok. Maka mohon untuk tidak merokok di dalam villa.
 • Property ini berada di AREA PEMUKIMAN, jadi dilarang melakukan aktivitas ilegal. Harap jaga ketenangan dan hindari kebisingan, terutama di malam hari.` },
   { id:'villa-ferrum', name:'Villa Ferrum', cat:'villa', catLabel:'Villa',
-    loc:'Lembang, Bandung', beds:4, baths:3, guests:8, price:2600000,
+    loc:'Lembang, Bandung', beds:4, baths:3, guests:8, price:11000000,
     img:'https://ik.imagekit.io/o1hnx31yy/Ferrum.JPG?updatedAt=1790155917429',
     desc:'Villa Ferrum di Lembang menawarkan suasana tenang dan eksklusif dengan nuansa alam yang sejuk dan nyaman untuk staycation keluarga.' },
 
@@ -2214,9 +2257,61 @@ Hal-hal yang PERLU diketahui sebelum booking:
 
   // Kosan (1)
   { id:'kos-de-orange', name:'Kosan De Orange Kost', cat:'kos', catLabel:'Kosan',
-    loc:'Bandung', beds:1, baths:1, guests:1, price:850000,
+    loc:'Jl. Babakan Jeruk IV No. 11 A, Sukagalih, Kecamatan Sukajadi, Kota Bandung', beds:1, baths:1, guests:1, price:850000,
     img:'https://images.unsplash.com/photo-1494526585095-c41746248156?auto=format&fit=crop&w=800&q=80',
-    desc:'Kosan eksklusif bergaya modern dengan fasilitas lengkap. Bulanan maupun harian, cocok untuk mahasiswa atau pekerja muda yang butuh tempat tinggal nyaman di Bandung.' }
+    roomOptions:[
+      { name:'Single Room', price:950000 },
+      { name:'Single Balkon', price:1000000 },
+      { name:'Superior Room', price:1250000 },
+      { name:'Single Deluxe', price:1400000 },
+      { name:'Superior Deluxe', price:1600000 }
+    ],
+    desc:`Jl. Babakan Jeruk IV No. 11 A, Sukagalih, Kecamatan Sukajadi, Kota Bandung
+
+Single Room
+Harga: Rp950.000/bulan
+• Single bed – 1 orang
+• Kamar mandi luar
+• Kamar No. 2, 4, 5, 12, 15
+
+Single Balkon
+Harga: Rp1.000.000/bulan
+• Single bed – 1 orang
+• Kamar mandi luar
+• Kamar No. 10, 13, 14
+
+Superior Room
+Harga: Rp1.250.000/bulan
+• King bed atau twin beds – bisa 2 orang dengan tambahan biaya Rp300.000
+• Kamar mandi luar
+• Kamar No. 1, 3, 6, 7, 8
+
+Single Deluxe
+Harga: Rp1.400.000/bulan
+• Single bed – 1 orang
+• Kamar mandi dalam
+• Kamar No. 11
+
+Superior Deluxe
+Harga: Rp1.600.000/bulan
+• King bed – bisa 2 orang dengan tambahan biaya Rp300.000
+• Kamar mandi dalam
+• Kamar No. 9
+
+FASILITAS:
+• Ruang tamu & dapur umum
+• Kasur
+• Lemari
+• WiFi
+• Water heater
+• Area parkir
+• Akses 24 jam
+
+NOTE:
+• Belum termasuk deposit. Deposit Rp500.000 dibayarkan 1 kali dan dikembalikan pada saat check-out.
+• Single untuk 1 orang.
+• Superior bisa untuk 2 orang dengan tambahan biaya Rp300.000/bulan.
+• Parkir mobil hanya tersedia untuk 2 mobil dan dikenakan biaya Rp150.000/bulan.` }
 ];
 
 const villaX7 = properties.find(property => property.id === 'villa-x7');
@@ -2229,9 +2324,40 @@ properties.push({
 /* ============== RENDER PROPERTIES ============== */
 const propsGrid = document.getElementById('propsGrid');
 const formatPrice = (p) => 'Rp ' + p.toLocaleString('id-ID');
+let selectedBooking = null;
+const minPriceControl = document.getElementById('minPrice');
+const maxPriceControl = document.getElementById('maxPrice');
+const priceRangeValue = document.getElementById('priceRangeValue');
+const propertyPrices = properties.map(property => property.price);
+const lowestPrice = Math.min(...propertyPrices);
+const highestPrice = Math.max(...propertyPrices);
+minPriceControl.min = lowestPrice;
+minPriceControl.max = highestPrice;
+minPriceControl.value = lowestPrice;
+maxPriceControl.min = lowestPrice;
+maxPriceControl.max = highestPrice;
+maxPriceControl.value = highestPrice;
 
-function renderProperties(filter='all'){
-  const list = filter === 'all' ? properties : properties.filter(p => p.cat === filter);
+function updatePriceRangeLabel(){
+  let minimum = Number(minPriceControl.value);
+  let maximum = Number(maxPriceControl.value);
+  if(minimum > maximum){
+    if(document.activeElement === minPriceControl) maxPriceControl.value = minimum;
+    else minPriceControl.value = maximum;
+    minimum = Number(minPriceControl.value);
+    maximum = Number(maxPriceControl.value);
+  }
+  priceRangeValue.textContent = `${formatPrice(minimum)} - ${formatPrice(maximum)}`;
+}
+minPriceControl.addEventListener('input', updatePriceRangeLabel);
+maxPriceControl.addEventListener('input', updatePriceRangeLabel);
+updatePriceRangeLabel();
+
+function renderProperties(filter='all', minimumPrice=lowestPrice, maximumPrice=highestPrice){
+  const list = properties.filter(property => {
+    const matchesType = filter === 'all' || property.cat === filter;
+    return matchesType && property.price >= minimumPrice && property.price <= maximumPrice;
+  });
   if(list.length === 0){
     propsGrid.innerHTML = '<div class="no-results"><p>Tidak ada properti pada kategori ini.</p></div>';
     return;
@@ -2296,6 +2422,15 @@ function openModal(id){
     .replace(/##\s*/g, '')
     .replace(/^- /gm, '• ')
     .replace(/\n{3,}/g, '\n\n');
+  const roomOptionsMarkup = p.roomOptions ? `
+    <div class="modal-room-choice">
+      <label for="modalRoomSelect">Pilih tipe kamar</label>
+      <select id="modalRoomSelect">
+        ${p.roomOptions.map((room, index) => `<option value="${index}">${room.name} — ${formatPrice(room.price)}/bulan</option>`).join('')}
+      </select>
+    </div>` : '';
+  const initialPrice = p.roomOptions ? p.roomOptions[0].price : p.price;
+  const pricePeriod = p.roomOptions ? 'per bulan' : 'per malam';
 
   modalBody.innerHTML = `
     <span class="prop-cat" style="position:static;display:inline-block;margin-bottom:8px">${p.catLabel}</span>
@@ -2310,6 +2445,7 @@ function openModal(id){
       <span><svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>${p.guests} Tamu</span>
     </div>
     <p class="modal-desc">${cleanDescription(p.desc)}</p>
+    ${roomOptionsMarkup}
     <div class="modal-map-wrap">
       <div class="modal-map-label">Lokasi</div>
       <iframe
@@ -2321,10 +2457,29 @@ function openModal(id){
       </iframe>
     </div>
     <div class="modal-price-row">
-      <div class="modal-price">${formatPrice(p.price)}<small>per malam</small></div>
-      <a href="#booking" class="btn btn-primary" onclick="closeModal()">Booking Sekarang</a>
+      <div class="modal-price" id="modalPrice">${formatPrice(initialPrice)}<small>${pricePeriod}</small></div>
+      <a href="#booking" class="btn btn-primary" id="modalBooking">Booking Sekarang</a>
     </div>
   `;
+  const roomSelect = document.getElementById('modalRoomSelect');
+  if(roomSelect){
+    const updateRoomSelection = () => {
+      const room = p.roomOptions[Number(roomSelect.value)];
+      selectedBooking = { property:p.name, room:room.name, price:room.price };
+      document.getElementById('modalPrice').innerHTML = `${formatPrice(room.price)}<small>per bulan</small>`;
+      const bookingSelection = document.getElementById('bookingSelection');
+      bookingSelection.hidden = false;
+      bookingSelection.innerHTML = `Pilihan booking: <strong>${p.name} — ${room.name} (${formatPrice(room.price)}/bulan)</strong>`;
+    };
+    roomSelect.addEventListener('change', updateRoomSelection);
+    updateRoomSelection();
+  } else {
+    selectedBooking = null;
+    document.getElementById('bookingSelection').hidden = true;
+  }
+  document.getElementById('modalBooking').addEventListener('click', () => {
+    if(p.cat === 'kos') document.getElementById('propType').value = p.cat;
+  });
   modalOverlay.classList.add('active');
   document.body.style.overflow = 'hidden';
 }
@@ -2350,29 +2505,108 @@ menuToggle.addEventListener('click', () => navLinks.classList.toggle('open'));
 navLinks.querySelectorAll('a').forEach(a => a.addEventListener('click', () => navLinks.classList.remove('open')));
 
 /* ============== BOOKING FORM ============== */
+const dateRangeTrigger = document.getElementById('dateRangeTrigger');
+const dateRangePopover = document.getElementById('dateRangePopover');
+const dateMonthLabel = document.getElementById('dateMonthLabel');
+const dateGrid = document.getElementById('dateGrid');
+const dateRangeHint = document.getElementById('dateRangeHint');
+const checkinInput = document.getElementById('checkin');
+const checkoutInput = document.getElementById('checkout');
 const today = new Date().toISOString().split('T')[0];
-document.getElementById('checkin').min = today;
-document.getElementById('checkin').addEventListener('change', function(){
-  document.getElementById('checkout').min = this.value;
+let calendarMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+let rangeStart = '';
+let rangeEnd = '';
+
+const toIsoDate = (date) => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+const displayDate = (isoDate) => {
+  if(!isoDate) return 'dd/mm/yyyy';
+  const [year, month, day] = isoDate.split('-');
+  return `${day}/${month}/${year}`;
+};
+
+function renderDateCalendar(){
+  dateMonthLabel.textContent = calendarMonth.toLocaleDateString('id-ID', {month:'long', year:'numeric'});
+  dateGrid.innerHTML = '';
+  const firstDay = new Date(calendarMonth.getFullYear(), calendarMonth.getMonth(), 1).getDay();
+  const daysInMonth = new Date(calendarMonth.getFullYear(), calendarMonth.getMonth() + 1, 0).getDate();
+  for(let blank = 0; blank < firstDay; blank++) dateGrid.appendChild(document.createElement('span'));
+  for(let day = 1; day <= daysInMonth; day++){
+    const date = new Date(calendarMonth.getFullYear(), calendarMonth.getMonth(), day);
+    const isoDate = toIsoDate(date);
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'date-day';
+    button.textContent = day;
+    button.disabled = isoDate < today || (rangeStart && !rangeEnd && isoDate < rangeStart);
+    if(isoDate === rangeStart) button.classList.add('is-start');
+    if(isoDate === rangeEnd) button.classList.add('is-end');
+    if(rangeStart && rangeEnd && isoDate > rangeStart && isoDate < rangeEnd) button.classList.add('is-between');
+    button.addEventListener('click', () => {
+      if(!rangeStart || rangeEnd){
+        rangeStart = isoDate;
+        rangeEnd = '';
+        checkinInput.value = rangeStart;
+        checkoutInput.value = '';
+        dateRangeHint.textContent = 'Pilih tanggal check-out';
+      } else {
+        rangeEnd = isoDate;
+        checkoutInput.value = rangeEnd;
+        dateRangeHint.textContent = 'Rentang tanggal sudah dipilih';
+        dateRangePopover.hidden = true;
+        dateRangeTrigger.classList.remove('active');
+      }
+      dateRangeTrigger.textContent = `${displayDate(rangeStart)} - ${displayDate(rangeEnd)}`;
+      renderDateCalendar();
+    });
+    dateGrid.appendChild(button);
+  }
+}
+
+dateRangeTrigger.addEventListener('click', () => {
+  dateRangePopover.hidden = !dateRangePopover.hidden;
+  dateRangeTrigger.classList.toggle('active', !dateRangePopover.hidden);
+  if(!dateRangePopover.hidden) renderDateCalendar();
 });
+document.getElementById('datePrev').addEventListener('click', () => {
+  calendarMonth = new Date(calendarMonth.getFullYear(), calendarMonth.getMonth() - 1, 1);
+  renderDateCalendar();
+});
+document.getElementById('dateNext').addEventListener('click', () => {
+  calendarMonth = new Date(calendarMonth.getFullYear(), calendarMonth.getMonth() + 1, 1);
+  renderDateCalendar();
+});
+document.addEventListener('click', (event) => {
+  if(!document.getElementById('dateRangePicker').contains(event.target)){
+    dateRangePopover.hidden = true;
+    dateRangeTrigger.classList.remove('active');
+  }
+});
+renderDateCalendar();
 
 document.getElementById('bookingForm').addEventListener('submit', (e) => {
   e.preventDefault();
   const checkin = document.getElementById('checkin').value;
   const checkout = document.getElementById('checkout').value;
   const type = document.getElementById('propType').value;
+  const minimumPrice = Number(minPriceControl.value);
+  const maximumPrice = Number(maxPriceControl.value);
   if(!checkin || !checkout){
     alert('Mohon pilih tanggal check-in dan check-out terlebih dahulu.');
     return;
   }
-  if(type){
-    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-    document.querySelector(`.filter-btn[data-filter="${type}"]`).classList.add('active');
-    renderProperties(type);
-  }
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  const activeFilter = type || 'all';
+  document.querySelector(`.filter-btn[data-filter="${activeFilter}"]`).classList.add('active');
+  renderProperties(activeFilter, minimumPrice, maximumPrice);
   document.getElementById('properties').scrollIntoView({behavior:'smooth'});
   setTimeout(() => {
-    alert(`Terima kasih! ${type ? 'Properti telah difilter' : 'Menampilkan semua properti'}. Pilih unit favorit Anda dan klik "Booking Sekarang" untuk konfirmasi via WhatsApp/Instagram @yourhomeapartment.`);
+    const bookingDetails = selectedBooking ? ` Pilihan Anda: ${selectedBooking.property} - ${selectedBooking.room} (${formatPrice(selectedBooking.price)}/bulan).` : '';
+    alert(`Terima kasih! ${type ? 'Properti telah difilter' : 'Menampilkan semua properti'}.${bookingDetails} Pilih unit favorit Anda dan klik "Booking Sekarang" untuk konfirmasi via WhatsApp/Instagram @yourhomeapartment.`);
   }, 700);
 });
 
