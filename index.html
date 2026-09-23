@@ -1,0 +1,1066 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>YOUR HOME — Comfort in Every Corner of Bandung</title>
+<meta name="description" content="YOUR HOME — Sewa apartemen, villa, dan guest house terbaik di Bandung. Sudirman Suites, Villa Alam, Villa Aurum, dan banyak lagi." />
+
+<!-- Fonts -->
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+
+<style>
+/* ============================================================
+   YOUR HOME — Modern Tropical Theme
+   Palette derived from Villa Ferrum PDF:
+   - Cream / Sand backgrounds
+   - Terracotta + deep coffee accents
+   - Sage / forest green natural accent
+   - Charcoal text
+   ============================================================ */
+
+:root{
+  --cream:        #FAF7F2;
+  --cream-deep:   #F1ECE2;
+  --sand:         #E8E0D2;
+  --terracotta:   #A0522D;
+  --terracotta-d: #8B4513;
+  --coffee:       #5C4033;
+  --coffee-d:     #3E2723;
+  --charcoal:     #2C2620;
+  --sage:         #6B8E5A;
+  --forest:       #3F5A3A;
+  --white:        #FFFFFF;
+  --grey:         #8C857C;
+  --grey-l:       #D9D3C8;
+  --shadow:       0 10px 30px rgba(60, 40, 25, .10);
+  --shadow-lg:    0 20px 60px rgba(60, 40, 25, .15);
+  --radius:       16px;
+  --radius-sm:    10px;
+  --trans:        .35s cubic-bezier(.2,.7,.3,1);
+  --max:          1240px;
+}
+
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  font-family:'Poppins', system-ui, sans-serif;
+  background:var(--cream);
+  color:var(--charcoal);
+  line-height:1.65;
+  overflow-x:hidden;
+  font-weight:400;
+}
+h1,h2,h3,h4{font-family:'Playfair Display', Georgia, serif;font-weight:600;line-height:1.2;color:var(--coffee-d);letter-spacing:-.01em}
+h1{font-size:clamp(2.4rem, 6vw, 4.6rem)}
+h2{font-size:clamp(1.9rem, 4vw, 2.9rem)}
+h3{font-size:clamp(1.25rem,2vw,1.55rem)}
+p{color:var(--grey)}
+a{color:inherit;text-decoration:none}
+img{max-width:100%;display:block}
+ul{list-style:none}
+button{font-family:inherit;cursor:pointer;border:none;background:none}
+.container{max-width:var(--max);margin:0 auto;padding:0 24px}
+.section{padding:90px 0}
+.btn{
+  display:inline-flex;align-items:center;gap:.55rem;
+  padding:14px 28px;border-radius:50px;
+  font-weight:600;font-size:.92rem;letter-spacing:.02em;
+  transition:var(--trans);
+  border:1.5px solid transparent;
+}
+.btn-primary{background:var(--terracotta);color:var(--white)}
+.btn-primary:hover{background:var(--coffee-d);transform:translateY(-2px);box-shadow:0 12px 24px rgba(92,64,51,.25)}
+.btn-outline{background:transparent;color:var(--coffee-d);border-color:var(--coffee)}
+.btn-outline:hover{background:var(--coffee-d);color:var(--white)}
+.btn-white{background:var(--white);color:var(--coffee-d)}
+.btn-white:hover{background:var(--cream-deep);transform:translateY(-2px)}
+.eyebrow{
+  display:inline-flex;align-items:center;gap:.5rem;
+  font-family:'Poppins',sans-serif;font-weight:600;
+  font-size:.78rem;letter-spacing:.22em;text-transform:uppercase;
+  color:var(--terracotta);margin-bottom:1rem;
+}
+.eyebrow::before{content:"";width:30px;height:1.5px;background:var(--terracotta)}
+.section-head{text-align:center;max-width:720px;margin:0 auto 56px}
+.section-head p{margin-top:14px;font-size:1.02rem}
+
+/* ============== NAVBAR ============== */
+.navbar{
+  position:fixed;top:0;left:0;right:0;z-index:100;
+  padding:18px 0;transition:var(--trans);
+  background:transparent;
+}
+.navbar.scrolled{
+  background:rgba(250,247,242,.95);
+  backdrop-filter:blur(12px);
+  box-shadow:0 4px 20px rgba(60,40,25,.06);
+  padding:12px 0;
+}
+.nav-inner{display:flex;align-items:center;justify-content:space-between}
+.logo{display:flex;align-items:center;gap:.65rem;font-family:'Playfair Display',serif}
+.logo-mark{
+  width:42px;height:42px;border-radius:50%;
+  background:var(--coffee-d);color:var(--cream);
+  display:flex;align-items:center;justify-content:center;
+  font-weight:700;font-size:1.1rem;letter-spacing:-.02em;
+  border:2px solid var(--terracotta);
+}
+.logo-text{display:flex;flex-direction:column;line-height:1.05}
+.logo-text strong{font-size:1.25rem;color:var(--coffee-d);font-weight:700;letter-spacing:.05em}
+.logo-text small{font-size:.62rem;letter-spacing:.2em;color:var(--terracotta);font-family:'Poppins',sans-serif;font-weight:500;text-transform:uppercase}
+.nav-links{display:flex;gap:36px;align-items:center}
+.nav-links a{font-size:.93rem;font-weight:500;color:var(--coffee-d);position:relative;transition:var(--trans)}
+.nav-links a::after{content:"";position:absolute;left:0;bottom:-6px;width:0;height:1.5px;background:var(--terracotta);transition:var(--trans)}
+.nav-links a:hover{color:var(--terracotta)}
+.nav-links a:hover::after{width:100%}
+.nav-cta{display:flex;align-items:center;gap:14px}
+.menu-toggle{display:none;font-size:1.6rem;color:var(--coffee-d);background:transparent}
+
+/* ============== HERO ============== */
+.hero{
+  position:relative;min-height:100vh;display:flex;align-items:center;
+  padding:140px 0 80px;
+  background:
+    linear-gradient(180deg, rgba(60,40,25,.55) 0%, rgba(60,40,25,.35) 50%, rgba(60,40,25,.75) 100%),
+    url('https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&w=1920&q=80') center/cover no-repeat;
+  color:var(--white);
+}
+.hero::after{
+  content:"";position:absolute;inset:0;
+  background:radial-gradient(ellipse at top right, rgba(160,82,45,.25), transparent 50%);
+  pointer-events:none;
+}
+.hero-content{position:relative;z-index:2;max-width:760px}
+.hero .eyebrow{color:#F4D1B0}
+.hero .eyebrow::before{background:#F4D1B0}
+.hero h1{color:var(--white);margin-bottom:1.2rem}
+.hero h1 em{font-style:italic;color:#F4D1B0;font-weight:500}
+.hero-tagline{font-size:1.25rem;color:rgba(255,255,255,.92);margin-bottom:2.2rem;max-width:560px;font-weight:300}
+.hero-actions{display:flex;gap:16px;flex-wrap:wrap;align-items:center;margin-bottom:3rem}
+.hero-stats{display:flex;gap:40px;flex-wrap:wrap}
+.hero-stat strong{display:block;font-family:'Playfair Display',serif;font-size:2.2rem;color:#F4D1B0;line-height:1}
+.hero-stat span{font-size:.82rem;color:rgba(255,255,255,.8);letter-spacing:.05em;text-transform:uppercase;margin-top:.3rem;display:block}
+.hero-scroll{
+  position:absolute;bottom:30px;left:50%;transform:translateX(-50%);
+  color:rgba(255,255,255,.7);font-size:.75rem;letter-spacing:.2em;text-transform:uppercase;
+  display:flex;flex-direction:column;align-items:center;gap:.5rem;
+}
+.hero-scroll::after{content:"";width:1px;height:36px;background:rgba(255,255,255,.4);animation:scrolldown 2s infinite}
+@keyframes scrolldown{0%,100%{transform:scaleY(.4);transform-origin:top}50%{transform:scaleY(1);transform-origin:top}}
+
+/* ============== BOOKING WIDGET ============== */
+.booking-widget{
+  position:relative;z-index:5;
+  background:var(--white);border-radius:var(--radius);
+  box-shadow:var(--shadow-lg);
+  padding:28px;margin:-70px auto 0;max-width:var(--max);
+  display:grid;grid-template-columns:repeat(4,1fr) auto;gap:18px;align-items:end;
+}
+.bw-field{display:flex;flex-direction:column;gap:.4rem}
+.bw-field label{font-size:.72rem;letter-spacing:.15em;text-transform:uppercase;color:var(--grey);font-weight:600}
+.bw-field input, .bw-field select{
+  border:1.5px solid var(--grey-l);border-radius:var(--radius-sm);
+  padding:11px 14px;font-family:inherit;font-size:.92rem;color:var(--coffee-d);
+  background:var(--cream);transition:var(--trans);
+}
+.bw-field input:focus, .bw-field select:focus{outline:none;border-color:var(--terracotta);background:var(--white)}
+.bw-submit{padding:13px 28px;height:48px}
+
+/* ============== FEATURED ============== */
+.featured{padding-top:120px}
+.featured-grid{display:grid;grid-template-columns:1.4fr 1fr 1fr;grid-template-rows:340px 340px;gap:20px}
+.feat-card{
+  position:relative;border-radius:var(--radius);overflow:hidden;
+  cursor:pointer;transition:var(--trans);
+}
+.feat-card:nth-child(1){grid-row:1/3}
+.feat-card img{width:100%;height:100%;object-fit:cover;transition:var(--trans)}
+.feat-card:hover img{transform:scale(1.06)}
+.feat-card::after{
+  content:"";position:absolute;inset:0;
+  background:linear-gradient(180deg, transparent 40%, rgba(60,40,25,.85) 100%);
+}
+.feat-info{position:absolute;bottom:0;left:0;right:0;padding:28px;color:var(--white);z-index:2}
+.feat-tag{
+  display:inline-block;background:var(--terracotta);color:var(--white);
+  padding:5px 12px;border-radius:50px;font-size:.7rem;letter-spacing:.12em;
+  text-transform:uppercase;font-weight:600;margin-bottom:10px;
+}
+.feat-info h3{color:var(--white);margin-bottom:6px}
+.feat-info p{color:rgba(255,255,255,.85);font-size:.88rem}
+.feat-price{position:absolute;top:18px;right:18px;background:rgba(255,255,255,.92);color:var(--coffee-d);padding:7px 14px;border-radius:50px;font-size:.78rem;font-weight:600;z-index:2}
+
+/* ============== PROPERTIES ============== */
+.props{background:var(--cream-deep)}
+.filter-bar{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-bottom:48px}
+.filter-btn{
+  padding:9px 22px;border-radius:50px;
+  font-size:.85rem;font-weight:500;color:var(--coffee-d);
+  background:var(--white);border:1.5px solid var(--grey-l);
+  transition:var(--trans);
+}
+.filter-btn:hover{border-color:var(--terracotta);color:var(--terracotta)}
+.filter-btn.active{background:var(--coffee-d);color:var(--white);border-color:var(--coffee-d)}
+
+.props-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:28px}
+.prop-card{
+  background:var(--white);border-radius:var(--radius);overflow:hidden;
+  box-shadow:var(--shadow);transition:var(--trans);
+  display:flex;flex-direction:column;
+}
+.prop-card:hover{transform:translateY(-6px);box-shadow:var(--shadow-lg)}
+.prop-img{position:relative;height:240px;overflow:hidden}
+.prop-img img{width:100%;height:100%;object-fit:cover;transition:var(--trans)}
+.prop-card:hover .prop-img img{transform:scale(1.08)}
+.prop-cat{
+  position:absolute;top:14px;left:14px;
+  background:rgba(255,255,255,.92);color:var(--coffee-d);
+  padding:5px 13px;border-radius:50px;font-size:.7rem;
+  font-weight:600;letter-spacing:.08em;text-transform:uppercase;
+}
+.prop-fav{
+  position:absolute;top:14px;right:14px;width:36px;height:36px;
+  background:rgba(255,255,255,.92);border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  color:var(--terracotta);font-size:1rem;transition:var(--trans);
+}
+.prop-fav:hover{background:var(--terracotta);color:var(--white)}
+.prop-body{padding:22px 22px 24px;flex:1;display:flex;flex-direction:column}
+.prop-body h3{margin-bottom:6px;font-size:1.25rem}
+.prop-loc{display:flex;align-items:center;gap:6px;color:var(--grey);font-size:.85rem;margin-bottom:14px}
+.prop-loc svg{width:14px;height:14px;flex-shrink:0;fill:var(--terracotta)}
+.prop-features{display:flex;gap:14px;color:var(--coffee);font-size:.82rem;margin-bottom:18px;flex-wrap:wrap}
+.prop-features span{display:flex;align-items:center;gap:5px}
+.prop-features svg{width:14px;height:14px;fill:var(--sage)}
+.prop-foot{display:flex;justify-content:space-between;align-items:center;margin-top:auto;padding-top:16px;border-top:1px solid var(--grey-l)}
+.prop-price{font-family:'Playfair Display',serif;font-size:1.35rem;color:var(--terracotta);font-weight:600}
+.prop-price small{font-family:'Poppins',sans-serif;font-size:.72rem;color:var(--grey);font-weight:400;display:block;margin-top:-2px}
+.prop-detail{font-size:.82rem;font-weight:600;color:var(--coffee-d);display:flex;align-items:center;gap:5px;transition:var(--trans)}
+.prop-detail:hover{color:var(--terracotta);gap:9px}
+.no-results{grid-column:1/-1;text-align:center;padding:60px;color:var(--grey)}
+
+/* ============== ABOUT ============== */
+.about{padding:100px 0}
+.about-grid{display:grid;grid-template-columns:1fr 1fr;gap:80px;align-items:center}
+.about-imgs{position:relative;height:540px}
+.about-imgs img{position:absolute;border-radius:var(--radius);object-fit:cover;box-shadow:var(--shadow-lg)}
+.about-imgs img:nth-child(1){width:70%;height:75%;top:0;left:0;z-index:1}
+.about-imgs img:nth-child(2){width:55%;height:55%;bottom:0;right:0;z-index:2;border:8px solid var(--cream)}
+.about-badge{
+  position:absolute;top:30px;right:-20px;z-index:3;
+  background:var(--terracotta);color:var(--white);
+  width:120px;height:120px;border-radius:50%;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  text-align:center;padding:14px;box-shadow:var(--shadow-lg);
+}
+.about-badge strong{font-family:'Playfair Display',serif;font-size:2rem;line-height:1}
+.about-badge span{font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;margin-top:4px}
+.about-text h2{margin-bottom:1.4rem}
+.about-text p{margin-bottom:1rem;font-size:1rem}
+.about-features{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:32px}
+.about-feat{display:flex;gap:14px;align-items:flex-start}
+.about-feat-icon{
+  width:46px;height:46px;border-radius:12px;
+  background:var(--cream-deep);color:var(--terracotta);
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+.about-feat-icon svg{width:22px;height:22px;fill:var(--terracotta)}
+.about-feat h4{font-family:'Poppins',sans-serif;font-size:.95rem;margin-bottom:3px;color:var(--coffee-d)}
+.about-feat p{font-size:.83rem;margin:0;color:var(--grey)}
+
+/* ============== EXPERIENCE / BANDUNG ============== */
+.experience{
+  padding:100px 0;
+  background:
+    linear-gradient(180deg, rgba(60,40,25,.78), rgba(60,40,25,.78)),
+    url('https://images.unsplash.com/photo-1537953773345-d172ccf13cf1?auto=format&fit=crop&w=1920&q=80') center/cover fixed;
+  color:var(--white);
+}
+.experience .section-head h2{color:var(--white)}
+.experience .section-head p{color:rgba(255,255,255,.85)}
+.exp-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:24px}
+.exp-card{
+  text-align:center;padding:32px 24px;
+  background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);
+  border-radius:var(--radius);backdrop-filter:blur(8px);transition:var(--trans);
+}
+.exp-card:hover{background:rgba(255,255,255,.12);transform:translateY(-4px)}
+.exp-icon{
+  width:64px;height:64px;border-radius:50%;
+  background:var(--terracotta);color:var(--white);
+  display:flex;align-items:center;justify-content:center;
+  margin:0 auto 18px;
+}
+.exp-icon svg{width:28px;height:28px;fill:var(--white)}
+.exp-card h4{color:var(--white);font-family:'Poppins',sans-serif;font-size:1.05rem;margin-bottom:8px}
+.exp-card p{color:rgba(255,255,255,.8);font-size:.86rem;margin:0}
+
+/* ============== TESTIMONIALS ============== */
+.testi{padding:100px 0;background:var(--cream)}
+.testi-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:28px}
+.testi-card{
+  background:var(--white);padding:32px;border-radius:var(--radius);
+  box-shadow:var(--shadow);position:relative;
+}
+.testi-card::before{
+  content:"\201C";position:absolute;top:-10px;left:24px;
+  font-family:'Playfair Display',serif;font-size:5rem;color:var(--terracotta);
+  line-height:1;opacity:.35;
+}
+.testi-stars{color:var(--terracotta);font-size:.95rem;margin-bottom:14px;letter-spacing:2px}
+.testi-text{font-size:.95rem;color:var(--coffee);margin-bottom:22px;font-style:italic;line-height:1.7}
+.testi-author{display:flex;align-items:center;gap:12px}
+.testi-avatar{
+  width:48px;height:48px;border-radius:50%;
+  background:var(--terracotta);color:var(--white);
+  display:flex;align-items:center;justify-content:center;
+  font-weight:600;font-family:'Playfair Display',serif;
+}
+.testi-author strong{display:block;font-size:.95rem;color:var(--coffee-d);font-weight:600}
+.testi-author span{font-size:.8rem;color:var(--grey)}
+
+/* ============== CTA ============== */
+.cta{
+  padding:90px 0;
+  background:linear-gradient(135deg, var(--coffee-d), var(--coffee));
+  color:var(--white);position:relative;overflow:hidden;
+}
+.cta::before, .cta::after{
+  content:"";position:absolute;border-radius:50%;
+  background:rgba(160,82,45,.25);
+}
+.cta::before{width:400px;height:400px;top:-200px;right:-100px}
+.cta::after{width:300px;height:300px;bottom:-150px;left:-80px;background:rgba(107,142,90,.18)}
+.cta-inner{position:relative;z-index:2;text-align:center;max-width:760px;margin:0 auto}
+.cta h2{color:var(--white);margin-bottom:1rem}
+.cta p{color:rgba(255,255,255,.85);font-size:1.1rem;margin-bottom:2rem}
+.cta-actions{display:flex;gap:16px;justify-content:center;flex-wrap:wrap}
+
+/* ============== FOOTER ============== */
+.footer{background:var(--coffee-d);color:rgba(255,255,255,.75);padding:70px 0 30px}
+.footer-grid{display:grid;grid-template-columns:1.4fr 1fr 1fr 1.2fr;gap:48px;margin-bottom:50px}
+.footer-brand .logo-text strong{color:var(--white)}
+.footer-brand p{color:rgba(255,255,255,.65);font-size:.9rem;margin:20px 0 22px;max-width:320px}
+.social-row{display:flex;gap:12px}
+.social-row a{
+  width:40px;height:40px;border-radius:50%;
+  background:rgba(255,255,255,.08);color:var(--white);
+  display:flex;align-items:center;justify-content:center;
+  font-size:.9rem;transition:var(--trans);
+}
+.social-row a:hover{background:var(--terracotta);transform:translateY(-3px)}
+.social-row svg{width:18px;height:18px;fill:currentColor}
+.footer-col h4{color:var(--white);font-family:'Poppins',sans-serif;font-size:1rem;margin-bottom:18px;letter-spacing:.03em}
+.footer-col ul li{margin-bottom:10px}
+.footer-col ul li a{color:rgba(255,255,255,.65);font-size:.9rem;transition:var(--trans)}
+.footer-col ul li a:hover{color:var(--terracotta);padding-left:5px}
+.footer-contact li{display:flex;gap:10px;align-items:flex-start;margin-bottom:14px;font-size:.88rem;color:rgba(255,255,255,.7)}
+.footer-contact svg{width:16px;height:16px;fill:var(--terracotta);flex-shrink:0;margin-top:3px}
+.footer-bottom{
+  border-top:1px solid rgba(255,255,255,.1);
+  padding-top:24px;display:flex;justify-content:space-between;
+  align-items:center;flex-wrap:wrap;gap:12px;
+  font-size:.83rem;color:rgba(255,255,255,.55);
+}
+.footer-bottom a{color:rgba(255,255,255,.65)}
+.footer-bottom a:hover{color:var(--terracotta)}
+
+/* ============== MODAL ============== */
+.modal-overlay{
+  position:fixed;inset:0;z-index:200;
+  background:rgba(60,40,25,.75);backdrop-filter:blur(6px);
+  display:none;align-items:center;justify-content:center;padding:24px;
+}
+.modal-overlay.active{display:flex}
+.modal{
+  background:var(--white);border-radius:var(--radius);
+  max-width:560px;width:100%;max-height:90vh;overflow-y:auto;
+  box-shadow:var(--shadow-lg);
+}
+.modal-close{
+  position:absolute;top:16px;right:16px;z-index:5;
+  width:38px;height:38px;border-radius:50%;background:var(--white);
+  display:flex;align-items:center;justify-content:center;
+  font-size:1.4rem;color:var(--coffee-d);box-shadow:var(--shadow);
+}
+.modal-img{height:240px;position:relative;overflow:hidden;border-radius:var(--radius) var(--radius) 0 0}
+.modal-img img{width:100%;height:100%;object-fit:cover}
+.modal-body{padding:28px}
+.modal-body h3{margin-bottom:6px}
+.modal-loc{color:var(--grey);font-size:.88rem;margin-bottom:18px;display:flex;align-items:center;gap:6px}
+.modal-features{display:flex;gap:18px;flex-wrap:wrap;padding:16px;background:var(--cream);border-radius:var(--radius-sm);margin-bottom:18px}
+.modal-features span{display:flex;align-items:center;gap:6px;font-size:.85rem;color:var(--coffee);font-weight:500}
+.modal-features svg{width:16px;height:16px;fill:var(--terracotta)}
+.modal-desc{font-size:.92rem;color:var(--coffee);margin-bottom:20px;line-height:1.7}
+.modal-price-row{display:flex;justify-content:space-between;align-items:center;padding-top:18px;border-top:1px solid var(--grey-l)}
+.modal-price{font-family:'Playfair Display',serif;font-size:1.8rem;color:var(--terracotta);font-weight:600}
+.modal-price small{font-family:'Poppins',sans-serif;font-size:.75rem;color:var(--grey);display:block;font-weight:400}
+
+/* ============== RESPONSIVE ============== */
+@media (max-width: 1024px){
+  .featured-grid{grid-template-columns:1fr 1fr;grid-template-rows:auto}
+  .feat-card:nth-child(1){grid-row:auto;grid-column:1/-1;height:340px}
+  .feat-card{height:280px}
+  .props-grid{grid-template-columns:repeat(2,1fr)}
+  .exp-grid{grid-template-columns:repeat(2,1fr)}
+  .testi-grid{grid-template-columns:1fr}
+  .footer-grid{grid-template-columns:1fr 1fr;gap:32px}
+  .about-grid{grid-template-columns:1fr;gap:60px}
+  .about-imgs{height:480px}
+  .booking-widget{grid-template-columns:1fr 1fr;gap:14px}
+  .bw-submit{grid-column:1/-1;justify-self:start}
+}
+@media (max-width: 720px){
+  .section{padding:60px 0}
+  .nav-links{display:none}
+  .menu-toggle{display:block}
+  .nav-links.open{
+    display:flex;flex-direction:column;
+    position:absolute;top:100%;left:0;right:0;
+    background:var(--cream);padding:24px;gap:18px;
+    box-shadow:var(--shadow);
+  }
+  .hero{padding:120px 0 60px;text-align:center}
+  .hero-content{margin:0 auto}
+  .hero-actions{justify-content:center}
+  .hero-stats{justify-content:center;gap:24px}
+  .featured-grid{grid-template-columns:1fr}
+  .feat-card{height:240px}
+  .props-grid{grid-template-columns:1fr}
+  .exp-grid{grid-template-columns:1fr}
+  .booking-widget{grid-template-columns:1fr}
+  .about-features{grid-template-columns:1fr}
+  .footer-grid{grid-template-columns:1fr}
+  .footer-bottom{flex-direction:column;text-align:center}
+}
+
+/* fade-in animation */
+.fade-in{opacity:0;transform:translateY(30px);transition:opacity .8s ease, transform .8s ease}
+.fade-in.visible{opacity:1;transform:translateY(0)}
+</style>
+</head>
+<body>
+
+<!-- ============== NAVBAR ============== -->
+<nav class="navbar" id="navbar">
+  <div class="container nav-inner">
+    <a href="#home" class="logo">
+      <div class="logo-mark">Y</div>
+      <div class="logo-text">
+        <strong>YOUR HOME</strong>
+        <small>Bandung Stays</small>
+      </div>
+    </a>
+    <ul class="nav-links" id="navLinks">
+      <li><a href="#home">Beranda</a></li>
+      <li><a href="#properties">Properti</a></li>
+      <li><a href="#about">Tentang</a></li>
+      <li><a href="#experience">Bandung</a></li>
+      <li><a href="#contact">Kontak</a></li>
+    </ul>
+    <div class="nav-cta">
+      <a href="#booking" class="btn btn-primary">Book Now</a>
+      <button class="menu-toggle" id="menuToggle" aria-label="Menu">&#9776;</button>
+    </div>
+  </div>
+</nav>
+
+<!-- ============== HERO ============== -->
+<section class="hero" id="home">
+  <div class="container hero-content">
+    <span class="eyebrow">Sewa Properti Premium di Bandung</span>
+    <h1>YOUR <em>HOME</em><br/>Comfort in Every<br/>Corner of Bandung</h1>
+    <p class="hero-tagline">Dari apartemen modern di jantung kota hingga villa alam di Lembang yang sejuk — temukan tempat menginap sempurna Anda bersama kami.</p>
+    <div class="hero-actions">
+      <a href="#properties" class="btn btn-primary">Jelajahi Properti</a>
+      <a href="#booking" class="btn btn-outline" style="color:#fff;border-color:rgba(255,255,255,.5)">Cek Ketersediaan</a>
+    </div>
+    <div class="hero-stats">
+      <div class="hero-stat"><strong>19+</strong><span>Properti Pilihan</span></div>
+      <div class="hero-stat"><strong>5★</strong><span>Rating Tamu</span></div>
+      <div class="hero-stat"><strong>24/7</strong><span>Layanan Tamu</span></div>
+      <div class="hero-stat"><strong>Bandung</strong><span>Lokasi Strategis</span></div>
+    </div>
+  </div>
+  <div class="hero-scroll">Scroll</div>
+</section>
+
+<!-- ============== BOOKING WIDGET ============== -->
+<section id="booking">
+  <div class="container">
+    <form class="booking-widget" id="bookingForm">
+      <div class="bw-field">
+        <label>Check-in</label>
+        <input type="date" id="checkin" required />
+      </div>
+      <div class="bw-field">
+        <label>Check-out</label>
+        <input type="date" id="checkout" required />
+      </div>
+      <div class="bw-field">
+        <label>Tamu</label>
+        <select id="guests">
+          <option>1 Tamu</option>
+          <option selected>2 Tamu</option>
+          <option>3 Tamu</option>
+          <option>4 Tamu</option>
+          <option>5+ Tamu</option>
+        </select>
+      </div>
+      <div class="bw-field">
+        <label>Lokasi / Tipe</label>
+        <select id="propType">
+          <option value="">Semua Properti</option>
+          <option value="apartment">Apartemen</option>
+          <option value="villa">Villa</option>
+          <option value="guesthouse">Guest House</option>
+          <option value="kos">Kosan</option>
+        </select>
+      </div>
+      <button type="submit" class="btn btn-primary bw-submit">Cari</button>
+    </form>
+  </div>
+</section>
+
+<!-- ============== FEATURED ============== -->
+<section class="featured section">
+  <div class="container">
+    <div class="section-head">
+      <span class="eyebrow" style="justify-content:center">Pilihan Unggulan</span>
+      <h2>Properti Pilihan Tamu</h2>
+      <p>Properti paling populer dengan rating tertinggi dari tamu YOUR HOME di seluruh Bandung.</p>
+    </div>
+    <div class="featured-grid">
+      <div class="feat-card" data-id="villa-aurum">
+        <img src="https://images.unsplash.com/photo-1564013799919-ab600027ffc6?auto=format&fit=crop&w=1200&q=80" alt="Villa Aurum" />
+        <span class="feat-price">Rp 2.5jt / malam</span>
+        <div class="feat-info">
+          <span class="feat-tag">Villa Mewah</span>
+          <h3>Villa Aurum</h3>
+          <p>Lembang, Bandung — Kapasitas 12 tamu dengan pemandangan pegunungan</p>
+        </div>
+      </div>
+      <div class="feat-card" data-id="sudirman-18">
+        <img src="https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?auto=format&fit=crop&w=800&q=80" alt="Sudirman Suites" />
+        <span class="feat-price">Rp 850rb / malam</span>
+        <div class="feat-info">
+          <span class="feat-tag">Apartemen</span>
+          <h3>Lantai 18 Sudirman Suites</h3>
+          <p>Pusat Kota Bandung</p>
+        </div>
+      </div>
+      <div class="feat-card" data-id="villa-alam-12">
+        <img src="https://images.unsplash.com/photo-1518733057094-95b53143d2a7?auto=format&fit=crop&w=800&q=80" alt="Villa Alam" />
+        <span class="feat-price">Rp 1.8jt / malam</span>
+        <div class="feat-info">
+          <span class="feat-tag">Villa Alam</span>
+          <h3>Villa Alam 1 & 2</h3>
+          <p>Lembang, Bandung</p>
+        </div>
+      </div>
+      <div class="feat-card" data-id="villa-de-bukit">
+        <img src="https://images.unsplash.com/photo-1613977258367-862d7ad4aaaa?auto=format&fit=crop&w=800&q=80" alt="Villa De Bukit Dago" />
+        <span class="feat-price">Rp 3.2jt / malam</span>
+        <div class="feat-info">
+          <span class="feat-tag">Villa Eksklusif</span>
+          <h3>Villa De Bukit Dago</h3>
+          <p>Dago Atas, Bandung</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============== PROPERTIES ============== -->
+<section class="props section" id="properties">
+  <div class="container">
+    <div class="section-head">
+      <span class="eyebrow" style="justify-content:center">Semua Properti</span>
+      <h2>Pilihan Akomodasi di Bandung</h2>
+      <p>Total 19 properti tersebar di Bandung dan sekitarnya — apartemen, villa, guest house, hingga kosan eksklusif.</p>
+    </div>
+    <div class="filter-bar" id="filterBar">
+      <button class="filter-btn active" data-filter="all">Semua</button>
+      <button class="filter-btn" data-filter="apartment">Apartemen</button>
+      <button class="filter-btn" data-filter="villa">Villa</button>
+      <button class="filter-btn" data-filter="guesthouse">Guest House</button>
+      <button class="filter-btn" data-filter="kos">Kosan</button>
+    </div>
+    <div class="props-grid" id="propsGrid">
+      <!-- Properties will be injected here by JavaScript -->
+    </div>
+  </div>
+</section>
+
+<!-- ============== ABOUT ============== -->
+<section class="about" id="about">
+  <div class="container about-grid">
+    <div class="about-imgs">
+      <img src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=800&q=80" alt="Interior villa" />
+      <img src="https://images.unsplash.com/photo-1583847268964-b28dc8f51f92?auto=format&fit=crop&w=600&q=80" alt="Detail villa" />
+      <div class="about-badge">
+        <strong>5★</strong>
+        <span>Rating Tamu</span>
+      </div>
+    </div>
+    <div class="about-text">
+      <span class="eyebrow">Tentang YOUR HOME</span>
+      <h2>Menginap di Bandung, Rasanya di Rumah Sendiri</h2>
+      <p>YOUR HOME hadir untuk memberikan pengalaman menginap terbaik di setiap sudut Bandung. Dari apartemen strategis di Sudirman Suites hingga villa alam di Lembang yang sejuk, setiap properti kami dipilih dengan teliti untuk memastikan kenyamanan Anda.</p>
+      <p>Kami percaya bahwa setiap perjalanan layak diakhiri dengan istirahat yang berkualitas. Itulah mengapa setiap properti YOUR HOME dilengkapi dengan fasilitas modern, kebersihan terjaga, dan sentuhan hangat khas rumah — agar Anda benar-benar merasakan "comfort in every corner".</p>
+      <div class="about-features">
+        <div class="about-feat">
+          <div class="about-feat-icon">
+            <svg viewBox="0 0 24 24"><path d="M12 2l3 7h7l-5.5 4 2 7-6.5-4.5L6 20l2-7L2 9h7z"/></svg>
+          </div>
+          <div><h4>Properti Pilihan</h4><p>19+ properti kurasi terbaik</p></div>
+        </div>
+        <div class="about-feat">
+          <div class="about-feat-icon">
+            <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+          </div>
+          <div><h4>Layanan 24/7</h4><p>Tim tamu siap membantu kapan saja</p></div>
+        </div>
+        <div class="about-feat">
+          <div class="about-feat-icon">
+            <svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z"/></svg>
+          </div>
+          <div><h4>Booking Aman</h4><p>Pembayaran terjamin & fleksibel</p></div>
+        </div>
+        <div class="about-feat">
+          <div class="about-feat-icon">
+            <svg viewBox="0 0 24 24"><path d="M21 6h-3.17L16 4h-6L8.17 6H5c-1.1 0-2 .9-2 2v11c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm-9 11c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z"/></svg>
+          </div>
+          <div><h4>Foto Asli</h4><p>Sesuai dengan kondisi sebenarnya</p></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============== EXPERIENCE / BANDUNG ============== -->
+<section class="experience" id="experience">
+  <div class="container">
+    <div class="section-head">
+      <span class="eyebrow" style="justify-content:center;color:#F4D1B0">Mengapa Bandung</span>
+      <h2>Pengalaman Bandung yang Tak Terlupakan</h2>
+      <p>Bandung menawarkan perpaduan sempurna antara udara sejuk pegunungan, kuliner khas, dan keramahan warga. YOUR HOME menempatkan Anda di jantung semua itu.</p>
+    </div>
+    <div class="exp-grid">
+      <div class="exp-card">
+        <div class="exp-icon">
+          <svg viewBox="0 0 24 24"><path d="M14 6l-3.75 5 2.85 3.8-1.6 1.2C9.81 13.75 7 10 7 10l-6 8h22L14 6z"/></svg>
+        </div>
+        <h4>Udara Sejuk</h4>
+        <p>Terletak di dataran tinggi 768 mdpl, Bandung menawarkan kesejukan sepanjang tahun.</p>
+      </div>
+      <div class="exp-card">
+        <div class="exp-icon">
+          <svg viewBox="0 0 24 24"><path d="M11 9H9V2H7v7H5V2H3v7c0 2.12 1.66 3.84 3.75 3.97V22h2.5v-9.03C11.34 12.84 13 11.12 13 9V2h-2v7zm5-3v8h2.5v8H21V2c-2.76 0-5 2.24-5 4z"/></svg>
+        </div>
+        <h4>Kuliner Khas</h4>
+        <p>Dari batagor kingsley hingga seblak Setiabudi — surga kuliner ada di setiap sudut kota.</p>
+      </div>
+      <div class="exp-card">
+        <div class="exp-icon">
+          <svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+        </div>
+        <h4>Lokasi Strategis</h4>
+        <p>Properti tersebar di Dago, Lembang, Sukajadi, hingga Kota Baru Parahyangan.</p>
+      </div>
+      <div class="exp-card">
+        <div class="exp-icon">
+          <svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+        </div>
+        <h4>Keramahan Lokal</h4>
+        <p>Tim lokal yang ramah dan siap membantu Anda merasakan Bandung seperti penduduk asli.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============== TESTIMONIALS ============== -->
+<section class="testi">
+  <div class="container">
+    <div class="section-head">
+      <span class="eyebrow" style="justify-content:center">Kata Tamu Kami</span>
+      <h2>Cerita Mereka di YOUR HOME</h2>
+    </div>
+    <div class="testi-grid">
+      <div class="testi-card">
+        <div class="testi-stars">★★★★★</div>
+        <p class="testi-text">"Menginap di Villa Aurum adalah pengalaman luar biasa. Pemandangannya spektakuler dan villanya sangat bersih. Pasti balik lagi!"</p>
+        <div class="testi-author">
+          <div class="testi-avatar">DW</div>
+          <div>
+            <strong>Dewi Wijaya</strong>
+            <span>Jakarta · Menginap di Villa Aurum</span>
+          </div>
+        </div>
+      </div>
+      <div class="testi-card">
+        <div class="testi-stars">★★★★★</div>
+        <p class="testi-text">"Sudirman Suites Lantai 18 lokasinya strategis banget, dekat ke semua tempat. Apartemennya nyaman dan fasilitas lengkap. Recommended!"</p>
+        <div class="testi-author">
+          <div class="testi-avatar">RH</div>
+          <div>
+            <strong>Rizky Hidayat</strong>
+            <span>Surabaya · Menginap di Sudirman Suites</span>
+          </div>
+        </div>
+      </div>
+      <div class="testi-card">
+        <div class="testi-stars">★★★★★</div>
+        <p class="testi-text">"Tim YOUR HOME sangat responsif. Check-in mudah, properti sesuai foto, dan harganya worth it. Layak jadi pilihan utama di Bandung."</p>
+        <div class="testi-author">
+          <div class="testi-avatar">AP</div>
+          <div>
+            <strong>Andi Pratama</strong>
+            <span>Bekasi · Menginap di Villa De Bukit Dago</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============== CTA ============== -->
+<section class="cta">
+  <div class="container cta-inner">
+    <span class="eyebrow" style="color:#F4D1B0;justify-content:center">Siap Berlibur?</span>
+    <h2>Rasakan Comfort in Every Corner of Bandung</h2>
+    <p>Pesan sekarang dan dapatkan pengalaman menginap tak terlupakan bersama YOUR HOME. Tim kami siap membantu Anda menemukan properti impian.</p>
+    <div class="cta-actions">
+      <a href="#booking" class="btn btn-white">Mulai Booking</a>
+      <a href="https://instagram.com/yourhomeapartment" target="_blank" class="btn btn-outline" style="color:#fff;border-color:rgba(255,255,255,.5)">Chat via Instagram</a>
+    </div>
+  </div>
+</section>
+
+<!-- ============== FOOTER ============== -->
+<footer class="footer" id="contact">
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <a href="#home" class="logo">
+          <div class="logo-mark">Y</div>
+          <div class="logo-text">
+            <strong>YOUR HOME</strong>
+            <small>Bandung Stays</small>
+          </div>
+        </a>
+        <p>Comfort in every corner of Bandung. Penyedia akomodasi premium terpercaya untuk liburan, bisnis, dan staycation Anda di kota Kembang.</p>
+        <div class="social-row">
+          <a href="https://instagram.com/yourhomeapartment" target="_blank" aria-label="Instagram">
+            <svg viewBox="0 0 24 24"><path d="M12 2.16c3.2 0 3.58.01 4.85.07 1.17.05 1.81.25 2.23.41.56.22.96.48 1.38.9.42.42.68.82.9 1.38.16.42.36 1.06.41 2.23.06 1.27.07 1.65.07 4.85s-.01 3.58-.07 4.85c-.05 1.17-.25 1.81-.41 2.23-.22.56-.48.96-.9 1.38-.42.42-.82.68-1.38.9-.42.16-1.06.36-2.23.41-1.27.06-1.65.07-4.85.07s-3.58-.01-4.85-.07c-1.17-.05-1.81-.25-2.23-.41-.56-.22-.96-.48-1.38-.9-.42-.42-.68-.82-.9-1.38-.16-.42-.36-1.06-.41-2.23C2.17 15.58 2.16 15.2 2.16 12s.01-3.58.07-4.85c.05-1.17.25-1.81.41-2.23.22-.56.48-.96.9-1.38.42-.42.82-.68 1.38-.9.42-.16 1.06-.36 2.23-.41C8.42 2.17 8.8 2.16 12 2.16zm0 3.68A6.16 6.16 0 1 0 18.16 12 6.16 6.16 0 0 0 12 5.84zm0 10.16A4 4 0 1 1 16 12a4 4 0 0 1-4 4zm6.4-10.4a1.44 1.44 0 1 1-1.44-1.44 1.44 1.44 0 0 1 1.44 1.44z"/></svg>
+          </a>
+          <a href="#" aria-label="WhatsApp">
+            <svg viewBox="0 0 24 24"><path d="M.06 24l1.68-6.16A11.87 11.87 0 0 1 .15 11.9C.15 5.34 5.48 0 12.05 0a11.82 11.82 0 0 1 8.41 3.49 11.82 11.82 0 0 1 3.48 8.41c0 6.57-5.33 11.9-11.9 11.9a11.9 11.9 0 0 1-5.68-1.45L.06 24zm6.6-3.8l.36.22a9.86 9.86 0 0 0 5.02 1.38h.01c5.46 0 9.9-4.43 9.9-9.9a9.86 9.86 0 0 0-2.9-7A9.81 9.81 0 0 0 12.05 2c-5.46 0-9.9 4.43-9.9 9.9a9.86 9.86 0 0 0 1.51 5.26l.24.38-1 3.62 3.76-1zm5.4-7.6c-.07-.12-.27-.2-.56-.34-.3-.15-1.76-.87-2.03-.97-.27-.1-.47-.15-.67.15-.2.3-.77.97-.94 1.16-.17.2-.35.22-.64.07-.3-.15-1.25-.46-2.39-1.47-.88-.79-1.48-1.76-1.65-2.06-.17-.3-.02-.46.13-.6.13-.14.3-.35.45-.52.15-.17.2-.3.3-.5.1-.2.05-.37-.02-.52-.08-.15-.67-1.62-.92-2.22-.24-.58-.49-.5-.67-.51l-.57-.01c-.2 0-.52.07-.79.37-.27.3-1.04 1.02-1.04 2.49 0 1.47 1.06 2.88 1.21 3.08.15.2 2.1 3.2 5.08 4.49.71.31 1.26.49 1.69.62.71.23 1.36.2 1.87.12.57-.08 1.76-.72 2.01-1.41.25-.7.25-1.29.17-1.42z"/></svg>
+          </a>
+          <a href="mailto:hello@yourhome.id" aria-label="Email">
+            <svg viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
+          </a>
+        </div>
+      </div>
+      <div class="footer-col">
+        <h4>Jelajahi</h4>
+        <ul>
+          <li><a href="#home">Beranda</a></li>
+          <li><a href="#properties">Semua Properti</a></li>
+          <li><a href="#about">Tentang Kami</a></li>
+          <li><a href="#experience">Pengalaman Bandung</a></li>
+          <li><a href="#booking">Booking Sekarang</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Properti</h4>
+        <ul>
+          <li><a href="#properties">Apartemen</a></li>
+          <li><a href="#properties">Villa</a></li>
+          <li><a href="#properties">Guest House</a></li>
+          <li><a href="#properties">Kosan</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Kontak</h4>
+        <ul class="footer-contact">
+          <li>
+            <svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+            <span>Bandung, Jawa Barat, Indonesia</span>
+          </li>
+          <li>
+            <svg viewBox="0 0 24 24"><path d="M6.62 10.79a15.05 15.05 0 0 0 6.59 6.59l2.2-2.2a1 1 0 0 1 1.02-.24c1.12.37 2.33.57 3.57.57a1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.25.2 2.45.57 3.57a1 1 0 0 1-.25 1.02l-2.2 2.2z"/></svg>
+            <span>+62 812-3456-7890</span>
+          </li>
+          <li>
+            <svg viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
+            <span>hello@yourhome.id</span>
+          </li>
+          <li>
+            <svg viewBox="0 0 24 24"><path d="M12 2.16c3.2 0 3.58.01 4.85.07 1.17.05 1.81.25 2.23.41.56.22.96.48 1.38.9.42.42.68.82.9 1.38.16.42.36 1.06.41 2.23.06 1.27.07 1.65.07 4.85s-.01 3.58-.07 4.85c-.05 1.17-.25 1.81-.41 2.23-.22.56-.48.96-.9 1.38-.42.42-.82.68-1.38.9-.42.16-1.06.36-2.23.41-1.27.06-1.65.07-4.85.07s-3.58-.01-4.85-.07c-1.17-.05-1.81-.25-2.23-.41-.56-.22-.96-.48-1.38-.9-.42-.42-.68-.82-.9-1.38-.16-.42-.36-1.06-.41-2.23C2.17 15.58 2.16 15.2 2.16 12s.01-3.58.07-4.85c.05-1.17.25-1.81.41-2.23.22-.56.48-.96.9-1.38.42-.42.82-.68 1.38-.9.42-.16 1.06-.36 2.23-.41C8.42 2.17 8.8 2.16 12 2.16z"/></svg>
+            <span>@yourhomeapartment</span>
+          </li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>&copy; 2026 YOUR HOME. All rights reserved. · Comfort in every corner of Bandung.</p>
+      <p><a href="#">Kebijakan Privasi</a> · <a href="#">Syarat & Ketentuan</a></p>
+    </div>
+  </div>
+</footer>
+
+<!-- ============== MODAL ============== -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal" id="modal">
+    <button class="modal-close" id="modalClose">&times;</button>
+    <div class="modal-img"><img id="modalImg" src="" alt="" /></div>
+    <div class="modal-body" id="modalBody"></div>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   PROPERTY DATA — 19 units
+   ============================================================ */
+const properties = [
+  // Apartemen (5)
+  { id:'sudirman-7', name:'Lantai 7 Sudirman Suites', cat:'apartment', catLabel:'Apartemen',
+    loc:'Sudirman Suites, Bandung', beds:2, baths:1, guests:4, price:650000,
+    img:'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=800&q=80',
+    desc:'Apartemen cozy di lantai 7 Sudirman Suites dengan fasilitas modern. Cocok untuk staycation maupun bisnis. Dekat dengan pusat perbelanjaan dan kuliner Bandung.' },
+  { id:'sudirman-11', name:'Lantai 11 Sudirman Suites', cat:'apartment', catLabel:'Apartemen',
+    loc:'Sudirman Suites, Bandung', beds:2, baths:1, guests:4, price:750000,
+    img:'https://images.unsplash.com/photo-1631049307264-da0ec9d70304?auto=format&fit=crop&w=800&q=80',
+    desc:'Unit di lantai 11 dengan pemandangan kota yang lebih luas. Dilengkapi dapur lengkap, AC, WiFi cepat, dan area kerja untuk Anda yang produktif.' },
+  { id:'sudirman-18', name:'Lantai 18 Sudirman Suites', cat:'apartment', catLabel:'Apartemen',
+    loc:'Sudirman Suites, Bandung', beds:2, baths:1, guests:4, price:850000,
+    img:'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?auto=format&fit=crop&w=800&q=80',
+    desc:'Premium unit di lantai 18 dengan view kota Bandung yang memukau. Interior elegan dengan sentuhan modern tropical yang hangat.' },
+  { id:'sudirman-19', name:'Lantai 19 Sudirman Suites', cat:'apartment', catLabel:'Apartemen',
+    loc:'Sudirman Suites, Bandung', beds:2, baths:1, guests:4, price:950000,
+    img:'https://images.unsplash.com/photo-1493809842364-78817add7ffb?auto=format&fit=crop&w=800&q=80',
+    desc:'Unit tertinggi di Sudirman Suites dengan panorama 360° kota Bandung. Pengalaman menginap premium dengan fasilitas lengkap.' },
+  { id:'galeri-ciumbuleuit', name:'Apartment Galeri Ciumbuleuit', cat:'apartment', catLabel:'Apartemen',
+    loc:'Ciumbuleuit, Bandung', beds:1, baths:1, guests:2, price:550000,
+    img:'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?auto=format&fit=crop&w=800&q=80',
+    desc:'Apartemen strategis di kawasan Ciumbuleuit, dekat denganuniversitas dan pusat kuliner. Pilihan tepat untuk pasangan atau solo traveler.' },
+
+  // Villa (10)
+  { id:'villa-aurum', name:'Villa Aurum', cat:'villa', catLabel:'Villa',
+    loc:'Lembang, Bandung', beds:6, baths:4, guests:12, price:2500000,
+    img:'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?auto=format&fit=crop&w=800&q=80',
+    desc:'Villa mewah di Lembang dengan kapasitas 12 tamu. Pemandangan pegunungan langsung, kolam pribadi, dan ruang serbaguna untuk acara keluarga maupun corporate.' },
+  { id:'villa-alam-1', name:'Villa Alam 1', cat:'villa', catLabel:'Villa',
+    loc:'Lembang, Bandung', beds:3, baths:2, guests:6, price:1200000,
+    img:'https://images.unsplash.com/photo-1518733057094-95b53143d2a7?auto=format&fit=crop&w=800&q=80',
+    desc:'Villa alam pertama dengan konsep natural di Lembang. Cocok untuk keluarga yang ingin menikmati sejuknya udara pegunungan dengan fasilitas lengkap.' },
+  { id:'villa-alam-2', name:'Villa Alam 2', cat:'villa', catLabel:'Villa',
+    loc:'Lembang, Bandung', beds:3, baths:2, guests:6, price:1200000,
+    img:'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&w=800&q=80',
+    desc:'Villa alam kedua dengan desain serupa. Pilihan tepat untuk retret kecil bersama sahabat atau keluarga inti.' },
+  { id:'villa-alam-12', name:'Villa Alam 1 & 2', cat:'villa', catLabel:'Villa',
+    loc:'Lembang, Bandung', beds:6, baths:4, guests:12, price:1800000,
+    img:'https://images.unsplash.com/photo-1520250497591-112f2f40a3f7?auto=format&fit=crop&w=800&q=80',
+    desc:'Gabungan Villa Alam 1 & 2 untuk acara besar atau gathering keluarga besar. Kapasitas hingga 12 tamu dengan dua ruang tamu terpisah.' },
+  { id:'villa-trinity', name:'Villa Trinity Garden Villa', cat:'villa', catLabel:'Villa',
+    loc:'Lembang, Bandung', beds:4, baths:3, guests:10, price:2200000,
+    img:'https://images.unsplash.com/photo-1600596542815-3723b63d4f85?auto=format&fit=crop&w=800&q=80',
+    desc:'Villa dengan taman luas dan konsep garden living. Ruang terbuka hijau yang sempurna untuk bersantai, BBQ, dan menikmati suasana alam Lembang.' },
+  { id:'villa-x4', name:'Villa X4', cat:'villa', catLabel:'Villa',
+    loc:'Dago Atas, Bandung', beds:4, baths:3, guests:8, price:2000000,
+    img:'https://images.unsplash.com/photo-1613977258367-862d7ad4aaaa?auto=format&fit=crop&w=800&q=80',
+    desc:'Villa modern di Dago Atas dengan arsitektur kontemporer. View kota Bandung dari ketinggian dan fasilitas eksklusif untuk pengalaman menginap berkelas.' },
+  { id:'villa-x7', name:'Villa X7', cat:'villa', catLabel:'Villa',
+    loc:'Dago Atas, Bandung', beds:5, baths:4, guests:12, price:2800000,
+    img:'https://images.unsplash.com/photo-1564501049412-61c2a3083791?auto=format&fit=crop&w=800&q=80',
+    desc:'Villa flagship seri X dengan 5 kamar tidur dan kolam infinity. Solusi akomodasi premium untuk group besar yang ingin liburan mewah di Bandung.' },
+  { id:'villa-awn', name:'Villa AWN', cat:'villa', catLabel:'Villa',
+    loc:'Lembang, Bandung', beds:3, baths:2, guests:8, price:1500000,
+    img:'https://images.unsplash.com/photo-1571896349842-33c89424de2d?auto=format&fit=crop&w=800&q=80',
+    desc:'Villa hangat dengan fireplace indoor dan konsep cozy modern. Pilihan favorit untuk liburan akhir tahun di Lembang yang sejuk.' },
+  { id:'villa-casa-kemilau', name:'Villa Casa Kemilau Bintang', cat:'villa', catLabel:'Villa',
+    loc:'Lembang, Bandung', beds:4, baths:3, guests:10, price:2400000,
+    img:'https://images.unsplash.com/photo-1605538883669-825200433431?auto=format&fit=crop&w=800&q=80',
+    desc:'Villa dengan deck stargazing untuk menikmati langit malam Lembang yang berbintang. Pengalaman romantis untuk pasangan atau keluarga.' },
+  { id:'villa-casa-bliss', name:'Villa Casa Bliss', cat:'villa', catLabel:'Villa',
+    loc:'Lembang, Bandung', beds:3, baths:2, guests:6, price:1600000,
+    img:'https://images.unsplash.com/photo-1583845112203-29329902332e?auto=format&fit=crop&w=800&q=80',
+    desc:'Villa tropical modern dengan kolam pribadi dan taman eksotis. Suasana blissful yang membuat liburan Anda terasa seperti di surga.' },
+  { id:'villa-de-bukit', name:'Villa De Bukit Dago', cat:'villa', catLabel:'Villa',
+    loc:'Dago Atas, Bandung', beds:5, baths:4, guests:12, price:3200000,
+    img:'https://images.unsplash.com/photo-1600585154526-990dced4db0d?auto=format&fit=crop&w=800&q=80',
+    desc:'Villa eksklusif di bukit Dago dengan pemandangan kota Bandung yang spektakuler. Layak jadi pilihan untuk perayaan momen spesial Anda.' },
+
+  // Guest House (3)
+  { id:'gh-parahyangan', name:'Guest House Kota Baru Parahyangan', cat:'guesthouse', catLabel:'Guest House',
+    loc:'Kota Baru Parahyangan, Bandung', beds:3, baths:2, guests:8, price:900000,
+    img:'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=800&q=80',
+    desc:'Guest house luas di kawasan Kota Baru Parahyangan. Lingkungan tenang dan asri, cocok untuk retreat keluarga atau acara korporat.' },
+  { id:'gh-sumba', name:'Guest House Tatar Banyak Sumba', cat:'guesthouse', catLabel:'Guest House',
+    loc:'Tatar Banyak Sumba, Bandung', beds:2, baths:1, guests:5, price:650000,
+    img:'https://images.unsplash.com/photo-1484154218962-a197022b5858?auto=format&fit=crop&w=800&q=80',
+    desc:'Guest house nyaman di kawasan Tatar Banyak Sumba. Lokasi strategis dengan fasilitas lengkap untuk menginap jangka pendek maupun panjang.' },
+
+  // Kosan (1)
+  { id:'kos-de-orange', name:'Kosan De Orange Kost', cat:'kos', catLabel:'Kosan',
+    loc:'Bandung', beds:1, baths:1, guests:1, price:850000,
+    img:'https://images.unsplash.com/photo-1505693416388-ac5ce068068c?auto=format&fit=crop&w=800&q=80',
+    desc:'Kosan eksklusif bergaya modern dengan fasilitas lengkap. Bulanan maupun harian, cocok untuk mahasiswa atau pekerja muda yang butuh tempat tinggal nyaman di Bandung.' }
+];
+
+/* ============== RENDER PROPERTIES ============== */
+const propsGrid = document.getElementById('propsGrid');
+const formatPrice = (p) => 'Rp ' + p.toLocaleString('id-ID');
+
+function renderProperties(filter='all'){
+  const list = filter === 'all' ? properties : properties.filter(p => p.cat === filter);
+  if(list.length === 0){
+    propsGrid.innerHTML = '<div class="no-results"><p>Tidak ada properti pada kategori ini.</p></div>';
+    return;
+  }
+  propsGrid.innerHTML = list.map(p => `
+    <article class="prop-card" data-id="${p.id}">
+      <div class="prop-img">
+        <img src="${p.img}" alt="${p.name}" loading="lazy" />
+        <span class="prop-cat">${p.catLabel}</span>
+        <button class="prop-fav" aria-label="Favorit">♥</button>
+      </div>
+      <div class="prop-body">
+        <h3>${p.name}</h3>
+        <div class="prop-loc">
+          <svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+          ${p.loc}
+        </div>
+        <div class="prop-features">
+          <span><svg viewBox="0 0 24 24"><path d="M7 14h10v-3H7m10-1h2a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2h-2v3a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-3H3a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h2V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v4z"/></svg>${p.beds} Kamar</span>
+          <span><svg viewBox="0 0 24 24"><path d="M9 2v6H7v2h2v10h2V10h2V8h-2V2m4 0v10h2v6h2v-6h2V2z"/></svg>${p.baths} K.Mandi</span>
+          <span><svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>${p.guests} Tamu</span>
+        </div>
+        <div class="prop-foot">
+          <div class="prop-price">${formatPrice(p.price)}<small>per malam</small></div>
+          <a href="#" class="prop-detail" data-id="${p.id}">Lihat Detail →</a>
+        </div>
+      </div>
+    </article>
+  `).join('');
+
+  // Attach detail click handlers
+  document.querySelectorAll('[data-id]').forEach(el => {
+    el.addEventListener('click', (e) => {
+      e.preventDefault();
+      const id = el.getAttribute('data-id');
+      openModal(id);
+    });
+  });
+}
+renderProperties();
+
+/* ============== FILTER ============== */
+document.querySelectorAll('.filter-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    renderProperties(btn.dataset.filter);
+  });
+});
+
+/* ============== MODAL ============== */
+const modalOverlay = document.getElementById('modalOverlay');
+const modalImg = document.getElementById('modalImg');
+const modalBody = document.getElementById('modalBody');
+
+function openModal(id){
+  const p = properties.find(x => x.id === id);
+  if(!p) return;
+  modalImg.src = p.img;
+  modalImg.alt = p.name;
+  modalBody.innerHTML = `
+    <span class="prop-cat" style="position:static;display:inline-block;margin-bottom:8px">${p.catLabel}</span>
+    <h3>${p.name}</h3>
+    <div class="modal-loc">
+      <svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:var(--terracotta)"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+      ${p.loc}
+    </div>
+    <div class="modal-features">
+      <span><svg viewBox="0 0 24 24"><path d="M7 14h10v-3H7m10-1h2a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2h-2v3a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-3H3a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h2V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v4z"/></svg>${p.beds} Kamar Tidur</span>
+      <span><svg viewBox="0 0 24 24"><path d="M9 2v6H7v2h2v10h2V10h2V8h-2V2m4 0v10h2v6h2v-6h2V2z"/></svg>${p.baths} Kamar Mandi</span>
+      <span><svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>${p.guests} Tamu</span>
+    </div>
+    <p class="modal-desc">${p.desc}</p>
+    <div class="modal-price-row">
+      <div class="modal-price">${formatPrice(p.price)}<small>per malam</small></div>
+      <a href="#booking" class="btn btn-primary" onclick="closeModal()">Booking Sekarang</a>
+    </div>
+  `;
+  modalOverlay.classList.add('active');
+  document.body.style.overflow = 'hidden';
+}
+function closeModal(){
+  modalOverlay.classList.remove('active');
+  document.body.style.overflow = '';
+}
+document.getElementById('modalClose').addEventListener('click', closeModal);
+modalOverlay.addEventListener('click', (e) => { if(e.target === modalOverlay) closeModal(); });
+document.addEventListener('keydown', (e) => { if(e.key === 'Escape') closeModal(); });
+
+/* ============== NAVBAR SCROLL ============== */
+const navbar = document.getElementById('navbar');
+window.addEventListener('scroll', () => {
+  if(window.scrollY > 50) navbar.classList.add('scrolled');
+  else navbar.classList.remove('scrolled');
+});
+
+/* ============== MOBILE MENU ============== */
+const menuToggle = document.getElementById('menuToggle');
+const navLinks = document.getElementById('navLinks');
+menuToggle.addEventListener('click', () => navLinks.classList.toggle('open'));
+navLinks.querySelectorAll('a').forEach(a => a.addEventListener('click', () => navLinks.classList.remove('open')));
+
+/* ============== BOOKING FORM ============== */
+const today = new Date().toISOString().split('T')[0];
+document.getElementById('checkin').min = today;
+document.getElementById('checkin').addEventListener('change', function(){
+  document.getElementById('checkout').min = this.value;
+});
+
+document.getElementById('bookingForm').addEventListener('submit', (e) => {
+  e.preventDefault();
+  const checkin = document.getElementById('checkin').value;
+  const checkout = document.getElementById('checkout').value;
+  const type = document.getElementById('propType').value;
+  if(!checkin || !checkout){
+    alert('Mohon pilih tanggal check-in dan check-out terlebih dahulu.');
+    return;
+  }
+  if(type){
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    document.querySelector(`.filter-btn[data-filter="${type}"]`).classList.add('active');
+    renderProperties(type);
+  }
+  document.getElementById('properties').scrollIntoView({behavior:'smooth'});
+  setTimeout(() => {
+    alert(`Terima kasih! ${type ? 'Properti telah difilter' : 'Menampilkan semua properti'}. Pilih unit favorit Anda dan klik "Booking Sekarang" untuk konfirmasi via WhatsApp/Instagram @yourhomeapartment.`);
+  }, 700);
+});
+
+/* ============== FEATURED CARD CLICK ============== */
+document.querySelectorAll('.feat-card').forEach(card => {
+  card.addEventListener('click', () => openModal(card.dataset.id));
+});
+
+/* ============== FADE-IN ANIMATION ============== */
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(e => { if(e.isIntersecting) e.target.classList.add('visible'); });
+}, {threshold: 0.1});
+document.querySelectorAll('.section').forEach(s => {
+  s.classList.add('fade-in');
+  observer.observe(s);
+});
+</script>
+
+</body>
+</html>
