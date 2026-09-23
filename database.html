@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Database Properti | YOUR HOME</title>
+<style>
+:root{--ink:#2c2620;--muted:#776f66;--cream:#faf7f2;--paper:#fff;--line:#e2dbd0;--accent:#a0522d;--green:#3f5a3a;--soft:#f1ece2}
+*{box-sizing:border-box}
+body{margin:0;background:var(--cream);color:var(--ink);font-family:Arial,sans-serif}
+.page{max-width:1180px;margin:0 auto;padding:42px 24px 64px}
+header{display:flex;justify-content:space-between;align-items:flex-end;gap:24px;border-bottom:1px solid var(--line);padding-bottom:26px;margin-bottom:28px}
+h1{font-family:Georgia,serif;font-size:clamp(2rem,4vw,3.4rem);font-weight:500;margin:0 0 8px;color:#3e2723}
+.subtitle{margin:0;color:var(--muted);font-size:.95rem}
+.back{color:var(--accent);font-weight:700;text-decoration:none;white-space:nowrap}
+.summary{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:26px}
+.stat{background:var(--paper);border:1px solid var(--line);padding:18px;border-radius:8px}
+.stat strong{display:block;font:600 1.7rem Georgia,serif;color:var(--accent)}
+.stat span{color:var(--muted);font-size:.8rem}
+.table-wrap{background:var(--paper);border:1px solid var(--line);border-radius:8px;overflow:auto}
+table{width:100%;border-collapse:collapse;min-width:760px}
+th,td{text-align:left;padding:14px 16px;border-bottom:1px solid var(--line);vertical-align:middle}
+th{background:var(--soft);font-size:.73rem;letter-spacing:.1em;text-transform:uppercase;color:#665c52}
+tbody tr:last-child td{border-bottom:0}
+td:first-child{color:var(--muted);font-size:.85rem;width:52px}
+.unit{font-weight:700;color:#3e2723}
+.category{display:inline-block;margin-top:4px;color:var(--muted);font-size:.76rem}
+.price{font-weight:700;color:var(--accent);white-space:nowrap}
+.status{display:inline-flex;align-items:center;gap:7px;font-size:.8rem;font-weight:700;white-space:nowrap}
+.status::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--green)}
+.status.price-change::before{background:var(--accent)}
+.status.unchanged::before{background:#aaa29a}
+.note{color:var(--muted);font-size:.8rem}
+footer{margin-top:20px;color:var(--muted);font-size:.78rem}
+@media(max-width:650px){.page{padding:28px 14px 46px}header{display:block}.back{display:inline-block;margin-top:18px}.summary{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<main class="page">
+<header>
+  <div>
+    <h1>Database Properti</h1>
+    <p class="subtitle">Daftar unit dan harga sewa terbaru YOUR HOME</p>
+  </div>
+  <a class="back" href="index.html">Kembali ke website</a>
+</header>
+
+<section class="summary" aria-label="Ringkasan database">
+  <div class="stat"><strong>22</strong><span>Total unit aktif</span></div>
+  <div class="stat"><strong>21</strong><span>Harga diperbarui</span></div>
+  <div class="stat"><strong>1</strong><span>Belum ada perubahan harga</span></div>
+</section>
+
+<div class="table-wrap">
+<table>
+<thead><tr><th>No.</th><th>Nama Unit</th><th>Harga / malam</th><th>Status</th><th>Catatan</th></tr></thead>
+<tbody>
+<tr><td>1</td><td><span class="unit">Lantai 7 Sudirman Suites</span><br><span class="category">Apartemen</span></td><td class="price">Rp 618.000</td><td><span class="status price-change">Harga diubah</span></td><td class="note">Harga diperbarui</td></tr>
+<tr><td>2</td><td><span class="unit">Lantai 11 Sudirman Suites</span><br><span class="category">Apartemen</span></td><td class="price">Rp 955.000</td><td><span class="status price-change">Harga diubah</span></td><td class="note">Harga diperbarui</td></tr>
+<tr><td>3</td><td><span class="unit">Lantai 18 Sudirman Suites</span><br><span class="category">Apartemen</span></td><td class="price">Rp 668.000</td><td><span class="status price-change">Harga diubah</span></td><td class="note">Harga diperbarui</td></tr>
+<tr><td>4</td><td><span class="unit">Lantai 19 Sudirman Suites</span><br><span class="category">Apartemen</span></td><td class="price">Rp 909.000</td><td><span class="status price-change">Harga diubah</span></td><td class="note">Harga diperbarui</td></tr>
+<tr><td>5</td><td><span class="unit">Apartment Galeri Ciumbuleuit 3</span><br><span class="category">Apartemen</span></td><td class="price">Rp 506.000</td><td><span class="status price-change">Harga diubah</span></td><td class="note">Harga diperbarui & maps tersedia</td></tr>
+<tr><td>6</td><td><span class="unit">Villa Aurum</span><br><span class="category">Villa</span></td><td class="price">Rp 8.899.000</td><td><span class="status price-change">Harga diubah</span></td><td class="note">Harga, deskripsi & maps</td></tr>
+<tr><td>7</td><td><span class="unit">Villa Putih</span><br><span class="category">Villa</span></td><td class="price">Rp 2.899.000</td><td><span class="status price-change">Harga diubah</span></td><td class="note">Harga, deskripsi & maps</td></tr>
+<tr><td>8</td><td><span class="unit">Villa Alam 1</span><br><span class="category">Villa</span></td><td class="price">Rp 2.899.999</td><td><span class="status price-change">Harga diubah</span></td><td class="note">Harga, deskripsi & maps</td></tr>
+<tr><td>9</td><td><span class="unit">Villa Alam 2</span><br><span class="category">Villa</span></td><td class="price">Rp 2.750.000</td><td><span class="status price-change">Harga diubah</span></td><td class="note">Harga, deskripsi & maps</td></tr>
+<tr><td>10</td><td><span class="unit">Villa Alam 1 & 2</span><br><span class="category">Villa</span></td><td class="price">Rp 4.999.999</td><td><span class="status price-change">Harga diubah</span></td><td class="note">Harga, deskripsi & maps</td></tr>
+<tr><td>11</td><td><span class="unit">Villa Trinity Garden Villa</span><br><span class="category">Villa</span></td><td class="price">Rp 7.899.000</td><td><span class="status price-change">Harga diubah</span></td><td class="note">Harga, deskripsi & maps</td></tr>
+<tr><td>12</td><td><span class="unit">Villa X4</span><br><span class="category">Villa</span></td><td class="price">Rp 1.799.000</td><td><span class="status price-change">Harga diubah</span></td><td class="note">Harga, deskripsi & maps</td></tr>
+<tr><td>13</td><td><span class="unit">Villa X7</span><br><span class="category">Villa</span></td><td class="price">Rp 1.399.000</td><td><span class="status price-change">Harga diubah</span></td><td class="note">Harga, deskripsi & maps</td></tr>
+<tr><td>14</td><td><span class="unit">Villa X47</span><br><span class="category">Villa</span></td><td class="price">Rp 1.399.000</td><td><span class="status price-change">Harga diubah</span></td><td class="note">Meniru data Villa X7</td></tr>
+<tr><td>15</td><td><span class="unit">Villa AWN</span><br><span class="category">Villa</span></td><td class="price">Rp 6.899.000</td><td><span class="status price-change">Harga diubah</span></td><td class="note">Harga, deskripsi & maps</td></tr>
+<tr><td>16</td><td><span class="unit">Villa Casa Kemilau Bintang</span><br><span class="category">Villa</span></td><td class="price">Rp 3.321.000</td><td><span class="status price-change">Harga diubah</span></td><td class="note">Harga, deskripsi & maps</td></tr>
+<tr><td>17</td><td><span class="unit">Villa Casa Bliss</span><br><span class="category">Villa</span></td><td class="price">Rp 6.899.000</td><td><span class="status price-change">Harga diubah</span></td><td class="note">Harga, deskripsi & maps</td></tr>
+<tr><td>18</td><td><span class="unit">Villa De Bukit Dago</span><br><span class="category">Villa</span></td><td class="price">Rp 1.399.000</td><td><span class="status price-change">Harga diubah</span></td><td class="note">Harga, deskripsi & maps</td></tr>
+<tr><td>19</td><td><span class="unit">Villa Ferrum</span><br><span class="category">Villa</span></td><td class="price">Rp 11.000.000</td><td><span class="status price-change">Harga diubah</span></td><td class="note">Harga diperbarui</td></tr>
+<tr><td>20</td><td><span class="unit">Davion House</span><br><span class="category">Guest House</span></td><td class="price">Rp 1.499.000</td><td><span class="status price-change">Harga diubah</span></td><td class="note">Harga, deskripsi & maps</td></tr>
+<tr><td>21</td><td><span class="unit">Guest House Tatar Banyak Sumba</span><br><span class="category">Guest House</span></td><td class="price">Rp 1.414.000</td><td><span class="status price-change">Harga diubah</span></td><td class="note">Harga, deskripsi & maps</td></tr>
+<tr><td>22</td><td><span class="unit">Kosan De Orange Kost</span><br><span class="category">Kosan</span></td><td class="price">Rp 850.000</td><td><span class="status">Deskripsi diubah</span></td><td class="note">Pilihan kamar: Single Rp 950.000; Single Balkon Rp 1.000.000; Superior Rp 1.250.000; Single Deluxe Rp 1.400.000; Superior Deluxe Rp 1.600.000 per bulan</td></tr>
+</tbody>
+</table>
+</div>
+<footer>Catatan: Villa X47 menggunakan data Villa X7 saat ini. Harga pada halaman ini mengikuti data terbaru di index.html.</footer>
+</main>
+</body>
+</html>
