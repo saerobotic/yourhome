@@ -102,11 +102,12 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
 .nav-inner{display:flex;align-items:center;justify-content:space-between}
 .logo{display:flex;align-items:center;gap:.65rem;font-family:'Playfair Display',serif}
 .logo-mark{
-  width:42px;height:42px;border-radius:50%;
-  background:var(--coffee-d);color:var(--cream);
+  width:52px;height:42px;border-radius:0;
+  background:transparent;color:var(--cream);
   display:flex;align-items:center;justify-content:center;
   font-weight:700;font-size:1.1rem;letter-spacing:-.02em;
-  border:2px solid var(--terracotta);
+  border:0;
+  object-fit:contain;
 }
 .logo-text{display:flex;flex-direction:column;line-height:1.05}
 .logo-text strong{font-size:1.25rem;color:var(--coffee-d);font-weight:700;letter-spacing:.05em}
@@ -343,6 +344,7 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
 .footer{background:var(--coffee-d);color:rgba(255,255,255,.75);padding:70px 0 30px}
 .footer-grid{display:grid;grid-template-columns:1.4fr 1fr 1fr 1.2fr;gap:48px;margin-bottom:50px}
 .footer-brand .logo-text strong{color:var(--white)}
+.footer-brand .logo-mark{width:64px;height:52px}
 .footer-brand p{color:rgba(255,255,255,.65);font-size:.9rem;margin:20px 0 22px;max-width:320px}
 .social-row{display:flex;gap:12px}
 .social-row a{
@@ -448,7 +450,7 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
 <nav class="navbar" id="navbar">
   <div class="container nav-inner">
     <a href="#home" class="logo">
-      <div class="logo-mark">Y</div>
+      <img class="logo-mark" src="https://ik.imagekit.io/5bnhlcghq/ChatGPT%20Image%20Sep%2023,%202026,%2012_39_48%20PM.png?updatedAt=1790142373268" alt="YOUR HOME" />
       <div class="logo-text">
         <strong>YOUR HOME</strong>
         <small>Bandung Stays</small>
@@ -746,7 +748,7 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
     <div class="footer-grid">
       <div class="footer-brand">
         <a href="#home" class="logo">
-          <div class="logo-mark">Y</div>
+          <img class="logo-mark" src="https://ik.imagekit.io/5bnhlcghq/ChatGPT%20Image%20Sep%2023,%202026,%2012_39_48%20PM.png?updatedAt=1790142373268" alt="YOUR HOME" />
           <div class="logo-text">
             <strong>YOUR HOME</strong>
             <small>Bandung Stays</small>
