@@ -199,7 +199,7 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
   cursor:pointer;transition:var(--trans);
 }
 .feat-card:nth-child(1){grid-row:1/3}
-.feat-card img{width:100%;height:100%;object-fit:cover;transition:var(--trans)}
+.feat-card img{width:100%;height:100%;object-fit:cover;transition:var(--trans);will-change:transform}
 .feat-card:hover img{transform:scale(1.06)}
 .feat-card::after{
   content:"";position:absolute;inset:0;
@@ -235,7 +235,7 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
 }
 .prop-card:hover{transform:translateY(-6px);box-shadow:var(--shadow-lg)}
 .prop-img{position:relative;height:240px;overflow:hidden}
-.prop-img img{width:100%;height:100%;object-fit:cover;transition:var(--trans)}
+.prop-img img{width:100%;height:100%;object-fit:cover;transition:var(--trans);will-change:transform}
 .prop-card:hover .prop-img img{transform:scale(1.08)}
 .prop-cat{
   position:absolute;top:14px;left:14px;
@@ -268,7 +268,7 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
 .about{padding:100px 0}
 .about-grid{display:grid;grid-template-columns:1fr 1fr;gap:80px;align-items:center}
 .about-imgs{position:relative;height:540px}
-.about-imgs img{position:absolute;border-radius:var(--radius);object-fit:cover;box-shadow:var(--shadow-lg)}
+.about-imgs img{position:absolute;border-radius:var(--radius);object-fit:cover;box-shadow:var(--shadow-lg);will-change:transform}
 .about-imgs img:nth-child(1){width:70%;height:75%;top:0;left:0;z-index:1}
 .about-imgs img:nth-child(2){width:55%;height:55%;bottom:0;right:0;z-index:2;border:8px solid var(--cream)}
 .about-badge{
@@ -410,7 +410,7 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
   font-size:1.4rem;color:var(--coffee-d);box-shadow:var(--shadow);
 }
 .modal-img{height:240px;position:relative;overflow:hidden;border-radius:var(--radius) var(--radius) 0 0}
-.modal-img img{width:100%;height:100%;object-fit:cover}
+.modal-img img{width:100%;height:100%;object-fit:cover;will-change:transform}
 .modal-body{padding:28px}
 .modal-body h3{margin-bottom:6px}
 .modal-loc{color:var(--grey);font-size:.88rem;margin-bottom:18px;display:flex;align-items:center;gap:6px}
@@ -483,7 +483,7 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
 }
 
 /* fade-in animation */
-.fade-in{opacity:0;transform:translateY(30px);transition:opacity .8s ease, transform .8s ease}
+.fade-in{opacity:0;transform:translateY(30px);transition:opacity .8s ease, transform .8s ease;will-change:transform}
 .fade-in.visible{opacity:1;transform:translateY(0)}
 </style>
 </head>
@@ -493,7 +493,11 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
 <nav class="navbar" id="navbar">
   <div class="container nav-inner">
     <a href="#home" class="logo">
-      <img class="logo-mark" src="https://ik.imagekit.io/o1hnx31yy/yh%20(2).png" alt="YOUR HOME" />
+      <picture>
+        <source srcset="https://ik.imagekit.io/o1hnx31yy/yh%20(2).png?tr=f-avif" type="image/avif" />
+        <source srcset="https://ik.imagekit.io/o1hnx31yy/yh%20(2).png?tr=f-webp" type="image/webp" />
+        <img class="logo-mark" src="https://ik.imagekit.io/o1hnx31yy/yh%20(2).png?tr=f-jpg" width="352" height="104" loading="lazy" alt="YOUR HOME" />
+      </picture>
     </a>
     <ul class="nav-links" id="navLinks">
       <li><a href="#home">Beranda</a></li>
@@ -526,7 +530,6 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
       <div class="hero-stat"><strong>Bandung</strong><span>Lokasi Strategis</span></div>
     </div>
   </div>
-  <div class="hero-scroll">Scroll</div>
 </section>
 
 <!-- ============== BOOKING WIDGET ============== -->
@@ -595,8 +598,8 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
     </div>
     <div class="featured-grid">
       <div class="feat-card" data-id="villa-aurum">
-        <img src="https://ik.imagekit.io/o1hnx31yy/Aurum.png?updatedAt=1790155916889" alt="Villa Aurum" />
-        <span class="feat-price">Rp 2.5jt / malam</span>
+        <picture><source srcset="https://ik.imagekit.io/o1hnx31yy/Aurum.png?updatedAt=1790155916889&tr=f-avif" type="image/avif" /><source srcset="https://ik.imagekit.io/o1hnx31yy/Aurum.png?updatedAt=1790155916889&tr=f-webp" type="image/webp" /><img src="https://ik.imagekit.io/o1hnx31yy/Aurum.png?updatedAt=1790155916889&tr=f-jpg" width="800" height="600" loading="lazy" alt="Villa Aurum" /></picture>
+        <span class="feat-price">Rp 8.899.000 / malam</span>
         <div class="feat-info">
           <span class="feat-tag">Villa Mewah</span>
           <h3>Villa Aurum</h3>
@@ -604,8 +607,8 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
         </div>
       </div>
       <div class="feat-card" data-id="villa-putih">
-        <img src="https://ik.imagekit.io/o1hnx31yy/Villa%20putih.png?updatedAt=1790155915297" alt="Villa Putih" />
-        <span class="feat-price">Rp 2.2jt / malam</span>
+        <picture><source srcset="https://ik.imagekit.io/o1hnx31yy/Villa%20putih.png?updatedAt=1790155915297&tr=f-avif" type="image/avif" /><source srcset="https://ik.imagekit.io/o1hnx31yy/Villa%20putih.png?updatedAt=1790155915297&tr=f-webp" type="image/webp" /><img src="https://ik.imagekit.io/o1hnx31yy/Villa%20putih.png?updatedAt=1790155915297&tr=f-jpg" width="800" height="600" loading="lazy" alt="Villa Putih" /></picture>
+        <span class="feat-price">Rp 2.899.000 / malam</span>
         <div class="feat-info">
           <span class="feat-tag">Villa Putih</span>
           <h3>Villa Putih</h3>
@@ -613,8 +616,8 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
         </div>
       </div>
       <div class="feat-card" data-id="sudirman-18">
-        <img src="https://ik.imagekit.io/o1hnx31yy/appart%2018.jpg?updatedAt=1790155903507" alt="Lantai 18 Sudirman Suites" />
-        <span class="feat-price">Rp 850rb / malam</span>
+        <picture><source srcset="https://ik.imagekit.io/o1hnx31yy/appart%2018.jpg?updatedAt=1790155903507&tr=f-avif" type="image/avif" /><source srcset="https://ik.imagekit.io/o1hnx31yy/appart%2018.jpg?updatedAt=1790155903507&tr=f-webp" type="image/webp" /><img src="https://ik.imagekit.io/o1hnx31yy/appart%2018.jpg?updatedAt=1790155903507&tr=f-jpg" width="800" height="600" loading="lazy" alt="Lantai 18 Sudirman Suites" /></picture>
+        <span class="feat-price">Rp 668.000 / malam</span>
         <div class="feat-info">
           <span class="feat-tag">Apartemen</span>
           <h3>Lantai 18 Sudirman Suites</h3>
@@ -622,8 +625,8 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
         </div>
       </div>
       <div class="feat-card" data-id="villa-alam-12">
-        <img src="https://ik.imagekit.io/o1hnx31yy/Alam%201&2.jpeg?updatedAt=1790156623926" alt="Villa Alam 1 & 2" />
-        <span class="feat-price">Rp 1.8jt / malam</span>
+        <picture><source srcset="https://ik.imagekit.io/o1hnx31yy/Alam%201&2.jpeg?updatedAt=1790156623926&tr=f-avif" type="image/avif" /><source srcset="https://ik.imagekit.io/o1hnx31yy/Alam%201&2.jpeg?updatedAt=1790156623926&tr=f-webp" type="image/webp" /><img src="https://ik.imagekit.io/o1hnx31yy/Alam%201&2.jpeg?updatedAt=1790156623926&tr=f-jpg" width="800" height="600" loading="lazy" alt="Villa Alam 1 & 2" /></picture>
+        <span class="feat-price">Rp 4.999.999 / malam</span>
         <div class="feat-info">
           <span class="feat-tag">Villa Alam</span>
           <h3>Villa Alam 1 & 2</h3>
@@ -631,8 +634,8 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
         </div>
       </div>
       <div class="feat-card" data-id="villa-de-bukit">
-        <img src="https://ik.imagekit.io/o1hnx31yy/Dago.JPG?updatedAt=1790155909539" alt="Villa De Bukit Dago" />
-        <span class="feat-price">Rp 3.2jt / malam</span>
+        <picture><source srcset="https://ik.imagekit.io/o1hnx31yy/Dago.JPG?updatedAt=1790155909539&tr=f-avif" type="image/avif" /><source srcset="https://ik.imagekit.io/o1hnx31yy/Dago.JPG?updatedAt=1790155909539&tr=f-webp" type="image/webp" /><img src="https://ik.imagekit.io/o1hnx31yy/Dago.JPG?updatedAt=1790155909539&tr=f-jpg" width="800" height="600" loading="lazy" alt="Villa De Bukit Dago" /></picture>
+        <span class="feat-price">Rp 1.399.000 / malam</span>
         <div class="feat-info">
           <span class="feat-tag">Villa Eksklusif</span>
           <h3>Villa De Bukit Dago</h3>
@@ -2196,8 +2199,8 @@ Hal lain yang perlu diperhatikan
 • Setiap kerusakan yang disebabkan oleh tamu dapat dikenakan biaya penggantian atau perbaikan.` },
   { id:'villa-alba-uno', name:'Villa Alba Uno', cat:'villa', catLabel:'Villa',
     loc:'Cigugur Girang, Parongpong, Bandung', beds:3, baths:2, guests:8, price:3500000, weekdayPrice:3500000, weekendPrice:5000000,
-    mapQuery:'Cigugur Girang, Parongpong, Bandung',
-    mapLink:'https://maps.app.goo.gl/tpoxrhNt3Gk9mkDW7',
+    mapQuery:'Villa Alba Uno Heated Pool Lembang Bandung',
+    mapLink:'https://www.google.com/maps/place/Villa+Alba+Uno+Heated+Pool+Lembang+Bandung/@-6.8226204,107.5889648,16z/data=!3m1!4b1!4m11!3m10!1s0x2e68e169647dfeb5:0xb00e61239e4a6dd1!5m3!1s2027-02-01!4m1!1i2!8m2!3d-6.8226204!4d107.5915451!16s%2Fg%2F11nhlhwr19!17BQ0FF?entry=ttu&g_ep=EgoyMDI2MDkyMS4wIKXMDSoASAFQAw%3D%3D',
     img:'https://ik.imagekit.io/o1hnx31yy/alba%20uno.png?updatedAt=1790230551143',
     desc:`Villa Alba Uno – Parongpong
 
@@ -2293,8 +2296,8 @@ Dengan menginap di Villa Alba Uno, tamu dianggap telah membaca, memahami, dan me
 Apabila terdapat pelanggaran terhadap peraturan, pihak pengelola villa berhak memberikan peringatan, membatalkan reservasi, dan menganggap pembayaran tidak dapat dikembalikan.` },
   { id:'villa-alba-duo', name:'Villa Alba Duo', cat:'villa', catLabel:'Villa',
     loc:'Cigugur Girang, Parongpong, Bandung', beds:3, baths:2, guests:8, price:3000000, weekdayPrice:3000000, weekendPrice:4500000,
-    mapQuery:'Cigugur Girang, Parongpong, Bandung',
-    mapLink:'https://maps.app.goo.gl/tpoxrhNt3Gk9mkDW7',
+    mapQuery:'Villa Alba Uno Heated Pool Lembang Bandung',
+    mapLink:'https://www.google.com/maps/place/Villa+Alba+Uno+Heated+Pool+Lembang+Bandung/@-6.8226204,107.5889648,16z/data=!3m1!4b1!4m11!3m10!1s0x2e68e169647dfeb5:0xb00e61239e4a6dd1!5m3!1s2027-02-01!4m1!1i2!8m2!3d-6.8226204!4d107.5915451!16s%2Fg%2F11nhlhwr19!17BQ0FF?entry=ttu&g_ep=EgoyMDI2MDkyMS4wIKXMDSoASAFQAw%3D%3D',
     img:'https://ik.imagekit.io/o1hnx31yy/alba%20duo.avif',
     desc:`Villa Alba Duo – Parongpong
 
@@ -2390,6 +2393,8 @@ Dengan menginap di Villa Alba Duo, tamu dianggap telah membaca, memahami, dan me
 Apabila terdapat pelanggaran terhadap peraturan, pihak pengelola villa berhak memberikan peringatan, membatalkan reservasi, dan menganggap pembayaran tidak dapat dikembalikan.` },
   { id:'villa-forest-heal', name:'Villa Forest Heal', cat:'villa', catLabel:'Villa',
     loc:'Lokasi belum diatur', beds:3, baths:1, guests:6, price:1800000, weekdayPrice:1800000, weekendPrice:2800000,
+    mapQuery:'-6.812246,107.6278903',
+    mapLink:'https://maps.app.goo.gl/QydyHQhY9EHQqyeo8',
     img:'https://ik.imagekit.io/o1hnx31yy/Forest%20Hill.png?updatedAt=1790155914559',
     desc:`Forest Heal Villa – Lembang
 

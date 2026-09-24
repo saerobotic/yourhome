@@ -60,7 +60,7 @@ footer{margin-top:20px;color:var(--muted);font-size:.78rem}
 
 <div class="table-wrap">
 <table>
-<thead><tr><th>No.</th><th>Nama Unit</th><th>Harga Weekday</th><th>Harga Weekend</th><th>Status Harga Weekend</th><th>Status Foto</th><th>Status Maps</th></tr></thead>
+<thead><tr><th>No.</th><th>Nama Unit</th><th>Harga Weekday</th><th>Harga Weekend</th><th>Status Harga Weekend</th><th>Status Foto</th><th>Status Maps</th><th>Keterangan</th></tr></thead>
 <tbody>
 <tr><td>1</td><td><span class="unit">Lantai 7 Sudirman Suites</span><br><span class="category">Apartemen</span></td><td class="price">Rp 618.000</td><td><span class="status price-change">Harga diubah</span></td><td class="note">Harga diperbarui</td></tr>
 <tr><td>2</td><td><span class="unit">Lantai 11 Sudirman Suites</span><br><span class="category">Apartemen</span></td><td class="price">Rp 955.000</td><td><span class="status price-change">Harga diubah</span></td><td class="note">Harga diperbarui</td></tr>
@@ -87,7 +87,7 @@ footer{margin-top:20px;color:var(--muted);font-size:.78rem}
 <tr><td>23</td><td><span class="unit">Villa Rustic Nine</span><br><span class="category">Villa</span></td><td class="price">Rp 8.500.000</td><td><span class="status unchanged">Harga belum diubah</span></td><td class="note">Foto, maps, dan harga weekend sudah dimasukan</td></tr>
 <tr><td>24</td><td><span class="unit">Villa Alba Uno</span><br><span class="category">Villa</span></td><td class="price">Rp 3.500.000</td><td><span class="status unchanged">Harga belum diubah</span></td><td class="note">Foto, maps, dan harga weekend sudah dimasukan</td></tr>
 <tr><td>25</td><td><span class="unit">Villa Alba Duo</span><br><span class="category">Villa</span></td><td class="price">Rp 3.000.000</td><td><span class="status unchanged">Harga belum diubah</span></td><td class="note">Foto, maps, dan harga weekend sudah dimasukan</td></tr>
-<tr><td>26</td><td><span class="unit">Villa Forest Heal</span><br><span class="category">Villa</span></td><td class="price">Rp 1.800.000</td><td><span class="status unchanged">Harga belum diubah</span></td><td class="note">Foto sudah diperbarui; maps menyusul</td></tr>
+<tr><td>26</td><td><span class="unit">Villa Forest Heal</span><br><span class="category">Villa</span></td><td class="price">Rp 1.800.000</td><td><span class="status unchanged">Harga belum diubah</span></td><td class="note">Foto, maps, dan harga weekend sudah dimasukan</td></tr>
 <tr><td>27</td><td><span class="unit">Villa Tree Vena</span><br><span class="category">Villa</span></td><td class="price">Rp 4.900.000</td><td><span class="status unchanged">Harga belum diubah</span></td><td class="note">Foto, maps, dan harga weekend sudah dimasukan</td></tr>
 <tr><td>28</td><td><span class="unit">Villa Sananda</span><br><span class="category">Villa</span></td><td class="price">Rp 2.500.000</td><td><span class="status unchanged">Harga belum diubah</span></td><td class="note">Foto, maps, dan harga weekend sudah dimasukan</td></tr>
 <tr><td>29</td><td><span class="unit">Villa Aprilia</span><br><span class="category">Villa</span></td><td class="price">Rp 3.350.000</td><td><span class="status unchanged">Harga belum diubah</span></td><td class="note">Foto, maps, dan harga weekend sudah dimasukan</td></tr>
@@ -112,7 +112,6 @@ const pendingMapNames = new Set([
   'Lantai 18 Sudirman Suites',
   'Lantai 19 Sudirman Suites',
   'Villa Ferrum',
-  'Villa Forest Heal',
 ]);
 const weekendPriceNames = new Set(['Villa Forest Heal', 'Villa Rustic Nine', 'Villa Alba Uno', 'Villa Alba Duo', 'Villa Sananda', 'Villa Aprilia', 'Villa Halimun', 'Villa Halimpu', 'Villa Manakala', 'Villa De Green', 'Villa Casa M3', 'Villa Tree Vena']);
 const weekendPrices = {
@@ -152,7 +151,6 @@ function renderPhotoStatus(row) {
   weekendCell.textContent = hasWeekendPrice ? `Rp ${weekendPrice.toLocaleString('id-ID')}` : '-';
   weekendStatusCell.innerHTML = `<span class="status ${weekendIsHigher ? 'price-change' : 'unchanged'}">${weekendIsHigher ? 'DONE' : 'Belum diubah'}</span>`;
   if(generalStatusCell.querySelector('.status')) generalStatusCell.remove();
-  if(noteCell) noteCell.remove();
   const existingWeekendCell = row.querySelector('.weekend-price');
   const existingWeekendStatusCell = row.querySelector('.weekend-status-cell');
   if(!existingWeekendCell){
@@ -160,14 +158,14 @@ function renderPhotoStatus(row) {
     row.insertBefore(weekendCell, row.children[3]);
   }
   weekendStatusCell.className = 'weekend-status-cell';
-  existingWeekendStatusCell ? existingWeekendStatusCell.replaceWith(weekendStatusCell) : row.insertBefore(weekendStatusCell, row.children[5]);
+  existingWeekendStatusCell ? existingWeekendStatusCell.replaceWith(weekendStatusCell) : row.insertBefore(weekendStatusCell, noteCell || null);
   const isUpdated = isPhotoUpdated(unitName);
   const existingCell = row.querySelector('.photo-cell');
   const cell = document.createElement('td');
   const status = document.createElement('span');
 
   status.className = `photo-status${isUpdated ? ' updated' : ''}`;
-  status.textContent = isUpdated ? 'Sudah diubah' : 'Belum diubah';
+  status.textContent = isUpdated ? 'DONE' : 'Belum diubah';
 
   cell.className = 'photo-cell';
   cell.append(status);
@@ -182,6 +180,7 @@ function renderPhotoStatus(row) {
   const existingMapCell = row.querySelector('.map-cell');
   mapCell.append(mapStatus);
   existingMapCell ? existingMapCell.replaceWith(mapCell) : row.append(mapCell);
+  if(noteCell) row.append(noteCell);
 }
 
 function updatePhotoCount() {

@@ -3,8 +3,30 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <meta name="theme-color" content="#059669" />
+  <meta name="theme-color" content="#a0522d" />
   <title>Absensi Crew Apartemen</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-analytics-compat.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyDdYrCzwvIJIElihY65_1qKVsgyB1rvXVQ",
+      authDomain: "your-home-ae753.firebaseapp.com",
+      projectId: "your-home-ae753",
+      storageBucket: "your-home-ae753.firebasestorage.app",
+      messagingSenderId: "110505936236",
+      appId: "1:110505936236:web:7aed6ee94713f98fbf9f49",
+      measurementId: "G-KY50J93K11"
+    };
+
+    const firebaseApp = firebase.initializeApp(firebaseConfig);
+    if (typeof firebase.analytics === 'function') firebase.analytics(firebaseApp);
+  </script>
 
   <!-- Tailwind CSS via CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -64,10 +86,63 @@
       width: 56px; height: 56px; object-fit: cover; border-radius: 8px;
       border: 2px solid #d1fae5;
     }
+    .work-photo-thumb { width: 64px; height: 64px; object-fit: cover; border-radius: 8px; border: 2px solid var(--line); }
+    .work-photo-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; }
+    @media (max-width: 380px) { .work-photo-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
 
     /* Sembunyikan scroll bar horizontal pada navigasi tab */
     .no-scrollbar::-webkit-scrollbar { display: none; }
     .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+    /* Identitas visual YOUR HOME: hangat, tenang, dan mudah dibaca di lapangan. */
+    :root {
+      --coffee-d: #3e2723;
+      --coffee: #5d4037;
+      --terracotta: #a0522d;
+      --terracotta-dark: #843f24;
+      --cream: #faf7f2;
+      --paper: #ffffff;
+      --line: #e2dbd0;
+      --soft: #f1ece2;
+      --muted: #776f66;
+      --green: #3f5a3a;
+    }
+    body { background: var(--cream) !important; color: var(--coffee-d) !important; font-family: 'Poppins', sans-serif; }
+    h1, h2, h3, h4 { font-family: 'Playfair Display', Georgia, serif; }
+    .bg-gradient-to-br.from-brand-600.to-brand-800,
+    .bg-gradient-to-r.from-brand-600.to-brand-700 { background: linear-gradient(135deg, var(--coffee-d), var(--terracotta)) !important; }
+    .bg-white { background-color: var(--paper) !important; }
+    .bg-gray-50 { background-color: var(--cream) !important; }
+    .bg-gray-100 { background-color: var(--soft) !important; }
+    .text-gray-800, .text-gray-700 { color: var(--coffee-d) !important; }
+    .text-gray-600, .text-gray-500 { color: var(--muted) !important; }
+    .text-gray-400 { color: #968b80 !important; }
+    .text-brand-100 { color: #f4ddd0 !important; }
+    .text-brand-600, .text-brand-700, .text-brand-800 { color: var(--terracotta) !important; }
+    .bg-brand-50 { background-color: #f8eee8 !important; }
+    .bg-brand-100 { background-color: #f3dfd2 !important; }
+    .bg-brand-200 { background-color: #e8c3ae !important; }
+    .bg-brand-600 { background-color: var(--terracotta) !important; }
+    .bg-brand-700, .hover\:bg-brand-700:hover { background-color: var(--terracotta-dark) !important; }
+    .border-brand-200 { border-color: #d9b39c !important; }
+    .border-gray-100, .border-gray-200 { border-color: var(--line) !important; }
+    .ring-brand-500:focus, .focus\:ring-brand-500:focus { --tw-ring-color: rgba(160, 82, 45, .28) !important; }
+    .focus\:border-brand-500:focus { border-color: var(--terracotta) !important; }
+    .shadow-brand-600\/30 { --tw-shadow-color: rgba(160, 82, 45, .3) !important; }
+    .rounded-3xl, .rounded-2xl, .rounded-xl { border-radius: 12px !important; }
+    #loginScreen { background: radial-gradient(circle at top right, rgba(160,82,45,.25), transparent 38%), linear-gradient(135deg, var(--coffee-d), var(--terracotta)) !important; }
+    #loginScreen > div { border: 1px solid rgba(226,219,208,.9); box-shadow: 0 20px 50px rgba(62,39,35,.2); }
+    #mainApp { max-width: 760px; margin: 0 auto; background: var(--cream); }
+    #mainApp > header { border-radius: 0 0 12px 12px !important; box-shadow: 0 10px 28px rgba(62,39,35,.14); }
+    #mainApp .bg-white.rounded-2xl { border: 1px solid var(--line); box-shadow: 0 10px 24px rgba(62,39,35,.08); }
+    .app-logo { width: 216px; height: 84px; object-fit: contain; object-position: left center; margin-bottom: 8px; }
+    button, select, input { font-family: 'Poppins', sans-serif; }
+    button.bg-gray-800 { background-color: var(--coffee-d) !important; }
+    button.hover\:bg-gray-900:hover { background-color: #241613 !important; }
+    .text-red-500 { color: #b42318 !important; }
+    .bg-amber-50 { background-color: #fff7e8 !important; }
+    .border-amber-300 { border-color: #e5bd72 !important; }
+    .text-amber-800 { color: #8b5e21 !important; }
   </style>
 </head>
 
@@ -97,11 +172,8 @@
     <div class="w-full max-w-sm bg-white rounded-3xl shadow-2xl p-7">
       <!-- Logo / Title -->
       <div class="text-center mb-6">
-        <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-brand-100 mb-3">
-          <!-- Icon: building -->
-          <svg xmlns="http://www.w3.org/2000/svg" class="w-9 h-9 text-brand-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M3 21h18M5 21V5a2 2 0 012-2h6a2 2 0 012 2v16M13 21v-6h4a2 2 0 012 2v4M9 9h0M9 13h0M9 17h0" />
-          </svg>
+        <div class="inline-flex items-center justify-center w-48 h-16 mb-3">
+          <img src="https://ik.imagekit.io/o1hnx31yy/yh%20(2).png?updatedAt=1790230701085" alt="YOUR HOME" class="max-w-full h-full object-contain" />
         </div>
         <h1 class="text-2xl font-bold text-gray-800">Absensi Crew</h1>
         <p class="text-sm text-gray-500">Sistem Check-in Crew Sewa Apartemen</p>
@@ -115,12 +187,11 @@
                   class="w-full px-4 py-3.5 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition text-base">
             <option value="">— Pilih crew —</option>
             <!-- 6 nama crew default, gampang diganti di JS -->
-            <option value="Crew 1">Crew 1</option>
-            <option value="Crew 2">Crew 2</option>
-            <option value="Crew 3">Crew 3</option>
-            <option value="Crew 4">Crew 4</option>
-            <option value="Crew 5">Crew 5</option>
-            <option value="Crew 6">Crew 6</option>
+            <option value="Aji Agung">Aji Agung</option>
+            <option value="Rezza Afrian Sukarsah">Rezza Afrian Sukarsah</option>
+            <option value="Qeyla Viorentina">Qeyla Viorentina</option>
+            <option value="Yono Maryono Narsisno">Yono Maryono Narsisno</option>
+            <option value="Udin Komarudin">Udin Komarudin</option>
           </select>
         </div>
 
@@ -153,6 +224,7 @@
     <header class="bg-gradient-to-r from-brand-600 to-brand-700 text-white px-5 pt-6 pb-5 rounded-b-3xl shadow-lg">
       <div class="flex items-center justify-between">
         <div>
+          <img class="app-logo" src="https://ik.imagekit.io/o1hnx31yy/putihi.png" alt="YOUR HOME" />
           <p class="text-xs text-brand-100">Halo, selamat datang</p>
           <h2 id="greetingCrew" class="text-xl font-bold">Crew</h2>
         </div>
@@ -233,7 +305,7 @@
 
         <!-- Upload Foto -->
         <div class="mt-4">
-          <label class="block text-sm font-semibold text-gray-700 mb-1.5">Foto Bukti <span class="text-red-500">*</span></label>
+          <label class="block text-sm font-semibold text-gray-700 mb-1.5">Foto Bukti Selfie di Lokasi <span class="text-red-500">*</span></label>
           <div class="flex items-center gap-3">
             <div id="photoPreview" class="w-20 h-20 rounded-xl bg-gray-100 border-2 border-dashed border-gray-300 flex items-center justify-center overflow-hidden flex-shrink-0">
               <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -241,19 +313,56 @@
                 <path stroke-linecap="round" stroke-linejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
               </svg>
             </div>
-            <label for="photoInput" class="flex-1 cursor-pointer bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold py-3.5 rounded-xl text-center text-sm transition">
-              Ambil / Pilih Foto
-            </label>
-            <input type="file" id="photoInput" accept="image/*" capture="environment" class="hidden" />
+            <button type="button" id="openSelfieCamera" class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold py-3.5 rounded-xl text-center text-sm transition">
+              Buka Kamera Selfie
+            </button>
           </div>
-          <p class="text-xs text-gray-400 mt-1">Kamera belakang HP akan terbuka otomatis.</p>
+          <p class="text-xs text-gray-400 mt-1">Ambil selfie saat berada di lokasi untuk bukti check-in.</p>
         </div>
 
-        <!-- Input Nomor Unit -->
+        <div id="selfieCameraPanel" class="hidden fixed inset-0 z-40 bg-black/80 p-5 flex items-center justify-center">
+          <div class="w-full max-w-md bg-white rounded-2xl p-4">
+            <video id="selfieVideo" class="w-full aspect-[3/4] rounded-xl bg-black object-cover" style="transform:scaleX(-1)" autoplay playsinline></video>
+            <div class="flex gap-2 mt-3">
+              <button type="button" id="captureSelfieBtn" class="flex-1 bg-brand-600 hover:bg-brand-700 text-white font-bold py-3 rounded-xl">Ambil Foto</button>
+              <button type="button" id="closeSelfieCameraBtn" class="px-4 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold rounded-xl">Tutup</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Upload foto hasil kerja, maksimal 30 foto -->
+        <div class="mt-5 pt-4 border-t border-gray-100">
+          <label class="block text-sm font-semibold text-gray-700 mb-1.5">Foto Hasil Kerjaan <span class="text-red-500">*</span></label>
+          <label for="workPhotoInput" class="block cursor-pointer bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold py-3.5 rounded-xl text-center text-sm transition">
+            Pilih Foto Hasil Kerjaan
+          </label>
+          <input type="file" id="workPhotoInput" accept="image/*" capture="environment" multiple class="hidden" />
+          <p id="workPhotoCount" class="text-xs text-gray-400 mt-2">Belum ada foto. Pilih 1–30 foto.</p>
+          <div id="workPhotoPreview" class="work-photo-grid mt-3"></div>
+        </div>
+
+        <!-- Dropdown properti -->
         <div class="mt-4">
-          <label for="unitInput" class="block text-sm font-semibold text-gray-700 mb-1.5">Nomor Unit / Nama Properti <span class="text-red-500">*</span></label>
-          <input type="text" id="unitInput" placeholder="Contoh: Tower A - Unit 1205"
-                 class="w-full px-4 py-3.5 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition text-base" />
+          <label for="unitInput" class="block text-sm font-semibold text-gray-700 mb-1.5">Pilih Properti <span class="text-red-500">*</span></label>
+          <select id="unitInput"
+                  class="w-full px-4 py-3.5 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition text-base">
+            <option value="">— Pilih properti —</option>
+            <optgroup label="Apartemen">
+              <option>Lantai 7 Sudirman Suites</option><option>Lantai 11 Sudirman Suites</option><option>Lantai 18 Sudirman Suites</option><option>Lantai 19 Sudirman Suites</option><option>Apartment Galeri Ciumbuleuit 3</option>
+            </optgroup>
+            <optgroup label="Villa">
+              <option>Villa Aurum</option><option>Villa Putih</option><option>Villa Alam 1</option><option>Villa Alam 2</option><option>Villa Alam 1 &amp; 2</option><option>Villa Trinity Garden Villa</option><option>Villa X4</option><option>Villa X7</option><option>Villa X47</option><option>Villa AWN</option><option>Villa Casa Kemilau Bintang</option><option>Villa Casa Bliss</option><option>Villa De Bukit Dago</option><option>Villa Ferrum</option><option>Villa Rustic Nine</option><option>Villa Alba Uno</option><option>Villa Alba Duo</option><option>Villa Forest Heal</option><option>Villa Tree Vena</option><option>Villa Sananda</option><option>Villa Aprilia</option><option>Villa Halimun</option><option>Villa Halimpu</option><option>Villa Manakala</option><option>Villa De Green</option><option>Villa Casa M3</option>
+            </optgroup>
+            <optgroup label="Guest House">
+              <option>Davion House</option><option>Guest House Tatar Banyak Sumba</option>
+            </optgroup>
+            <optgroup label="Kosan">
+              <option>Kosan De Orange Kost</option>
+            </optgroup>
+            <option value="Lainnya">Lainnya</option>
+          </select>
+          <input type="text" id="customUnitInput" placeholder="Tulis nama properti atau unit"
+                 class="hidden w-full mt-2 px-4 py-3.5 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition text-base" />
         </div>
 
         <!-- Dropdown Jenis Pekerjaan -->
@@ -389,13 +498,15 @@
   const CONFIG = {
     ADMIN_PIN: '1234',
     // Daftar 6 crew, bisa diganti di sini
-    CREW_LIST: ['Crew 1', 'Crew 2', 'Crew 3', 'Crew 4', 'Crew 5', 'Crew 6'],
+    CREW_LIST: ['Aji Agung', 'Rezza Afrian Sukarsah', 'Qeyla Viorentina', 'Yono Maryono Narsisno', 'Udin Komarudin'],
     // Key utama di localStorage
     STORAGE_KEY: 'absensi_crew_data',
     // Batas akurasi GPS (meter) untuk memunculkan peringatan
     ACCURACY_THRESHOLD: 100,
     // Durasi simpan foto dalam localStorage (compress max)
-    PHOTO_MAX_WIDTH: 640
+    PHOTO_MAX_WIDTH: 640,
+    PHOTO_MAX_BYTES: 250 * 1024,
+    MAX_WORK_PHOTOS: 30
   };
 
   /* ============================================================
@@ -405,6 +516,7 @@
     currentCrew: null,
     gpsData: null,       // { lat, lng, accuracy }
     photoData: null,     // base64 string
+    workPhotos: [],       // base64 foto hasil kerja
     today: new Date().toISOString().slice(0, 10) // YYYY-MM-DD
   };
 
@@ -520,8 +632,20 @@
         canvas.height = height;
         const ctx = canvas.getContext('2d');
         ctx.drawImage(img, 0, 0, width, height);
-        // Kompres dengan quality 0.7
-        const compressed = canvas.toDataURL('image/jpeg', 0.7);
+        let quality = 0.72;
+        let compressed = canvas.toDataURL('image/jpeg', quality);
+        while (compressed.length * 0.75 > CONFIG.PHOTO_MAX_BYTES && quality > 0.25) {
+          quality -= 0.08;
+          compressed = canvas.toDataURL('image/jpeg', quality);
+        }
+        while (compressed.length * 0.75 > CONFIG.PHOTO_MAX_BYTES && width > 320) {
+          width = Math.round(width * 0.85);
+          height = Math.round(height * 0.85);
+          canvas.width = width;
+          canvas.height = height;
+          ctx.drawImage(img, 0, 0, width, height);
+          compressed = canvas.toDataURL('image/jpeg', quality);
+        }
         callback(compressed);
       };
       img.src = e.target.result;
@@ -629,8 +753,19 @@
     // --- CHECK-IN: ambil GPS ---
     document.getElementById('getLocationBtn').addEventListener('click', getLocation);
 
-    // --- CHECK-IN: upload foto ---
-    document.getElementById('photoInput').addEventListener('change', handlePhotoUpload);
+    // --- CHECK-IN: selfie kamera langsung ---
+    document.getElementById('openSelfieCamera').addEventListener('click', openSelfieCamera);
+    document.getElementById('captureSelfieBtn').addEventListener('click', captureSelfie);
+    document.getElementById('closeSelfieCameraBtn').addEventListener('click', closeSelfieCamera);
+    document.getElementById('workPhotoInput').addEventListener('change', handleWorkPhotoUpload);
+
+    document.getElementById('unitInput').addEventListener('change', () => {
+      const customInput = document.getElementById('customUnitInput');
+      customInput.classList.toggle('hidden', document.getElementById('unitInput').value !== 'Lainnya');
+      if (document.getElementById('unitInput').value !== 'Lainnya') customInput.value = '';
+      validateForm();
+    });
+    document.getElementById('customUnitInput').addEventListener('input', validateForm);
 
     // --- CHECK-IN: validasi form real-time ---
     ['unitInput', 'jobTypeSelect'].forEach(id => {
@@ -715,20 +850,98 @@
   /* ============================================================
      FOTO: handle upload
      ============================================================ */
-  function handlePhotoUpload(e) {
-    const file = e.target.files[0];
-    if (!file) return;
-    showLoading('Memproses foto…');
-    compressImage(file, (dataUrl) => {
-      hideLoading();
-      state.photoData = dataUrl;
-      // Tampilkan preview
-      const preview = document.getElementById('photoPreview');
-      preview.innerHTML = `<img src="${dataUrl}" class="w-full h-full object-cover" alt="foto" />`;
-      preview.classList.remove('border-dashed', 'border-gray-300', 'bg-gray-100');
-      preview.classList.add('border-solid', 'border-brand-500');
+  let selfieStream = null;
+
+  async function openSelfieCamera() {
+    if (!navigator.mediaDevices?.getUserMedia) {
+      showToast('Kamera langsung tidak didukung browser ini.', 'error');
+      return;
+    }
+    try {
+      selfieStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' }, audio: false });
+      document.getElementById('selfieVideo').srcObject = selfieStream;
+      document.getElementById('selfieCameraPanel').classList.remove('hidden');
+    } catch (error) {
+      showToast('Izin kamera diperlukan untuk selfie bukti.', 'error');
+    }
+  }
+
+  function closeSelfieCamera() {
+    selfieStream?.getTracks().forEach(track => track.stop());
+    selfieStream = null;
+    document.getElementById('selfieVideo').srcObject = null;
+    document.getElementById('selfieCameraPanel').classList.add('hidden');
+  }
+
+  function captureSelfie() {
+    const video = document.getElementById('selfieVideo');
+    if (!video.videoWidth) {
+      showToast('Kamera belum siap. Coba lagi.', 'error');
+      return;
+    }
+    const canvas = document.createElement('canvas');
+    canvas.width = Math.min(video.videoWidth, CONFIG.PHOTO_MAX_WIDTH);
+    canvas.height = Math.round(video.videoHeight * canvas.width / video.videoWidth);
+    const context = canvas.getContext('2d');
+    context.translate(canvas.width, 0);
+    context.scale(-1, 1);
+    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+    let quality = 0.7;
+    state.photoData = canvas.toDataURL('image/jpeg', quality);
+    while (state.photoData.length * 0.75 > CONFIG.PHOTO_MAX_BYTES && quality > 0.25) {
+      quality -= 0.08;
+      state.photoData = canvas.toDataURL('image/jpeg', quality);
+    }
+    const preview = document.getElementById('photoPreview');
+    preview.innerHTML = `<img src="${state.photoData}" class="w-full h-full object-cover" alt="selfie bukti di lokasi" />`;
+    preview.classList.remove('border-dashed', 'border-gray-300', 'bg-gray-100');
+    preview.classList.add('border-solid', 'border-brand-500');
+    closeSelfieCamera();
+    validateForm();
+    showToast('Selfie bukti berhasil diambil.', 'success');
+  }
+
+  async function handleWorkPhotoUpload(e) {
+    const selectedFiles = Array.from(e.target.files || []);
+    if (!selectedFiles.length) return;
+    const availableSlots = CONFIG.MAX_WORK_PHOTOS - state.workPhotos.length;
+    if (selectedFiles.length > availableSlots) {
+      showToast(`Maksimal ${CONFIG.MAX_WORK_PHOTOS} foto hasil kerja.`, 'error');
+      e.target.value = '';
+      return;
+    }
+    showLoading(`Memproses ${selectedFiles.length} foto hasil kerja…`);
+    try {
+      const compressedPhotos = await Promise.all(selectedFiles.map(file => new Promise(resolve => {
+        compressImage(file, resolve);
+      })));
+      state.workPhotos.push(...compressedPhotos);
+      renderWorkPhotoPreview();
       validateForm();
-      showToast('Foto siap.', 'success');
+      showToast(`${compressedPhotos.length} foto hasil kerja siap.`, 'success');
+    } finally {
+      hideLoading();
+      e.target.value = '';
+    }
+  }
+
+  function renderWorkPhotoPreview() {
+    const preview = document.getElementById('workPhotoPreview');
+    document.getElementById('workPhotoCount').textContent = state.workPhotos.length
+      ? `${state.workPhotos.length}/${CONFIG.MAX_WORK_PHOTOS} foto siap dikirim. Maksimal 250 KB per foto.`
+      : 'Belum ada foto. Pilih 1–30 foto.';
+    preview.innerHTML = state.workPhotos.map((photo, index) => `
+      <button type="button" class="relative" data-remove-work-photo="${index}" aria-label="Hapus foto hasil kerja ${index + 1}">
+        <img src="${photo}" class="work-photo-thumb" alt="Foto hasil kerja ${index + 1}" />
+        <span class="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-red-500 text-white text-xs leading-5">×</span>
+      </button>
+    `).join('');
+    preview.querySelectorAll('[data-remove-work-photo]').forEach(button => {
+      button.addEventListener('click', () => {
+        state.workPhotos.splice(Number(button.dataset.removeWorkPhoto), 1);
+        renderWorkPhotoPreview();
+        validateForm();
+      });
     });
   }
 
@@ -738,19 +951,25 @@
   function validateForm() {
     const hasGps = !!state.gpsData;
     const hasPhoto = !!state.photoData;
-    const hasUnit = document.getElementById('unitInput').value.trim() !== '';
+    const hasWorkPhotos = state.workPhotos.length > 0;
+    const selectedUnit = document.getElementById('unitInput').value;
+    const customUnit = document.getElementById('customUnitInput').value.trim();
+    const hasUnit = selectedUnit !== '' && (selectedUnit !== 'Lainnya' || customUnit !== '');
     const hasJob = document.getElementById('jobTypeSelect').value !== '';
-    document.getElementById('saveCheckinBtn').disabled = !(hasGps && hasPhoto && hasUnit && hasJob);
+    document.getElementById('saveCheckinBtn').disabled = !(hasGps && hasPhoto && hasWorkPhotos && hasUnit && hasJob);
   }
 
   /* ============================================================
      SIMPAN CHECK-IN
      ============================================================ */
   function saveCheckin() {
-    const unit = document.getElementById('unitInput').value.trim();
+    const selectedUnit = document.getElementById('unitInput').value;
+    const unit = selectedUnit === 'Lainnya'
+      ? document.getElementById('customUnitInput').value.trim()
+      : selectedUnit;
     const jobType = document.getElementById('jobTypeSelect').value;
-    if (!state.gpsData || !state.photoData || !unit || !jobType) {
-      showToast('Lengkapi semua data terlebih dahulu.', 'error');
+    if (!state.gpsData || !state.photoData || !state.workPhotos.length || !unit || !jobType) {
+      showToast('Lengkapi GPS, foto bukti, dan foto hasil kerja terlebih dahulu.', 'error');
       return;
     }
     const record = {
@@ -762,7 +981,8 @@
       lat: state.gpsData.lat,
       lng: state.gpsData.lng,
       accuracy: state.gpsData.accuracy,
-      photo: state.photoData
+      photo: state.photoData,
+      workPhotos: state.workPhotos
     };
     addRecord(record);
     showToast('Check-in berhasil disimpan! ✅', 'success');
@@ -777,14 +997,18 @@
   function resetForm() {
     state.gpsData = null;
     state.photoData = null;
+    state.workPhotos = [];
     document.getElementById('gpsInfo').classList.add('hidden');
     document.getElementById('gpsWarning').classList.add('hidden');
-    document.getElementById('photoInput').value = '';
+    document.getElementById('workPhotoInput').value = '';
     const preview = document.getElementById('photoPreview');
     preview.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" /></svg>`;
     preview.classList.add('border-dashed', 'border-gray-300', 'bg-gray-100');
     preview.classList.remove('border-solid', 'border-brand-500');
+    renderWorkPhotoPreview();
     document.getElementById('unitInput').value = '';
+    document.getElementById('customUnitInput').value = '';
+    document.getElementById('customUnitInput').classList.add('hidden');
     document.getElementById('jobTypeSelect').value = '';
     document.getElementById('saveCheckinBtn').disabled = true;
   }
@@ -834,6 +1058,7 @@
              class="inline-flex items-center gap-1 mt-1.5 text-xs text-brand-600 hover:underline font-medium">
             Buka di Google Maps ↗
           </a>
+          ${r.workPhotos?.length ? `<div class="mt-3"><p class="text-xs text-gray-500 mb-1">Foto hasil kerja (${r.workPhotos.length})</p><div class="work-photo-grid">${r.workPhotos.map((photo, index) => `<img src="${photo}" class="work-photo-thumb" alt="Foto hasil kerja ${index + 1}" />`).join('')}</div></div>` : ''}
         </div>
       </div>
     `).join('');
@@ -937,6 +1162,7 @@
              class="inline-flex items-center gap-1 mt-1 text-xs text-brand-600 hover:underline">
             Maps ↗ (${r.lat.toFixed(5)}, ${r.lng.toFixed(5)})
           </a>
+          ${r.workPhotos?.length ? `<div class="mt-3"><p class="text-xs text-gray-500 mb-1">Foto hasil kerja (${r.workPhotos.length})</p><div class="work-photo-grid">${r.workPhotos.map((photo, index) => `<img src="${photo}" class="work-photo-thumb" alt="Foto hasil kerja ${index + 1}" />`).join('')}</div></div>` : ''}
         </div>
       </div>
     `).join('');
