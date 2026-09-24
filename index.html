@@ -149,7 +149,7 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
   color:rgba(255,255,255,.7);font-size:.75rem;letter-spacing:.2em;text-transform:uppercase;
   display:flex;flex-direction:column;align-items:center;gap:.5rem;
 }
-.hero-scroll::after{content:"";width:1px;height:36px;background:rgba(255,255,255,.4);animation:scrolldown 2s infinite}
+.hero-scroll::after{content:"";width:1px;height:36px;background:rgba(255,255,255,.4);animation:scrolldown 2s infinite;will-change:transform}
 @keyframes scrolldown{0%,100%{transform:scaleY(.4);transform-origin:top}50%{transform:scaleY(1);transform-origin:top}}
 
 /* ============== BOOKING WIDGET ============== */
@@ -671,8 +671,16 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
 <section class="about" id="about">
   <div class="container about-grid">
     <div class="about-imgs">
-      <img src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=800&q=80" alt="Interior villa" />
-      <img src="https://images.unsplash.com/photo-1583847268964-b28dc8f51f92?auto=format&fit=crop&w=600&q=80" alt="Detail villa" />
+      <picture>
+        <source srcset="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=800&q=80&fm=avif" type="image/avif" />
+        <source srcset="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=800&q=80&fm=webp" type="image/webp" />
+        <img src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=800&q=80&fm=jpg" width="800" height="600" loading="lazy" alt="Interior villa" />
+      </picture>
+      <picture>
+        <source srcset="https://images.unsplash.com/photo-1583847268964-b28dc8f51f92?auto=format&fit=crop&w=600&q=80&fm=avif" type="image/avif" />
+        <source srcset="https://images.unsplash.com/photo-1583847268964-b28dc8f51f92?auto=format&fit=crop&w=600&q=80&fm=webp" type="image/webp" />
+        <img src="https://images.unsplash.com/photo-1583847268964-b28dc8f51f92?auto=format&fit=crop&w=600&q=80&fm=jpg" width="600" height="450" loading="lazy" alt="Detail villa" />
+      </picture>
       <div class="about-badge">
         <strong>5★</strong>
         <span>Rating Tamu</span>
@@ -818,7 +826,11 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
     <div class="footer-grid">
       <div class="footer-brand">
         <a href="#home" class="logo">
-          <img class="logo-mark" src="https://ik.imagekit.io/o1hnx31yy/yh%20(2).png" alt="YOUR HOME" />
+          <picture>
+            <source srcset="https://ik.imagekit.io/o1hnx31yy/yh%20(2).png?tr=f-avif" type="image/avif" />
+            <source srcset="https://ik.imagekit.io/o1hnx31yy/yh%20(2).png?tr=f-webp" type="image/webp" />
+            <img class="logo-mark" src="https://ik.imagekit.io/o1hnx31yy/yh%20(2).png?tr=f-jpg" width="352" height="104" loading="lazy" alt="YOUR HOME" />
+          </picture>
         </a>
         <p>Comfort in every corner of Bandung. Penyedia akomodasi premium terpercaya untuk liburan, bisnis, dan staycation Anda di kota Kembang.</p>
         <div class="social-row">
@@ -885,7 +897,13 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
 <div class="modal-overlay" id="modalOverlay">
   <div class="modal" id="modal">
     <button class="modal-close" id="modalClose">&times;</button>
-    <div class="modal-img"><img id="modalImg" src="" alt="" /></div>
+    <div class="modal-img">
+      <picture>
+        <source id="modalImgAvif" srcset="" type="image/avif" />
+        <source id="modalImgWebp" srcset="" type="image/webp" />
+        <img id="modalImg" src="" width="800" height="600" loading="lazy" alt="" />
+      </picture>
+    </div>
     <div class="modal-body" id="modalBody"></div>
   </div>
 </div>
@@ -3511,6 +3529,7 @@ function updatePriceRangeLabel(){
   }
   priceRangeValue.textContent = `${formatPrice(minimum)} - ${formatPrice(maximum)}`;
 }
+const getImageUrl = (url, format) => `${url}${url.includes('?') ? '&' : '?'}tr=f-${format}`;
 minPriceControl.addEventListener('input', updatePriceRangeLabel);
 maxPriceControl.addEventListener('input', updatePriceRangeLabel);
 updatePriceRangeLabel();
@@ -3527,7 +3546,11 @@ function renderProperties(filter='all', minimumPrice=lowestPrice, maximumPrice=h
   propsGrid.innerHTML = list.map(p => `
     <article class="prop-card" data-id="${p.id}">
       <div class="prop-img">
-        <img src="${p.img}" alt="${p.name}" loading="lazy" />
+        <picture>
+          <source srcset="${getImageUrl(p.img, 'avif')}" type="image/avif" />
+          <source srcset="${getImageUrl(p.img, 'webp')}" type="image/webp" />
+          <img src="${p.img}" width="800" height="600" loading="lazy" alt="${p.name}" />
+        </picture>
         <span class="prop-cat">${p.catLabel}</span>
         <button class="prop-fav" aria-label="Favorit">♥</button>
       </div>
@@ -3573,12 +3596,16 @@ document.querySelectorAll('.filter-btn').forEach(btn => {
 /* ============== MODAL ============== */
 const modalOverlay = document.getElementById('modalOverlay');
 const modalImg = document.getElementById('modalImg');
+const modalImgAvif = document.getElementById('modalImgAvif');
+const modalImgWebp = document.getElementById('modalImgWebp');
 const modalBody = document.getElementById('modalBody');
 
 function openModal(id){
   const p = properties.find(x => x.id === id);
   if(!p) return;
   modalImg.src = p.img;
+  modalImgAvif.srcset = getImageUrl(p.img, 'avif');
+  modalImgWebp.srcset = getImageUrl(p.img, 'webp');
   modalImg.alt = p.name;
   const cleanDescription = (text) => text
     .replace(/##\s*/g, '')
