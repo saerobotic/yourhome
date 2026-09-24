@@ -60,7 +60,7 @@ footer{margin-top:20px;color:var(--muted);font-size:.78rem}
 
 <div class="table-wrap">
 <table>
-<thead><tr><th>No.</th><th>Nama Unit</th><th>Harga Weekday</th><th>Harga Weekend</th><th>Status Harga Weekend</th><th>Status Foto</th><th>Status Maps</th><th>Catatan</th></tr></thead>
+<thead><tr><th>No.</th><th>Nama Unit</th><th>Harga Weekday</th><th>Harga Weekend</th><th>Status Harga Weekend</th><th>Status Foto</th><th>Status Maps</th></tr></thead>
 <tbody>
 <tr><td>1</td><td><span class="unit">Lantai 7 Sudirman Suites</span><br><span class="category">Apartemen</span></td><td class="price">Rp 618.000</td><td><span class="status price-change">Harga diubah</span></td><td class="note">Harga diperbarui</td></tr>
 <tr><td>2</td><td><span class="unit">Lantai 11 Sudirman Suites</span><br><span class="category">Apartemen</span></td><td class="price">Rp 955.000</td><td><span class="status price-change">Harga diubah</span></td><td class="note">Harga diperbarui</td></tr>
@@ -138,6 +138,7 @@ function renderPhotoStatus(row) {
   const unitName = row.querySelector('.unit').textContent.trim();
   const priceCell = row.querySelector('.price');
   const generalStatusCell = row.children[3];
+  const noteCell = row.querySelector('.note');
   const weekdayCell = document.createElement('td');
   const weekendCell = document.createElement('td');
   const weekendStatusCell = document.createElement('td');
@@ -151,6 +152,7 @@ function renderPhotoStatus(row) {
   weekendCell.textContent = hasWeekendPrice ? `Rp ${weekendPrice.toLocaleString('id-ID')}` : '-';
   weekendStatusCell.innerHTML = `<span class="status ${weekendIsHigher ? 'price-change' : 'unchanged'}">${weekendIsHigher ? 'DONE' : 'Belum diubah'}</span>`;
   if(generalStatusCell.querySelector('.status')) generalStatusCell.remove();
+  if(noteCell) noteCell.remove();
   const existingWeekendCell = row.querySelector('.weekend-price');
   const existingWeekendStatusCell = row.querySelector('.weekend-status-cell');
   if(!existingWeekendCell){
@@ -169,7 +171,7 @@ function renderPhotoStatus(row) {
 
   cell.className = 'photo-cell';
   cell.append(status);
-  existingCell ? existingCell.replaceWith(cell) : row.insertBefore(cell, row.lastElementChild);
+  existingCell ? existingCell.replaceWith(cell) : row.append(cell);
 
   const mapCell = document.createElement('td');
   const mapStatus = document.createElement('span');
@@ -179,7 +181,7 @@ function renderPhotoStatus(row) {
   mapCell.className = 'map-cell';
   const existingMapCell = row.querySelector('.map-cell');
   mapCell.append(mapStatus);
-  existingMapCell ? existingMapCell.replaceWith(mapCell) : row.insertBefore(mapCell, row.lastElementChild);
+  existingMapCell ? existingMapCell.replaceWith(mapCell) : row.append(mapCell);
 }
 
 function updatePhotoCount() {
