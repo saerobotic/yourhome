@@ -90,19 +90,19 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
 /* ============== NAVBAR ============== */
 .navbar{
   position:fixed;top:0;left:0;right:0;z-index:100;
-  padding:18px 0;transition:var(--trans);
+  padding:12px 0;transition:var(--trans);
   background:transparent;
 }
 .navbar.scrolled{
   background:rgba(250,247,242,.95);
   backdrop-filter:blur(12px);
   box-shadow:0 4px 20px rgba(60,40,25,.06);
-  padding:12px 0;
+  padding:8px 0;
 }
 .nav-inner{display:flex;align-items:center;justify-content:space-between}
 .logo{display:flex;align-items:center;gap:.65rem;font-family:'Playfair Display',serif}
 .logo-mark{
-  width:64px;height:52px;border-radius:0;
+  width:176px;height:52px;border-radius:0;
   background:transparent;color:var(--cream);
   display:flex;align-items:center;justify-content:center;
   font-weight:700;font-size:1.1rem;letter-spacing:-.02em;
@@ -365,7 +365,7 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
 .footer{background:var(--coffee-d);color:rgba(255,255,255,.75);padding:70px 0 30px}
 .footer-grid{display:grid;grid-template-columns:1.4fr 1fr 1fr 1.2fr;gap:48px;margin-bottom:50px}
 .footer-brand .logo-text strong{color:var(--white)}
-.footer-brand .logo-mark{width:64px;height:52px}
+.footer-brand .logo-mark{width:192px;height:58px}
 .footer-brand p{color:rgba(255,255,255,.65);font-size:.9rem;margin:20px 0 22px;max-width:320px}
 .social-row{display:flex;gap:12px}
 .social-row a{
@@ -456,6 +456,7 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
   .featured{padding-top:48px}
   .section-head{margin-bottom:32px}
   .nav-links{display:none}
+  .logo-mark{width:144px;height:44px}
   .menu-toggle{display:block}
   .nav-cta .btn-primary{padding:9px 15px;font-size:.8rem;white-space:nowrap}
   .nav-links.open{
@@ -492,7 +493,7 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
 <nav class="navbar" id="navbar">
   <div class="container nav-inner">
     <a href="#home" class="logo">
-      <img class="logo-mark" src="https://ik.imagekit.io/5bnhlcghq/ChatGPT%20Image%20Sep%2023,%202026,%2012_39_48%20PM.png?updatedAt=1790142373268" alt="YOUR HOME" />
+      <img class="logo-mark" src="https://ik.imagekit.io/o1hnx31yy/yh%20(2).png" alt="YOUR HOME" />
     </a>
     <ul class="nav-links" id="navLinks">
       <li><a href="#home">Beranda</a></li>
@@ -814,11 +815,7 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
     <div class="footer-grid">
       <div class="footer-brand">
         <a href="#home" class="logo">
-          <img class="logo-mark" src="https://ik.imagekit.io/5bnhlcghq/ChatGPT%20Image%20Sep%2023,%202026,%2012_39_48%20PM.png?updatedAt=1790142373268" alt="YOUR HOME" />
-          <div class="logo-text">
-            <strong>YOUR HOME</strong>
-            <small>Bandung Stays</small>
-          </div>
+          <img class="logo-mark" src="https://ik.imagekit.io/o1hnx31yy/yh%20(2).png" alt="YOUR HOME" />
         </a>
         <p>Comfort in every corner of Bandung. Penyedia akomodasi premium terpercaya untuk liburan, bisnis, dan staycation Anda di kota Kembang.</p>
         <div class="social-row">
@@ -1653,7 +1650,7 @@ Selamat datang di Vila kami. Demi kenyamanan dan keamanan bersama, mohon mematuh
 15. Dengan menginap di vila ini, tamu dianggap telah membaca dan menyetujui seluruh peraturan yang berlaku, apabila salah satu dari peraturan tersebut ada yang dilanggar oleh penyewa maka management villa berhak menegur dahulu, dan membatalkan pemesanan villa secara sepihak, dan pembayaran dianggap hangus.
 
 Terima kasih atas kerja samanya. Semoga Anda menikmati masa menginap di Villa Alam.` },
-  { id:'villa-trinity', name:'Villa Trinity Garden Villa', cat:'villa', catLabel:'Villa',
+  { id:'villa-trinity', name:'Villa Trinity Garden', cat:'villa', catLabel:'Villa',
     loc:'Cihideung, Parongpong, Lembang', beds:4, baths:3, guests:10, price:7899000,
     mapQuery:'https://maps.app.goo.gl/axmY92pc2N8JFPiD9',
     img:'https://ik.imagekit.io/o1hnx31yy/X4.JPG?updatedAt=1790155917669',
@@ -2141,6 +2138,1139 @@ Hal-hal yang PERLU diketahui sebelum booking:
     loc:'Lembang, Bandung', beds:4, baths:3, guests:8, price:11000000,
     img:'https://ik.imagekit.io/o1hnx31yy/Ferrum.JPG?updatedAt=1790155917429',
     desc:'Villa Ferrum di Lembang menawarkan suasana tenang dan eksklusif dengan nuansa alam yang sejuk dan nyaman untuk staycation keluarga.' },
+  { id:'villa-rustic-nine', name:'Villa Rustic Nine', cat:'villa', catLabel:'Villa',
+    loc:'Dago, Bandung', beds:4, baths:3, guests:8, price:8500000, weekdayPrice:8500000, weekendPrice:12100000,
+    mapQuery:'Dago, Bandung',
+    mapLink:'https://maps.app.goo.gl/q66wyEuL2P1Yn7hS8',
+    img:'https://ik.imagekit.io/o1hnx31yy/RusticNine%20Villa%20Dago.avif',
+    desc:`Villa Rustic Nine Dago – Bandung
+
+Villa Rustic Nine hadir di kawasan Dago, Bandung, dengan suasana tenang, udara sejuk, dan nuansa alam yang nyaman. Lokasinya cocok untuk menikmati waktu istirahat bersama keluarga maupun teman, dengan akses mudah menuju berbagai destinasi wisata, kafe, dan restoran di kawasan Dago.
+
+Tempat
+Ruang & Area:
+
+• Villa pribadi dengan suasana yang tenang dan nyaman
+• Area berkumpul yang luas untuk keluarga dan rombongan
+• Area outdoor untuk bersantai menikmati udara sejuk Dago
+• Pemandangan dan lingkungan hijau khas kawasan Dago
+• Cocok untuk staycation, liburan keluarga, dan quality time bersama
+
+Kamar & Kenyamanan:
+
+• 4 kamar tidur
+• 3 kamar mandi
+• Kapasitas hingga 8 tamu
+• Ruang keluarga dan area duduk yang nyaman
+
+Dapur & Ruang Makan:
+
+• Area makan untuk keluarga dan rombongan
+• Dapur dengan perlengkapan dasar
+• Kulkas dan fasilitas pendukung menginap
+
+Akses tamu
+• Akses ke seluruh area villa
+• Area parkir pribadi
+• Lingkungan yang tenang dan ramah keluarga
+• Akses kendaraan yang mudah
+• Akses mudah menuju berbagai tempat wisata, kafe, dan restoran di Dago
+
+Fasilitas Pendukung di Sekitar:
+
+• Dago Dreampark
+• Tahura Ir. H. Juanda
+• Dago Golf
+• Selasar Sunaryo Art Space
+• Wot Batu
+• Tebing Keraton
+• Punclut
+• Kafe dan restoran Dago Pakar
+
+Hal lain yang perlu diperhatikan
+
+• Informasi check-in akan disampaikan pada hari kedatangan setelah villa siap digunakan.
+• Mohon menjaga kebersihan dan ketenangan selama menginap.
+• Dilarang merokok di dalam villa.
+• Hewan peliharaan dan acara khusus perlu dikonfirmasi terlebih dahulu kepada pengelola.
+• Setiap kerusakan yang disebabkan oleh tamu dapat dikenakan biaya penggantian atau perbaikan.` },
+  { id:'villa-alba-uno', name:'Villa Alba Uno', cat:'villa', catLabel:'Villa',
+    loc:'Cigugur Girang, Parongpong, Bandung', beds:3, baths:2, guests:8, price:3500000, weekdayPrice:3500000, weekendPrice:5000000,
+    mapQuery:'Cigugur Girang, Parongpong, Bandung',
+    mapLink:'https://maps.app.goo.gl/tpoxrhNt3Gk9mkDW7',
+    img:'https://ik.imagekit.io/o1hnx31yy/alba%20uno.png?updatedAt=1790230551143',
+    desc:`Villa Alba Uno – Parongpong
+
+Terletak di Cigugur Girang, Parongpong yang tenang, dikelilingi pepohonan hijau, udara sejuk, dan suasana alam yang menenangkan. Berlokasi dekat dengan:
+
+• Dusun Bambu
+• Curug Cimahi
+• Lembang Park & Zoo
+• Farmhouse Lembang
+• The Great Asia Africa
+• Floating Market
+• Dago Dreampark
+• Punclut
+
+Cocok untuk liburan santai, family getaway, atau quality time bersama orang tersayang, dekat berbagai destinasi wisata, kafe, dan restoran.
+
+Tempat
+Kamar & Ruang:
+
+• Luas area: 250 m²
+• 2 kamar tidur, masing-masing dengan 1 tempat tidur Queen
+• 1 kamar tidur dengan 2 tempat tidur Queen
+• WiFi SUPER CEPAT TANPA BATAS – hingga 80 Mbps
+• TV LED 43”
+• Kolam renang pribadi
+• Peralatan karaoke lengkap dengan mikrofon dan speaker
+
+Kamar Mandi & Kenyamanan:
+
+• Shower
+• Bathtub dengan pemandangan indah
+• Lemari pakaian, meja rias, dan cermin besar
+
+Dapur & Ruang Makan:
+
+• Meja makan dengan peralatan makan lengkap
+• Kompor dengan peralatan masak dasar
+• Kulkas
+• Air mineral galon tersedia
+• Grill BBQ bertenaga gas
+
+Akses tamu
+Fasilitas Villa Alba Uno:
+
+• Kolam renang pribadi
+• Grill BBQ bertenaga gas
+• Peralatan karaoke dengan mikrofon dan speaker
+• Bathtub dengan pemandangan indah
+• Lingkungan hijau dan tenang
+• Suasana pegunungan yang sejuk dan nyaman
+• Area outdoor yang luas
+• Parkir pribadi
+• Akses kendaraan yang mudah
+• Lingkungan tenang dan ramah keluarga
+• Cocok untuk staycation, liburan keluarga, dan quality time bersama
+• WiFi SUPER CEPAT TANPA BATAS – hingga 80 Mbps
+• TV LED 43”
+
+Fasilitas Pendukung di Sekitar:
+
+• Minimarket & toko lokal
+• Kafe & restoran di sekitar Parongpong dan Lembang
+• Akses mudah ke berbagai tempat wisata
+• Ruang terbuka hijau dan area dengan pemandangan indah
+
+Hal lain yang perlu diperhatikan
+CHECK-IN 14:00 WIB
+
+Saat check-in, seluruh fasilitas villa dalam kondisi baik. Mohon segera informasikan kepada staff villa atau admin apabila terdapat kerusakan atau kendala sebelum menggunakan fasilitas.
+
+CHECK-OUT 11:00 WIB
+
+Tamu dapat mengajukan late check-out hingga pukul 11:30 WIB, tergantung ketersediaan dan dengan ketentuan tidak ada tamu lain yang dijadwalkan check-in setelahnya.
+
+PERATURAN VILLA:
+
+• Deposit jaminan sebesar Rp1.000.000 diperlukan dan akan dikembalikan setelah villa diperiksa setelah check-out.
+• Waktu check-in pukul 14:00 WIB dan check-out pukul 11:00 WIB. Early check-in atau late check-out di luar waktu yang telah disepakati akan dikenakan biaya Rp500.000 per jam.
+• Penggunaan alat musik atau karaoke dengan volume berlebihan tidak diperbolehkan karena dapat mengganggu tamu lain maupun warga sekitar.
+• Tamu dilarang membawa minuman beralkohol, obat-obatan terlarang, senjata api, senjata tajam, melakukan perjudian, atau aktivitas ilegal lainnya.
+• Segala bentuk aktivitas seksual yang tidak pantas atau melanggar hukum dilarang keras di area villa.
+• Pihak pengelola villa tidak bertanggung jawab atas kecelakaan atau cedera yang disebabkan oleh kelalaian pribadi tamu.
+• Merokok hanya diperbolehkan di area balkon outdoor.
+• Hewan peliharaan tidak diperbolehkan kecuali telah mendapatkan konfirmasi dan izin terlebih dahulu dari pihak pengelola villa.
+• Dilarang memindahkan atau mengubah posisi furnitur tanpa izin.
+• Mohon menjaga kebersihan villa dan tidak membuang sampah sembarangan atau mengotori area kolam renang.
+• Segala kerusakan yang disebabkan oleh tamu akan dikenakan biaya sesuai dengan biaya penggantian atau perbaikan barang yang rusak.
+• Pesta tidak diperbolehkan. Tamu juga tidak diperkenankan membawa dekorasi yang dapat merusak dinding atau furnitur villa.
+• Jumlah tamu dan kendaraan tidak boleh melebihi kapasitas maksimal yang telah ditentukan, kecuali telah mendapatkan persetujuan terlebih dahulu dari pihak pengelola villa.
+
+Dengan menginap di Villa Alba Uno, tamu dianggap telah membaca, memahami, dan menyetujui seluruh peraturan yang tercantum di atas.
+
+Apabila terdapat pelanggaran terhadap peraturan, pihak pengelola villa berhak memberikan peringatan, membatalkan reservasi, dan menganggap pembayaran tidak dapat dikembalikan.` },
+  { id:'villa-alba-duo', name:'Villa Alba Duo', cat:'villa', catLabel:'Villa',
+    loc:'Cigugur Girang, Parongpong, Bandung', beds:3, baths:2, guests:8, price:3000000, weekdayPrice:3000000, weekendPrice:4500000,
+    mapQuery:'Cigugur Girang, Parongpong, Bandung',
+    mapLink:'https://maps.app.goo.gl/tpoxrhNt3Gk9mkDW7',
+    img:'https://ik.imagekit.io/o1hnx31yy/alba%20duo.avif',
+    desc:`Villa Alba Duo – Parongpong
+
+Terletak di Cigugur Girang, Parongpong yang tenang, dikelilingi pepohonan hijau, udara sejuk, dan suasana alam yang menenangkan. Berlokasi dekat dengan:
+
+• Dusun Bambu
+• Curug Cimahi
+• Lembang Park & Zoo
+• Farmhouse Lembang
+• The Great Asia Africa
+• Floating Market
+• Dago Dreampark
+• Punclut
+
+Cocok untuk liburan santai, family getaway, atau quality time bersama orang tersayang, dekat berbagai destinasi wisata, kafe, dan restoran.
+
+Tempat
+Kamar & Ruang:
+
+• Luas area: 250 m²
+• 2 kamar tidur, masing-masing dengan 1 tempat tidur Queen
+• 1 kamar tidur dengan 2 tempat tidur Queen
+• WiFi SUPER CEPAT TANPA BATAS – hingga 80 Mbps
+• TV LED 43”
+• Kolam renang pribadi
+• Peralatan karaoke lengkap dengan mikrofon dan speaker
+
+Kamar Mandi & Kenyamanan:
+
+• Shower
+• Bathtub dengan pemandangan indah
+• Lemari pakaian, meja rias, dan cermin besar
+
+Dapur & Ruang Makan:
+
+• Meja makan dengan peralatan makan lengkap
+• Kompor dengan peralatan masak dasar
+• Kulkas
+• Air mineral galon tersedia
+• Grill BBQ bertenaga gas
+
+Akses tamu
+Fasilitas Villa Alba Duo:
+
+• Kolam renang pribadi
+• Grill BBQ bertenaga gas
+• Peralatan karaoke dengan mikrofon dan speaker
+• Bathtub dengan pemandangan indah
+• Lingkungan hijau dan tenang
+• Suasana pegunungan yang sejuk dan nyaman
+• Area outdoor yang luas
+• Parkir pribadi
+• Akses kendaraan yang mudah
+• Lingkungan tenang dan ramah keluarga
+• Cocok untuk staycation, liburan keluarga, dan quality time bersama
+• WiFi SUPER CEPAT TANPA BATAS – hingga 80 Mbps
+• TV LED 43”
+
+Fasilitas Pendukung di Sekitar:
+
+• Minimarket & toko lokal
+• Kafe & restoran di sekitar Parongpong dan Lembang
+• Akses mudah ke berbagai tempat wisata
+• Ruang terbuka hijau dan area dengan pemandangan indah
+
+Hal lain yang perlu diperhatikan
+CHECK-IN 14:00 WIB
+
+Saat check-in, seluruh fasilitas villa dalam kondisi baik. Mohon segera informasikan kepada staff villa atau admin apabila terdapat kerusakan atau kendala sebelum menggunakan fasilitas.
+
+CHECK-OUT 11:00 WIB
+
+Tamu dapat mengajukan late check-out hingga pukul 11:30 WIB, tergantung ketersediaan dan dengan ketentuan tidak ada tamu lain yang dijadwalkan check-in setelahnya.
+
+PERATURAN VILLA:
+
+• Deposit jaminan sebesar Rp1.000.000 diperlukan dan akan dikembalikan setelah villa diperiksa setelah check-out.
+• Waktu check-in pukul 14:00 WIB dan check-out pukul 11:00 WIB. Early check-in atau late check-out di luar waktu yang telah disepakati akan dikenakan biaya Rp500.000 per jam.
+• Penggunaan alat musik atau karaoke dengan volume berlebihan tidak diperbolehkan karena dapat mengganggu tamu lain maupun warga sekitar.
+• Tamu dilarang membawa minuman beralkohol, obat-obatan terlarang, senjata api, senjata tajam, melakukan perjudian, atau aktivitas ilegal lainnya.
+• Segala bentuk aktivitas seksual yang tidak pantas atau melanggar hukum dilarang keras di area villa.
+• Pihak pengelola villa tidak bertanggung jawab atas kecelakaan atau cedera yang disebabkan oleh kelalaian pribadi tamu.
+• Merokok hanya diperbolehkan di area balkon outdoor.
+• Hewan peliharaan tidak diperbolehkan kecuali telah mendapatkan konfirmasi dan izin terlebih dahulu dari pihak pengelola villa.
+• Dilarang memindahkan atau mengubah posisi furnitur tanpa izin.
+• Mohon menjaga kebersihan villa dan tidak membuang sampah sembarangan atau mengotori area kolam renang.
+• Segala kerusakan yang disebabkan oleh tamu akan dikenakan biaya sesuai dengan biaya penggantian atau perbaikan barang yang rusak.
+• Pesta tidak diperbolehkan. Tamu juga tidak diperkenankan membawa dekorasi yang dapat merusak dinding atau furnitur villa.
+• Jumlah tamu dan kendaraan tidak boleh melebihi kapasitas maksimal yang telah ditentukan, kecuali telah mendapatkan persetujuan terlebih dahulu dari pihak pengelola villa.
+
+Dengan menginap di Villa Alba Duo, tamu dianggap telah membaca, memahami, dan menyetujui seluruh peraturan yang tercantum di atas.
+
+Apabila terdapat pelanggaran terhadap peraturan, pihak pengelola villa berhak memberikan peringatan, membatalkan reservasi, dan menganggap pembayaran tidak dapat dikembalikan.` },
+  { id:'villa-forest-heal', name:'Villa Forest Heal', cat:'villa', catLabel:'Villa',
+    loc:'Lokasi belum diatur', beds:3, baths:1, guests:6, price:1800000, weekdayPrice:1800000, weekendPrice:2800000,
+    img:'https://ik.imagekit.io/o1hnx31yy/Forest%20Hill.png?updatedAt=1790155914559',
+    desc:`Forest Heal Villa – Lembang
+
+Terletak di kawasan Kayuambon, Lembang yang tenang, dikelilingi pepohonan hijau dan udara pegunungan yang sejuk. Berlokasi dekat dengan:
+
+• Floating Market
+• Farmhouse
+• The Great Asia Africa
+• Lembang Park & Zoo
+• Observatorium Bosscha
+• Dusun Bambu
+• Kafe dan restoran Lembang
+
+Cocok untuk liburan santai, family stay, atau quality time bersama
+
+Tempat
+Ruang & Area:
+
+• Luas area: 1.700 m²
+• 3 kamar tidur, masing-masing dengan 1 Queen bed
+• WiFi SUPER CEPAT TANPA BATAS – hingga 80 Mbps
+• TV LED 43”
+• Kolam pemancingan yang luas
+• Area outdoor yang luas dikelilingi pepohonan hijau
+• Suasana alam yang tenang dan menyegarkan
+
+Kamar Mandi & Kenyamanan:
+
+• Shower
+• Bathtub dengan pemandangan indah
+• Lemari pakaian, meja rias, dan cermin besar
+
+Dapur & Ruang Makan:
+
+• Meja makan dengan peralatan makan lengkap
+• Kompor dengan peralatan masak dasar
+• Kulkas
+• Galon air mineral disediakan
+• Grill BBQ dengan gas
+
+Akses tamu
+Fasilitas Forest Heal Villa:
+
+• Kolam pemancingan yang luas
+• Grill BBQ dengan gas
+• Bathtub dengan pemandangan indah
+• Lingkungan hijau dan tenang
+• Suasana pegunungan yang sejuk dan nyaman
+• Area outdoor yang luas dan dikelilingi pepohonan
+• Parkir pribadi
+• Akses kendaraan yang mudah
+• Lingkungan tenang dan cocok untuk keluarga
+• Cocok untuk staycation, liburan keluarga, dan quality time bersama
+• WiFi SUPER CEPAT TANPA BATAS – hingga 80 Mbps
+• TV LED 43”
+
+Fasilitas Pendukung di Sekitar:
+
+• Minimarket & toko sekitar
+• Kafe & restoran di area Lembang
+• Akses mudah ke berbagai tempat wisata populer
+• Area hijau dan spot dengan pemandangan indah
+
+Hal lain yang perlu diperhatikan
+Hal-hal yang PERLU diketahui sebelum booking:
+
+• Cara Check In akan diinfo hari H setelah rumah sudah dalam kondisi siap
+• DILARANG MEMBAWA HEWAN PELIHARAAN.
+• DILARANG MEROKOK. Terdapat area outdoor dimana Anda bisa bersantai dan merokok Maka mohon untuk tidak merokok di dalam rumah.
+• Property ini berada di AREA PEMUKIMAN, jadi dilarang melakukan aktivitas ilegal. Harap jaga ketenangan dan hindari kebisingan, terutama di malam hari.` },
+  { id:'villa-tree-vena', name:'Villa Tree Vena', cat:'villa', catLabel:'Villa',
+    loc:'Dago Village, Dago, Bandung', beds:4, baths:2, guests:8, price:4900000, weekdayPrice:4900000, weekendPrice:5900000,
+    mapQuery:'https://maps.app.goo.gl/p7UXRjQi8PFsKH9n9',
+    mapLink:'https://maps.app.goo.gl/p7UXRjQi8PFsKH9n9',
+    img:'https://ik.imagekit.io/o1hnx31yy/tree%20vena.avif',
+    desc:`Villa Tree Vena Dago – Dago
+
+Terletak di Dago Village yang tenang dan asri, dengan udara sejuk, pepohonan hijau, dan pemandangan indah. Lokasinya dekat dengan:
+
+• Dago Dreampark
+• Tahura Ir. H. Juanda
+• Dago Golf
+• Selasar Sunaryo Art Space
+• Wot Batu
+• Tebing Keraton
+• Punclut
+• Kafe dan restoran Dago Pakar
+
+Cocok untuk staycation, liburan keluarga, atau bersantai, dengan akses mudah ke berbagai destinasi wisata, restoran, dan kafe.
+
+Dan masih banyak lagi..
+
+Tempat
+Kamar & Ruang:
+
+• Luas area: 230 m²
+• 4 kamar tidur, masing-masing dengan 1 Queen bed
+• WiFi SUPER CEPAT TANPA BATAS – hingga 80 Mbps
+• TV LED 43”
+• Kolam renang pribadi
+
+Kamar Mandi & Kenyamanan:
+
+• Shower
+• Bathtub dengan pemandangan indah
+• Lemari pakaian, meja rias, dan cermin besar
+
+Dapur & Ruang Makan:
+
+• Meja makan dengan peralatan makan lengkap
+• Kompor dengan peralatan memasak dasar
+• Kulkas
+• Galon air mineral tersedia
+• Alat BBQ menggunakan gas
+
+Akses tamu
+Fasilitas Villa Tree Vena Dago:
+
+• Kolam renang pribadi
+• Alat BBQ menggunakan gas
+• Bathtub dengan pemandangan indah
+• Lingkungan hijau dan tenang
+• Suasana pegunungan yang sejuk dan nyaman
+• Area outdoor yang luas
+• Parkir pribadi
+• Akses kendaraan yang mudah
+• Lingkungan yang tenang dan ramah keluarga
+• Cocok untuk staycation, liburan keluarga, dan menghabiskan waktu berkualitas bersama
+• WiFi SUPER CEPAT TANPA BATAS – hingga 80 Mbps
+• TV LED 43”
+
+Fasilitas Pendukung di Sekitar:
+
+• Minimarket & toko lokal
+• Kafe & restoran di sekitar Dago dan Dago Pakar
+• Akses mudah ke berbagai tempat wisata populer
+• Ruang terbuka hijau dan area dengan pemandangan indah
+• Akses mudah menuju Dago Dreampark
+• Akses mudah menuju kawasan Dago Pakar dan sekitarnya
+
+Hal lain yang perlu diperhatikan
+CHECK-IN 14:00 WIB
+
+Saat check-in, seluruh fasilitas villa dalam kondisi baik. Mohon segera informasikan kepada staff villa atau admin apabila terdapat kerusakan atau kendala sebelum menggunakan fasilitas yang tersedia.
+
+CHECK-OUT 11:00 WIB
+
+Tamu dapat mengajukan late check-out hingga pukul 11:30 WIB, tergantung ketersediaan dan dengan ketentuan tidak ada tamu lain yang dijadwalkan untuk check-in setelahnya.
+
+PERATURAN VILLA:
+
+• Deposit jaminan sebesar Rp1.000.000 diperlukan dan akan dikembalikan setelah villa selesai diperiksa setelah check-out.
+• Waktu check-in adalah 14:00 WIB dan check-out 11:00 WIB. Early check-in atau late check-out di luar waktu yang telah ditentukan akan dikenakan biaya Rp500.000 per jam.
+• Penggunaan alat musik atau karaoke dengan volume berlebihan tidak diperbolehkan karena dapat mengganggu tamu lain maupun warga sekitar.
+• Tamu dilarang keras membawa minuman beralkohol, narkoba, senjata api, senjata tajam, melakukan perjudian, atau aktivitas ilegal lainnya.
+• Segala bentuk tindakan seksual yang tidak pantas atau melanggar hukum dilarang keras di area villa.
+• Pihak pengelola villa tidak bertanggung jawab atas kecelakaan atau cedera yang disebabkan oleh kelalaian pribadi tamu.
+• Merokok hanya diperbolehkan di area balkon outdoor.
+• Hewan peliharaan tidak diperbolehkan kecuali telah mendapatkan konfirmasi dan izin terlebih dahulu dari pihak pengelola villa.
+• Dilarang memindahkan atau mengubah posisi furniture tanpa izin.
+• Mohon menjaga kebersihan villa dan tidak membuang sampah sembarangan atau mengotori area kolam renang.
+• Setiap kerusakan yang disebabkan oleh tamu akan dikenakan biaya sesuai dengan biaya penggantian atau perbaikan barang yang rusak.
+• Pesta tidak diperbolehkan. Tamu juga dilarang membawa dekorasi yang dapat merusak dinding atau furniture villa.
+• Jumlah tamu dan kendaraan tidak boleh melebihi kapasitas maksimum yang telah ditentukan, kecuali telah mendapatkan persetujuan terlebih dahulu dari pihak pengelola villa.
+
+Dengan menginap di Villa Tree Vena, tamu dianggap telah membaca, memahami, dan menyetujui seluruh peraturan yang tercantum di atas.
+
+Apabila terjadi pelanggaran terhadap peraturan, pihak pengelola villa berhak memberikan peringatan, membatalkan reservasi, dan menyatakan pembayaran tidak dapat dikembalikan.` },
+  { id:'villa-sananda', name:'Villa Sananda', cat:'villa', catLabel:'Villa',
+    loc:'Cigugur Girang, Parongpong, Bandung', beds:3, baths:1, guests:5, price:2500000, weekdayPrice:2500000, weekendPrice:4000000,
+    mapQuery:'Cigugur Girang, Parongpong, Bandung',
+    mapLink:'https://maps.app.goo.gl/zSMfi28aCrCBt4KV8',
+    img:'https://ik.imagekit.io/o1hnx31yy/sananda.avif',
+    desc:`Villa Sananda – Parongpong
+
+Terletak di kawasan tenang Cigugur Girang, Parongpong, dengan udara pegunungan yang sejuk dan pemandangan yang indah. Berlokasi dekat dengan Dusun Bambu, Curug Cimahi, Lembang Park & Zoo, Farmhouse Lembang, The Great Asia Africa, Floating Market Lembang, dan Dago Dreampark.
+
+Tempat yang sempurna untuk bersantai atau liburan bersama keluarga, dekat dengan berbagai destinasi wisata, restoran, dan kafe.
+
+Tempat
+Kamar & Ruang:
+
+• Luas area: 202 m²
+• 1 kamar tidur dengan 1 Queen bed
+• 1 kamar tidur dengan 2 Single bed
+• 1 kamar tidur dengan 1 Single bed
+• WiFi SUPER CEPAT & UNLIMITED – hingga 80 Mbps
+• TV LED 43”
+• Kolam renang pribadi
+
+Kamar Mandi & Kenyamanan:
+
+• Shower
+• Lemari pakaian, meja rias, dan cermin besar
+
+Dapur & Ruang Makan:
+
+• Meja makan dengan peralatan makan lengkap
+• Kompor dengan peralatan masak dasar
+• Kulkas
+• Air mineral galon tersedia
+• BBQ grill menggunakan gas
+
+Akses tamu
+Fasilitas Villa Sananda:
+
+• Kolam renang pribadi
+• Alat BBQ menggunakan gas
+• Lingkungan hijau, tenang, dan asri
+• Suasana pegunungan yang sejuk dan nyaman
+• Area outdoor yang luas
+• Parkir pribadi
+• Akses kendaraan yang mudah
+• Lingkungan yang tenang dan ramah keluarga
+• Cocok untuk staycation, liburan keluarga, dan quality time bersama
+• WiFi SUPER CEPAT & UNLIMITED – hingga 80 Mbps
+• TV LED 43”
+
+Fasilitas Pendukung di Sekitar:
+
+• Minimarket & toko kebutuhan sehari-hari
+• Kafe & restoran di sekitar Parongpong dan Lembang
+• Akses mudah ke berbagai tempat wisata
+• Ruang terbuka hijau dan area dengan pemandangan indah
+• Akses mudah menuju Dusun Bambu dan kawasan Lembang
+
+Hal lain yang perlu diperhatikan:
+
+• Cara check-in akan diinfo pada hari kedatangan setelah rumah dalam kondisi siap.
+• DILARANG MEMBAWA HEWAN PELIHARAAN.
+• DILARANG MEROKOK DI DALAM RUMAH. Merokok hanya diperbolehkan di area outdoor.
+• Properti berada di area pemukiman. Harap menjaga ketenangan dan menghindari kebisingan, terutama pada malam hari.
+• Dilarang melakukan aktivitas ilegal di area properti.` },
+  { id:'villa-aprilia', name:'Villa Aprilia', cat:'villa', catLabel:'Villa',
+    loc:'Gudangkahuripan, Lembang, Bandung', beds:2, baths:1, guests:5, price:3350000, weekdayPrice:3350000, weekendPrice:4400000,
+    mapQuery:'Gudangkahuripan, Lembang, Bandung',
+    mapLink:'https://maps.app.goo.gl/wMUaa6knQEE71Lk56',
+    img:'https://ik.imagekit.io/o1hnx31yy/aprilia.avif',
+    desc:`Villa Aprilia – Lembang
+
+Berlokasi di Gudangkahuripan, Lembang, Villa Aprilia menawarkan suasana sejuk, asri, dan tenang dengan pemandangan hijau yang menyegarkan. Berlokasi dekat dengan Farmhouse Lembang, The Great Asia Africa, Floating Market Lembang, Lembang Park & Zoo, De Ranch Lembang, Dago Dreampark, serta kafe dan restoran sekitar Lembang.
+
+Cocok untuk liburan keluarga, staycation, gathering, dan quality time.
+
+Tempat
+Deskripsi Kamar & Ruang:
+
+• Total area: 300 m²
+• 1 kamar tidur dengan 1 tempat tidur Queen
+• 1 kamar tidur dengan 2 tempat tidur Single
+• WiFi SUPER CEPAT TANPA BATAS – hingga 80 Mbps
+• TV LED 43”
+• Kolam renang pribadi
+
+Kamar Mandi & Kenyamanan:
+
+• Shower
+• Lemari pakaian
+• Meja rias
+• Cermin besar
+
+Dapur & Ruang Makan:
+
+• Meja makan dengan peralatan makan lengkap
+• Kompor dengan peralatan masak dasar
+• Kulkas
+• Galon air mineral tersedia
+
+Akses tamu
+Fasilitas Villa Aprilia:
+
+• Lingkungan hijau, tenang, asri, dan menyegarkan
+• Suasana pegunungan yang sejuk dengan pemandangan indah
+• Area villa yang luas dan nyaman
+• Kolam renang pribadi
+• Area outdoor yang luas
+• WiFi SUPER CEPAT TANPA BATAS – hingga 80 Mbps
+• TV LED 43”
+• Parkir pribadi
+• Area ruang makan dan dapur yang lengkap
+• Cocok untuk keluarga, grup, staycation, dan gathering
+• Suasana tenang dan privat untuk menginap dengan nyaman
+
+Fasilitas Pendukung di Sekitar:
+
+• Farmhouse Lembang
+• The Great Asia Africa
+• Floating Market Lembang
+• Lembang Park & Zoo
+• De Ranch Lembang
+• Dago Dreampark
+• Kafe & restoran di sekitar Lembang
+• Akses mudah menuju berbagai destinasi populer di Lembang
+
+Hal lain yang perlu diperhatikan:
+
+• Cara check-in akan diinfo pada hari kedatangan setelah rumah dalam kondisi siap.
+• DILARANG MEMBAWA HEWAN PELIHARAAN.
+• DILARANG MEROKOK DI DALAM RUMAH. Merokok hanya diperbolehkan di area outdoor.
+• Properti berada di area pemukiman. Harap menjaga ketenangan dan menghindari kebisingan, terutama pada malam hari.
+• Dilarang melakukan aktivitas ilegal di area properti.` },
+  { id:'villa-halimun', name:'Villa Halimun', cat:'villa', catLabel:'Villa',
+    loc:'Lembang, Bandung', beds:1, baths:1, guests:4, price:9800000, weekdayPrice:9800000, weekendPrice:16000000,
+    mapQuery:'Lembang, Bandung',
+    mapLink:'https://maps.app.goo.gl/JwHXTLaLcK4MZeKW7',
+    img:'https://ik.imagekit.io/o1hnx31yy/halimun.png?updatedAt=1790155915473',
+    desc:`Villa Halimun – Lembang
+
+Deskripsi Kamar & Ruang:
+
+• Kamar tidur nyaman dengan tempat tidur King.
+• WiFi SUPER CEPAT TANPA BATAS – hingga 80 Mbps.
+• TV LED 43”.
+• Kolam renang pribadi.
+• Meja biliar.
+
+Kamar Mandi & Kenyamanan:
+
+• Bathtub di setiap kamar mandi.
+• Shower.
+• Lemari pakaian.
+• Meja rias.
+• Cermin besar.
+
+Dapur & Ruang Makan:
+
+• Meja makan dengan peralatan makan lengkap.
+• Kompor dengan peralatan masak dasar.
+• Kulkas.
+• Galon air mineral tersedia.
+
+Akses tamu
+Fasilitas Villa Halimun:
+
+• Lingkungan hijau, tenang, asri, dan menyegarkan.
+• Suasana pegunungan yang sejuk dengan pemandangan indah.
+• Area villa yang luas dan nyaman.
+• Kolam renang pribadi.
+• Kamar tidur nyaman dengan tempat tidur King.
+• Bathtub di setiap kamar mandi.
+• Area outdoor yang luas.
+• Meja biliar.
+• WiFi SUPER CEPAT TANPA BATAS – hingga 80 Mbps.
+• TV LED 43”.
+• Parkir pribadi.
+• Area ruang makan dan dapur yang lengkap.
+• Cocok untuk keluarga, grup, staycation, dan gathering.
+• Suasana tenang dan privat untuk menginap dengan nyaman.
+
+Fasilitas Pendukung di Sekitar:
+
+• Noah’s Park.
+• Floating Market Lembang.
+• Observatorium Bosscha.
+• Dago Dreampark.
+• The Great Asia Africa.
+• Farmhouse Lembang.
+• Kafe dan restoran di sekitar Lembang.
+• Akses mudah menuju berbagai destinasi populer di Lembang.
+
+Hal lain yang perlu diperhatikan
+SYARAT & KETENTUAN PEMESANAN VILLA
+
+Dengan melakukan pemesanan villa, tamu dianggap telah membaca, memahami, dan menyetujui seluruh syarat dan ketentuan yang telah ditetapkan oleh pihak manajemen villa.
+
+1. Identitas Tamu
+
+Sebagai bagian dari proses pemesanan dan untuk keperluan keamanan penyewaan villa, tamu wajib memberikan foto KTP kepada pihak manajemen villa.
+
+2. Extra Bed
+
+Pembayaran extra bed yang telah dilakukan tidak dapat dikembalikan (non-refundable).
+
+3. Check-in dan Check-out
+
+• Check-in: pukul 14.00 WIB.
+• Check-out: maksimal pukul 12.00 WIB.
+
+4. Early Check-in
+
+Early check-in atau check-in lebih awal tidak diperbolehkan karena pihak manajemen villa membutuhkan waktu untuk membersihkan dan mempersiapkan seluruh area villa.
+
+5. Late Check-out
+
+Late check-out dikenakan biaya sebesar Rp500.000 per 30 menit.
+
+6. Aktivitas Ilegal
+
+Tamu dilarang keras melakukan aktivitas apa pun yang bertentangan dengan hukum dan peraturan yang berlaku di Indonesia.
+
+7. Kapasitas Maksimal Tamu
+
+Jumlah tamu tidak diperbolehkan melebihi kapasitas maksimal villa demi kenyamanan tamu dan ketertiban lingkungan sekitar.
+
+8. Parkir
+
+Kendaraan hanya diperbolehkan parkir di area parkir yang telah disediakan oleh pihak villa.
+
+9. Acara dan Keramaian
+
+Villa tidak diperbolehkan digunakan untuk pesta pernikahan, pesta ulang tahun, acara, atau kegiatan lain yang melebihi kapasitas maksimal villa atau menimbulkan kebisingan maupun gangguan terhadap lingkungan sekitar.
+
+10. Hewan Peliharaan
+
+Hewan peliharaan jenis apa pun tidak diperbolehkan berada di area villa.
+
+11. Batas Kebisingan
+
+Aktivitas yang menimbulkan kebisingan diperbolehkan hingga pukul 21.00 WIB. Setelah waktu tersebut, tamu wajib menjaga ketenangan dan menghormati lingkungan sekitar.
+
+12. Sound System dan Speaker
+
+Tamu tidak diperbolehkan membawa atau menggunakan sound system, peralatan karaoke, speaker portable, maupun alat pengeras suara lainnya.
+
+13. Properti Villa
+
+Tamu tidak diperbolehkan memindahkan, mengubah posisi, atau memindahkan perabot, dekorasi, maupun properti villa lainnya tanpa persetujuan terlebih dahulu dari pihak manajemen villa.
+
+14. Kebersihan dan Kerusakan
+
+Tamu bertanggung jawab menjaga kebersihan dan kondisi villa selama masa menginap serta menjaga seluruh fasilitas dan properti yang tersedia. Apabila terjadi kerusakan, pecah, atau kehilangan, tamu wajib memberikan ganti rugi sesuai nilai penggantian penuh dari barang yang rusak atau hilang.
+
+15. Persetujuan Syarat dan Ketentuan
+
+Tamu wajib membaca, memahami, dan menyetujui seluruh syarat dan ketentuan sebelum melakukan pemesanan. Apabila terjadi pelanggaran, pihak manajemen villa berhak memberikan teguran, membatalkan reservasi, atau menghentikan masa menginap tanpa pengembalian dana.
+
+Dengan melakukan pemesanan, tamu dianggap telah membaca, memahami, dan menyetujui seluruh syarat dan ketentuan yang berlaku.` },
+  { id:'villa-halimpu', name:'Villa Halimpu', cat:'villa', catLabel:'Villa',
+    loc:'Pagerwangi, Lembang, Bandung', beds:1, baths:1, guests:4, price:8900000, weekdayPrice:8900000, weekendPrice:13000000,
+    mapQuery:'Lembang, Bandung',
+    mapLink:'https://maps.app.goo.gl/JwHXTLaLcK4MZeKW7',
+    img:'https://ik.imagekit.io/o1hnx31yy/halimpu.png?updatedAt=1790155914543',
+    desc:`Villa Halimpu – Lembang
+
+Berlokasi di Pagerwangi, Lembang, Villa Halimpu menawarkan suasana sejuk, asri, dan tenang, dikelilingi udara pegunungan serta pemandangan hijau khas Lembang.
+
+Tempat wisata dan fasilitas di sekitar:
+
+• Noah’s Park ±1 km.
+• Floating Market Lembang ±2 km.
+• Observatorium Bosscha ±3 km.
+• Dago Dreampark ±3 km.
+• The Great Asia Africa ±4 km.
+• Farmhouse Lembang ±5 km.
+• Kafe dan restoran sekitar Lembang.
+
+Cocok untuk staycation, liburan keluarga, gathering, dan quality time dalam suasana nyaman dan privat.
+
+Tempat
+Deskripsi Kamar & Ruang:
+
+• Kamar tidur nyaman dengan tempat tidur King.
+• WiFi SUPER CEPAT TANPA BATAS – hingga 80 Mbps.
+• TV LED 43”.
+• Kolam renang pribadi.
+
+Kamar Mandi & Kenyamanan:
+
+• Bathtub di setiap kamar mandi.
+• Shower.
+• Lemari pakaian.
+• Meja rias.
+• Cermin besar.
+
+Dapur & Ruang Makan:
+
+• Meja makan dengan peralatan makan lengkap.
+• Kompor dengan peralatan masak dasar.
+• Kulkas.
+• Galon air mineral tersedia.
+
+Akses tamu
+Fasilitas Villa Halimpu:
+
+• Lingkungan hijau, tenang, asri, dan menyegarkan.
+• Suasana pegunungan yang sejuk dengan pemandangan indah.
+• Area villa yang luas dan nyaman.
+• Kolam renang pribadi.
+• Kamar tidur nyaman dengan tempat tidur King.
+• Bathtub di setiap kamar mandi.
+• Area outdoor yang luas.
+• WiFi SUPER CEPAT TANPA BATAS – hingga 80 Mbps.
+• TV LED 43”.
+• Parkir pribadi.
+• Area ruang makan dan dapur yang lengkap.
+• Cocok untuk keluarga, grup, staycation, dan gathering.
+• Suasana tenang dan privat untuk pengalaman menginap yang nyaman.
+
+Fasilitas Pendukung di Sekitar:
+
+• Noah’s Park.
+• Floating Market Lembang.
+• Observatorium Bosscha.
+• Dago Dreampark.
+• The Great Asia Africa.
+• Farmhouse Lembang.
+• Kafe dan restoran di sekitar Lembang.
+• Akses mudah menuju berbagai destinasi populer di Lembang.
+
+Hal lain yang perlu diperhatikan
+SYARAT & KETENTUAN PEMESANAN VILLA
+
+Dengan melakukan pemesanan villa, tamu dianggap telah membaca, memahami, dan menyetujui seluruh syarat dan ketentuan yang telah ditetapkan oleh pihak manajemen villa.
+
+1. Identitas Tamu
+
+Tamu wajib memberikan foto KTP kepada pihak manajemen villa sebagai bagian dari proses pemesanan dan untuk keperluan keamanan penyewaan villa.
+
+2. Extra Bed
+
+Pembayaran extra bed yang telah dilakukan tidak dapat dikembalikan (non-refundable).
+
+3. Check-in dan Check-out
+
+• Check-in: pukul 14.00 WIB.
+• Check-out: maksimal pukul 12.00 WIB.
+
+4. Early Check-in
+
+Early check-in atau check-in lebih awal tidak diperbolehkan karena pihak manajemen villa membutuhkan waktu untuk membersihkan dan mempersiapkan seluruh area villa.
+
+5. Late Check-out
+
+Late check-out dikenakan biaya sebesar Rp500.000 per 30 menit.
+
+6. Aktivitas Ilegal
+
+Tamu dilarang keras melakukan aktivitas apa pun yang bertentangan dengan hukum dan peraturan yang berlaku di Indonesia.
+
+7. Kapasitas Maksimal Tamu
+
+Jumlah tamu tidak diperbolehkan melebihi kapasitas maksimal villa demi kenyamanan tamu dan menjaga ketertiban lingkungan sekitar.
+
+8. Parkir
+
+Kendaraan hanya diperbolehkan parkir di area parkir yang telah disediakan oleh pihak villa.
+
+9. Acara dan Keramaian
+
+Villa tidak diperbolehkan digunakan untuk pesta pernikahan, pesta ulang tahun, acara, atau kegiatan lain yang melebihi kapasitas maksimal villa atau menimbulkan kebisingan maupun gangguan terhadap lingkungan sekitar.
+
+10. Hewan Peliharaan
+
+Hewan peliharaan jenis apa pun tidak diperbolehkan berada di area villa.
+
+11. Batas Kebisingan
+
+Aktivitas yang menimbulkan kebisingan diperbolehkan hingga pukul 21.00 WIB. Setelah waktu tersebut, tamu wajib menjaga ketenangan dan menghormati lingkungan sekitar.
+
+12. Sound System dan Speaker
+
+Tamu tidak diperbolehkan membawa atau menggunakan sound system, peralatan karaoke, speaker portable, maupun alat pengeras suara lainnya.
+
+13. Properti Villa
+
+Tamu tidak diperbolehkan memindahkan, mengubah posisi, atau memindahkan perabot, dekorasi, maupun properti villa lainnya tanpa persetujuan terlebih dahulu dari pihak manajemen villa.
+
+14. Kebersihan dan Kerusakan
+
+Tamu bertanggung jawab menjaga kebersihan dan kondisi villa selama masa menginap serta menjaga seluruh fasilitas dan properti yang tersedia. Apabila terjadi kerusakan, pecah, atau kehilangan, tamu wajib memberikan ganti rugi sesuai nilai penggantian penuh dari barang yang rusak atau hilang.
+
+15. Persetujuan Syarat dan Ketentuan
+
+Tamu wajib membaca, memahami, dan menyetujui seluruh syarat dan ketentuan sebelum melakukan pemesanan. Apabila terjadi pelanggaran, pihak manajemen villa berhak memberikan teguran, membatalkan reservasi, atau menghentikan masa menginap tanpa pengembalian dana.
+
+Dengan melakukan pemesanan, tamu dianggap telah membaca, memahami, dan menyetujui seluruh syarat dan ketentuan yang berlaku.` },
+  { id:'villa-manakala', name:'Villa Manakala', cat:'villa', catLabel:'Villa',
+    loc:'Lembang, Bandung', beds:3, baths:1, guests:6, price:6500000, weekdayPrice:6500000, weekendPrice:9200000,
+    mapQuery:'Lembang, Bandung',
+    mapLink:'https://maps.app.goo.gl/jmr4bbgixA71nEPb9',
+    img:'https://ik.imagekit.io/o1hnx31yy/Manalaka.png?updatedAt=1790155915559',
+    desc:`Villa Manakala – Lembang
+
+Berlokasi di Lembang, Villa Manakala menawarkan suasana sejuk, asri, dan tenang, dikelilingi udara pegunungan serta pemandangan hijau khas Lembang.
+
+Tempat wisata dan fasilitas di sekitar:
+
+• Farmhouse Lembang ±4 km.
+• Floating Market ±3 km.
+• The Great Asia Africa ±4 km.
+• Orchid Forest Cikole ±10 km.
+• Dusun Bambu ±7 km.
+• Kafe dan restoran sekitar Lembang.
+• Pusat Kota Bandung ±15 km.
+
+Cocok untuk staycation, liburan keluarga, gathering, dan quality time dalam suasana nyaman dan privat.
+
+Akses tamu
+Fasilitas Manakala Villa Lembang:
+
+• Lingkungan hijau, tenang, dan asri.
+• Suasana pegunungan yang sejuk dengan pemandangan indah.
+• Luas tanah 1.000 m².
+• Kolam renang pribadi.
+• 3 kamar tidur nyaman dengan tempat tidur King.
+• Bathtub di setiap kamar mandi.
+• Area outdoor yang luas dengan ayunan.
+• WiFi SUPER CEPAT TANPA BATAS – hingga 80 Mbps.
+• TV LED 43”.
+• Parkir pribadi.
+• Area makan dan dapur yang lengkap.
+• Cocok untuk keluarga, rombongan, staycation, dan gathering.
+• Suasana tenang dan privat untuk beristirahat dan bersantai.
+
+Fasilitas Pendukung di Sekitar:
+
+• Floating Market Lembang.
+• The Great Asia Africa.
+• Farmhouse Lembang.
+• Orchid Forest Cikole.
+• Dusun Bambu.
+• Berbagai kafe dan restoran di sekitar Lembang.
+• Akses mudah menuju Bandung dan berbagai destinasi wisata populer di Lembang.
+
+Hal lain yang perlu diperhatikan
+SYARAT & KETENTUAN PEMESANAN VILLA
+
+Dengan melakukan pemesanan villa, tamu dianggap telah membaca, memahami, dan menyetujui seluruh syarat dan ketentuan yang telah ditetapkan oleh pihak manajemen villa.
+
+1. Identitas Tamu
+
+Tamu wajib memberikan foto KTP kepada pihak manajemen villa sebagai bagian dari proses pemesanan dan untuk keperluan keamanan penyewaan villa.
+
+2. Extra Bed
+
+Pembayaran extra bed yang telah dilakukan tidak dapat dikembalikan (non-refundable).
+
+3. Check-in dan Check-out
+
+• Check-in: pukul 14.00 WIB.
+• Check-out: maksimal pukul 12.00 WIB.
+
+4. Early Check-in
+
+Early check-in atau check-in lebih awal tidak diperbolehkan karena pihak manajemen villa membutuhkan waktu untuk membersihkan dan mempersiapkan seluruh area villa.
+
+5. Late Check-out
+
+Late check-out dikenakan biaya sebesar Rp500.000 per 30 menit.
+
+6. Aktivitas Ilegal
+
+Tamu dilarang keras melakukan aktivitas apa pun yang bertentangan dengan hukum dan peraturan yang berlaku di Indonesia.
+
+7. Kapasitas Maksimal Tamu
+
+Jumlah tamu tidak diperbolehkan melebihi kapasitas maksimal villa demi kenyamanan tamu dan menjaga ketertiban lingkungan sekitar.
+
+8. Parkir
+
+Kendaraan hanya diperbolehkan parkir di area parkir yang telah disediakan oleh pihak villa.
+
+9. Acara dan Keramaian
+
+Villa tidak diperbolehkan digunakan untuk pesta pernikahan, pesta ulang tahun, acara, atau kegiatan lain yang melebihi kapasitas maksimal villa atau menimbulkan kebisingan maupun gangguan terhadap lingkungan sekitar.
+
+10. Hewan Peliharaan
+
+Hewan peliharaan jenis apa pun tidak diperbolehkan berada di area villa.
+
+11. Batas Kebisingan
+
+Aktivitas yang menimbulkan kebisingan diperbolehkan hingga pukul 21.00 WIB. Setelah waktu tersebut, tamu wajib menjaga ketenangan dan menghormati lingkungan sekitar.
+
+12. Sound System dan Speaker
+
+Tamu tidak diperbolehkan membawa atau menggunakan sound system, peralatan karaoke, speaker portable, maupun alat pengeras suara lainnya.
+
+13. Properti Villa
+
+Tamu tidak diperbolehkan memindahkan, mengubah posisi, atau memindahkan perabot, dekorasi, maupun properti villa lainnya tanpa persetujuan terlebih dahulu dari pihak manajemen villa.
+
+14. Kebersihan dan Kerusakan
+
+Tamu bertanggung jawab menjaga kebersihan dan kondisi villa selama masa menginap serta menjaga seluruh fasilitas dan properti yang tersedia. Apabila terjadi kerusakan, pecah, atau kehilangan, tamu wajib memberikan ganti rugi sesuai nilai penggantian penuh dari barang yang rusak atau hilang.
+
+15. Persetujuan Syarat dan Ketentuan
+
+Tamu wajib membaca, memahami, dan menyetujui seluruh syarat dan ketentuan sebelum melakukan pemesanan. Apabila terjadi pelanggaran, pihak manajemen villa berhak memberikan teguran, membatalkan reservasi, atau menghentikan masa menginap tanpa pengembalian dana.
+
+Dengan melakukan pemesanan, tamu dianggap telah membaca, memahami, dan menyetujui seluruh syarat dan ketentuan yang berlaku.` },
+  { id:'villa-de-green', name:'Villa De Green', cat:'villa', catLabel:'Villa',
+    loc:'Langensari, Lembang, Bandung', beds:1, baths:1, guests:4, price:7500000, weekdayPrice:7500000, weekendPrice:10700000,
+    mapQuery:'Langensari, Lembang, Bandung',
+    mapLink:'https://maps.app.goo.gl/ZEvcH9vukSazTSXK6',
+    img:'https://ik.imagekit.io/o1hnx31yy/Dgreen.png?updatedAt=1790155916582',
+    desc:`D'Green Villa Lembang
+
+Berlokasi di Langensari, Lembang, D'Green Villa menawarkan suasana sejuk, asri, dan tenang dengan pemandangan hijau yang menyegarkan. Lokasinya dekat dengan Begonia Garden, Maribaya Park, Curug Maribaya, De' Ranch Lembang, Bukit Strawberry Lembang, Dago Dreampark, serta kafe dan restoran sekitar Lembang.
+
+Cocok untuk liburan keluarga, staycation, gathering, dan quality time.
+
+Tempat
+Deskripsi Kamar & Ruang:
+
+• Kamar tidur nyaman dengan tempat tidur King.
+• WiFi SUPER CEPAT TANPA BATAS – hingga 80 Mbps.
+• TV LED 43”.
+• Kolam renang pribadi.
+• Meja biliar.
+• Meja tenis meja.
+• Area BBQ.
+• Area api unggun dengan cerobong asap.
+
+Kamar Mandi & Kenyamanan:
+
+• Bathtub di setiap kamar mandi.
+• Shower.
+• Lemari pakaian.
+• Meja rias.
+• Cermin besar.
+
+Dapur & Ruang Makan:
+
+• Meja makan dengan peralatan makan lengkap.
+• Kompor dengan peralatan masak dasar.
+• Kulkas.
+• Galon air mineral tersedia.
+
+Akses tamu
+Fasilitas D'Green Villa:
+
+• Lingkungan hijau, tenang, asri, dan menyegarkan.
+• Suasana pegunungan yang sejuk dengan pemandangan indah.
+• Area villa yang luas dan nyaman.
+• Kolam renang pribadi.
+• Kamar tidur nyaman dengan tempat tidur King.
+• Bathtub di setiap kamar mandi.
+• Area outdoor yang luas.
+• Meja biliar dan tenis meja.
+• Area BBQ.
+• Area api unggun dengan cerobong asap.
+• WiFi SUPER CEPAT TANPA BATAS – hingga 80 Mbps.
+• TV LED 43”.
+• Parkir pribadi.
+• Area ruang makan dan dapur yang lengkap.
+• Cocok untuk keluarga, grup, staycation, dan gathering.
+• Suasana tenang dan privat untuk menginap dengan nyaman.
+
+Fasilitas Pendukung di Sekitar:
+
+• Begonia Garden.
+• Maribaya Park.
+• Curug Maribaya.
+• De' Ranch Lembang.
+• Bukit Strawberry Lembang.
+• Dago Dreampark.
+• Kafe dan restoran di sekitar Lembang.
+• Akses mudah menuju berbagai destinasi populer di Lembang.
+
+Hal lain yang perlu diperhatikan
+SYARAT & KETENTUAN PEMESANAN VILLA
+
+Dengan melakukan pemesanan villa, tamu dianggap telah membaca, memahami, dan menyetujui seluruh syarat dan ketentuan yang telah ditetapkan oleh pihak manajemen villa.
+
+1. Identitas Tamu
+
+Tamu wajib memberikan foto KTP kepada pihak manajemen villa sebagai bagian dari proses pemesanan dan untuk keperluan keamanan penyewaan villa.
+
+2. Extra Bed
+
+Pembayaran extra bed yang telah dilakukan tidak dapat dikembalikan (non-refundable).
+
+3. Check-in dan Check-out
+
+• Check-in: pukul 14.00 WIB.
+• Check-out: maksimal pukul 12.00 WIB.
+
+4. Early Check-in
+
+Early check-in atau check-in lebih awal tidak diperbolehkan karena pihak manajemen villa membutuhkan waktu untuk membersihkan dan mempersiapkan seluruh area villa.
+
+5. Late Check-out
+
+Late check-out dikenakan biaya sebesar Rp500.000 per 30 menit.
+
+6. Aktivitas Ilegal
+
+Tamu dilarang keras melakukan aktivitas apa pun yang bertentangan dengan hukum dan peraturan yang berlaku di Indonesia.
+
+7. Kapasitas Maksimal Tamu
+
+Jumlah tamu tidak diperbolehkan melebihi kapasitas maksimal villa demi kenyamanan tamu dan menjaga ketertiban lingkungan sekitar.
+
+8. Parkir
+
+Kendaraan hanya diperbolehkan parkir di area parkir yang telah disediakan oleh pihak villa.
+
+9. Acara dan Keramaian
+
+Villa tidak diperbolehkan digunakan untuk pesta pernikahan, pesta ulang tahun, acara, atau kegiatan lain yang melebihi kapasitas maksimal villa atau menimbulkan kebisingan maupun gangguan terhadap lingkungan sekitar.
+
+10. Hewan Peliharaan
+
+Hewan peliharaan jenis apa pun tidak diperbolehkan berada di area villa.
+
+11. Batas Kebisingan
+
+Aktivitas yang menimbulkan kebisingan diperbolehkan hingga pukul 21.00 WIB. Setelah waktu tersebut, tamu wajib menjaga ketenangan dan menghormati lingkungan sekitar.
+
+12. Sound System dan Speaker
+
+Tamu tidak diperbolehkan membawa atau menggunakan sound system, peralatan karaoke, speaker portable, maupun alat pengeras suara lainnya.
+
+13. Properti Villa
+
+Tamu tidak diperbolehkan memindahkan, mengubah posisi, atau memindahkan perabot, dekorasi, maupun properti villa lainnya tanpa persetujuan terlebih dahulu dari pihak manajemen villa.
+
+14. Kebersihan dan Kerusakan
+
+Tamu bertanggung jawab menjaga kebersihan dan kondisi villa selama masa menginap serta menjaga seluruh fasilitas dan properti yang tersedia. Apabila terjadi kerusakan, pecah, atau kehilangan, tamu wajib memberikan ganti rugi sesuai nilai penggantian penuh dari barang yang rusak atau hilang.
+
+15. Persetujuan Syarat dan Ketentuan
+
+Tamu wajib membaca, memahami, dan menyetujui seluruh syarat dan ketentuan sebelum melakukan pemesanan. Apabila terjadi pelanggaran, pihak manajemen villa berhak memberikan teguran, membatalkan reservasi, atau menghentikan masa menginap tanpa pengembalian dana.
+
+Dengan melakukan pemesanan, tamu dianggap telah membaca, memahami, dan menyetujui seluruh syarat dan ketentuan yang berlaku.` },
+  { id:'villa-casa-m3', name:'Villa Casa M3', cat:'villa', catLabel:'Villa',
+    loc:'Komplek Villa Trinity, Lembang, Bandung', beds:5, baths:1, guests:10, price:4200000, weekdayPrice:4200000, weekendPrice:5300000,
+    mapQuery:'Komplek Villa Trinity, Lembang, Bandung',
+    mapLink:'https://maps.app.goo.gl/DenRUnrfK7Quoku28',
+    img:'https://ik.imagekit.io/o1hnx31yy/M3.png?updatedAt=1790155915826',
+    desc:`3M Villa | Komplek Villa Trinity | Lembang
+
+Berada di kawasan Komplek Villa Trinity, Lembang yang asri dan tenang, dengan akses mudah ke berbagai destinasi wisata populer:
+
+• Kampung Daun Culture Gallery & Cafe ±500 m.
+• Lembang Park & Zoo ±3 km.
+• Curug Tilu Leuwi Opat ±4 km.
+• Farmhouse Susu Lembang dan The Great Asia Africa ±5 km.
+• Dusun Bambu Family Leisure Park ±6 km.
+
+Dikelilingi udara pegunungan yang sejuk, suasana alam yang damai, serta tempat kuliner ikonik.
+
+Tempat
+Deskripsi Kamar & Area:
+
+• Luas total belum diinformasikan.
+• 4 kamar tidur, masing-masing dilengkapi 1 Queen bed.
+• 1 kamar tidur dengan 2 Single bed.
+• WiFi SUPER CEPAT TANPA BATAS – hingga 80 Mbps.
+• LED TV 43”.
+
+Kamar Mandi & Kenyamanan:
+
+• Shower.
+• Lemari pakaian, meja rias, dan cermin besar.
+
+Dapur & Area Makan:
+
+• Meja makan lengkap dengan peralatan makan.
+• Kompor dengan peralatan memasak dasar.
+• Kulkas.
+• Air minum galon disediakan.
+
+Akses tamu
+Fasilitas 3M Villa | Komplek Villa Trinity | Lembang:
+
+• Keamanan 24 jam di dalam area kompleks villa.
+• Lingkungan hijau, asri, dan tenang, jauh dari bising kota.
+• Udara sejuk khas pegunungan Lembang, ideal untuk bersantai dan beristirahat.
+• Sangat cocok untuk staycation, liburan keluarga, dan work from home.
+• Area halaman dan ruang terbuka hijau yang asri.
+• Akses kendaraan mudah di kawasan eksklusif yang tenang.
+• Area parkir pribadi yang aman.
+
+Akses Terdekat & Fasilitas Pendukung:
+
+• Minimarket dan toko kelontong lokal.
+• Tempat kuliner populer dan kafe ikonik Lembang, termasuk Kampung Daun.
+• Akses cepat ke Lembang Park & Zoo, Dusun Bambu, dan Farmhouse.
+• Rute alternatif menuju pusat Kota Bandung via Jalan Setiabudi atau Cisarua.
+
+Hal lain yang perlu diperhatikan:
+
+• Cara check-in akan diinfo pada hari kedatangan setelah villa siap digunakan.
+• Jika membutuhkan extra bed, mohon konfirmasi paling lambat sebelum waktu maksimal pengantaran pukul 17.00 WIB.
+• DILARANG MEMBAWA HEWAN PELIHARAAN.
+• DILARANG MEROKOK DI DALAM VILLA. Merokok hanya diperbolehkan di area outdoor.
+• Properti berada di area pemukiman. Harap menjaga ketenangan dan menghindari kebisingan, terutama pada malam hari.
+• Dilarang melakukan aktivitas ilegal di area properti.` },
 
   // Guest House (3)
   { id:'gh-parahyangan', name:'Guest House Kota Baru Parahyangan', cat:'guesthouse', catLabel:'Guest House',
@@ -2271,6 +3401,8 @@ Hal-hal yang PERLU diketahui sebelum booking:
   // Kosan (1)
   { id:'kos-de-orange', name:'Kosan De Orange Kost', cat:'kos', catLabel:'Kosan',
     loc:'Jl. Babakan Jeruk IV No. 11 A, Sukagalih, Kecamatan Sukajadi, Kota Bandung', beds:1, baths:1, guests:1, price:850000,
+    mapLink:'https://maps.app.goo.gl/ZDqPG9Eb25ffQ4YS9',
+    mapQuery:'Jl. Babakan Jeruk IV No. 11 A, Sukagalih, Kecamatan Sukajadi, Kota Bandung',
     img:'https://images.unsplash.com/photo-1494526585095-c41746248156?auto=format&fit=crop&w=800&q=80',
     roomOptions:[
       { name:'Single Room', price:950000 },
@@ -2337,6 +3469,18 @@ properties.push({
 /* ============== RENDER PROPERTIES ============== */
 const propsGrid = document.getElementById('propsGrid');
 const formatPrice = (p) => 'Rp ' + p.toLocaleString('id-ID');
+const isWeekendNight = (dateValue) => {
+  if(!dateValue) return false;
+  const [year, month, day] = dateValue.split('-').map(Number);
+  const dayOfWeek = new Date(year, month - 1, day).getDay();
+  return dayOfWeek === 5 || dayOfWeek === 6;
+};
+const getNightlyPrice = (property, dateValue) => {
+  if(property.weekdayPrice && property.weekendPrice){
+    return isWeekendNight(dateValue) ? property.weekendPrice : property.weekdayPrice;
+  }
+  return property.price;
+};
 let selectedBooking = null;
 const minPriceControl = document.getElementById('minPrice');
 const maxPriceControl = document.getElementById('maxPrice');
@@ -2442,7 +3586,7 @@ function openModal(id){
         ${p.roomOptions.map((room, index) => `<option value="${index}">${room.name} — ${formatPrice(room.price)}/bulan</option>`).join('')}
       </select>
     </div>` : '';
-  const initialPrice = p.roomOptions ? p.roomOptions[0].price : p.price;
+  const initialPrice = p.roomOptions ? p.roomOptions[0].price : getNightlyPrice(p, '');
   const pricePeriod = p.roomOptions ? 'per bulan' : 'per malam';
 
   modalBody.innerHTML = `
@@ -2468,6 +3612,7 @@ function openModal(id){
         loading="lazy"
         referrerpolicy="no-referrer-when-downgrade">
       </iframe>
+      ${p.mapLink ? `<a href="${p.mapLink}" target="_blank" rel="noopener noreferrer" style="display:block;padding:10px 14px;color:var(--terracotta);font-size:.8rem;font-weight:600;text-decoration:none">Buka pin di Google Maps →</a>` : ''}
     </div>
     <div class="modal-price-row">
       <div class="modal-price" id="modalPrice">${formatPrice(initialPrice)}<small>${pricePeriod}</small></div>
@@ -2504,10 +3649,20 @@ function openModal(id){
   }
   const modalCheckin = document.getElementById('modalCheckin');
   const modalCheckout = document.getElementById('modalCheckout');
+  const updateNightlyPrice = () => {
+    if(!p.weekdayPrice || p.roomOptions) return;
+    const nightlyPrice = getNightlyPrice(p, modalCheckin.value);
+    const priceLabel = isWeekendNight(modalCheckin.value) ? 'weekend' : 'weekday';
+    document.getElementById('modalPrice').innerHTML = `${formatPrice(nightlyPrice)}<small>${priceLabel} per malam</small>`;
+  };
   const todayDate = new Date().toISOString().split('T')[0];
   modalCheckin.min = todayDate;
   modalCheckout.min = todayDate;
-  modalCheckin.addEventListener('change', () => { modalCheckout.min = modalCheckin.value; });
+  modalCheckin.addEventListener('change', () => {
+    modalCheckout.min = modalCheckin.value;
+    updateNightlyPrice();
+  });
+  updateNightlyPrice();
   document.getElementById('modalBookingForm').addEventListener('submit', (event) => {
     event.preventDefault();
     if(modalCheckout.value < modalCheckin.value){
@@ -2519,7 +3674,8 @@ function openModal(id){
     const guestEmail = document.getElementById('modalGuestEmail').value.trim();
     const guestPhone = document.getElementById('modalGuestPhone').value.trim();
     const displayBookingDate = (value) => displayDate(value);
-    const roomLine = room ? `%0APilihan kamar: ${encodeURIComponent(room.name)}%0AHarga: ${encodeURIComponent(formatPrice(room.price))}/bulan` : `%0AHarga: ${encodeURIComponent(formatPrice(p.price))}/malam`;
+    const nightlyPrice = getNightlyPrice(p, modalCheckin.value);
+    const roomLine = room ? `%0APilihan kamar: ${encodeURIComponent(room.name)}%0AHarga: ${encodeURIComponent(formatPrice(room.price))}/bulan` : `%0AHarga: ${encodeURIComponent(formatPrice(nightlyPrice))}/malam`;
     const message = `Halo YOUR HOME, saya ingin melakukan booking.%0A%0AProperti: ${encodeURIComponent(p.name)}${roomLine}%0ACheck-in: ${encodeURIComponent(displayBookingDate(modalCheckin.value))}%0ACheck-out: ${encodeURIComponent(displayBookingDate(modalCheckout.value))}%0ANama: ${encodeURIComponent(guestName)}%0AEmail: ${encodeURIComponent(guestEmail)}%0ANo. WhatsApp: ${encodeURIComponent(guestPhone)}%0A%0AMohon konfirmasi ketersediaan dan total harganya. Terima kasih.`;
     window.open(`https://wa.me/6288276788800?text=${message}`, '_blank', 'noopener,noreferrer');
   });
