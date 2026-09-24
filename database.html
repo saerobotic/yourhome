@@ -29,9 +29,11 @@ td:first-child{color:var(--muted);font-size:.85rem;width:52px}
 .status{display:inline-flex;align-items:center;gap:7px;font-size:.8rem;font-weight:700;white-space:nowrap}
 .status::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--green)}
 .status.price-change::before{background:var(--accent)}
-.status.unchanged::before{background:#aaa29a}
+.status.unchanged{color:#b42318}
+.status.unchanged::before{background:#b42318}
 .photo-status{display:inline-flex;align-items:center;gap:7px;font-size:.8rem;font-weight:700;white-space:nowrap}
-.photo-status::before{content:"";width:8px;height:8px;border-radius:50%;background:#aaa29a}
+.photo-status{color:#b42318}
+.photo-status::before{content:"";width:8px;height:8px;border-radius:50%;background:#b42318}
 .photo-status.updated{color:var(--green)}
 .photo-status.updated::before{background:var(--green)}
 .note{color:var(--muted);font-size:.8rem}
@@ -50,15 +52,15 @@ footer{margin-top:20px;color:var(--muted);font-size:.78rem}
 </header>
 
 <section class="summary" aria-label="Ringkasan database">
-  <div class="stat"><strong>22</strong><span>Total unit aktif</span></div>
+  <div class="stat"><strong>34</strong><span>Total unit aktif</span></div>
   <div class="stat"><strong>22</strong><span>Harga diperbarui</span></div>
-  <div class="stat"><strong>0</strong><span>Belum ada perubahan harga</span></div>
+  <div class="stat"><strong>12</strong><span>Belum ada perubahan harga</span></div>
   <div class="stat"><strong id="updatedPhotoCount">0</strong><span>Foto sudah diubah</span></div>
 </section>
 
 <div class="table-wrap">
 <table>
-<thead><tr><th>No.</th><th>Nama Unit</th><th>Harga / malam</th><th>Status</th><th>Status Foto</th><th>Catatan</th></tr></thead>
+<thead><tr><th>No.</th><th>Nama Unit</th><th>Harga Weekday</th><th>Harga Weekend</th><th>Status Harga Weekend</th><th>Status Foto</th><th>Status Maps</th><th>Catatan</th></tr></thead>
 <tbody>
 <tr><td>1</td><td><span class="unit">Lantai 7 Sudirman Suites</span><br><span class="category">Apartemen</span></td><td class="price">Rp 618.000</td><td><span class="status price-change">Harga diubah</span></td><td class="note">Harga diperbarui</td></tr>
 <tr><td>2</td><td><span class="unit">Lantai 11 Sudirman Suites</span><br><span class="category">Apartemen</span></td><td class="price">Rp 955.000</td><td><span class="status price-change">Harga diubah</span></td><td class="note">Harga diperbarui</td></tr>
@@ -82,6 +84,18 @@ footer{margin-top:20px;color:var(--muted);font-size:.78rem}
 <tr><td>20</td><td><span class="unit">Davion House</span><br><span class="category">Guest House</span></td><td class="price">Rp 1.499.000</td><td><span class="status price-change">Harga diubah</span></td><td class="note">Harga, deskripsi & maps</td></tr>
 <tr><td>21</td><td><span class="unit">Guest House Tatar Banyak Sumba</span><br><span class="category">Guest House</span></td><td class="price">Rp 1.414.000</td><td><span class="status price-change">Harga diubah</span></td><td class="note">Harga, deskripsi & maps</td></tr>
 <tr><td>22</td><td><span class="unit">Kosan De Orange Kost</span><br><span class="category">Kosan</span></td><td class="price">Rp 850.000</td><td><span class="status price-change">Harga diubah</span></td><td class="note">Harga & pilihan kamar diperbarui: Single Rp 950.000; Single Balkon Rp 1.000.000; Superior Rp 1.250.000; Single Deluxe Rp 1.400.000; Superior Deluxe Rp 1.600.000 per bulan</td></tr>
+<tr><td>23</td><td><span class="unit">Villa Rustic Nine</span><br><span class="category">Villa</span></td><td class="price">Rp 8.500.000</td><td><span class="status unchanged">Harga belum diubah</span></td><td class="note">Foto, maps, dan harga weekend sudah dimasukan</td></tr>
+<tr><td>24</td><td><span class="unit">Villa Alba Uno</span><br><span class="category">Villa</span></td><td class="price">Rp 3.500.000</td><td><span class="status unchanged">Harga belum diubah</span></td><td class="note">Foto, maps, dan harga weekend sudah dimasukan</td></tr>
+<tr><td>25</td><td><span class="unit">Villa Alba Duo</span><br><span class="category">Villa</span></td><td class="price">Rp 3.000.000</td><td><span class="status unchanged">Harga belum diubah</span></td><td class="note">Foto, maps, dan harga weekend sudah dimasukan</td></tr>
+<tr><td>26</td><td><span class="unit">Villa Forest Heal</span><br><span class="category">Villa</span></td><td class="price">Rp 1.800.000</td><td><span class="status unchanged">Harga belum diubah</span></td><td class="note">Foto sudah diperbarui; maps menyusul</td></tr>
+<tr><td>27</td><td><span class="unit">Villa Tree Vena</span><br><span class="category">Villa</span></td><td class="price">Rp 4.900.000</td><td><span class="status unchanged">Harga belum diubah</span></td><td class="note">Foto, maps, dan harga weekend sudah dimasukan</td></tr>
+<tr><td>28</td><td><span class="unit">Villa Sananda</span><br><span class="category">Villa</span></td><td class="price">Rp 2.500.000</td><td><span class="status unchanged">Harga belum diubah</span></td><td class="note">Foto, maps, dan harga weekend sudah dimasukan</td></tr>
+<tr><td>29</td><td><span class="unit">Villa Aprilia</span><br><span class="category">Villa</span></td><td class="price">Rp 3.350.000</td><td><span class="status unchanged">Harga belum diubah</span></td><td class="note">Foto, maps, dan harga weekend sudah dimasukan</td></tr>
+<tr><td>30</td><td><span class="unit">Villa Halimun</span><br><span class="category">Villa</span></td><td class="price">Rp 9.800.000</td><td><span class="status unchanged">Harga belum diubah</span></td><td class="note">Foto, maps, dan harga weekend sudah dimasukan</td></tr>
+<tr><td>31</td><td><span class="unit">Villa Halimpu</span><br><span class="category">Villa</span></td><td class="price">Rp 8.900.000</td><td><span class="status unchanged">Harga belum diubah</span></td><td class="note">Foto, maps, dan harga weekend sudah dimasukan</td></tr>
+<tr><td>32</td><td><span class="unit">Villa Manakala</span><br><span class="category">Villa</span></td><td class="price">Rp 6.500.000</td><td><span class="status unchanged">Harga belum diubah</span></td><td class="note">Foto, maps, dan harga weekend sudah dimasukan</td></tr>
+<tr><td>33</td><td><span class="unit">Villa De Green</span><br><span class="category">Villa</span></td><td class="price">Rp 7.500.000</td><td><span class="status unchanged">Harga belum diubah</span></td><td class="note">Foto, maps, dan harga weekend sudah dimasukan</td></tr>
+<tr><td>34</td><td><span class="unit">Villa Casa M3</span><br><span class="category">Villa</span></td><td class="price">Rp 4.200.000</td><td><span class="status unchanged">Harga belum diubah</span></td><td class="note">Foto, maps, dan harga weekend sudah dimasukan</td></tr>
 </tbody>
 </table>
 </div>
@@ -89,13 +103,62 @@ footer{margin-top:20px;color:var(--muted);font-size:.78rem}
 </main>
 <script>
 const rows = document.querySelectorAll('tbody tr');
+const dummyPhotoNames = new Set([
+  'Kosan De Orange Kost',
+]);
+const pendingMapNames = new Set([
+  'Lantai 7 Sudirman Suites',
+  'Lantai 11 Sudirman Suites',
+  'Lantai 18 Sudirman Suites',
+  'Lantai 19 Sudirman Suites',
+  'Villa Ferrum',
+  'Villa Forest Heal',
+]);
+const weekendPriceNames = new Set(['Villa Forest Heal', 'Villa Rustic Nine', 'Villa Alba Uno', 'Villa Alba Duo', 'Villa Sananda', 'Villa Aprilia', 'Villa Halimun', 'Villa Halimpu', 'Villa Manakala', 'Villa De Green', 'Villa Casa M3', 'Villa Tree Vena']);
+const weekendPrices = {
+  'Villa Forest Heal': 2800000,
+  'Villa Rustic Nine': 12100000,
+  'Villa Alba Uno': 5000000,
+  'Villa Alba Duo': 4500000,
+  'Villa Sananda': 4000000,
+  'Villa Aprilia': 4400000,
+  'Villa Halimun': 16000000,
+  'Villa Halimpu': 13000000,
+  'Villa Manakala': 9200000,
+  'Villa De Green': 10700000,
+  'Villa Casa M3': 5300000,
+  'Villa Tree Vena': 5900000
+};
 
 function isPhotoUpdated(unitName) {
-  return unitName !== 'Kosan De Orange Kost';
+  return !dummyPhotoNames.has(unitName);
 }
 
 function renderPhotoStatus(row) {
   const unitName = row.querySelector('.unit').textContent.trim();
+  const priceCell = row.querySelector('.price');
+  const generalStatusCell = row.children[3];
+  const weekdayCell = document.createElement('td');
+  const weekendCell = document.createElement('td');
+  const weekendStatusCell = document.createElement('td');
+  const hasWeekendPrice = weekendPriceNames.has(unitName);
+  const weekdayPrice = Number(priceCell.textContent.replace(/[^0-9]/g, ''));
+  const weekendPrice = weekendPrices[unitName] || 0;
+  const weekendIsHigher = weekendPrice > weekdayPrice;
+  weekdayCell.className = 'price weekday-price';
+  weekdayCell.textContent = priceCell.textContent;
+  weekendCell.className = 'price weekend-price';
+  weekendCell.textContent = hasWeekendPrice ? `Rp ${weekendPrice.toLocaleString('id-ID')}` : '-';
+  weekendStatusCell.innerHTML = `<span class="status ${weekendIsHigher ? 'price-change' : 'unchanged'}">${weekendIsHigher ? 'DONE' : 'Belum diubah'}</span>`;
+  if(generalStatusCell.querySelector('.status')) generalStatusCell.remove();
+  const existingWeekendCell = row.querySelector('.weekend-price');
+  const existingWeekendStatusCell = row.querySelector('.weekend-status-cell');
+  if(!existingWeekendCell){
+    priceCell.replaceWith(weekdayCell);
+    row.insertBefore(weekendCell, row.children[3]);
+  }
+  weekendStatusCell.className = 'weekend-status-cell';
+  existingWeekendStatusCell ? existingWeekendStatusCell.replaceWith(weekendStatusCell) : row.insertBefore(weekendStatusCell, row.children[5]);
   const isUpdated = isPhotoUpdated(unitName);
   const existingCell = row.querySelector('.photo-cell');
   const cell = document.createElement('td');
@@ -107,6 +170,16 @@ function renderPhotoStatus(row) {
   cell.className = 'photo-cell';
   cell.append(status);
   existingCell ? existingCell.replaceWith(cell) : row.insertBefore(cell, row.lastElementChild);
+
+  const mapCell = document.createElement('td');
+  const mapStatus = document.createElement('span');
+  const mapsAvailable = !pendingMapNames.has(unitName);
+  mapStatus.className = `photo-status${mapsAvailable ? ' updated' : ''}`;
+  mapStatus.textContent = mapsAvailable ? 'Sudah tersedia' : 'Belum tersedia';
+  mapCell.className = 'map-cell';
+  const existingMapCell = row.querySelector('.map-cell');
+  mapCell.append(mapStatus);
+  existingMapCell ? existingMapCell.replaceWith(mapCell) : row.insertBefore(mapCell, row.lastElementChild);
 }
 
 function updatePhotoCount() {
