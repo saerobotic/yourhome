@@ -13,7 +13,7 @@ header{display:flex;justify-content:space-between;align-items:flex-end;gap:24px;
 h1{font-family:Georgia,serif;font-size:clamp(2rem,4vw,3.4rem);font-weight:500;margin:0 0 8px;color:#3e2723}
 .subtitle{margin:0;color:var(--muted);font-size:.95rem}
 .back{color:var(--accent);font-weight:700;text-decoration:none;white-space:nowrap}
-.summary{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:26px}
+.summary{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:26px}
 .stat{background:var(--paper);border:1px solid var(--line);padding:18px;border-radius:8px}
 .stat strong{display:block;font:600 1.7rem Georgia,serif;color:var(--accent)}
 .stat span{color:var(--muted);font-size:.8rem}
@@ -30,6 +30,10 @@ td:first-child{color:var(--muted);font-size:.85rem;width:52px}
 .status::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--green)}
 .status.price-change::before{background:var(--accent)}
 .status.unchanged::before{background:#aaa29a}
+.photo-status{display:inline-flex;align-items:center;gap:7px;font-size:.8rem;font-weight:700;white-space:nowrap}
+.photo-status::before{content:"";width:8px;height:8px;border-radius:50%;background:#aaa29a}
+.photo-status.updated{color:var(--green)}
+.photo-status.updated::before{background:var(--green)}
 .note{color:var(--muted);font-size:.8rem}
 footer{margin-top:20px;color:var(--muted);font-size:.78rem}
 @media(max-width:650px){.page{padding:28px 14px 46px}header{display:block}.back{display:inline-block;margin-top:18px}.summary{grid-template-columns:1fr}}
@@ -49,11 +53,12 @@ footer{margin-top:20px;color:var(--muted);font-size:.78rem}
   <div class="stat"><strong>22</strong><span>Total unit aktif</span></div>
   <div class="stat"><strong>22</strong><span>Harga diperbarui</span></div>
   <div class="stat"><strong>0</strong><span>Belum ada perubahan harga</span></div>
+  <div class="stat"><strong id="updatedPhotoCount">0</strong><span>Foto sudah diubah</span></div>
 </section>
 
 <div class="table-wrap">
 <table>
-<thead><tr><th>No.</th><th>Nama Unit</th><th>Harga / malam</th><th>Status</th><th>Catatan</th></tr></thead>
+<thead><tr><th>No.</th><th>Nama Unit</th><th>Harga / malam</th><th>Status</th><th>Status Foto</th><th>Catatan</th></tr></thead>
 <tbody>
 <tr><td>1</td><td><span class="unit">Lantai 7 Sudirman Suites</span><br><span class="category">Apartemen</span></td><td class="price">Rp 618.000</td><td><span class="status price-change">Harga diubah</span></td><td class="note">Harga diperbarui</td></tr>
 <tr><td>2</td><td><span class="unit">Lantai 11 Sudirman Suites</span><br><span class="category">Apartemen</span></td><td class="price">Rp 955.000</td><td><span class="status price-change">Harga diubah</span></td><td class="note">Harga diperbarui</td></tr>
@@ -82,5 +87,35 @@ footer{margin-top:20px;color:var(--muted);font-size:.78rem}
 </div>
 <footer>Catatan: Villa X47 menggunakan data Villa X7 saat ini. Harga pada halaman ini mengikuti data terbaru di index.html.</footer>
 </main>
+<script>
+const rows = document.querySelectorAll('tbody tr');
+
+function isPhotoUpdated(unitName) {
+  return unitName !== 'Kosan De Orange Kost';
+}
+
+function renderPhotoStatus(row) {
+  const unitName = row.querySelector('.unit').textContent.trim();
+  const isUpdated = isPhotoUpdated(unitName);
+  const existingCell = row.querySelector('.photo-cell');
+  const cell = document.createElement('td');
+  const status = document.createElement('span');
+
+  status.className = `photo-status${isUpdated ? ' updated' : ''}`;
+  status.textContent = isUpdated ? 'Sudah diubah' : 'Belum diubah';
+
+  cell.className = 'photo-cell';
+  cell.append(status);
+  existingCell ? existingCell.replaceWith(cell) : row.insertBefore(cell, row.lastElementChild);
+}
+
+function updatePhotoCount() {
+  document.getElementById('updatedPhotoCount').textContent =
+    [...rows].filter(row => isPhotoUpdated(row.querySelector('.unit').textContent.trim())).length;
+}
+
+rows.forEach(row => renderPhotoStatus(row));
+updatePhotoCount();
+</script>
 </body>
 </html>
