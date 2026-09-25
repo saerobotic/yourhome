@@ -92,7 +92,7 @@
       <button onclick="switchView('properti')" class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left">
         <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0H5m14 0h2m-2 0h-4m-6 0H3m2 0h4M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5"/></svg>
         <span>Properti</span>
-        <span class="ml-auto text-[10px] bg-slate-800 text-slate-400 px-1.5 py-0.5 rounded">8</span>
+        <span class="ml-auto text-[10px] bg-slate-800 text-slate-400 px-1.5 py-0.5 rounded">31</span>
       </button>
       <button onclick="switchView('booking')" class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left">
         <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
@@ -132,9 +132,9 @@
     <!-- User -->
     <div class="px-3 py-3 border-t border-slate-800/70">
       <div class="flex items-center gap-3 px-2 py-2 rounded-lg hover:bg-slate-800/60 cursor-pointer">
-        <div class="w-9 h-9 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-white text-xs font-bold">AM</div>
+        <div class="w-9 h-9 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-white text-xs font-bold">SS</div>
         <div class="flex-1 min-w-0">
-          <div class="text-white text-sm font-semibold truncate">Andra Manager</div>
+          <div class="text-white text-sm font-semibold truncate">Sigit Sae</div>
           <div class="text-slate-500 text-[11px]">Super Admin</div>
         </div>
         <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg>
@@ -207,8 +207,8 @@
           <div class="relative flex flex-col sm:flex-row sm:items-end justify-between gap-4">
             <div>
               <div class="text-amber-300 text-xs font-semibold uppercase tracking-wider mb-2">Selamat datang kembali</div>
-              <h2 class="text-2xl sm:text-3xl font-extrabold">Halo, Andra! 👋</h2>
-              <p class="text-slate-300 text-sm mt-2 max-w-xl">Bulan ini Anda mengelola <b class="text-white">8 properti</b> dengan total <b class="text-white">42 booking</b> dan net profit <b class="text-amber-300">Rp 184,7jt</b>. Performa naik 12,4% dibanding bulan lalu.</p>
+              <h2 class="text-2xl sm:text-3xl font-extrabold">Halo, Sigit Sae! 👋</h2>
+              <p class="text-slate-300 text-sm mt-2 max-w-xl">Bulan ini Anda mengelola <b class="text-white">31 properti</b> dengan total <b class="text-white">42 booking</b> dan net profit <b class="text-amber-300">Rp 184,7jt</b>. Performa naik 12,4% dibanding bulan lalu.</p>
             </div>
             <div class="flex gap-2">
               <button onclick="switchView('laporan')" class="bg-white/10 hover:bg-white/20 backdrop-blur text-white text-sm font-semibold px-4 py-2.5 rounded-lg flex items-center gap-2">
@@ -370,9 +370,11 @@
       <div id="view-properti" class="view">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
           <div class="flex gap-2 flex-wrap">
-            <button class="tab-btn active" onclick="filterProp(this,'all')">Semua (8)</button>
-            <button class="tab-btn" onclick="filterProp(this,'apartment')">Apartemen (6)</button>
-            <button class="tab-btn" onclick="filterProp(this,'villa')">Villa (2)</button>
+            <button class="tab-btn active" onclick="filterProp(this,'all')">Semua (31)</button>
+            <button class="tab-btn" onclick="filterProp(this,'apartment')">Apartemen (5)</button>
+            <button class="tab-btn" onclick="filterProp(this,'villa')">Villa (23)</button>
+            <button class="tab-btn" onclick="filterProp(this,'guesthouse')">Guest House (2)</button>
+            <button class="tab-btn" onclick="filterProp(this,'kos')">Kosan (1)</button>
           </div>
           <button onclick="showToast('Form tambah properti akan tersedia di v2')" class="flex items-center gap-2 bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold px-4 py-2 rounded-lg">
             <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 4v16m8-8H4"/></svg>
@@ -592,10 +594,10 @@
           <div class="absolute -right-12 -top-12 w-56 h-56 bg-white/10 rounded-full blur-3xl"></div>
           <div class="relative flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div class="flex items-center gap-4">
-              <div class="w-14 h-14 rounded-2xl bg-white/15 backdrop-blur flex items-center justify-center text-2xl font-bold">BS</div>
+              <div class="w-14 h-14 rounded-2xl bg-white/15 backdrop-blur flex items-center justify-center text-2xl font-bold">AF</div>
               <div>
                 <div class="text-amber-300 text-xs font-semibold uppercase tracking-wider">Owner Portal — Preview</div>
-                <h2 class="text-2xl font-extrabold mt-1">Pak Budi Santoso</h2>
+                <h2 class="text-2xl font-extrabold mt-1">Andri Fernando</h2>
                 <p class="text-slate-200 text-sm mt-1">Memiliki 3 properti · Total share Rp 142,8jt bulan ini</p>
               </div>
             </div>
@@ -698,7 +700,7 @@
             <div class="p-5 pb-3 flex items-center justify-between">
               <div>
                 <h3 class="font-bold text-slate-900">Manajemen Pengguna</h3>
-                <p class="text-xs text-slate-500">Role: Super Admin, Staff, Owner</p>
+                <p class="text-xs text-slate-500">Role: Super Admin, Owner</p>
               </div>
               <button onclick="showToast('Form tambah user — siap di v2')" class="text-xs font-semibold text-brand-600 hover:text-brand-700">+ Tambah User</button>
             </div>
@@ -942,25 +944,56 @@ const CAT_COLORS = {
 };
 
 const OWNERS = [
-  { id:'O1', name:'Budi Santoso', initial:'BS', phone:'+62 812-3456-7890', email:'budi.s@email.com', color:'from-emerald-400 to-teal-500' },
-  { id:'O2', name:'Sinta Wijaya', initial:'SW', phone:'+62 813-9876-5432', email:'sinta.w@email.com', color:'from-rose-400 to-pink-500' },
-  { id:'O3', name:'Andi Kurniawan', initial:'AK', phone:'+62 856-1234-5678', email:'andi.k@email.com', color:'from-blue-400 to-indigo-500' },
-  { id:'O4', name:'Rina Maulana', initial:'RM', phone:'+62 878-2345-6789', email:'rina.m@email.com', color:'from-amber-400 to-orange-500' },
-  { id:'O5', name:'Hendra Gunawan', initial:'HG', phone:'+62 821-3456-7890', email:'hendra.g@email.com', color:'from-violet-400 to-purple-500' },
-  { id:'O6', name:'Dewi Lestari', initial:'DL', phone:'+62 819-8765-4321', email:'dewi.l@email.com', color:'from-cyan-400 to-blue-500' },
-  { id:'O7', name:'Rudi Hartono', initial:'RH', phone:'+62 877-1122-3344', email:'rudi.h@email.com', color:'from-lime-400 to-green-500' }
+  { id:'O1', name:'Andri Fernando', initial:'AF', phone:'-', email:'-', color:'from-blue-400 to-indigo-500' },
+  { id:'O2', name:'Hardiman', initial:'H', phone:'-', email:'-', color:'from-amber-400 to-orange-500' },
+  { id:'O3', name:'House in Bandung', initial:'HB', phone:'-', email:'-', color:'from-emerald-400 to-teal-500' },
+  { id:'O4', name:'Kwei Mei', initial:'KM', phone:'-', email:'-', color:'from-violet-400 to-purple-500' },
+  { id:'O5', name:'Veronica', initial:'V', phone:'-', email:'-', color:'from-rose-400 to-pink-500' },
+  { id:'O6', name:'Agen', initial:'A', phone:'-', email:'-', color:'from-slate-400 to-slate-600' },
+  { id:'O7', name:'Agen', initial:'A', phone:'-', email:'-', color:'from-slate-400 to-slate-600' }
 ];
 
+const ownerFor = index => [{ id:`O${(index % OWNERS.length) + 1}`, share:100 }];
 const PROPERTIES = [
-  { id:'P1', name:'Dago Suite 2BR', code:'DS-2BR', type:'apartment', area:'Dago Suites, Dago', beds:2, baths:2, gradient:'from-indigo-500 to-purple-600', owners:[{id:'O1',share:100}] },
-  { id:'P2', name:'VIB Studio 18B', code:'VIB-18B', type:'apartment', area:'VIB Building, Cihampelas', beds:1, baths:1, gradient:'from-rose-500 to-orange-500', owners:[{id:'O2',share:100}] },
-  { id:'P3', name:'GCA 12FL Pool View', code:'GCA-12FL', type:'apartment', area:'Grand Casa Ayani, Cihampelas', beds:2, baths:2, gradient:'from-emerald-500 to-teal-600', owners:[{id:'O3',share:60},{id:'O5',share:40}] },
-  { id:'P4', name:'Ora Apartment 5A', code:'ORA-5A', type:'apartment', area:'Ora Apartment, Setiabudi', beds:1, baths:1, gradient:'from-blue-500 to-cyan-500', owners:[{id:'O4',share:100}] },
-  { id:'P5', name:'KBP Townhouse 3BR', code:'KBP-3BR', type:'villa', area:'Kota Baru Parahyangan', beds:3, baths:2, gradient:'from-amber-500 to-yellow-500', owners:[{id:'O1',share:100}] },
-  { id:'P6', name:'Dago Plaza 9C', code:'DP-9C', type:'apartment', area:'Dago Plaza, Dago', beds:1, baths:1, gradient:'from-violet-500 to-fuchsia-500', owners:[{id:'O6',share:100}] },
-  { id:'P7', name:'Beverly Studio 21', code:'BV-21', type:'apartment', area:'Beverly Bandung, Ciumbuleuit', beds:1, baths:1, gradient:'from-pink-500 to-rose-500', owners:[{id:'O3',share:70},{id:'O7',share:30}] },
-  { id:'P8', name:'Senayan Park 7F', code:'SP-7F', type:'villa', area:'Senayan Park Bandung', beds:3, baths:3, gradient:'from-slate-600 to-slate-800', owners:[{id:'O2',share:100}] }
+  { id:'P1', name:'Lantai 7 Sudirman Suites', code:'SUD-07', type:'apartment', area:'Sudirman Suites, Bandung', beds:2, baths:1, guests:4, price:618000, gradient:'from-indigo-500 to-purple-600', owners:ownerFor(0) },
+  { id:'P2', name:'Lantai 11 Sudirman Suites', code:'SUD-11', type:'apartment', area:'Sudirman Suites, Bandung', beds:3, baths:2, guests:8, price:955000, gradient:'from-blue-500 to-cyan-500', owners:ownerFor(1) },
+  { id:'P3', name:'Lantai 18 Sudirman Suites', code:'SUD-18', type:'apartment', area:'Sudirman Suites, Bandung', beds:2, baths:2, guests:6, price:668000, gradient:'from-emerald-500 to-teal-600', owners:ownerFor(2) },
+  { id:'P4', name:'Lantai 19 Sudirman Suites', code:'SUD-19', type:'apartment', area:'Sudirman Suites, Bandung', beds:3, baths:2, guests:12, price:909000, gradient:'from-violet-500 to-fuchsia-500', owners:ownerFor(3) },
+  { id:'P5', name:'Apartment Galeri Ciumbuleuit 3', code:'GCB-03', type:'apartment', area:'Graha Puspa, Lembang, Bandung', beds:4, baths:3, guests:8, price:2899000, gradient:'from-rose-500 to-orange-500', owners:ownerFor(4) },
+  { id:'P6', name:'Villa Alam 1', code:'VAL-01', type:'villa', area:'Graha Puspa, Lembang, Bandung', beds:3, baths:2, guests:6, price:2899999, gradient:'from-amber-500 to-yellow-500', owners:ownerFor(5) },
+  { id:'P7', name:'Villa Alam 2', code:'VAL-02', type:'villa', area:'Graha Puspa, Lembang, Bandung', beds:3, baths:2, guests:6, price:2750000, gradient:'from-lime-500 to-green-600', owners:ownerFor(6) },
+  { id:'P8', name:'Villa Alam 1 & 2', code:'VAL-12', type:'villa', area:'Lembang, Bandung', beds:6, baths:4, guests:12, price:4999999, gradient:'from-teal-500 to-emerald-700', owners:ownerFor(7) },
+  { id:'P9', name:'Villa Trinity Garden Villa', code:'VTG', type:'villa', area:'Cihideung, Parongpong, Lembang', beds:4, baths:3, guests:10, price:7899000, gradient:'from-sky-500 to-blue-700', owners:ownerFor(8) },
+  { id:'P10', name:'Villa X4', code:'VX4', type:'villa', area:'Cihanjuang Rahayu, Parongpong', beds:4, baths:3, guests:8, price:1799000, gradient:'from-orange-500 to-red-600', owners:ownerFor(9) },
+  { id:'P11', name:'Villa X7', code:'VX7', type:'villa', area:'Cihanjuang Rahayu, Parongpong', beds:5, baths:4, guests:12, price:1399000, gradient:'from-pink-500 to-rose-600', owners:ownerFor(10) },
+  { id:'P12', name:'Villa AWN', code:'AWN', type:'villa', area:'Lembang, Bandung', beds:3, baths:2, guests:8, price:6899000, gradient:'from-fuchsia-500 to-purple-700', owners:ownerFor(11) },
+  { id:'P13', name:'Villa Casa Kemilau Bintang', code:'VCKB', type:'villa', area:'Lembang, Bandung', beds:4, baths:3, guests:10, price:3321000, gradient:'from-yellow-500 to-amber-700', owners:ownerFor(12) },
+  { id:'P14', name:'Villa Casa Bliss', code:'VCB', type:'villa', area:'Aurora 1st Pentagon, Lembang', beds:3, baths:2, guests:6, price:6899000, gradient:'from-cyan-500 to-blue-700', owners:ownerFor(13) },
+  { id:'P15', name:'Villa De Bukit Dago', code:'VBD', type:'villa', area:'Dago Pakar, Ciburial, Bandung', beds:5, baths:4, guests:12, price:1399000, gradient:'from-slate-600 to-slate-800', owners:ownerFor(14) },
+  { id:'P16', name:'Villa Ferrum', code:'VFR', type:'villa', area:'Lembang, Bandung', beds:4, baths:3, guests:8, price:11000000, gradient:'from-stone-500 to-stone-800', owners:ownerFor(15) },
+  { id:'P17', name:'Villa Rustic Nine', code:'VRN', type:'villa', area:'Dago, Bandung', beds:4, baths:3, guests:8, price:8500000, gradient:'from-red-500 to-orange-700', owners:ownerFor(16) },
+  { id:'P18', name:'Villa Alba Uno', code:'VAU', type:'villa', area:'Cigugur Girang, Parongpong', beds:3, baths:2, guests:8, price:3500000, gradient:'from-green-500 to-emerald-700', owners:ownerFor(17) },
+  { id:'P19', name:'Villa Alba Duo', code:'VAD', type:'villa', area:'Cigugur Girang, Parongpong', beds:3, baths:2, guests:8, price:3000000, gradient:'from-emerald-500 to-teal-700', owners:ownerFor(18) },
+  { id:'P20', name:'Villa Forest Heal', code:'VFH', type:'villa', area:'Lokasi belum diatur', beds:3, baths:1, guests:6, price:1800000, gradient:'from-green-600 to-lime-700', owners:ownerFor(19) },
+  { id:'P21', name:'Villa Tree Vena', code:'VTV', type:'villa', area:'Dago Village, Dago, Bandung', beds:4, baths:2, guests:8, price:4900000, gradient:'from-cyan-600 to-teal-800', owners:ownerFor(20) },
+  { id:'P22', name:'Villa Sananda', code:'VSN', type:'villa', area:'Cigugur Girang, Parongpong', beds:3, baths:1, guests:5, price:2500000, gradient:'from-indigo-500 to-blue-700', owners:ownerFor(21) },
+  { id:'P23', name:'Villa Aprilia', code:'VAP', type:'villa', area:'Gudangkahuripan, Lembang', beds:2, baths:1, guests:5, price:3350000, gradient:'from-pink-500 to-fuchsia-700', owners:ownerFor(22) },
+  { id:'P24', name:'Villa Halimun', code:'VHM', type:'villa', area:'Lembang, Bandung', beds:1, baths:1, guests:4, price:9800000, gradient:'from-purple-600 to-indigo-800', owners:ownerFor(23) },
+  { id:'P25', name:'Villa Halimpu', code:'VHP', type:'villa', area:'Pagerwangi, Lembang', beds:1, baths:1, guests:4, price:8900000, gradient:'from-amber-500 to-orange-700', owners:ownerFor(24) },
+  { id:'P26', name:'Villa Manakala', code:'VMK', type:'villa', area:'Lembang, Bandung', beds:3, baths:1, guests:6, price:6500000, gradient:'from-red-500 to-pink-700', owners:ownerFor(25) },
+  { id:'P27', name:'Villa De Green', code:'VDG', type:'villa', area:'Langensari, Lembang', beds:1, baths:1, guests:4, price:7500000, gradient:'from-lime-500 to-green-800', owners:ownerFor(26) },
+  { id:'P28', name:'Villa Casa M3', code:'VCM3', type:'villa', area:'Komplek Villa Trinity, Lembang', beds:5, baths:1, guests:10, price:4200000, gradient:'from-orange-500 to-amber-700', owners:ownerFor(27) },
+  { id:'P29', name:'Guest House Kota Baru Parahyangan', code:'GH-KBP', type:'guesthouse', area:'Kota Baru Parahyangan', beds:3, baths:2, guests:8, price:1499000, gradient:'from-blue-600 to-indigo-800', owners:ownerFor(28) },
+  { id:'P30', name:'Guest House Tatar Banyak Sumba', code:'GH-TBS', type:'guesthouse', area:'Tatar Banyak Sumba, Kota Baru Parahyangan', beds:3, baths:1, guests:6, price:1414000, gradient:'from-teal-500 to-cyan-700', owners:ownerFor(29) },
+  { id:'P31', name:'Kosan De Orange Kost', code:'KDO', type:'kos', area:'Babakan Jeruk, Sukajadi, Bandung', beds:1, baths:1, guests:1, price:850000, gradient:'from-orange-500 to-red-700', owners:ownerFor(30) }
 ];
+const ownerIdsByProperty = {
+  P1:'O1', P2:'O1', P3:'O1', P4:'O2', P5:'O3',
+  P10:'O3', P11:'O3', P14:'O5', P15:'O3', P20:'O4', P31:'O3'
+};
+PROPERTIES.forEach(property => {
+  property.owners = [{ id:ownerIdsByProperty[property.id] || 'O6', share:100 }];
+});
 
 /* Generate realistic bookings for September 2026 */
 function genBookings(){
@@ -1053,13 +1086,13 @@ const EXPENSES = [
 
 /* Users for management */
 const USERS = [
-  { name:'Andra Manager', email:'andra@propertiku.id', role:'Super Admin', access:'Semua properti', status:'active', initial:'AM', color:'from-amber-400 to-orange-500' },
-  { name:'Siti Operator', email:'siti@propertiku.id', role:'Staff', access:'8 properti', status:'active', initial:'SO', color:'from-blue-400 to-indigo-500' },
-  { name:'Joko Field', email:'joko@propertiku.id', role:'Staff', access:'5 properti (Dago, VIB, GCA, Ora, BV)', status:'active', initial:'JF', color:'from-emerald-400 to-teal-500' },
-  { name:'Budi Santoso', email:'budi.s@email.com', role:'Owner', access:'3 properti (DS, KBP, +1)', status:'active', initial:'BS', color:'from-rose-400 to-pink-500' },
-  { name:'Sinta Wijaya', email:'sinta.w@email.com', role:'Owner', access:'2 properti (VIB, SP)', status:'active', initial:'SW', color:'from-violet-400 to-purple-500' },
-  { name:'Andi Kurniawan', email:'andi.k@email.com', role:'Owner', access:'2 properti (GCA, BV)', status:'active', initial:'AK', color:'from-cyan-400 to-blue-500' },
-  { name:'Rina Maulana', email:'rina.m@email.com', role:'Owner', access:'1 properti (Ora)', status:'pending', initial:'RM', color:'from-lime-400 to-green-500' }
+  { name:'Sigit Sae', email:'sigit@propertiku.id', role:'Super Admin', access:'Semua properti', status:'active', initial:'SS', color:'from-amber-400 to-orange-500' },
+  { name:'Andri Fernando', email:'-', role:'Owner', access:'3 properti (Sudirman Suites)', status:'active', initial:'AF', color:'from-blue-400 to-indigo-500' },
+  { name:'Hardiman', email:'-', role:'Owner', access:'1 properti (Sudirman Suites)', status:'active', initial:'H', color:'from-amber-400 to-orange-500' },
+  { name:'House in Bandung', email:'-', role:'Owner', access:'5 properti (Galeri, X4, X7, De Bukit, De Orange)', status:'active', initial:'HB', color:'from-emerald-400 to-teal-500' },
+  { name:'Kwei Mei', email:'-', role:'Owner', access:'1 properti (Forest Heal)', status:'active', initial:'KM', color:'from-violet-400 to-purple-500' },
+  { name:'Veronica', email:'-', role:'Owner', access:'1 properti (Casa Bliss)', status:'active', initial:'V', color:'from-rose-400 to-pink-500' },
+  { name:'Agen', email:'-', role:'Owner', access:'Properti lainnya', status:'active', initial:'A', color:'from-slate-400 to-slate-600' }
 ];
 
 /* ============== STATE ============== */
