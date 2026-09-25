@@ -16,6 +16,7 @@ CREATE TABLE IF NOT EXISTS properties (
   map_embed TEXT NOT NULL DEFAULT '',
   description TEXT NOT NULL DEFAULT '',
   room_options TEXT NOT NULL DEFAULT '[]',
+  external_bookings TEXT NOT NULL DEFAULT '[]',
   sort_order INTEGER NOT NULL DEFAULT 0,
   active INTEGER NOT NULL DEFAULT 1,
   updated_at TEXT NOT NULL
@@ -23,3 +24,16 @@ CREATE TABLE IF NOT EXISTS properties (
 
 CREATE INDEX IF NOT EXISTS idx_properties_active_category
   ON properties(active, category, sort_order);
+
+CREATE TABLE IF NOT EXISTS site_settings (
+  key TEXT PRIMARY KEY,
+  value TEXT NOT NULL DEFAULT '',
+  updated_at TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS contact_messages (
+  id TEXT PRIMARY KEY,
+  message TEXT NOT NULL,
+  status TEXT NOT NULL DEFAULT 'unread',
+  created_at TEXT NOT NULL
+);

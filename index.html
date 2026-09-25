@@ -173,6 +173,7 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
 .date-range-trigger{width:100%;text-align:left;border:1.5px solid var(--grey-l);border-radius:var(--radius-sm);padding:11px 14px;font-family:inherit;font-size:.92rem;color:var(--coffee-d);background:var(--cream);white-space:nowrap}
 .date-range-trigger.active,.date-range-trigger:focus{outline:none;border-color:var(--terracotta);background:var(--white)}
 .date-range-popover{position:absolute;top:calc(100% + 10px);left:0;width:320px;z-index:20;background:var(--white);border:1px solid var(--grey-l);border-radius:var(--radius-sm);box-shadow:var(--shadow-lg);padding:16px}
+.modal-date-field{position:relative;z-index:3}.modal-date-popover{max-width:calc(100vw - 80px)}
 .date-range-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
 .date-range-nav button{width:30px;height:30px;border-radius:50%;color:var(--coffee-d);font-size:1.1rem}
 .date-range-nav button:hover{background:var(--cream-deep);color:var(--terracotta)}
@@ -3403,6 +3404,11 @@ function normalizeRemoteProperty(row){
     try { imageUrls = JSON.parse(imageUrls); } catch { imageUrls = []; }
   }
   if(!Array.isArray(imageUrls) || !imageUrls.length) imageUrls = row.image_url ? [row.image_url] : [];
+  let externalBookings = row.external_bookings || [];
+  if(typeof externalBookings === 'string'){
+    try { externalBookings = JSON.parse(externalBookings); } catch { externalBookings = []; }
+  }
+  if(!Array.isArray(externalBookings)) externalBookings = [];
   return {
     id: String(row.id),
     name: row.name,
@@ -3421,7 +3427,8 @@ function normalizeRemoteProperty(row){
     mapLink: row.map_link || '',
     mapEmbed: row.map_embed || (row.map_link?.includes('/maps/embed') ? row.map_link : ''),
     desc: row.description || '',
-    roomOptions
+    roomOptions,
+    externalBookings
   };
 }
 async function loadRemoteProperties(){
@@ -3532,17 +3539,26 @@ function updatePriceRangeLabel(){
   priceRangeValue.textContent = `${formatPrice(minimum)} - ${formatPrice(maximum)}`;
 }
 const getImageUrl = (url, format) => `${url}${url.includes('?') ? '&' : '?'}tr=f-${format}`;
+function hasExternalBookingConflict(property, startDate, endDate){
+  if(!startDate || !endDate) return false;
+  return (property.externalBookings || []).some(booking => startDate < booking.end_date && endDate > booking.start_date);
+}
 minPriceControl.addEventListener('input', updatePriceRangeLabel);
 maxPriceControl.addEventListener('input', updatePriceRangeLabel);
 updatePriceRangeLabel();
 
 function renderProperties(filter='all', minimumPrice=lowestPrice, maximumPrice=highestPrice){
+  const requestedCheckin = document.getElementById('checkin')?.value || '';
+  const requestedCheckout = document.getElementById('checkout')?.value || '';
   const list = properties.filter(property => {
     const matchesType = filter === 'all' || property.cat === filter;
-    return matchesType && property.price >= minimumPrice && property.price <= maximumPrice;
+    const isAvailable = !hasExternalBookingConflict(property, requestedCheckin, requestedCheckout);
+    return matchesType && property.price >= minimumPrice && property.price <= maximumPrice && isAvailable;
   });
   if(list.length === 0){
-    propsGrid.innerHTML = '<div class="no-results"><p>Tidak ada properti pada kategori ini.</p></div>';
+    propsGrid.innerHTML = requestedCheckin && requestedCheckout
+      ? '<div class="no-results"><p>Tidak ada properti yang tersedia pada tanggal tersebut.</p></div>'
+      : '<div class="no-results"><p>Tidak ada properti pada kategori ini.</p></div>';
     return;
   }
   propsGrid.innerHTML = list.map(p => `
@@ -3678,8 +3694,7 @@ function openModal(id){
     <form class="modal-booking-form" id="modalBookingForm">
       <h4>Pesan ${p.name}</h4>
       <div class="modal-booking-fields">
-        <label>Tanggal check-in<input type="date" id="modalCheckin" required /></label>
-        <label>Tanggal check-out<input type="date" id="modalCheckout" required /></label>
+        <label class="modal-date-field">Tanggal<input type="hidden" id="modalCheckin" /><input type="hidden" id="modalCheckout" /><button type="button" class="date-range-trigger" id="modalDateRangeTrigger">dd/mm/yyyy - dd/mm/yyyy</button><div class="date-range-popover modal-date-popover" id="modalDateRangePopover" hidden><div class="date-range-nav"><button type="button" id="modalDatePrev" aria-label="Bulan sebelumnya">&#8249;</button><span class="date-month-label" id="modalDateMonthLabel"></span><button type="button" id="modalDateNext" aria-label="Bulan berikutnya">&#8250;</button></div><div class="date-weekdays"><span>Min</span><span>Sen</span><span>Sel</span><span>Rab</span><span>Kam</span><span>Jum</span><span>Sab</span></div><div class="date-grid" id="modalDateGrid"></div><p class="date-range-hint" id="modalDateRangeHint">Pilih tanggal check-in</p></div></label>
         <label>Nama pemesan<input type="text" id="modalGuestName" placeholder="Nama lengkap" required /></label>
         <label>Email<input type="email" id="modalGuestEmail" placeholder="nama@email.com" required /></label>
         <label>No. WhatsApp<input type="tel" id="modalGuestPhone" placeholder="08xxxxxxxxxx" required /></label>
@@ -3706,19 +3721,50 @@ function openModal(id){
   }
   const modalCheckin = document.getElementById('modalCheckin');
   const modalCheckout = document.getElementById('modalCheckout');
+  const modalDateTrigger = document.getElementById('modalDateRangeTrigger');
+  const modalDatePopover = document.getElementById('modalDateRangePopover');
+  const modalDateGrid = document.getElementById('modalDateGrid');
+  const modalDateMonthLabel = document.getElementById('modalDateMonthLabel');
+  const modalDateHint = document.getElementById('modalDateRangeHint');
+  let modalRangeStart = '';
+  let modalRangeEnd = '';
+  let modalCalendarMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+  const renderModalDateCalendar = () => {
+    modalDateMonthLabel.textContent = modalCalendarMonth.toLocaleDateString('id-ID', { month: 'long', year: 'numeric' });
+    modalDateGrid.innerHTML = '';
+    const firstDay = new Date(modalCalendarMonth.getFullYear(), modalCalendarMonth.getMonth(), 1).getDay();
+    const daysInMonth = new Date(modalCalendarMonth.getFullYear(), modalCalendarMonth.getMonth() + 1, 0).getDate();
+    for(let blank = 0; blank < firstDay; blank++) modalDateGrid.appendChild(document.createElement('span'));
+    for(let day = 1; day <= daysInMonth; day++){
+      const date = new Date(modalCalendarMonth.getFullYear(), modalCalendarMonth.getMonth(), day);
+      const isoDate = toIsoDate(date);
+      const button = document.createElement('button');
+      button.type = 'button'; button.className = 'date-day'; button.textContent = day;
+      button.disabled = isoDate < today || (modalRangeStart && !modalRangeEnd && isoDate < modalRangeStart);
+      if(isoDate === modalRangeStart) button.classList.add('is-start');
+      if(isoDate === modalRangeEnd) button.classList.add('is-end');
+      if(modalRangeStart && modalRangeEnd && isoDate > modalRangeStart && isoDate < modalRangeEnd) button.classList.add('is-between');
+      button.addEventListener('click', () => {
+        if(!modalRangeStart || modalRangeEnd){ modalRangeStart = isoDate; modalRangeEnd = ''; modalCheckin.value = isoDate; modalCheckout.value = ''; modalDateHint.textContent = 'Pilih tanggal check-out'; }
+        else { modalRangeEnd = isoDate; modalCheckout.value = isoDate; modalDateHint.textContent = 'Rentang tanggal sudah dipilih'; modalDatePopover.hidden = true; modalDateTrigger.classList.remove('active'); }
+        modalDateTrigger.textContent = `${displayDate(modalRangeStart)} - ${displayDate(modalRangeEnd)}`;
+        renderModalDateCalendar();
+        updateNightlyPrice();
+      });
+      modalDateGrid.appendChild(button);
+    }
+  };
+  modalDateTrigger.addEventListener('click', () => { modalDatePopover.hidden = !modalDatePopover.hidden; modalDateTrigger.classList.toggle('active', !modalDatePopover.hidden); if(!modalDatePopover.hidden) renderModalDateCalendar(); });
+  document.getElementById('modalDatePrev').addEventListener('click', () => { modalCalendarMonth = new Date(modalCalendarMonth.getFullYear(), modalCalendarMonth.getMonth() - 1, 1); renderModalDateCalendar(); });
+  document.getElementById('modalDateNext').addEventListener('click', () => { modalCalendarMonth = new Date(modalCalendarMonth.getFullYear(), modalCalendarMonth.getMonth() + 1, 1); renderModalDateCalendar(); });
   const updateNightlyPrice = () => {
-    if(!p.weekdayPrice || p.roomOptions) return;
+    if(!p.weekdayPrice || (p.roomOptions && p.roomOptions.length)) return;
     const nightlyPrice = getNightlyPrice(p, modalCheckin.value);
     const priceLabel = isWeekendNight(modalCheckin.value) ? 'weekend' : 'weekday';
     document.getElementById('modalPrice').innerHTML = `${formatPrice(nightlyPrice)}<small>${priceLabel} per malam</small>`;
   };
   const todayDate = new Date().toISOString().split('T')[0];
-  modalCheckin.min = todayDate;
-  modalCheckout.min = todayDate;
-  modalCheckin.addEventListener('change', () => {
-    modalCheckout.min = modalCheckin.value;
-    updateNightlyPrice();
-  });
+  renderModalDateCalendar();
   updateNightlyPrice();
   document.getElementById('modalBookingForm').addEventListener('submit', (event) => {
     event.preventDefault();
@@ -3726,7 +3772,11 @@ function openModal(id){
       alert('Tanggal check-out harus setelah tanggal check-in.');
       return;
     }
-    const room = p.roomOptions ? p.roomOptions[Number(document.getElementById('modalRoomSelect').value)] : null;
+    if(hasExternalBookingConflict(p, modalCheckin.value, modalCheckout.value)){
+      alert('Properti tidak tersedia pada tanggal tersebut karena sudah dibooking dari platform lain.');
+      return;
+    }
+    const room = roomSelect ? p.roomOptions[Number(roomSelect.value)] : null;
     const guestName = document.getElementById('modalGuestName').value.trim();
     const guestEmail = document.getElementById('modalGuestEmail').value.trim();
     const guestPhone = document.getElementById('modalGuestPhone').value.trim();
@@ -3890,9 +3940,7 @@ document.querySelectorAll('.section').forEach(s => {
   observer.observe(s);
 });
 
-/* ============== CUSTOM LOGOS ============== */
-const customHeaderLogo = localStorage.getItem('yourhome_logo_header');
-const customFooterLogo = localStorage.getItem('yourhome_logo_footer');
+/* ============== SITE SETTINGS ============== */
 function applyCustomLogo(id, value) {
   if(!value) return;
   const image = document.getElementById(id);
@@ -3900,15 +3948,30 @@ function applyCustomLogo(id, value) {
   image.src = value;
   image.closest('picture')?.querySelectorAll('source').forEach(source => { source.srcset = value; });
 }
-applyCustomLogo('headerLogo', customHeaderLogo);
-applyCustomLogo('footerLogo', customFooterLogo);
-
-const footerContact = {
-  location: localStorage.getItem('yourhome_footer_location') || 'Bandung, Jawa Barat, Indonesia',
-  phone: localStorage.getItem('yourhome_footer_phone') || '+62 882-7678-8800',
-  email: localStorage.getItem('yourhome_footer_email') || 'hello@yourhome.id',
-  instagram: localStorage.getItem('yourhome_footer_instagram') || '@yourhomeapartment'
-};
+async function loadSiteSettings() {
+  try {
+    const response = await fetch(`${PROPERTY_API_BASE}/settings?_=${Date.now()}`, { cache: 'no-store' });
+    const payload = await response.json();
+    if (!response.ok || payload.ok === false) return;
+    const settings = payload.data || {};
+    applyCustomLogo('headerLogo', settings.header_logo);
+    applyCustomLogo('footerLogo', settings.footer_logo);
+    const location = settings.footer_location || 'Bandung, Jawa Barat, Indonesia';
+    const phone = settings.footer_phone || '+62 882-7678-8800';
+    const email = settings.footer_email || 'hello@yourhome.id';
+    const instagram = settings.footer_instagram || '@yourhomeapartment';
+    document.getElementById('footerContactLocation').textContent = location;
+    document.getElementById('footerContactPhone').textContent = phone;
+    document.getElementById('footerContactPhone').href = `https://wa.me/${phone.replace(/\D/g, '')}`;
+    document.getElementById('footerContactEmail').textContent = email;
+    document.getElementById('footerContactEmail').href = `mailto:${email}`;
+    document.getElementById('footerContactInstagram').textContent = instagram;
+    document.getElementById('footerContactInstagram').href = `https://instagram.com/${instagram.replace(/^@/, '')}`;
+  } catch (error) {
+    console.warn('Site settings tidak dapat dimuat.', error);
+  }
+}
+loadSiteSettings();
 document.getElementById('footerContactLocation').textContent = footerContact.location;
 const footerPhoneDigits = footerContact.phone.replace(/\D/g, '');
 const footerPhone = document.getElementById('footerContactPhone');
@@ -3921,6 +3984,8 @@ const footerInstagram = document.getElementById('footerContactInstagram');
 const footerInstagramName = footerContact.instagram.replace(/^@/, '').replace(/^https?:\/\/instagram\.com\//, '').replace(/\/$/, '');
 footerInstagram.textContent = `@${footerInstagramName}`;
 footerInstagram.href = `https://instagram.com/${footerInstagramName}`;
+const footerInstagramIcon = footerInstagram.previousElementSibling;
+if(footerInstagramIcon) footerInstagramIcon.innerHTML = '<path d="M7 2h10a5 5 0 0 1 5 5v10a5 5 0 0 1-5 5H7a5 5 0 0 1-5-5V7a5 5 0 0 1 5-5zm0 2a3 3 0 0 0-3 3v10a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3V7a3 3 0 0 0-3-3H7zm5 3.5A4.5 4.5 0 1 1 7.5 12 4.5 4.5 0 0 1 12 7.5zm0 2A2.5 2.5 0 1 0 14.5 12 2.5 2.5 0 0 0 12 9.5zm5.25-3.25a1.25 1.25 0 1 1-1.25 1.25 1.25 0 0 1 1.25-1.25z"/>';
 </script>
 
 </body>
