@@ -304,6 +304,10 @@
               Buka Kamera Selfie
             </button>
           </div>
+          <button type="button" id="uploadSelfieBtn" class="w-full mt-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold py-3 rounded-xl text-center text-sm transition">
+            Pilih Selfie dari HP
+          </button>
+          <input type="file" id="selfieFileInput" accept="image/*" capture="user" class="hidden" />
           <p class="text-xs text-gray-400 mt-1">Ambil selfie saat berada di lokasi untuk bukti check-in.</p>
         </div>
 
@@ -338,7 +342,7 @@
               <option>Lantai 7 Sudirman Suites</option><option>Lantai 11 Sudirman Suites</option><option>Lantai 18 Sudirman Suites</option><option>Lantai 19 Sudirman Suites</option><option>Apartment Galeri Ciumbuleuit 3</option>
             </optgroup>
             <optgroup label="Villa">
-              <option>Villa Aurum</option><option>Villa Putih</option><option>Villa Alam 1</option><option>Villa Alam 2</option><option>Villa Alam 1 &amp; 2</option><option>Villa Trinity Garden Villa</option><option>Villa X4</option><option>Villa X7</option><option>Villa X47</option><option>Villa AWN</option><option>Villa Casa Kemilau Bintang</option><option>Villa Casa Bliss</option><option>Villa De Bukit Dago</option><option>Villa Ferrum</option><option>Villa Rustic Nine</option><option>Villa Alba Uno</option><option>Villa Alba Duo</option><option>Villa Forest Heal</option><option>Villa Tree Vena</option><option>Villa Sananda</option><option>Villa Aprilia</option><option>Villa Halimun</option><option>Villa Halimpu</option><option>Villa Manakala</option><option>Villa De Green</option><option>Villa Casa M3</option>
+              <option>Villa Aurum</option><option>Villa Putih</option><option>Villa Alam 1</option><option>Villa Alam 2</option><option>Villa Alam 1 &amp; 2</option><option>Villa Trinity Garden Villa</option><option>Villa X4</option><option>Villa X7</option><option>Villa X47</option><option>Villa AWN</option><option>Villa Casa Kemilau Bintang</option><option>Villa Casa Bliss</option><option>Villa De Bukit Dago</option><option>Villa Ferrum</option><option>Villa Rustic Nine</option><option>Villa Alba Uno</option><option>Villa Alba Duo</option><option>Villa Tree Vena</option><option>Villa Sananda</option><option>Villa Aprilia</option><option>Villa Halimun</option><option>Villa Halimpu</option><option>Villa Manakala</option><option>Villa De Green</option><option>Villa Casa M3</option>
             </optgroup>
             <optgroup label="Guest House">
               <option>Davion House</option><option>Guest House Tatar Banyak Sumba</option>
@@ -783,6 +787,8 @@
     document.getElementById('openSelfieCamera').addEventListener('click', openSelfieCamera);
     document.getElementById('captureSelfieBtn').addEventListener('click', captureSelfie);
     document.getElementById('closeSelfieCameraBtn').addEventListener('click', closeSelfieCamera);
+    document.getElementById('uploadSelfieBtn').addEventListener('click', () => document.getElementById('selfieFileInput').click());
+    document.getElementById('selfieFileInput').addEventListener('change', handleSelfieUpload);
     document.getElementById('workPhotoInput').addEventListener('change', handleWorkPhotoUpload);
 
     document.getElementById('unitInput').addEventListener('change', () => {
@@ -895,15 +901,45 @@
 
   async function openSelfieCamera() {
     if (!navigator.mediaDevices?.getUserMedia) {
-      showToast('Kamera langsung tidak didukung browser ini.', 'error');
+      showToast('Kamera tidak tersedia. Buka halaman lewat HTTPS atau gunakan "Pilih Selfie dari HP".', 'error');
+      return;
+    }
+    if (!window.isSecureContext && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
+      showToast('Kamera HP memerlukan HTTPS. Gunakan alamat HTTPS atau pilih selfie dari HP.', 'error');
       return;
     }
     try {
-      selfieStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' }, audio: false });
-      document.getElementById('selfieVideo').srcObject = selfieStream;
+      try {
+        selfieStream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: { ideal: 'user' }, width: { ideal: 720 }, height: { ideal: 960 } },
+          audio: false
+        });
+      } catch (firstError) {
+        console.warn('Constraint kamera depan gagal, mencoba kamera default:', firstError);
+        selfieStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+      }
+      const video = document.getElementById('selfieVideo');
+      video.srcObject = selfieStream;
       document.getElementById('selfieCameraPanel').classList.remove('hidden');
+      await new Promise(resolve => {
+        if (video.readyState >= 2) {
+          resolve();
+          return;
+        }
+        video.addEventListener('loadedmetadata', resolve, { once: true });
+      });
+      await video.play();
     } catch (error) {
-      showToast('Izin kamera diperlukan untuk selfie bukti.', 'error');
+      closeSelfieCamera();
+      console.error('Kamera selfie gagal:', error);
+      const messages = {
+        NotAllowedError: 'Izin kamera ditolak. Aktifkan izin Kamera untuk browser ini.',
+        PermissionDeniedError: 'Izin kamera ditolak. Aktifkan izin Kamera untuk browser ini.',
+        NotFoundError: 'Kamera HP tidak ditemukan.',
+        NotReadableError: 'Kamera sedang dipakai aplikasi lain.',
+        SecurityError: 'Kamera hanya bisa dipakai melalui HTTPS.'
+      };
+      showToast(messages[error.name] || 'Kamera gagal dibuka. Coba gunakan "Pilih Selfie dari HP".', 'error');
     }
   }
 
@@ -927,6 +963,13 @@
     context.translate(canvas.width, 0);
     context.scale(-1, 1);
     context.drawImage(video, 0, 0, canvas.width, canvas.height);
+    setSelfiePhoto(canvas);
+    closeSelfieCamera();
+    validateForm();
+    showToast('Selfie bukti berhasil diambil.', 'success');
+  }
+
+  function setSelfiePhoto(canvas) {
     let quality = 0.7;
     state.photoData = canvas.toDataURL('image/jpeg', quality);
     while (state.photoData.length * 0.75 > CONFIG.PHOTO_MAX_BYTES && quality > 0.25) {
@@ -937,9 +980,32 @@
     preview.innerHTML = `<img src="${state.photoData}" class="w-full h-full object-cover" alt="selfie bukti di lokasi" />`;
     preview.classList.remove('border-dashed', 'border-gray-300', 'bg-gray-100');
     preview.classList.add('border-solid', 'border-brand-500');
-    closeSelfieCamera();
-    validateForm();
-    showToast('Selfie bukti berhasil diambil.', 'success');
+  }
+
+  async function handleSelfieUpload(event) {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    showLoading('Memproses selfie…');
+    try {
+      await new Promise(resolve => compressImage(file, compressed => {
+        const image = new Image();
+        image.onload = () => {
+          const canvas = document.createElement('canvas');
+          const width = Math.min(image.naturalWidth, CONFIG.PHOTO_MAX_WIDTH);
+          canvas.width = width;
+          canvas.height = Math.round(image.naturalHeight * width / image.naturalWidth);
+          canvas.getContext('2d').drawImage(image, 0, 0, canvas.width, canvas.height);
+          setSelfiePhoto(canvas);
+          resolve();
+        };
+        image.src = compressed;
+      }));
+      validateForm();
+      showToast('Selfie berhasil dipilih.', 'success');
+    } finally {
+      hideLoading();
+      event.target.value = '';
+    }
   }
 
   async function handleWorkPhotoUpload(e) {
