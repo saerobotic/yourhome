@@ -295,6 +295,7 @@ export default {
           data: (result.results || []).map(row => ({
             ...row,
             room_options: safeParseJsonArray(row.room_options),
+            external_bookings: safeParseJsonArray(row.external_bookings),
             image_urls: (() => {
               const urls = safeParseJsonArray(row.image_urls);
               return row.image_url
@@ -302,6 +303,15 @@ export default {
                 : urls;
             })(),
           })),
+        });
+      }
+
+      // Ambil logo dan kontak website untuk halaman publik
+      if (request.method === 'GET' && path === '/settings') {
+        const result = await env.DB.prepare('SELECT key, value FROM site_settings').all();
+        return json({
+          ok: true,
+          data: Object.fromEntries((result.results || []).map(row => [row.key, row.value])),
         });
       }
 
@@ -689,6 +699,9 @@ export default {
         const mapLink = String(body.map_embed || body.map_link || '').trim();
         const description = String(body.description || '');
         const roomOptions = Array.isArray(body.room_options) ? body.room_options : [];
+        const externalBookings = Array.isArray(body.external_bookings)
+          ? body.external_bookings.filter(item => item && item.start_date && item.end_date && item.platform)
+          : [];
         let imageUrls = Array.isArray(body.image_urls)
           ? body.image_urls.filter(value => typeof value === 'string' && value.trim())
           : (imageUrl ? [imageUrl] : []);
@@ -715,8 +728,8 @@ export default {
           INSERT INTO properties (
             id, name, category, location, price, weekday_price, weekend_price,
             beds, baths, guests, image_url, map_query, map_link, description,
-            room_options, image_urls, sort_order, active, updated_at
-          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            room_options, external_bookings, image_urls, sort_order, active, updated_at
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
           ON CONFLICT(id) DO UPDATE SET
             name = excluded.name,
             category = excluded.category,
@@ -732,6 +745,7 @@ export default {
             map_link = excluded.map_link,
             description = excluded.description,
             room_options = excluded.room_options,
+            external_bookings = excluded.external_bookings,
             image_urls = excluded.image_urls,
             sort_order = excluded.sort_order,
             active = excluded.active,
@@ -739,10 +753,135 @@ export default {
         `).bind(
           id, name, category, location, price, weekdayPrice, weekendPrice,
           beds, baths, guests, imageUrl, mapQuery, mapLink, description,
-          JSON.stringify(roomOptions), JSON.stringify(imageUrls), sortOrder, active, now
+          JSON.stringify(roomOptions), JSON.stringify(externalBookings), JSON.stringify(imageUrls), sortOrder, active, now
         ).run();
 
         return json({ ok: true, data: { id, name } });
+      }
+
+      // Simpan logo website ke R2 dan setting kontak ke D1
+      if (request.method === 'POST' && path === '/admin/settings') {
+        const adminSecret = String(env.ADMIN_DASHBOARD_SECRET || '').trim();
+        if (!(await isAdminRequest(request, adminSecret))) {
+          return bad('Login admin diperlukan', 401);
+        }
+
+        const body = await request.json();
+        const allowedKeys = new Set([
+          'header_logo', 'footer_logo', 'footer_location', 'footer_phone',
+          'footer_email', 'footer_instagram',
+        ]);
+        const key = String(body.key || '').trim();
+        if (!allowedKeys.has(key)) return bad('Setting tidak dikenal');
+
+        let value = String(body.value || '').trim();
+        if (key === 'header_logo' || key === 'footer_logo') {
+          const parsed = parseDataUrl(value);
+          if (parsed.bytes.byteLength > 500 * 1024) {
+            return bad('Logo wajib berukuran di bawah 500 KB');
+          }
+          const objectKey = `site/${key}-${crypto.randomUUID()}`;
+          await env.PHOTOS.put(objectKey, parsed.bytes, {
+            httpMetadata: { contentType: parsed.contentType || 'image/png' },
+          });
+          value = publicFileUrl(url.origin, objectKey);
+        }
+
+        const now = new Date().toISOString();
+        await env.DB.prepare(`
+          INSERT INTO site_settings (key, value, updated_at)
+          VALUES (?, ?, ?)
+          ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at
+        `).bind(key, value, now).run();
+
+        return json({ ok: true, data: { key, value } });
+      }
+
+      if (request.method === 'POST' && path === '/admin/properties/external-bookings') {
+        const adminSecret = String(env.ADMIN_DASHBOARD_SECRET || '').trim();
+        if (!(await isAdminRequest(request, adminSecret))) return bad('Login admin diperlukan', 401);
+        const body = await request.json();
+        const id = String(body.id || '').trim();
+        const externalBookings = Array.isArray(body.external_bookings)
+          ? body.external_bookings.filter(item => item && item.start_date && item.end_date && item.platform)
+          : [];
+        if (!id) return bad('id properti wajib diisi');
+        const result = await env.DB.prepare('UPDATE properties SET external_bookings = ?, updated_at = ? WHERE id = ?')
+          .bind(JSON.stringify(externalBookings), new Date().toISOString(), id).run();
+        if (!result.meta?.changes) return bad('Properti tidak ditemukan', 404);
+        return json({ ok: true, data: { id, external_bookings: externalBookings } });
+      }
+
+      // Terima laporan bug atau pesan dari admin properti
+      if (request.method === 'POST' && path === '/admin/contact-it') {
+        const adminSecret = String(env.ADMIN_DASHBOARD_SECRET || '').trim();
+        if (!(await isAdminRequest(request, adminSecret))) {
+          return bad('Login admin diperlukan', 401);
+        }
+
+        const body = await request.json();
+        const message = String(body.message || '').trim();
+        if (!message || message.length > 2000) {
+          return bad('Pesan wajib diisi dan maksimal 2000 karakter');
+        }
+
+        const telegramToken = String(env.TELEGRAM_BOT_TOKEN || '').trim();
+        const telegramChatId = String(env.TELEGRAM_CHAT_ID || '').trim();
+        if (!telegramToken || !telegramChatId) {
+          return bad('Telegram IT belum dikonfigurasi di Worker', 503);
+        }
+
+        const id = crypto.randomUUID();
+        const createdAt = new Date().toISOString();
+        await env.DB.prepare(`
+          INSERT INTO contact_messages (id, message, status, created_at)
+          VALUES (?, ?, 'unread', ?)
+        `).bind(id, message, createdAt).run();
+
+        const telegramResponse = await fetch(`https://api.telegram.org/bot${telegramToken}/sendMessage`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            chat_id: telegramChatId,
+            text: `Pesan Contact IT YOUR HOME\n\n${message}\n\n${createdAt}`,
+          }),
+        });
+        const telegramResult = await telegramResponse.json().catch(() => ({}));
+        if (!telegramResponse.ok || telegramResult.ok !== true) {
+          return bad('Pesan tersimpan, tetapi gagal dikirim ke Telegram', 502);
+        }
+
+        return json({ ok: true, data: { id, created_at: createdAt } });
+      }
+
+      // Baca dan ubah status history Contact IT
+      if (request.method === 'GET' && path === '/admin/contact-it') {
+        const adminSecret = String(env.ADMIN_DASHBOARD_SECRET || '').trim();
+        if (!(await isAdminRequest(request, adminSecret))) return bad('Login admin diperlukan', 401);
+        const result = await env.DB
+          .prepare('SELECT id, message, status, created_at FROM contact_messages ORDER BY created_at DESC LIMIT 100')
+          .all();
+        return json({ ok: true, data: result.results || [] });
+      }
+
+      const contactStatusMatch = path.match(/^\/admin\/contact-it\/([^/]+)$/);
+      if (request.method === 'PATCH' && contactStatusMatch) {
+        const adminSecret = String(env.ADMIN_DASHBOARD_SECRET || '').trim();
+        if (!(await isAdminRequest(request, adminSecret))) return bad('Login admin diperlukan', 401);
+        const body = await request.json();
+        const status = String(body.status || '').trim();
+        if (!['unread', 'process', 'done'].includes(status)) return bad('Status tidak valid');
+        const id = decodeURIComponent(contactStatusMatch[1]);
+        await env.DB.prepare('UPDATE contact_messages SET status = ? WHERE id = ?').bind(status, id).run();
+        return json({ ok: true, data: { id, status } });
+      }
+
+      if (request.method === 'DELETE' && contactStatusMatch) {
+        const adminSecret = String(env.ADMIN_DASHBOARD_SECRET || '').trim();
+        if (!(await isAdminRequest(request, adminSecret))) return bad('Login admin diperlukan', 401);
+        const id = decodeURIComponent(contactStatusMatch[1]);
+        await env.DB.prepare('DELETE FROM contact_messages WHERE id = ?').bind(id).run();
+        return json({ ok: true, data: { id } });
       }
 
       // Upload foto galeri properti ke R2 dan simpan URL-nya di D1
