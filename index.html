@@ -424,6 +424,7 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
 .modal-map-label{padding:12px 14px 10px;font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;font-weight:700;color:var(--terracotta)}
 .modal-map-frame{display:block;width:100%;height:220px;border:0;background:#f8fafc}
 .modal-room-choice{margin:18px 0;padding:14px;background:var(--cream);border-radius:var(--radius-sm)}
+.modal-room-details{margin:10px 0 0;color:var(--grey);font-size:.8rem;line-height:1.55;white-space:pre-line}
 .modal-room-choice label{display:block;margin-bottom:7px;font-size:.75rem;letter-spacing:.08em;text-transform:uppercase;font-weight:700;color:var(--terracotta)}
 .modal-room-choice select{width:100%;border:1.5px solid var(--grey-l);border-radius:var(--radius-sm);padding:10px 12px;background:var(--white);color:var(--coffee-d);font:inherit}
 .modal-features{display:flex;gap:18px;flex-wrap:wrap;padding:16px;background:var(--cream);border-radius:var(--radius-sm);margin-bottom:18px}
@@ -3392,7 +3393,14 @@ properties.push({
 
 const PROPERTY_API_BASE = 'https://your-home-checkin-api.saerobotic.workers.dev';
 const propertyCategoryLabels = { apartment:'Apartemen', villa:'Villa', guesthouse:'Guest House', kos:'Kosan' };
-properties.forEach(property => { property.img = ''; property.imageUrls = []; });
+properties.forEach(property => {
+  property.img = '';
+  property.imageUrls = [];
+  property.desc = '';
+  property.mapQuery = '';
+  property.mapLink = '';
+  property.mapEmbed = '';
+});
 document.querySelector('.featured')?.classList.add('is-hidden');
 function normalizeRemoteProperty(row){
   let roomOptions = row.room_options || [];
@@ -3539,9 +3547,12 @@ function updatePriceRangeLabel(){
   priceRangeValue.textContent = `${formatPrice(minimum)} - ${formatPrice(maximum)}`;
 }
 const getImageUrl = (url, format) => `${url}${url.includes('?') ? '&' : '?'}tr=f-${format}`;
-function hasExternalBookingConflict(property, startDate, endDate){
+function hasExternalBookingConflict(property, startDate, endDate, roomName = ''){
   if(!startDate || !endDate) return false;
-  return (property.externalBookings || []).some(booking => startDate < booking.end_date && endDate > booking.start_date);
+  return (property.externalBookings || []).some(booking => {
+    const sameRoom = roomName ? (!booking.room_name || booking.room_name === roomName) : !booking.room_name;
+    return sameRoom && startDate < booking.end_date && endDate > booking.start_date;
+  });
 }
 minPriceControl.addEventListener('input', updatePriceRangeLabel);
 maxPriceControl.addEventListener('input', updatePriceRangeLabel);
@@ -3657,6 +3668,7 @@ function openModal(id){
       <select id="modalRoomSelect">
         ${p.roomOptions.map((room, index) => `<option value="${index}">${room.name} — ${formatPrice(room.price)}/bulan</option>`).join('')}
       </select>
+      <p class="modal-room-details" id="modalRoomDetails">${p.roomOptions[0].details || ''}</p>
     </div>` : '';
   const hasRoomOptions = Array.isArray(p.roomOptions) && p.roomOptions.length > 0;
   const initialPrice = hasRoomOptions ? p.roomOptions[0].price : getNightlyPrice(p, '');
@@ -3675,7 +3687,6 @@ function openModal(id){
       <span><svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>${p.guests} Tamu</span>
     </div>
     <p class="modal-desc">${cleanDescription(p.desc)}</p>
-    ${roomOptionsMarkup}
     <div class="modal-map-wrap">
       <div class="modal-map-label">Lokasi</div>
       <iframe
@@ -3687,6 +3698,7 @@ function openModal(id){
       </iframe>
       ${p.mapLink ? `<a href="${p.mapLink}" target="_blank" rel="noopener noreferrer" style="display:block;padding:10px 14px;color:var(--terracotta);font-size:.8rem;font-weight:600;text-decoration:none">Buka pin di Google Maps →</a>` : ''}
     </div>
+    ${roomOptionsMarkup}
     <div class="modal-price-row">
       <div class="modal-price" id="modalPrice">${formatPrice(initialPrice)}<small>${pricePeriod}</small></div>
       <span style="font-size:.8rem;color:var(--grey)">Isi data di bawah</span>
@@ -3709,6 +3721,7 @@ function openModal(id){
       const room = p.roomOptions[Number(roomSelect.value)];
       selectedBooking = { property:p.name, room:room.name, price:room.price };
       document.getElementById('modalPrice').innerHTML = `${formatPrice(room.price)}<small>per bulan</small>`;
+      document.getElementById('modalRoomDetails').textContent = room.details || '';
       const bookingSelection = document.getElementById('bookingSelection');
       bookingSelection.hidden = false;
       bookingSelection.innerHTML = `Pilihan booking: <strong>${p.name} — ${room.name} (${formatPrice(room.price)}/bulan)</strong>`;
@@ -3768,15 +3781,15 @@ function openModal(id){
   updateNightlyPrice();
   document.getElementById('modalBookingForm').addEventListener('submit', (event) => {
     event.preventDefault();
+    const room = roomSelect ? p.roomOptions[Number(roomSelect.value)] : null;
     if(modalCheckout.value < modalCheckin.value){
       alert('Tanggal check-out harus setelah tanggal check-in.');
       return;
     }
-    if(hasExternalBookingConflict(p, modalCheckin.value, modalCheckout.value)){
+    if(hasExternalBookingConflict(p, modalCheckin.value, modalCheckout.value, room?.name || '')){
       alert('Properti tidak tersedia pada tanggal tersebut karena sudah dibooking dari platform lain.');
       return;
     }
-    const room = roomSelect ? p.roomOptions[Number(roomSelect.value)] : null;
     const guestName = document.getElementById('modalGuestName').value.trim();
     const guestEmail = document.getElementById('modalGuestEmail').value.trim();
     const guestPhone = document.getElementById('modalGuestPhone').value.trim();

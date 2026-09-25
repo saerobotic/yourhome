@@ -144,7 +144,7 @@
     .pin-message.error{color:var(--danger)}
     .hidden{display:none!important}
     .admin-gate{min-height:100vh;display:grid;place-items:center;padding:24px;background:var(--cream)}
-    .admin-gate-card{width:min(420px,100%);background:var(--paper);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:24px}
+    .admin-gate-card{width:min(420px,100%);background:var(--paper);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:24px;text-align:center}.admin-gate-logo{display:block;width:min(240px,100%);height:72px;object-fit:contain;margin:0 auto 14px}
     .admin-gate-card h1{margin-bottom:8px}
     .admin-gate-form{display:grid;gap:12px;margin-top:20px}
     .admin-gate-message{min-height:1.2em;font-size:.8rem;font-weight:700;color:var(--danger)}
@@ -162,6 +162,7 @@
 <body>
   <section id="adminLoginScreen" class="admin-gate">
     <div class="admin-gate-card">
+      <img id="dashboardLoginLogo" class="admin-gate-logo" src="https://ik.imagekit.io/o1hnx31yy/yh%20(2).png?tr=f-jpg" alt="YOUR HOME" />
       <h1>Login Admin</h1>
       <p class="subtitle">Masukkan password admin untuk membuka dashboard.</p>
       <form id="adminLoginForm" class="admin-gate-form">
@@ -175,7 +176,7 @@
   <main id="dashboardApp" class="page hidden">
     <header class="topbar">
       <div class="brand">
-        <img class="brand-mark" src="https://ik.imagekit.io/o1hnx31yy/yh%20(2).png?updatedAt=1790230701085" alt="YOUR HOME" />
+        <img id="dashboardHeaderLogo" class="brand-mark" src="https://ik.imagekit.io/o1hnx31yy/yh%20(2).png?updatedAt=1790230701085" alt="YOUR HOME" />
         <div><h1>Check In Crew Dashboard</h1></div>
       </div>
       <div class="top-actions">
@@ -318,6 +319,17 @@
 
   <script>
     const API_BASE = 'https://your-home-checkin-api.saerobotic.workers.dev';
+    async function loadDashboardLogos() {
+      try {
+        const response = await fetch(`${API_BASE}/settings?_=${Date.now()}`, { cache: 'no-store' });
+        const payload = await response.json();
+        const logo = payload.ok && payload.data?.header_logo;
+        if (logo) {
+          document.getElementById('dashboardLoginLogo').src = logo;
+          document.getElementById('dashboardHeaderLogo').src = logo;
+        }
+      } catch { /* gunakan logo default jika API belum tersedia */ }
+    }
     // Data absensi: Cloudflare Worker (D1 + R2)
     const DAILY_SALARY = 100000; // Rp 3.000.000/bulan ÷ 30 hari
     const PAGE_SIZE = 15;
@@ -1099,6 +1111,7 @@
       }
     }
     async function init() {
+      loadDashboardLogos();
       document.getElementById('toggleAdminPassword').addEventListener('click', () => {
         const input = document.getElementById('adminPasswordInput');
         const visible = input.type === 'text';
