@@ -190,8 +190,10 @@ export default {
           endpoints: [
             'GET /',
             'GET /crews',
+            'GET /properties',
             'GET /checkins',
             'POST /admin/login',
+            'POST /admin/properties',
             'POST /checkin',
             'POST /login',
             'POST /admin/set-pin',
@@ -279,6 +281,27 @@ export default {
         return json({
           ok: true,
           data: (result.results || []).map(row => ({ name: row.name })),
+        });
+      }
+
+      // Ambil properti aktif untuk website publik
+      if (request.method === 'GET' && path === '/properties') {
+        const result = await env.DB
+          .prepare("SELECT * FROM properties WHERE active = 1 AND id <> 'villa-forest-heal' ORDER BY sort_order ASC, name ASC")
+          .all();
+
+        return json({
+          ok: true,
+          data: (result.results || []).map(row => ({
+            ...row,
+            room_options: safeParseJsonArray(row.room_options),
+            image_urls: (() => {
+              const urls = safeParseJsonArray(row.image_urls);
+              return row.image_url
+                ? [row.image_url, ...urls.filter(imageUrl => imageUrl !== row.image_url)]
+                : urls;
+            })(),
+          })),
         });
       }
 
@@ -640,6 +663,156 @@ export default {
           ok: true,
           token: await createAdminToken(adminSecret),
         });
+      }
+
+      // Simpan atau perbarui properti dari dashboard admin
+      if (request.method === 'POST' && path === '/admin/properties') {
+        const adminSecret = String(env.ADMIN_DASHBOARD_SECRET || '').trim();
+        if (!(await isAdminRequest(request, adminSecret))) {
+          return bad('Login admin diperlukan', 401);
+        }
+
+        const body = await request.json();
+        const id = String(body.id || '').trim();
+        const name = String(body.name || '').trim();
+        const category = String(body.category || '').trim();
+        const location = String(body.location || '').trim();
+        const price = Number(body.price);
+        const weekdayPrice = body.weekday_price == null || body.weekday_price === '' ? null : Number(body.weekday_price);
+        const weekendPrice = body.weekend_price == null || body.weekend_price === '' ? null : Number(body.weekend_price);
+        const beds = Number(body.beds || 0);
+        const baths = Number(body.baths || 0);
+        const guests = Number(body.guests || 0);
+        const preserveImages = body.preserve_images === true;
+        let imageUrl = String(body.image_url || '').trim();
+        const mapQuery = String(body.map_query || '').trim();
+        const mapLink = String(body.map_link || '').trim();
+        const description = String(body.description || '');
+        const roomOptions = Array.isArray(body.room_options) ? body.room_options : [];
+        let imageUrls = Array.isArray(body.image_urls)
+          ? body.image_urls.filter(value => typeof value === 'string' && value.trim())
+          : (imageUrl ? [imageUrl] : []);
+        const sortOrder = Number(body.sort_order || 0);
+        const active = body.active === false ? 0 : 1;
+
+        if (!id || !name || !['apartment', 'villa', 'guesthouse', 'kos'].includes(category) || !location || !Number.isFinite(price) || price < 0) {
+          return bad('id, name, category, location, dan price wajib valid');
+        }
+
+        if (preserveImages) {
+          const current = await env.DB
+            .prepare('SELECT image_url, image_urls FROM properties WHERE id = ?')
+            .bind(id)
+            .first();
+          if (current) {
+            imageUrl = String(current.image_url || '');
+            imageUrls = safeParseJsonArray(current.image_urls);
+          }
+        }
+
+        const now = new Date().toISOString();
+        await env.DB.prepare(`
+          INSERT INTO properties (
+            id, name, category, location, price, weekday_price, weekend_price,
+            beds, baths, guests, image_url, map_query, map_link, description,
+            room_options, image_urls, sort_order, active, updated_at
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          ON CONFLICT(id) DO UPDATE SET
+            name = excluded.name,
+            category = excluded.category,
+            location = excluded.location,
+            price = excluded.price,
+            weekday_price = excluded.weekday_price,
+            weekend_price = excluded.weekend_price,
+            beds = excluded.beds,
+            baths = excluded.baths,
+            guests = excluded.guests,
+            image_url = excluded.image_url,
+            map_query = excluded.map_query,
+            map_link = excluded.map_link,
+            description = excluded.description,
+            room_options = excluded.room_options,
+            image_urls = excluded.image_urls,
+            sort_order = excluded.sort_order,
+            active = excluded.active,
+            updated_at = excluded.updated_at
+        `).bind(
+          id, name, category, location, price, weekdayPrice, weekendPrice,
+          beds, baths, guests, imageUrl, mapQuery, mapLink, description,
+          JSON.stringify(roomOptions), JSON.stringify(imageUrls), sortOrder, active, now
+        ).run();
+
+        return json({ ok: true, data: { id, name } });
+      }
+
+      // Upload foto galeri properti ke R2 dan simpan URL-nya di D1
+      if (request.method === 'POST' && path === '/admin/properties/images') {
+        const adminSecret = String(env.ADMIN_DASHBOARD_SECRET || '').trim();
+        if (!(await isAdminRequest(request, adminSecret))) {
+          return bad('Login admin diperlukan', 401);
+        }
+
+        const body = await request.json();
+        const id = String(body.id || '').trim();
+        const mainImage = String(body.main_image || '').trim();
+        const existingMainUrl = String(body.existing_main_url || '').trim();
+        const images = Array.isArray(body.images) ? body.images : [];
+        const existingUrls = Array.isArray(body.existing_urls)
+          ? body.existing_urls.filter(value => typeof value === 'string' && value.trim())
+          : [];
+
+        if (!id || images.length > 20) {
+          return bad('id wajib dan maksimal 20 foto galeri per upload');
+        }
+
+        const existing = await env.DB
+          .prepare('SELECT id FROM properties WHERE id = ?')
+          .bind(id)
+          .first();
+        if (!existing) return bad('Properti tidak ditemukan', 404);
+
+        let mainUrl = existingMainUrl;
+        if (mainImage) {
+          const parsedMain = parseDataUrl(mainImage);
+          if (parsedMain.bytes.byteLength > 100 * 1024) {
+            return bad('Foto utama wajib berukuran di bawah 100 KB');
+          }
+          const mainKey = `properties/${slug(id)}/main-${crypto.randomUUID()}.jpg`;
+          await env.PHOTOS.put(mainKey, parsedMain.bytes, {
+            httpMetadata: { contentType: parsedMain.contentType || 'image/jpeg' },
+          });
+          mainUrl = publicFileUrl(url.origin, mainKey);
+        }
+
+        const uploadedUrls = [];
+        for (const image of images) {
+          const parsed = parseDataUrl(image);
+          if (parsed.bytes.byteLength > 100 * 1024) {
+            return bad('Setiap foto wajib berukuran di bawah 100 KB');
+          }
+          const key = `properties/${slug(id)}/${crypto.randomUUID()}.jpg`;
+          await env.PHOTOS.put(key, parsed.bytes, {
+            httpMetadata: { contentType: parsed.contentType || 'image/jpeg' },
+          });
+          uploadedUrls.push(publicFileUrl(url.origin, key));
+        }
+
+        const now = new Date().toISOString();
+        if (mainImage) {
+          await env.DB
+            .prepare('UPDATE properties SET image_url = ?, updated_at = ? WHERE id = ?')
+            .bind(mainUrl, now, id)
+            .run();
+        }
+        const imageUrls = [...existingUrls, ...uploadedUrls];
+        if (images.length) {
+          await env.DB
+            .prepare('UPDATE properties SET image_urls = ?, updated_at = ? WHERE id = ?')
+            .bind(JSON.stringify(imageUrls), now, id)
+            .run();
+        }
+
+        return json({ ok: true, id, image_url: mainImage ? mainUrl : existingMainUrl, image_urls: images.length ? imageUrls : undefined });
       }
 
       // POST /login { crew, pin }

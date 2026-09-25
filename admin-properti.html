@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#3e2723" />
+  <title>Admin Properti | YOUR HOME</title>
+  <style>
+    :root{--coffee:#3e2723;--terracotta:#a0522d;--cream:#faf7f2;--paper:#fff;--line:#e2dbd0;--muted:#776f66;--green:#3f5a3a;--danger:#b42318;--shadow:0 12px 30px rgba(62,39,35,.1)}
+    *{box-sizing:border-box}body{margin:0;background:var(--cream);color:var(--coffee);font-family:Inter,Arial,sans-serif}.hidden{display:none!important}
+    .page{max-width:1280px;margin:0 auto;padding:26px 20px 56px}.topbar{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:20px;flex-wrap:wrap}h1,h2,h3{font-family:Georgia,serif;margin:0}h1{font-size:1.7rem}.subtitle,.hint{color:var(--muted);font-size:.82rem;margin:5px 0 0}.actions{display:flex;gap:8px;flex-wrap:wrap}.button{border:1px solid var(--line);background:var(--paper);color:var(--coffee);padding:10px 14px;border-radius:8px;font-weight:700;cursor:pointer}.button.primary{background:var(--terracotta);border-color:var(--terracotta);color:#fff}.button.danger{background:var(--danger);border-color:var(--danger);color:#fff}.button:disabled{opacity:.55;cursor:not-allowed}
+    .panel{background:var(--paper);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);padding:20px;margin-bottom:18px}.toolbar{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap}.toolbar select,.field input,.field select,.field textarea{border:1px solid var(--line);border-radius:8px;background:#fff;color:var(--coffee);padding:10px 11px;font:inherit;width:100%}.toolbar select{width:auto;min-width:180px}.field{display:flex;flex-direction:column;gap:5px}.field label,.meta-label{font-size:.7rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}.form-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}.field.full{grid-column:1/-1}.field textarea{min-height:180px;resize:vertical}.check{display:flex;align-items:center;gap:8px;padding-top:25px;font-size:.84rem}.check input{width:auto}.form-actions{display:flex;justify-content:flex-end;gap:8px;grid-column:1/-1;padding-top:6px}.status{min-height:1.2em;font-size:.8rem;font-weight:700}.status.success{color:var(--green)}.status.error{color:var(--danger)}
+    .property-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));grid-auto-rows:minmax(62px,auto);align-content:start;gap:8px;margin-top:12px;max-height:230px;overflow-y:auto;padding:2px 6px 2px 2px}.property-item{border:1px solid var(--line);border-radius:8px;padding:9px 11px;display:flex;justify-content:space-between;gap:8px;align-items:center}.property-item strong{display:block;font-size:.9rem}.property-item span{display:block;color:var(--muted);font-size:.68rem;margin-top:2px}.property-item .button{padding:7px 10px;font-size:.74rem}.empty{padding:24px;text-align:center;color:var(--muted)}
+    .gallery{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px;margin-top:8px}.gallery-item{position:relative;aspect-ratio:16/10;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--cream)}.gallery-item[draggable="true"]{cursor:grab}.gallery-item.dragging{opacity:.45;outline:2px dashed var(--terracotta)}.gallery-item img{width:100%;height:100%;object-fit:cover}.gallery-remove{position:absolute;top:4px;right:4px;width:24px;height:24px;border:0;border-radius:50%;background:rgba(180,35,24,.9);color:#fff;font-weight:700;cursor:pointer}.gallery-new{position:absolute;left:4px;bottom:4px;padding:2px 5px;border-radius:4px;background:rgba(62,39,35,.85);color:#fff;font-size:.62rem;font-weight:700}.upload-note{color:var(--muted);font-size:.75rem;margin-top:6px}
+    .login{min-height:100vh;display:grid;place-items:center;padding:20px}.login-card{width:min(420px,100%);background:var(--paper);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:24px}.login-form{display:grid;gap:12px;margin-top:20px}
+    .password-wrap{position:relative;display:block}.password-wrap input{padding-right:46px}.password-toggle{position:absolute;right:8px;top:50%;transform:translateY(-50%);border:0;background:transparent;color:var(--muted);padding:6px;font-size:1rem;line-height:1;cursor:pointer}
+    @media(max-width:760px){.form-grid,.property-list{grid-template-columns:1fr}.field.full{grid-column:auto}.form-actions{grid-column:auto}.page{padding:20px 12px 40px}}
+  </style>
+</head>
+<body>
+  <section id="loginScreen" class="login">
+    <div class="login-card">
+      <h1>Admin Properti</h1>
+      <p class="subtitle">Kelola data properti YOUR HOME.</p>
+      <form id="loginForm" class="login-form">
+        <label class="field"><span class="meta-label">Password Admin</span><span class="password-wrap"><input id="adminPassword" type="password" autocomplete="current-password" required /><button id="toggleAdminPassword" class="password-toggle" type="button" aria-label="Tampilkan password" title="Tampilkan password">&#128065;</button></span></label>
+        <button class="button primary" type="submit">Masuk</button>
+        <p id="loginMessage" class="status error"></p>
+      </form>
+    </div>
+  </section>
+
+  <main id="app" class="page hidden">
+    <header class="topbar">
+      <div><h1>Kelola Properti</h1><p class="subtitle">Edit data publik tanpa mengubah kode `index.html`.</p></div>
+      <div class="actions"><a class="button" href="check-in-crew-dashboard.html">Dashboard</a><button class="button danger" id="logoutBtn" type="button">Logout</button></div>
+    </header>
+
+    <section class="panel">
+      <div class="toolbar"><div><h2>Daftar Properti</h2><p class="hint">Sumber data: Cloudflare D1. Foto diisi menggunakan URL gambar.</p></div><div class="actions"><select id="categoryFilter"><option value="">Semua kategori</option><option value="apartment">Apartemen</option><option value="villa">Villa</option><option value="guesthouse">Guest House</option><option value="kos">Kosan</option></select><button class="button primary" id="newPropertyBtn" type="button">Tambah Properti</button></div></div>
+      <p id="listMessage" class="status error"></p>
+      <div id="propertyList" class="property-list"></div>
+    </section>
+
+    <section class="panel" id="editorPanel">
+      <div class="toolbar"><div><h2 id="editorTitle">Pilih properti</h2><p class="hint">Semua perubahan disimpan ke server setelah tombol simpan ditekan.</p></div></div>
+      <form id="propertyForm" class="form-grid">
+        <label class="field"><span class="meta-label">ID / Slug</span><input id="propertyId" required placeholder="villa-casa-bliss" /></label>
+        <label class="field"><span class="meta-label">Nama Properti</span><input id="propertyName" required /></label>
+        <label class="field"><span class="meta-label">Kategori</span><select id="propertyCategory" required><option value="apartment">Apartemen</option><option value="villa">Villa</option><option value="guesthouse">Guest House</option><option value="kos">Kosan</option></select></label>
+        <label class="field"><span class="meta-label">Lokasi</span><input id="propertyLocation" required /></label>
+        <label class="field"><span class="meta-label">Harga Hari Biasa</span><input id="propertyWeekdayPrice" type="number" min="0" required /></label>
+        <label class="field"><span class="meta-label">Harga Jumat/Sabtu</span><input id="propertyWeekendPrice" type="number" min="0" required /></label>
+        <label class="field"><span class="meta-label">Kamar Tidur</span><input id="propertyBeds" type="number" min="0" /></label>
+        <label class="field"><span class="meta-label">Kamar Mandi</span><input id="propertyBaths" type="number" min="0" /></label>
+        <label class="field"><span class="meta-label">Kapasitas Tamu</span><input id="propertyGuests" type="number" min="0" /></label>
+        <div class="field"><span class="meta-label">Foto Utama (1 foto)</span><div id="propertyMainPreview" class="gallery"></div><input id="propertyMainFile" type="file" accept="image/*" /><p class="upload-note">Pilih 1 foto utama. Kompres otomatis di bawah 100 KB.</p></div>
+        <div class="field full"><span class="meta-label">Foto Galeri (banyak foto)</span><div id="propertyGallery" class="gallery"></div><input id="propertyImageFiles" type="file" accept="image/*" multiple /><p class="upload-note">Pilih banyak foto untuk tur ruangan. Kompres otomatis di bawah 100 KB per file.</p></div>
+        <label class="field"><span class="meta-label">Pencarian Google Maps</span><input id="propertyMapQuery" /></label>
+        <label class="field"><span class="meta-label">Link Google Maps</span><input id="propertyMapLink" type="url" /></label>
+        <label class="field"><span class="meta-label">Urutan Tampil</span><input id="propertySortOrder" type="number" min="0" /></label>
+        <label class="field full"><span class="meta-label">Deskripsi</span><textarea id="propertyDescription"></textarea></label>
+        <label class="check"><input id="propertyActive" type="checkbox" checked /> Tampilkan di website publik</label>
+        <p id="saveMessage" class="status" role="status" aria-live="polite"></p>
+        <div class="form-actions"><button class="button" id="clearBtn" type="button">Kosongkan</button><button class="button primary" type="submit">Simpan Properti</button></div>
+      </form>
+    </section>
+  </main>
+
+  <script>
+    const API_BASE = 'https://your-home-checkin-api.saerobotic.workers.dev';
+    const state = { token: sessionStorage.getItem('dashboard_admin_token') || '', properties: [], selectedId: null, mainImageUrl: '', mainImageFile: null, mainImagePreview: '', galleryUrls: [], galleryChanged: false, newImageFiles: [], newImagePreviews: [] };
+    const el = id => document.getElementById(id);
+    const categoryLabels = { apartment: 'Apartemen', villa: 'Villa', guesthouse: 'Guest House', kos: 'Kosan' };
+    async function request(url, options = {}) {
+      const response = await fetch(url, { ...options, headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${state.token}`, ...(options.headers || {}) } });
+      const text = await response.text();
+      let data = {};
+      try { data = text ? JSON.parse(text) : {}; } catch { data = {}; }
+      if (!response.ok || data.ok === false) throw new Error(data.error || data.message || text || `HTTP ${response.status}`);
+      return data;
+    }
+    function showApp() { el('loginScreen').classList.add('hidden'); el('app').classList.remove('hidden'); }
+    function showLogin(message = '') { el('loginScreen').classList.remove('hidden'); el('app').classList.add('hidden'); el('loginMessage').textContent = message; }
+    function propertyFormValue(property) {
+      el('propertyId').value = property?.id || '';
+      el('propertyName').value = property?.name || '';
+      el('propertyCategory').value = property?.category || 'villa';
+      el('propertyLocation').value = property?.location || '';
+      el('propertyWeekdayPrice').value = property?.weekday_price ?? property?.price ?? '';
+      el('propertyWeekendPrice').value = property?.weekend_price ?? property?.price ?? '';
+      el('propertyBeds').value = property?.beds ?? 0;
+      el('propertyBaths').value = property?.baths ?? 0;
+      el('propertyGuests').value = property?.guests ?? 0;
+      state.mainImageUrl = property?.image_url || '';
+      state.mainImageFile = null;
+      if (state.mainImagePreview) URL.revokeObjectURL(state.mainImagePreview);
+      state.mainImagePreview = '';
+      el('propertyMainFile').value = '';
+      renderMainPreview();
+      state.galleryUrls = Array.isArray(property?.image_urls) && property.image_urls.length
+        ? property.image_urls.filter(url => url !== property.image_url)
+        : [];
+      state.galleryChanged = false;
+      state.newImageFiles = [];
+      state.newImagePreviews.forEach(url => URL.revokeObjectURL(url));
+      state.newImagePreviews = [];
+      el('propertyImageFiles').value = '';
+      renderGallery();
+      el('propertyMapQuery').value = property?.map_query || '';
+      el('propertyMapLink').value = property?.map_link || '';
+      el('propertySortOrder').value = property?.sort_order ?? 0;
+      el('propertyDescription').value = property?.description || '';
+      el('propertyActive').checked = property?.active !== 0;
+      el('editorTitle').textContent = property ? `Edit: ${property.name}` : 'Tambah properti';
+      state.selectedId = property?.id || null;
+    }
+    function renderMainPreview() {
+      const url = state.mainImagePreview || state.mainImageUrl;
+      el('propertyMainPreview').innerHTML = url
+        ? `<div class="gallery-item"><img src="${escapeHtml(url)}" alt="Foto utama" />${state.mainImagePreview ? '<span class="gallery-new">Baru</span>' : ''}<button class="gallery-remove" id="removeMainImage" type="button" aria-label="Hapus foto utama">&times;</button></div>`
+        : '<span class="hint">Belum ada foto utama.</span>';
+      const removeButton = el('removeMainImage');
+      if (removeButton) removeButton.addEventListener('click', () => {
+        state.mainImageUrl = '';
+        state.mainImageFile = null;
+        if (state.mainImagePreview) URL.revokeObjectURL(state.mainImagePreview);
+        state.mainImagePreview = '';
+        el('propertyMainFile').value = '';
+        renderMainPreview();
+      });
+    }
+    function renderGallery() {
+      const savedImages = state.galleryUrls.map((url, index) => `<div class="gallery-item" draggable="true" data-gallery-index="${index}"><img src="${escapeHtml(url)}" alt="Foto properti ${index + 1}" loading="lazy" /><button class="gallery-remove" type="button" data-remove-gallery="${index}" aria-label="Hapus foto">&times;</button></div>`).join('');
+      const pendingImages = state.newImagePreviews.map((url, index) => `<div class="gallery-item" draggable="true" data-new-gallery-index="${index}"><img src="${escapeHtml(url)}" alt="Foto baru ${index + 1}" /><span class="gallery-new">Baru</span><button class="gallery-remove" type="button" data-remove-new-gallery="${index}" aria-label="Hapus foto baru">&times;</button></div>`).join('');
+      el('propertyGallery').innerHTML = savedImages || pendingImages
+        ? savedImages + pendingImages
+        : '<span class="hint">Belum ada foto galeri.</span>';
+      let draggedItem = null;
+      el('propertyGallery').querySelectorAll('.gallery-item[draggable="true"]').forEach(item => {
+        item.addEventListener('dragstart', event => {
+          draggedItem = item;
+          item.classList.add('dragging');
+          event.dataTransfer.effectAllowed = 'move';
+          event.dataTransfer.setData('text/plain', 'gallery');
+        });
+        item.addEventListener('dragend', () => {
+          item.classList.remove('dragging');
+          draggedItem = null;
+        });
+        item.addEventListener('dragover', event => event.preventDefault());
+        item.addEventListener('drop', event => {
+          event.preventDefault();
+          if (!draggedItem || draggedItem === item) return;
+          const fromGallery = draggedItem.dataset.galleryIndex;
+          const toGallery = item.dataset.galleryIndex;
+          const fromNew = draggedItem.dataset.newGalleryIndex;
+          const toNew = item.dataset.newGalleryIndex;
+          if (fromGallery != null && toGallery != null) {
+            [state.galleryUrls[fromGallery], state.galleryUrls[toGallery]] = [state.galleryUrls[toGallery], state.galleryUrls[fromGallery]];
+          } else if (fromNew != null && toNew != null) {
+            [state.newImageFiles[fromNew], state.newImageFiles[toNew]] = [state.newImageFiles[toNew], state.newImageFiles[fromNew]];
+            [state.newImagePreviews[fromNew], state.newImagePreviews[toNew]] = [state.newImagePreviews[toNew], state.newImagePreviews[fromNew]];
+          } else {
+            return;
+          }
+          state.galleryChanged = true;
+          renderGallery();
+        });
+      });
+      el('propertyGallery').querySelectorAll('[data-remove-gallery]').forEach(button => button.addEventListener('click', () => {
+        state.galleryChanged = true;
+        state.galleryUrls.splice(Number(button.dataset.removeGallery), 1);
+        renderGallery();
+      }));
+      el('propertyGallery').querySelectorAll('[data-remove-new-gallery]').forEach(button => button.addEventListener('click', () => {
+        state.galleryChanged = true;
+        const index = Number(button.dataset.removeNewGallery);
+        URL.revokeObjectURL(state.newImagePreviews[index]);
+        state.newImageFiles.splice(index, 1);
+        state.newImagePreviews.splice(index, 1);
+        renderGallery();
+        el('propertyImageFiles').value = '';
+      }));
+    }
+    function renderList() {
+      const filter = el('categoryFilter').value;
+      const items = state.properties.filter(property => !filter || property.category === filter);
+      el('propertyList').innerHTML = items.length ? items.map(property => `<article class="property-item"><div><strong>${escapeHtml(property.name)}</strong><span>${escapeHtml(categoryLabels[property.category] || property.category)} · ${formatPrice(property.price)} · ${property.active ? 'Aktif' : 'Nonaktif'}</span></div><button class="button" type="button" data-edit-id="${escapeHtml(property.id)}">Edit</button></article>`).join('') : '<div class="empty">Belum ada data properti. Jalankan schema D1 dan isi data melalui form.</div>';
+      el('propertyList').querySelectorAll('[data-edit-id]').forEach(button => button.addEventListener('click', () => propertyFormValue(state.properties.find(property => property.id === button.dataset.editId))));
+    }
+    function escapeHtml(value) { return String(value ?? '').replace(/[&<>'"]/g, character => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', "'":'&#39;', '"':'&quot;' }[character])); }
+    function formatPrice(value) { return `Rp ${Number(value || 0).toLocaleString('id-ID')}`; }
+    function compressImageForUpload(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onerror = () => reject(new Error(`Gagal membaca ${file.name}`));
+        reader.onload = () => {
+          const image = new Image();
+          image.onerror = () => reject(new Error(`Format foto ${file.name} tidak valid`));
+          image.onload = () => {
+            let width = Math.min(image.naturalWidth || 1280, 1280);
+            let height = Math.max(1, Math.round((image.naturalHeight || 720) * width / (image.naturalWidth || 1280)));
+            const canvas = document.createElement('canvas');
+            const context = canvas.getContext('2d');
+            let quality = 0.78;
+            let result = '';
+            do {
+              canvas.width = width;
+              canvas.height = height;
+              context.clearRect(0, 0, width, height);
+              context.drawImage(image, 0, 0, width, height);
+              result = canvas.toDataURL('image/jpeg', quality);
+              if (result.length * 0.75 > 95 * 1024) {
+                if (quality > 0.35) quality -= 0.08;
+                else { width = Math.round(width * 0.82); height = Math.round(height * 0.82); }
+              }
+            } while (result.length * 0.75 > 95 * 1024 && width > 320);
+            if (result.length * 0.75 > 100 * 1024) { reject(new Error(`${file.name} masih lebih dari 100 KB`)); return; }
+            resolve(result);
+          };
+          image.src = reader.result;
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+    async function loadProperties() {
+      try {
+        const response = await request(`${API_BASE}/properties?_=${Date.now()}`);
+        state.properties = Array.isArray(response.data)
+          ? response.data.filter(property => property.id !== 'villa-forest-heal')
+          : [];
+        el('listMessage').textContent = '';
+        renderList();
+      } catch (error) {
+        if (/Login admin diperlukan|401/.test(error.message)) { state.token = ''; sessionStorage.removeItem('dashboard_admin_token'); showLogin(error.message); return; }
+        el('listMessage').textContent = `${error.message}. Pastikan properties/schema.sql sudah dijalankan di D1.`;
+      }
+    }
+    async function login(event) {
+      event.preventDefault();
+      const button = event.currentTarget.querySelector('button'); button.disabled = true;
+      try {
+        const response = await fetch(`${API_BASE}/admin/login`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ password: el('adminPassword').value }) });
+        const data = await response.json();
+        if (!response.ok || data.ok === false) throw new Error(data.error || 'Login admin gagal.');
+        state.token = data.token;
+        sessionStorage.setItem('dashboard_admin_token', state.token);
+        showApp();
+        el('adminPassword').value = '';
+        await loadProperties();
+      } catch (error) { showLogin(error.message); } finally { button.disabled = false; }
+    }
+    async function saveProperty(event) {
+      event.preventDefault();
+      const saveMessage = el('saveMessage');
+      saveMessage.className = 'status'; saveMessage.textContent = 'Menyimpan...';
+      const numberOrNull = id => el(id).value === '' ? null : Number(el(id).value);
+      const payload = {
+        id: el('propertyId').value.trim(), name: el('propertyName').value.trim(), category: el('propertyCategory').value,
+        location: el('propertyLocation').value.trim(), price: Number(el('propertyWeekdayPrice').value), weekday_price: numberOrNull('propertyWeekdayPrice'), weekend_price: numberOrNull('propertyWeekendPrice'),
+        beds: Number(el('propertyBeds').value || 0), baths: Number(el('propertyBaths').value || 0), guests: Number(el('propertyGuests').value || 0), preserve_images: !state.galleryChanged, image_url: state.mainImageUrl,
+        map_query: el('propertyMapQuery').value.trim(), map_link: el('propertyMapLink').value.trim(), sort_order: Number(el('propertySortOrder').value || 0), description: el('propertyDescription').value, image_urls: state.galleryUrls, active: el('propertyActive').checked
+      };
+      try {
+        await request(`${API_BASE}/admin/properties`, { method: 'POST', body: JSON.stringify(payload) });
+        if (state.mainImageFile) {
+          saveMessage.textContent = 'Mengompres dan mengunggah foto utama...';
+          const mainImage = await compressImageForUpload(state.mainImageFile);
+          const mainResponse = await request(`${API_BASE}/admin/properties/images`, { method: 'POST', body: JSON.stringify({ id: payload.id, main_image: mainImage, existing_main_url: state.mainImageUrl, images: [], existing_urls: state.galleryUrls }) });
+          state.mainImageUrl = mainResponse.image_url || state.mainImageUrl;
+        }
+        if (state.newImageFiles.length) {
+          saveMessage.textContent = 'Mengompres dan mengunggah foto galeri...';
+          const images = await Promise.all(state.newImageFiles.map(compressImageForUpload));
+          const galleryResponse = await request(`${API_BASE}/admin/properties/images`, {
+            method: 'POST',
+            body: JSON.stringify({ id: payload.id, main_image: '', existing_main_url: state.mainImageUrl, images, existing_urls: state.galleryUrls })
+          });
+          state.galleryUrls = galleryResponse.image_urls || [...state.galleryUrls];
+        }
+        saveMessage.className = 'status success'; saveMessage.textContent = 'Properti berhasil disimpan.';
+        await loadProperties();
+        const savedProperty = state.properties.find(property => property.id === payload.id);
+        if (savedProperty) savedProperty.name = payload.name;
+        renderList();
+        propertyFormValue(savedProperty ? { ...savedProperty, name: payload.name } : payload);
+      } catch (error) { saveMessage.className = 'status error'; saveMessage.textContent = error.message; }
+    }
+    el('loginForm').addEventListener('submit', login);
+    el('toggleAdminPassword').addEventListener('click', () => {
+      const input = el('adminPassword');
+      const isVisible = input.type === 'text';
+      input.type = isVisible ? 'password' : 'text';
+      const button = el('toggleAdminPassword');
+      button.setAttribute('aria-label', isVisible ? 'Tampilkan password' : 'Sembunyikan password');
+      button.title = isVisible ? 'Tampilkan password' : 'Sembunyikan password';
+    });
+    el('propertyForm').addEventListener('submit', saveProperty);
+    el('propertyMainFile').addEventListener('change', event => {
+      state.mainImageFile = event.target.files?.[0] || null;
+      if (state.mainImagePreview) URL.revokeObjectURL(state.mainImagePreview);
+      state.mainImagePreview = state.mainImageFile ? URL.createObjectURL(state.mainImageFile) : '';
+      renderMainPreview();
+    });
+    el('propertyImageFiles').addEventListener('change', event => {
+      state.galleryChanged = true;
+      state.newImagePreviews.forEach(url => URL.revokeObjectURL(url));
+      state.newImageFiles = Array.from(event.target.files || []);
+      state.newImagePreviews = state.newImageFiles.map(file => URL.createObjectURL(file));
+      renderGallery();
+      el('saveMessage').className = 'status';
+      el('saveMessage').textContent = state.newImageFiles.length ? `${state.newImageFiles.length} foto siap dikompres saat disimpan.` : '';
+    });
+    el('categoryFilter').addEventListener('change', renderList);
+    el('newPropertyBtn').addEventListener('click', () => propertyFormValue(null));
+    el('clearBtn').addEventListener('click', () => propertyFormValue(null));
+    el('logoutBtn').addEventListener('click', () => { sessionStorage.removeItem('dashboard_admin_token'); state.token = ''; showLogin(); });
+    if (state.token) { showApp(); loadProperties(); } else showLogin();
+  </script>
+</body>
+</html>

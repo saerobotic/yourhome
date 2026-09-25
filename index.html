@@ -193,6 +193,8 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
 
 /* ============== FEATURED ============== */
 .featured{padding-top:120px}
+.featured.is-hidden{display:none}
+.feat-card.is-hidden{display:none}
 .featured-grid{display:grid;grid-template-columns:1.4fr 1fr 1fr;grid-template-rows:340px 340px;gap:20px}
 .feat-card{
   position:relative;border-radius:var(--radius);overflow:hidden;
@@ -266,7 +268,8 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
 
 /* ============== ABOUT ============== */
 .about{padding:100px 0}
-.about-grid{display:grid;grid-template-columns:1fr 1fr;gap:80px;align-items:center}
+.about-grid{display:grid;grid-template-columns:1fr;gap:80px;align-items:center}
+.about-imgs{display:none}
 .about-imgs{position:relative;height:540px}
 .about-imgs img{position:absolute;border-radius:var(--radius);object-fit:cover;box-shadow:var(--shadow-lg);will-change:transform}
 .about-imgs img:nth-child(1){width:70%;height:75%;top:0;left:0;z-index:1}
@@ -298,7 +301,7 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
   padding:100px 0;
   background:
     linear-gradient(180deg, rgba(60,40,25,.78), rgba(60,40,25,.78)),
-    url('https://images.unsplash.com/photo-1537953773345-d172ccf13cf1?auto=format&fit=crop&w=1920&q=80') center/cover fixed;
+    none;
   color:var(--white);
 }
 .experience .section-head h2{color:var(--white)}
@@ -409,8 +412,10 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
   display:flex;align-items:center;justify-content:center;
   font-size:1.4rem;color:var(--coffee-d);box-shadow:var(--shadow);
 }
-.modal-img{height:240px;position:relative;overflow:hidden;border-radius:var(--radius) var(--radius) 0 0}
+.modal-img{aspect-ratio:16/10;height:auto;position:relative;overflow:hidden;border-radius:var(--radius) var(--radius) 0 0}
 .modal-img img{width:100%;height:100%;object-fit:cover;will-change:transform}
+.modal-gallery-button{position:absolute;top:50%;z-index:2;transform:translateY(-50%);width:36px;height:36px;border:0;border-radius:50%;background:rgba(255,255,255,.9);color:var(--coffee-d);font-size:1.25rem;box-shadow:var(--shadow);cursor:pointer}
+.modal-gallery-button.prev{left:12px}.modal-gallery-button.next{right:12px}.modal-gallery-count{position:absolute;right:12px;bottom:10px;z-index:2;padding:4px 9px;border-radius:999px;background:rgba(0,0,0,.62);color:#fff;font-size:.72rem}
 .modal-body{padding:28px}
 .modal-body h3{margin-bottom:6px}
 .modal-loc{color:var(--grey);font-size:.88rem;margin-bottom:18px;display:flex;align-items:center;gap:6px}
@@ -599,7 +604,7 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
     </div>
     <div class="featured-grid">
       <div class="feat-card" data-id="villa-aurum">
-        <picture><source srcset="https://ik.imagekit.io/o1hnx31yy/Aurum.png?updatedAt=1790155916889&tr=f-avif" type="image/avif" /><source srcset="https://ik.imagekit.io/o1hnx31yy/Aurum.png?updatedAt=1790155916889&tr=f-webp" type="image/webp" /><img src="https://ik.imagekit.io/o1hnx31yy/Aurum.png?updatedAt=1790155916889&tr=f-jpg" width="800" height="600" loading="lazy" alt="Villa Aurum" /></picture>
+        <picture></picture>
         <span class="feat-price">Rp 8.899.000 / malam</span>
         <div class="feat-info">
           <span class="feat-tag">Villa Mewah</span>
@@ -608,7 +613,7 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
         </div>
       </div>
       <div class="feat-card" data-id="villa-putih">
-        <picture><source srcset="https://ik.imagekit.io/o1hnx31yy/Villa%20putih.png?updatedAt=1790155915297&tr=f-avif" type="image/avif" /><source srcset="https://ik.imagekit.io/o1hnx31yy/Villa%20putih.png?updatedAt=1790155915297&tr=f-webp" type="image/webp" /><img src="https://ik.imagekit.io/o1hnx31yy/Villa%20putih.png?updatedAt=1790155915297&tr=f-jpg" width="800" height="600" loading="lazy" alt="Villa Putih" /></picture>
+        <picture></picture>
         <span class="feat-price">Rp 2.899.000 / malam</span>
         <div class="feat-info">
           <span class="feat-tag">Villa Putih</span>
@@ -617,7 +622,7 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
         </div>
       </div>
       <div class="feat-card" data-id="sudirman-18">
-        <picture><source srcset="https://ik.imagekit.io/o1hnx31yy/appart%2018.jpg?updatedAt=1790155903507&tr=f-avif" type="image/avif" /><source srcset="https://ik.imagekit.io/o1hnx31yy/appart%2018.jpg?updatedAt=1790155903507&tr=f-webp" type="image/webp" /><img src="https://ik.imagekit.io/o1hnx31yy/appart%2018.jpg?updatedAt=1790155903507&tr=f-jpg" width="800" height="600" loading="lazy" alt="Lantai 18 Sudirman Suites" /></picture>
+        <picture></picture>
         <span class="feat-price">Rp 668.000 / malam</span>
         <div class="feat-info">
           <span class="feat-tag">Apartemen</span>
@@ -626,7 +631,7 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
         </div>
       </div>
       <div class="feat-card" data-id="villa-alam-12">
-        <picture><source srcset="https://ik.imagekit.io/o1hnx31yy/Alam%201&2.jpeg?updatedAt=1790156623926&tr=f-avif" type="image/avif" /><source srcset="https://ik.imagekit.io/o1hnx31yy/Alam%201&2.jpeg?updatedAt=1790156623926&tr=f-webp" type="image/webp" /><img src="https://ik.imagekit.io/o1hnx31yy/Alam%201&2.jpeg?updatedAt=1790156623926&tr=f-jpg" width="800" height="600" loading="lazy" alt="Villa Alam 1 & 2" /></picture>
+        <picture></picture>
         <span class="feat-price">Rp 4.999.999 / malam</span>
         <div class="feat-info">
           <span class="feat-tag">Villa Alam</span>
@@ -635,7 +640,7 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
         </div>
       </div>
       <div class="feat-card" data-id="villa-de-bukit">
-        <picture><source srcset="https://ik.imagekit.io/o1hnx31yy/Dago.JPG?updatedAt=1790155909539&tr=f-avif" type="image/avif" /><source srcset="https://ik.imagekit.io/o1hnx31yy/Dago.JPG?updatedAt=1790155909539&tr=f-webp" type="image/webp" /><img src="https://ik.imagekit.io/o1hnx31yy/Dago.JPG?updatedAt=1790155909539&tr=f-jpg" width="800" height="600" loading="lazy" alt="Villa De Bukit Dago" /></picture>
+        <picture></picture>
         <span class="feat-price">Rp 1.399.000 / malam</span>
         <div class="feat-info">
           <span class="feat-tag">Villa Eksklusif</span>
@@ -673,14 +678,10 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
   <div class="container about-grid">
     <div class="about-imgs">
       <picture>
-        <source srcset="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=800&q=80&fm=avif" type="image/avif" />
-        <source srcset="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=800&q=80&fm=webp" type="image/webp" />
-        <img src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=800&q=80&fm=jpg" width="800" height="600" loading="lazy" alt="Interior villa" />
+        
       </picture>
       <picture>
-        <source srcset="https://images.unsplash.com/photo-1583847268964-b28dc8f51f92?auto=format&fit=crop&w=600&q=80&fm=avif" type="image/avif" />
-        <source srcset="https://images.unsplash.com/photo-1583847268964-b28dc8f51f92?auto=format&fit=crop&w=600&q=80&fm=webp" type="image/webp" />
-        <img src="https://images.unsplash.com/photo-1583847268964-b28dc8f51f92?auto=format&fit=crop&w=600&q=80&fm=jpg" width="600" height="450" loading="lazy" alt="Detail villa" />
+        
       </picture>
       <div class="about-badge">
         <strong>5★</strong>
@@ -899,11 +900,14 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
   <div class="modal" id="modal">
     <button class="modal-close" id="modalClose">&times;</button>
     <div class="modal-img">
+      <button class="modal-gallery-button prev" id="modalGalleryPrev" type="button" aria-label="Foto sebelumnya">&#8249;</button>
       <picture>
         <source id="modalImgAvif" srcset="" type="image/avif" />
         <source id="modalImgWebp" srcset="" type="image/webp" />
         <img id="modalImg" src="" width="800" height="600" loading="lazy" alt="" />
       </picture>
+      <button class="modal-gallery-button next" id="modalGalleryNext" type="button" aria-label="Foto berikutnya">&#8250;</button>
+      <span class="modal-gallery-count" id="modalGalleryCount">1 / 1</span>
     </div>
     <div class="modal-body" id="modalBody"></div>
   </div>
@@ -917,7 +921,6 @@ const properties = [
   // Apartemen (5)
   { id:'sudirman-7', name:'Lantai 7 Sudirman Suites', cat:'apartment', catLabel:'Apartemen',
     loc:'Sudirman Suites, Bandung', beds:2, baths:1, guests:4, price:618000,
-    img:'https://ik.imagekit.io/o1hnx31yy/Appart%207.JPG?updatedAt=1790155916946',
     desc:`Tentang tempat ini
 
 APARTEMEN SUDIRMAN SUITES
@@ -992,7 +995,6 @@ Contoh: Parkir selama 3 jam, tamu membayar biaya biasa Rp 9.000.
 Untuk 17 jam, cukup bayar Rp 50.000 (Tarif Maksimum diterapkan secara otomatis).` },
   { id:'sudirman-11', name:'Lantai 11 Sudirman Suites', cat:'apartment', catLabel:'Apartemen',
     loc:'Sudirman Suites, Bandung', beds:3, baths:2, guests:8, price:955000,
-    img:'https://ik.imagekit.io/o1hnx31yy/appart%2011.jpg?updatedAt=1790155909751',
     desc:`Tentang tempat ini
 
 APARTEMEN SUDIRMAN SUITES
@@ -1064,7 +1066,6 @@ Contoh: Parkir selama 3 jam, tamu membayar biaya biasa Rp 9.000.
 Untuk 17 jam, cukup bayar Rp 50.000 (Tarif Maksimum diterapkan secara otomatis).` },
   { id:'sudirman-18', name:'Lantai 18 Sudirman Suites', cat:'apartment', catLabel:'Apartemen',
     loc:'Sudirman Suites, Bandung', beds:2, baths:2, guests:6, price:668000,
-    img:'https://ik.imagekit.io/o1hnx31yy/appart%2018.jpg?updatedAt=1790155903507',
     desc:`Tentang tempat ini
 
 APARTEMEN SUDIRMAN SUITES
@@ -1136,7 +1137,6 @@ Contoh: Parkir selama 3 jam, tamu membayar biaya biasa Rp 9.000.
 Untuk 17 jam, cukup bayar Rp 50.000 (Tarif Maksimum diterapkan secara otomatis).` },
   { id:'sudirman-19', name:'Lantai 19 Sudirman Suites', cat:'apartment', catLabel:'Apartemen',
     loc:'Sudirman Suites, Bandung', beds:3, baths:2, guests:12, price:909000,
-    img:'https://ik.imagekit.io/o1hnx31yy/appart%2019.jpeg?updatedAt=1790155907863',
     desc:`Tentang tempat ini
 
 SUDIRMAN SUITES APARTMENT
@@ -1210,7 +1210,6 @@ Untuk 17 jam, cukup bayar Rp 50.000 (Tarif Maksimum diterapkan secara otomatis).
     loc:'Jl. Ciumbuleuit No.67, Hegarmanah, Kec. Cidadap, Kota Bandung, Jawa Barat 40142, Indonesia',
     mapQuery:'Apartment Galeri Ciumbuleuit 3 4J93+97 Hegarmanah, Kota Bandung, Jawa Barat, Indonesia',
     beds:2, baths:1, guests:4, price:506000,
-    img:'https://ik.imagekit.io/o1hnx31yy/appart%20GCA.JPG?updatedAt=1790157278364',
     desc:`Tentang tempat ini
 
 📍Lokasi Strategis
@@ -1272,7 +1271,6 @@ Beritahu kami sebelum melakukan reservasi untuk memeriksa ketersediaan kami.` },
     loc:'Komplek Villa Triniti No.Kav M-27, Jl. Sersan Bajuri No.Km 47, Cigugur Girang, Kec. Parongpong, Kabupaten Bandung, Jawa Barat 40559',
     mapQuery:'Villa Triniti M-27, Komplek Villa Triniti No.Kav M-27, Jl. Sersan Bajuri No.Km 47, Cigugur Girang, Kec. Parongpong, Kabupaten Bandung, Jawa Barat 40559, Indonesia',
     beds:6, baths:4, guests:12, price:8899000,
-    img:'https://ik.imagekit.io/o1hnx31yy/Aurum.png?updatedAt=1790155916889',
     desc:`Tentang tempat ini
 
 Villa pribadi yang nyaman untuk keluarga, pasangan, maupun rombongan. Dilengkapi Wi-Fi, dapur, ruang keluarga, dan area bersantai. Nikmati suasana menginap yang tenang dengan lingkungan yang indah dan nyaman.
@@ -1354,7 +1352,6 @@ WAJIB DIBACA SEBELUM BOOKING:
   { id:'villa-putih', name:'Villa Putih', cat:'villa', catLabel:'Villa',
     loc:'Graha Puspa, Lembang, Bandung', beds:4, baths:3, guests:8, price:2899000,
     mapQuery:'5HMX+M7Q Komplek Graha Puspa, Jl. Sersan Bajuri, Cihideung, Parongpong, West Bandung Regency, West Java 40559',
-    img:'https://ik.imagekit.io/o1hnx31yy/Villa%20putih.png?updatedAt=1790155915297',
     desc:`VILLA PUTIH
 
 Terletak di kawasan Graha Puspa yang tenang dan hijau, dekat dengan:
@@ -1430,7 +1427,6 @@ Hal-hal yang PERLU diketahui sebelum booking:
   { id:'villa-alam-1', name:'Villa Alam 1', cat:'villa', catLabel:'Villa',
     loc:'5HMX+M7Q Komplek Graha Puspa, Lembang, Bandung', beds:3, baths:2, guests:6, price:2899999,
     mapQuery:'5HMX+VC Sukajaya, Kabupaten Bandung Barat, Jawa Barat',
-    img:'https://ik.imagekit.io/o1hnx31yy/Alam%201.jpeg?updatedAt=1790155908980',
     desc:`Villa Alam 1 – Komplek Graha Puspa by Your Home
 
 Berlokasi di dataran tinggi Lembang yang asri, dekat dengan:
@@ -1512,7 +1508,6 @@ Terima kasih atas kerja samanya. Semoga Anda menikmati masa menginap di Villa Al
   { id:'villa-alam-2', name:'Villa Alam 2', cat:'villa', catLabel:'Villa',
     loc:'5HMX+M7Q Komplek Graha Puspa, Lembang, Bandung', beds:3, baths:2, guests:6, price:2750000,
     mapQuery:'5HMX+VC Sukajaya, Kabupaten Bandung Barat, Jawa Barat',
-    img:'https://ik.imagekit.io/o1hnx31yy/Alam%202.jpeg?updatedAt=1790155909449',
     desc:`Villa Alam 2 – Komplek Graha Puspa by Your Home
 
 Berlokasi di dataran tinggi Lembang yang asri, dekat dengan:
@@ -1594,7 +1589,6 @@ Terima kasih atas kerja samanya. Semoga Anda menikmati masa menginap di Villa Al
   { id:'villa-alam-12', name:'Villa Alam 1 & 2', cat:'villa', catLabel:'Villa',
     loc:'Lembang, Bandung', beds:6, baths:4, guests:12, price:4999999,
     mapQuery:'5HMX+VC Sukajaya, Kabupaten Bandung Barat, Jawa Barat',
-    img:'https://ik.imagekit.io/o1hnx31yy/Alam%201&2.jpeg?updatedAt=1790156623926',
     desc:`Villa Alam – Komplek Graha Puspa by Your Home
 
 Berlokasi di dataran tinggi Lembang yang asri, dekat dengan:
@@ -1675,7 +1669,6 @@ Terima kasih atas kerja samanya. Semoga Anda menikmati masa menginap di Villa Al
   { id:'villa-trinity', name:'Villa Trinity Garden', cat:'villa', catLabel:'Villa',
     loc:'Cihideung, Parongpong, Lembang', beds:4, baths:3, guests:10, price:7899000,
     mapQuery:'https://maps.app.goo.gl/axmY92pc2N8JFPiD9',
-    img:'https://ik.imagekit.io/o1hnx31yy/X4.JPG?updatedAt=1790155917669',
     desc:`Villa Trinity Garden – Parongpong
 
 Terletak di Cihideung, Parongpong yang tenang, dikelilingi pepohonan hijau dan udara pegunungan yang sejuk. Dekat dengan:
@@ -1768,7 +1761,6 @@ Apabila terdapat pelanggaran terhadap peraturan, pihak pengelola villa berhak me
   { id:'villa-x4', name:'Villa X4', cat:'villa', catLabel:'Villa',
     loc:'Cihanjuang Rahayu, Kec. Parongpong, Kabupaten Bandung Barat, Jawa Barat', beds:4, baths:3, guests:8, price:1799000,
     mapQuery:'Cihanjuang Rahayu, Kec. Parongpong, Kabupaten Bandung Barat, Jawa Barat',
-    img:'https://ik.imagekit.io/o1hnx31yy/X4.JPG?updatedAt=1790155917669',
     desc:`X4 VILLA – VILLA ISTANA BUNGA LEMBANG
 
 Luas Unit: 118m²
@@ -1836,7 +1828,6 @@ Hal-hal yang PERLU diketahui sebelum booking:
   { id:'villa-x7', name:'Villa X7', cat:'villa', catLabel:'Villa',
     loc:'Cihanjuang Rahayu, Kec. Parongpong, Kabupaten Bandung Barat, Jawa Barat', beds:5, baths:4, guests:12, price:1399000,
     mapQuery:'Cihanjuang Rahayu, Kec. Parongpong, Kabupaten Bandung Barat, Jawa Barat',
-    img:'https://ik.imagekit.io/o1hnx31yy/X7.jpg?updatedAt=1790155904283',
     desc:`X7 VILLA – VILLA ISTANA BUNGA LEMBANG
 
 Luas Unit: 138m²
@@ -1903,7 +1894,6 @@ Hal-hal yang PERLU diketahui sebelum booking:
   { id:'villa-awn', name:'Villa AWN', cat:'villa', catLabel:'Villa',
     loc:'Lembang, Bandung', beds:3, baths:2, guests:8, price:6899000,
     mapQuery:'https://maps.app.goo.gl/JGphnh7xBi1eaisT6',
-    img:'https://ik.imagekit.io/o1hnx31yy/AWN.png?updatedAt=1790155914282',
     desc:`Villa pribadi yang nyaman untuk keluarga, pasangan, maupun rombongan. Dilengkapi Wi-Fi, dapur, area bermain anak, ayunan, dan lapangan basket. Nikmati suasana unik bersama anjing dan kucing ramah di area taman. Pet-friendly (khusus outdoor).
 
 Dekat dengan:
@@ -1973,7 +1963,6 @@ WAJIB DIBACA SEBELUM BOOKING:
   { id:'villa-casa-kemilau', name:'Villa Casa Kemilau Bintang', cat:'villa', catLabel:'Villa',
     loc:'Lembang, Bandung', beds:4, baths:3, guests:10, price:3321000,
     mapQuery:'https://maps.app.goo.gl/4as6GS6gkFJoRED68',
-    img:'https://ik.imagekit.io/o1hnx31yy/Cabin.png?updatedAt=1790155916198',
     desc:`Cabin Villa | Komplek Villa Trinity | Lembang
 
 Berada di kawasan Komplek Villa Trinity, Lembang yang asri dan tenang, dengan akses mudah ke berbagai destinasi wisata populer:
@@ -2030,7 +2019,6 @@ Hal-hal yang PERLU diketahui sebelum booking:
     loc:'Aurora 1st Pentagon, Lembang, Bandung', beds:3, baths:2, guests:6, price:6899000,
     mapQuery:'Villa Casa Bliss Aurora 1st Pentagon, Lembang, Bandung',
     mapLink:'https://maps.app.goo.gl/BWmogzbSbRB52L8V6',
-    img:'https://ik.imagekit.io/o1hnx31yy/Cassa.jpeg?updatedAt=1790155914013',
     desc:`Berlokasi di dataran tinggi Lembang yang sejuk, dekat dengan:
 
 • Floating Market Lembang ± 1,5 km
@@ -2093,7 +2081,6 @@ Hal-hal yang PERLU diketahui sebelum booking:
     loc:'Dago Pakar, Ciburial, Cimenyan, Bandung', beds:5, baths:4, guests:12, price:1399000,
     mapQuery:'-6.8623438,107.6356677',
     mapLink:'https://maps.app.goo.gl/cjXN45gPMTvzL5kd8',
-    img:'https://ik.imagekit.io/o1hnx31yy/Dago.JPG?updatedAt=1790155909539',
     desc:`De Bukit Dago Villa
 
 Terletak di kawasan dataran tinggi eksklusif Dago Pakar, dikelilingi oleh udara pegunungan yang sejuk, pemandangan yang indah, serta dekat dengan berbagai kafe dan destinasi favorit di Bandung.
@@ -2158,13 +2145,11 @@ Hal-hal yang PERLU diketahui sebelum booking:
 • Property ini berada di AREA PEMUKIMAN, jadi dilarang melakukan aktivitas ilegal. Harap jaga ketenangan dan hindari kebisingan, terutama di malam hari.` },
   { id:'villa-ferrum', name:'Villa Ferrum', cat:'villa', catLabel:'Villa',
     loc:'Lembang, Bandung', beds:4, baths:3, guests:8, price:11000000,
-    img:'https://ik.imagekit.io/o1hnx31yy/Ferrum.JPG?updatedAt=1790155917429',
     desc:'Villa Ferrum di Lembang menawarkan suasana tenang dan eksklusif dengan nuansa alam yang sejuk dan nyaman untuk staycation keluarga.' },
   { id:'villa-rustic-nine', name:'Villa Rustic Nine', cat:'villa', catLabel:'Villa',
     loc:'Dago, Bandung', beds:4, baths:3, guests:8, price:8500000, weekdayPrice:8500000, weekendPrice:12100000,
     mapQuery:'Dago, Bandung',
     mapLink:'https://maps.app.goo.gl/q66wyEuL2P1Yn7hS8',
-    img:'https://ik.imagekit.io/o1hnx31yy/RusticNine%20Villa%20Dago.avif',
     desc:`Villa Rustic Nine Dago – Bandung
 
 Villa Rustic Nine hadir di kawasan Dago, Bandung, dengan suasana tenang, udara sejuk, dan nuansa alam yang nyaman. Lokasinya cocok untuk menikmati waktu istirahat bersama keluarga maupun teman, dengan akses mudah menuju berbagai destinasi wisata, kafe, dan restoran di kawasan Dago.
@@ -2220,7 +2205,6 @@ Hal lain yang perlu diperhatikan
     loc:'Cigugur Girang, Parongpong, Bandung', beds:3, baths:2, guests:8, price:3500000, weekdayPrice:3500000, weekendPrice:5000000,
     mapQuery:'Villa Alba Uno Heated Pool Lembang Bandung',
     mapLink:'https://www.google.com/maps/place/Villa+Alba+Uno+Heated+Pool+Lembang+Bandung/@-6.8226204,107.5889648,16z/data=!3m1!4b1!4m11!3m10!1s0x2e68e169647dfeb5:0xb00e61239e4a6dd1!5m3!1s2027-02-01!4m1!1i2!8m2!3d-6.8226204!4d107.5915451!16s%2Fg%2F11nhlhwr19!17BQ0FF?entry=ttu&g_ep=EgoyMDI2MDkyMS4wIKXMDSoASAFQAw%3D%3D',
-    img:'https://ik.imagekit.io/o1hnx31yy/alba%20uno.png?updatedAt=1790230551143',
     desc:`Villa Alba Uno – Parongpong
 
 Terletak di Cigugur Girang, Parongpong yang tenang, dikelilingi pepohonan hijau, udara sejuk, dan suasana alam yang menenangkan. Berlokasi dekat dengan:
@@ -2317,7 +2301,6 @@ Apabila terdapat pelanggaran terhadap peraturan, pihak pengelola villa berhak me
     loc:'Cigugur Girang, Parongpong, Bandung', beds:3, baths:2, guests:8, price:3000000, weekdayPrice:3000000, weekendPrice:4500000,
     mapQuery:'Villa Alba Uno Heated Pool Lembang Bandung',
     mapLink:'https://www.google.com/maps/place/Villa+Alba+Uno+Heated+Pool+Lembang+Bandung/@-6.8226204,107.5889648,16z/data=!3m1!4b1!4m11!3m10!1s0x2e68e169647dfeb5:0xb00e61239e4a6dd1!5m3!1s2027-02-01!4m1!1i2!8m2!3d-6.8226204!4d107.5915451!16s%2Fg%2F11nhlhwr19!17BQ0FF?entry=ttu&g_ep=EgoyMDI2MDkyMS4wIKXMDSoASAFQAw%3D%3D',
-    img:'https://ik.imagekit.io/o1hnx31yy/alba%20duo.avif',
     desc:`Villa Alba Duo – Parongpong
 
 Terletak di Cigugur Girang, Parongpong yang tenang, dikelilingi pepohonan hijau, udara sejuk, dan suasana alam yang menenangkan. Berlokasi dekat dengan:
@@ -2410,85 +2393,10 @@ PERATURAN VILLA:
 Dengan menginap di Villa Alba Duo, tamu dianggap telah membaca, memahami, dan menyetujui seluruh peraturan yang tercantum di atas.
 
 Apabila terdapat pelanggaran terhadap peraturan, pihak pengelola villa berhak memberikan peringatan, membatalkan reservasi, dan menganggap pembayaran tidak dapat dikembalikan.` },
-  { id:'villa-forest-heal', name:'Villa Forest Heal', cat:'villa', catLabel:'Villa',
-    loc:'Lokasi belum diatur', beds:3, baths:1, guests:6, price:1800000, weekdayPrice:1800000, weekendPrice:2800000,
-    mapQuery:'-6.812246,107.6278903',
-    mapLink:'https://maps.app.goo.gl/QydyHQhY9EHQqyeo8',
-    img:'https://ik.imagekit.io/o1hnx31yy/Forest%20Hill.png?updatedAt=1790155914559',
-    desc:`Forest Heal Villa – Lembang
-
-Terletak di kawasan Kayuambon, Lembang yang tenang, dikelilingi pepohonan hijau dan udara pegunungan yang sejuk. Berlokasi dekat dengan:
-
-• Floating Market
-• Farmhouse
-• The Great Asia Africa
-• Lembang Park & Zoo
-• Observatorium Bosscha
-• Dusun Bambu
-• Kafe dan restoran Lembang
-
-Cocok untuk liburan santai, family stay, atau quality time bersama
-
-Tempat
-Ruang & Area:
-
-• Luas area: 1.700 m²
-• 3 kamar tidur, masing-masing dengan 1 Queen bed
-• WiFi SUPER CEPAT TANPA BATAS – hingga 80 Mbps
-• TV LED 43”
-• Kolam pemancingan yang luas
-• Area outdoor yang luas dikelilingi pepohonan hijau
-• Suasana alam yang tenang dan menyegarkan
-
-Kamar Mandi & Kenyamanan:
-
-• Shower
-• Bathtub dengan pemandangan indah
-• Lemari pakaian, meja rias, dan cermin besar
-
-Dapur & Ruang Makan:
-
-• Meja makan dengan peralatan makan lengkap
-• Kompor dengan peralatan masak dasar
-• Kulkas
-• Galon air mineral disediakan
-• Grill BBQ dengan gas
-
-Akses tamu
-Fasilitas Forest Heal Villa:
-
-• Kolam pemancingan yang luas
-• Grill BBQ dengan gas
-• Bathtub dengan pemandangan indah
-• Lingkungan hijau dan tenang
-• Suasana pegunungan yang sejuk dan nyaman
-• Area outdoor yang luas dan dikelilingi pepohonan
-• Parkir pribadi
-• Akses kendaraan yang mudah
-• Lingkungan tenang dan cocok untuk keluarga
-• Cocok untuk staycation, liburan keluarga, dan quality time bersama
-• WiFi SUPER CEPAT TANPA BATAS – hingga 80 Mbps
-• TV LED 43”
-
-Fasilitas Pendukung di Sekitar:
-
-• Minimarket & toko sekitar
-• Kafe & restoran di area Lembang
-• Akses mudah ke berbagai tempat wisata populer
-• Area hijau dan spot dengan pemandangan indah
-
-Hal lain yang perlu diperhatikan
-Hal-hal yang PERLU diketahui sebelum booking:
-
-• Cara Check In akan diinfo hari H setelah rumah sudah dalam kondisi siap
-• DILARANG MEMBAWA HEWAN PELIHARAAN.
-• DILARANG MEROKOK. Terdapat area outdoor dimana Anda bisa bersantai dan merokok Maka mohon untuk tidak merokok di dalam rumah.
-• Property ini berada di AREA PEMUKIMAN, jadi dilarang melakukan aktivitas ilegal. Harap jaga ketenangan dan hindari kebisingan, terutama di malam hari.` },
   { id:'villa-tree-vena', name:'Villa Tree Vena', cat:'villa', catLabel:'Villa',
     loc:'Dago Village, Dago, Bandung', beds:4, baths:2, guests:8, price:4900000, weekdayPrice:4900000, weekendPrice:5900000,
     mapQuery:'https://maps.app.goo.gl/p7UXRjQi8PFsKH9n9',
     mapLink:'https://maps.app.goo.gl/p7UXRjQi8PFsKH9n9',
-    img:'https://ik.imagekit.io/o1hnx31yy/tree%20vena.avif',
     desc:`Villa Tree Vena Dago – Dago
 
 Terletak di Dago Village yang tenang dan asri, dengan udara sejuk, pepohonan hijau, dan pemandangan indah. Lokasinya dekat dengan:
@@ -2586,7 +2494,6 @@ Apabila terjadi pelanggaran terhadap peraturan, pihak pengelola villa berhak mem
     loc:'Cigugur Girang, Parongpong, Bandung', beds:3, baths:1, guests:5, price:2500000, weekdayPrice:2500000, weekendPrice:4000000,
     mapQuery:'Cigugur Girang, Parongpong, Bandung',
     mapLink:'https://maps.app.goo.gl/zSMfi28aCrCBt4KV8',
-    img:'https://ik.imagekit.io/o1hnx31yy/sananda.avif',
     desc:`Villa Sananda – Parongpong
 
 Terletak di kawasan tenang Cigugur Girang, Parongpong, dengan udara pegunungan yang sejuk dan pemandangan yang indah. Berlokasi dekat dengan Dusun Bambu, Curug Cimahi, Lembang Park & Zoo, Farmhouse Lembang, The Great Asia Africa, Floating Market Lembang, dan Dago Dreampark.
@@ -2651,7 +2558,6 @@ Hal lain yang perlu diperhatikan:
     loc:'Gudangkahuripan, Lembang, Bandung', beds:2, baths:1, guests:5, price:3350000, weekdayPrice:3350000, weekendPrice:4400000,
     mapQuery:'Gudangkahuripan, Lembang, Bandung',
     mapLink:'https://maps.app.goo.gl/wMUaa6knQEE71Lk56',
-    img:'https://ik.imagekit.io/o1hnx31yy/aprilia.avif',
     desc:`Villa Aprilia – Lembang
 
 Berlokasi di Gudangkahuripan, Lembang, Villa Aprilia menawarkan suasana sejuk, asri, dan tenang dengan pemandangan hijau yang menyegarkan. Berlokasi dekat dengan Farmhouse Lembang, The Great Asia Africa, Floating Market Lembang, Lembang Park & Zoo, De Ranch Lembang, Dago Dreampark, serta kafe dan restoran sekitar Lembang.
@@ -2719,7 +2625,6 @@ Hal lain yang perlu diperhatikan:
     loc:'Lembang, Bandung', beds:1, baths:1, guests:4, price:9800000, weekdayPrice:9800000, weekendPrice:16000000,
     mapQuery:'Lembang, Bandung',
     mapLink:'https://maps.app.goo.gl/JwHXTLaLcK4MZeKW7',
-    img:'https://ik.imagekit.io/o1hnx31yy/halimun.png?updatedAt=1790155915473',
     desc:`Villa Halimun – Lembang
 
 Deskripsi Kamar & Ruang:
@@ -2845,7 +2750,6 @@ Dengan melakukan pemesanan, tamu dianggap telah membaca, memahami, dan menyetuju
     loc:'Pagerwangi, Lembang, Bandung', beds:1, baths:1, guests:4, price:8900000, weekdayPrice:8900000, weekendPrice:13000000,
     mapQuery:'Lembang, Bandung',
     mapLink:'https://maps.app.goo.gl/JwHXTLaLcK4MZeKW7',
-    img:'https://ik.imagekit.io/o1hnx31yy/halimpu.png?updatedAt=1790155914543',
     desc:`Villa Halimpu – Lembang
 
 Berlokasi di Pagerwangi, Lembang, Villa Halimpu menawarkan suasana sejuk, asri, dan tenang, dikelilingi udara pegunungan serta pemandangan hijau khas Lembang.
@@ -2984,7 +2888,6 @@ Dengan melakukan pemesanan, tamu dianggap telah membaca, memahami, dan menyetuju
     loc:'Lembang, Bandung', beds:3, baths:1, guests:6, price:6500000, weekdayPrice:6500000, weekendPrice:9200000,
     mapQuery:'Lembang, Bandung',
     mapLink:'https://maps.app.goo.gl/jmr4bbgixA71nEPb9',
-    img:'https://ik.imagekit.io/o1hnx31yy/Manalaka.png?updatedAt=1790155915559',
     desc:`Villa Manakala – Lembang
 
 Berlokasi di Lembang, Villa Manakala menawarkan suasana sejuk, asri, dan tenang, dikelilingi udara pegunungan serta pemandangan hijau khas Lembang.
@@ -3099,7 +3002,6 @@ Dengan melakukan pemesanan, tamu dianggap telah membaca, memahami, dan menyetuju
     loc:'Langensari, Lembang, Bandung', beds:1, baths:1, guests:4, price:7500000, weekdayPrice:7500000, weekendPrice:10700000,
     mapQuery:'Langensari, Lembang, Bandung',
     mapLink:'https://maps.app.goo.gl/ZEvcH9vukSazTSXK6',
-    img:'https://ik.imagekit.io/o1hnx31yy/Dgreen.png?updatedAt=1790155916582',
     desc:`D'Green Villa Lembang
 
 Berlokasi di Langensari, Lembang, D'Green Villa menawarkan suasana sejuk, asri, dan tenang dengan pemandangan hijau yang menyegarkan. Lokasinya dekat dengan Begonia Garden, Maribaya Park, Curug Maribaya, De' Ranch Lembang, Bukit Strawberry Lembang, Dago Dreampark, serta kafe dan restoran sekitar Lembang.
@@ -3235,7 +3137,6 @@ Dengan melakukan pemesanan, tamu dianggap telah membaca, memahami, dan menyetuju
     loc:'Komplek Villa Trinity, Lembang, Bandung', beds:5, baths:1, guests:10, price:4200000, weekdayPrice:4200000, weekendPrice:5300000,
     mapQuery:'Komplek Villa Trinity, Lembang, Bandung',
     mapLink:'https://maps.app.goo.gl/DenRUnrfK7Quoku28',
-    img:'https://ik.imagekit.io/o1hnx31yy/M3.png?updatedAt=1790155915826',
     desc:`3M Villa | Komplek Villa Trinity | Lembang
 
 Berada di kawasan Komplek Villa Trinity, Lembang yang asri dan tenang, dengan akses mudah ke berbagai destinasi wisata populer:
@@ -3301,7 +3202,6 @@ Hal lain yang perlu diperhatikan:
     loc:'Jl. Jinggakusuma Kulon No.5, Cipeundeuy, Kec. Padalarang, Kabupaten Bandung Barat, Jawa Barat 40553', beds:3, baths:2, guests:8, price:1499000,
     mapQuery:'Davion House, Kanvas tattoo, -6.8750339,107.47102',
     mapLink:'https://maps.app.goo.gl/oXfuK8KPf14bCxTo7',
-    img:'https://ik.imagekit.io/o1hnx31yy/Davion.JPG?updatedAt=1790155914130',
     desc:`Davion House – KOTA BARU PARAHYANGAN
 
 Berlokasi di kawasan hunian eksklusif dan tertata dengan baik, dekat dengan:
@@ -3363,7 +3263,6 @@ Hal-hal yang PERLU diketahui sebelum booking:
     loc:'Tatar Banyak Sumba, Kota Baru Parahyangan', beds:3, baths:1, guests:6, price:1414000,
     mapQuery:'-6.8745939,107.4685032',
     mapLink:'https://maps.app.goo.gl/cf1RpSVop89NW2p59',
-    img:'https://images.unsplash.com/photo-1484154218962-a197022b5858?auto=format&fit=crop&w=800&q=80',
     desc:`Tatar Banyak Sumba – KOTA BARU PARAHYANGAN
 
 Kawasan klaster eksklusif dengan udara segar, pemandangan asri, dan suasana tenang cocok untuk hunian keluarga maupun investasi.
@@ -3427,7 +3326,6 @@ Hal-hal yang PERLU diketahui sebelum booking:
     loc:'Jl. Babakan Jeruk IV No. 11 A, Sukagalih, Kecamatan Sukajadi, Kota Bandung', beds:1, baths:1, guests:1, price:850000,
     mapLink:'https://maps.app.goo.gl/ZDqPG9Eb25ffQ4YS9',
     mapQuery:'Jl. Babakan Jeruk IV No. 11 A, Sukagalih, Kecamatan Sukajadi, Kota Bandung',
-    img:'https://images.unsplash.com/photo-1494526585095-c41746248156?auto=format&fit=crop&w=800&q=80',
     roomOptions:[
       { name:'Single Room', price:950000 },
       { name:'Single Balkon', price:1000000 },
@@ -3490,6 +3388,100 @@ properties.push({
   name:'Villa X47'
 });
 
+const PROPERTY_API_BASE = 'https://your-home-checkin-api.saerobotic.workers.dev';
+const propertyCategoryLabels = { apartment:'Apartemen', villa:'Villa', guesthouse:'Guest House', kos:'Kosan' };
+properties.forEach(property => { property.img = ''; property.imageUrls = []; });
+document.querySelector('.featured')?.classList.add('is-hidden');
+function normalizeRemoteProperty(row){
+  let roomOptions = row.room_options || [];
+  if(typeof roomOptions === 'string'){
+    try { roomOptions = JSON.parse(roomOptions); } catch { roomOptions = []; }
+  }
+  let imageUrls = row.image_urls || [];
+  if(typeof imageUrls === 'string'){
+    try { imageUrls = JSON.parse(imageUrls); } catch { imageUrls = []; }
+  }
+  if(!Array.isArray(imageUrls) || !imageUrls.length) imageUrls = row.image_url ? [row.image_url] : [];
+  return {
+    id: String(row.id),
+    name: row.name,
+    cat: row.category,
+    catLabel: propertyCategoryLabels[row.category] || row.category,
+    loc: row.location || '',
+    beds: Number(row.beds || 0),
+    baths: Number(row.baths || 0),
+    guests: Number(row.guests || 0),
+    price: Number(row.price || 0),
+    weekdayPrice: row.weekday_price == null ? undefined : Number(row.weekday_price),
+    weekendPrice: row.weekend_price == null ? undefined : Number(row.weekend_price),
+    img: row.image_url || imageUrls[0] || '',
+    imageUrls,
+    mapQuery: row.map_query || '',
+    mapLink: row.map_link || '',
+    desc: row.description || '',
+    roomOptions
+  };
+}
+async function loadRemoteProperties(){
+  try{
+    const response = await fetch(`${PROPERTY_API_BASE}/properties?_=${Date.now()}`, { cache:'no-store' });
+    const payload = await response.json();
+    if(!response.ok || payload.ok === false || !Array.isArray(payload.data) || !payload.data.length) return;
+    const fallbackById = new Map(properties.map(property => [property.id, property]));
+    const remoteProperties = payload.data.map(row => {
+      const remote = normalizeRemoteProperty(row);
+      const fallback = fallbackById.get(remote.id) || {};
+      return {
+        ...fallback,
+        ...remote,
+        img: remote.img || '',
+        imageUrls: remote.imageUrls || [],
+        desc: remote.desc || fallback.desc || ''
+      };
+    }).filter(property => property.id && property.name && property.id !== 'villa-forest-heal');
+    if(!remoteProperties.length) return;
+    properties.splice(0, properties.length, ...remoteProperties);
+    configurePriceControls();
+    renderProperties('all', lowestPrice, highestPrice);
+    updateFeaturedProperties(remoteProperties);
+  }catch(error){
+    console.warn('Data properti D1 belum tersedia, memakai data fallback index.html:', error);
+  }
+}
+function updateFeaturedProperties(remoteProperties){
+  const featured = document.querySelector('.featured');
+  const cards = [...document.querySelectorAll('.feat-card')];
+  let visibleCards = 0;
+  cards.forEach(card => {
+    const property = remoteProperties.find(item => item.id === card.dataset.id);
+    const image = property?.img || property?.imageUrls?.[0] || '';
+    if(!image){
+      card.classList.add('is-hidden');
+      return;
+    }
+    card.classList.remove('is-hidden');
+    const picture = card.querySelector('picture');
+    let img = card.querySelector('img');
+    if(picture){
+      picture.querySelectorAll('source').forEach(source => { source.srcset = getImageUrl(image, source.type.includes('avif') ? 'avif' : 'webp'); });
+      if(!img){
+        img = document.createElement('img');
+        img.width = 800;
+        img.height = 600;
+        img.loading = 'lazy';
+        picture.appendChild(img);
+      }
+    }
+    if(img){ img.src = image; img.alt = property.name; }
+    const title = card.querySelector('h3');
+    if(title) title.textContent = property.name;
+    const price = card.querySelector('.feat-price');
+    if(price) price.textContent = `${formatPrice(getNightlyPrice(property, new Date().toISOString().slice(0, 10)))} / malam`;
+    visibleCards += 1;
+  });
+  if(featured && visibleCards) featured.classList.remove('is-hidden');
+}
+
 /* ============== RENDER PROPERTIES ============== */
 const propsGrid = document.getElementById('propsGrid');
 const formatPrice = (p) => 'Rp ' + p.toLocaleString('id-ID');
@@ -3509,15 +3501,20 @@ let selectedBooking = null;
 const minPriceControl = document.getElementById('minPrice');
 const maxPriceControl = document.getElementById('maxPrice');
 const priceRangeValue = document.getElementById('priceRangeValue');
-const propertyPrices = properties.map(property => property.price);
-const lowestPrice = Math.min(...propertyPrices);
-const highestPrice = Math.max(...propertyPrices);
-minPriceControl.min = lowestPrice;
-minPriceControl.max = highestPrice;
-minPriceControl.value = lowestPrice;
-maxPriceControl.min = lowestPrice;
-maxPriceControl.max = highestPrice;
-maxPriceControl.value = highestPrice;
+let lowestPrice = 0;
+let highestPrice = 0;
+function configurePriceControls(){
+  const propertyPrices = properties.map(property => property.price).filter(Number.isFinite);
+  lowestPrice = Math.min(...propertyPrices);
+  highestPrice = Math.max(...propertyPrices);
+  minPriceControl.min = lowestPrice;
+  minPriceControl.max = highestPrice;
+  minPriceControl.value = lowestPrice;
+  maxPriceControl.min = lowestPrice;
+  maxPriceControl.max = highestPrice;
+  maxPriceControl.value = highestPrice;
+}
+configurePriceControls();
 
 function updatePriceRangeLabel(){
   let minimum = Number(minPriceControl.value);
@@ -3567,23 +3564,29 @@ function renderProperties(filter='all', minimumPrice=lowestPrice, maximumPrice=h
           <span><svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>${p.guests} Tamu</span>
         </div>
         <div class="prop-foot">
-          <div class="prop-price">${formatPrice(p.price)}<small>per malam</small></div>
+          <div class="prop-price">${formatPrice(getNightlyPrice(p, new Date().toISOString().slice(0, 10)))}<small>per malam</small></div>
           <a href="#" class="prop-detail" data-id="${p.id}">Lihat Detail →</a>
         </div>
       </div>
     </article>
   `).join('');
 
-  // Attach detail click handlers
-  document.querySelectorAll('[data-id]').forEach(el => {
-    el.addEventListener('click', (e) => {
-      e.preventDefault();
-      const id = el.getAttribute('data-id');
-      openModal(id);
+  propsGrid.querySelectorAll('.prop-card').forEach(card => {
+    card.addEventListener('click', event => {
+      if(event.target.closest('.prop-fav')) return;
+      openModal(card.dataset.id);
+    });
+  });
+  propsGrid.querySelectorAll('.prop-detail').forEach(link => {
+    link.addEventListener('click', event => {
+      event.preventDefault();
+      event.stopPropagation();
+      openModal(link.dataset.id);
     });
   });
 }
 renderProperties();
+loadRemoteProperties();
 
 /* ============== FILTER ============== */
 document.querySelectorAll('.filter-btn').forEach(btn => {
@@ -3600,27 +3603,44 @@ const modalImg = document.getElementById('modalImg');
 const modalImgAvif = document.getElementById('modalImgAvif');
 const modalImgWebp = document.getElementById('modalImgWebp');
 const modalBody = document.getElementById('modalBody');
+const modalGalleryPrev = document.getElementById('modalGalleryPrev');
+const modalGalleryNext = document.getElementById('modalGalleryNext');
+const modalGalleryCount = document.getElementById('modalGalleryCount');
+let modalImageUrls = [];
+let modalImageIndex = 0;
+
+function updateModalGallery(){
+  const imageUrl = modalImageUrls[modalImageIndex] || '';
+  modalImg.src = imageUrl;
+  modalImgAvif.srcset = imageUrl ? getImageUrl(imageUrl, 'avif') : '';
+  modalImgWebp.srcset = imageUrl ? getImageUrl(imageUrl, 'webp') : '';
+  modalGalleryPrev.hidden = modalImageUrls.length < 2;
+  modalGalleryNext.hidden = modalImageUrls.length < 2;
+  modalGalleryCount.hidden = modalImageUrls.length < 2;
+  modalGalleryCount.textContent = `${modalImageIndex + 1} / ${modalImageUrls.length || 1}`;
+}
 
 function openModal(id){
-  const p = properties.find(x => x.id === id);
+  const p = properties.find(x => String(x.id) === String(id));
   if(!p) return;
-  modalImg.src = p.img;
-  modalImgAvif.srcset = getImageUrl(p.img, 'avif');
-  modalImgWebp.srcset = getImageUrl(p.img, 'webp');
+  modalImageUrls = Array.isArray(p.imageUrls) && p.imageUrls.length ? p.imageUrls : (p.img ? [p.img] : []);
+  modalImageIndex = 0;
+  updateModalGallery();
   modalImg.alt = p.name;
   const cleanDescription = (text) => text
     .replace(/##\s*/g, '')
     .replace(/^- /gm, '• ')
     .replace(/\n{3,}/g, '\n\n');
-  const roomOptionsMarkup = p.roomOptions ? `
+  const roomOptionsMarkup = Array.isArray(p.roomOptions) && p.roomOptions.length ? `
     <div class="modal-room-choice">
       <label for="modalRoomSelect">Pilih tipe kamar</label>
       <select id="modalRoomSelect">
         ${p.roomOptions.map((room, index) => `<option value="${index}">${room.name} — ${formatPrice(room.price)}/bulan</option>`).join('')}
       </select>
     </div>` : '';
-  const initialPrice = p.roomOptions ? p.roomOptions[0].price : getNightlyPrice(p, '');
-  const pricePeriod = p.roomOptions ? 'per bulan' : 'per malam';
+  const hasRoomOptions = Array.isArray(p.roomOptions) && p.roomOptions.length > 0;
+  const initialPrice = hasRoomOptions ? p.roomOptions[0].price : getNightlyPrice(p, '');
+  const pricePeriod = hasRoomOptions ? 'per bulan' : 'per malam';
 
   modalBody.innerHTML = `
     <span class="prop-cat" style="position:static;display:inline-block;margin-bottom:8px">${p.catLabel}</span>
@@ -3715,6 +3735,16 @@ function openModal(id){
   modalOverlay.classList.add('active');
   document.body.style.overflow = 'hidden';
 }
+modalGalleryPrev.addEventListener('click', () => {
+  if(!modalImageUrls.length) return;
+  modalImageIndex = (modalImageIndex - 1 + modalImageUrls.length) % modalImageUrls.length;
+  updateModalGallery();
+});
+modalGalleryNext.addEventListener('click', () => {
+  if(!modalImageUrls.length) return;
+  modalImageIndex = (modalImageIndex + 1) % modalImageUrls.length;
+  updateModalGallery();
+});
 function closeModal(){
   modalOverlay.classList.remove('active');
   document.body.style.overflow = '';

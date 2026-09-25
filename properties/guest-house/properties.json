@@ -1,0 +1,4 @@
+[
+  {"id":"davion-house","name":"Davion House","category":"guesthouse","location":"Kota Baru Parahyangan, Bandung","price":1499000,"beds":3,"baths":2,"guests":8,"sort_order":40},
+  {"id":"guest-house-tatar-banyak-sumba","name":"Guest House Tatar Banyak Sumba","category":"guesthouse","location":"Tatar Banyak Sumba, Kota Baru Parahyangan","price":1414000,"beds":3,"baths":1,"guests":6,"sort_order":41}
+]

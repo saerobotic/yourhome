@@ -1,0 +1,7 @@
+[
+  {"id":"sudirman-7","name":"Lantai 7 Sudirman Suites","category":"apartment","location":"Sudirman Suites, Bandung","price":618000,"beds":2,"baths":1,"guests":4,"image_url":"https://ik.imagekit.io/o1hnx31yy/Appart%207.JPG?updatedAt=1790155916946","sort_order":1},
+  {"id":"sudirman-11","name":"Lantai 11 Sudirman Suites","category":"apartment","location":"Sudirman Suites, Bandung","price":955000,"beds":3,"baths":2,"guests":8,"image_url":"https://ik.imagekit.io/o1hnx31yy/appart%2011.jpg?updatedAt=1790155909751","sort_order":2},
+  {"id":"sudirman-18","name":"Lantai 18 Sudirman Suites","category":"apartment","location":"Sudirman Suites, Bandung","price":668000,"beds":2,"baths":2,"guests":6,"image_url":"https://ik.imagekit.io/o1hnx31yy/appart%2018.jpg?updatedAt=1790155903507","sort_order":3},
+  {"id":"sudirman-19","name":"Lantai 19 Sudirman Suites","category":"apartment","location":"Sudirman Suites, Bandung","price":909000,"beds":3,"baths":2,"guests":12,"image_url":"https://ik.imagekit.io/o1hnx31yy/appart%2019.jpeg?updatedAt=1790155907863","sort_order":4},
+  {"id":"galeri-ciumbuleuit-3","name":"Apartment Galeri Ciumbuleuit 3","category":"apartment","location":"Graha Puspa, Lembang, Bandung","price":506000,"beds":2,"baths":1,"guests":4,"sort_order":5}
+]
