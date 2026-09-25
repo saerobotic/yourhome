@@ -194,6 +194,7 @@ export default {
             'GET /checkins',
             'POST /admin/login',
             'POST /admin/properties',
+            'DELETE /admin/properties/{id}',
             'POST /checkin',
             'POST /login',
             'POST /admin/set-pin',
@@ -810,6 +811,16 @@ export default {
           .bind(JSON.stringify(externalBookings), new Date().toISOString(), id).run();
         if (!result.meta?.changes) return bad('Properti tidak ditemukan', 404);
         return json({ ok: true, data: { id, external_bookings: externalBookings } });
+      }
+
+      const propertyAdminMatch = path.match(/^\/admin\/properties\/([^/]+)$/);
+      if (request.method === 'DELETE' && propertyAdminMatch) {
+        const adminSecret = String(env.ADMIN_DASHBOARD_SECRET || '').trim();
+        if (!(await isAdminRequest(request, adminSecret))) return bad('Login admin diperlukan', 401);
+        const id = decodeURIComponent(propertyAdminMatch[1]);
+        const result = await env.DB.prepare('DELETE FROM properties WHERE id = ?').bind(id).run();
+        if (!result.meta?.changes) return bad('Properti tidak ditemukan', 404);
+        return json({ ok: true, data: { id } });
       }
 
       // Terima laporan bug atau pesan dari admin properti
