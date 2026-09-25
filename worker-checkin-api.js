@@ -686,7 +686,7 @@ export default {
         const preserveImages = body.preserve_images === true;
         let imageUrl = String(body.image_url || '').trim();
         const mapQuery = String(body.map_query || '').trim();
-        const mapLink = String(body.map_link || '').trim();
+        const mapLink = String(body.map_embed || body.map_link || '').trim();
         const description = String(body.description || '');
         const roomOptions = Array.isArray(body.room_options) ? body.room_options : [];
         let imageUrls = Array.isArray(body.image_urls)

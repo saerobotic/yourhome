@@ -13,6 +13,7 @@ CREATE TABLE IF NOT EXISTS properties (
   image_urls TEXT NOT NULL DEFAULT '[]',
   map_query TEXT NOT NULL DEFAULT '',
   map_link TEXT NOT NULL DEFAULT '',
+  map_embed TEXT NOT NULL DEFAULT '',
   description TEXT NOT NULL DEFAULT '',
   room_options TEXT NOT NULL DEFAULT '[]',
   sort_order INTEGER NOT NULL DEFAULT 0,
