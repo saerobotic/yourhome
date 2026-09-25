@@ -37,6 +37,7 @@ td:first-child{color:var(--muted);font-size:.85rem;width:52px}
 .photo-status.updated{color:var(--green)}
 .photo-status.updated::before{background:var(--green)}
 .note{color:var(--muted);font-size:.8rem}
+.owner{font-weight:700;color:var(--green);white-space:nowrap}
 footer{margin-top:20px;color:var(--muted);font-size:.78rem}
 @media(max-width:650px){.page{padding:28px 14px 46px}header{display:block}.back{display:inline-block;margin-top:18px}.summary{grid-template-columns:1fr}}
 </style>
@@ -60,7 +61,7 @@ footer{margin-top:20px;color:var(--muted);font-size:.78rem}
 
 <div class="table-wrap">
 <table>
-<thead><tr><th>No.</th><th>Nama Unit</th><th>Harga Weekday</th><th>Harga Weekend</th><th>Status Harga Weekend</th><th>Status Foto</th><th>Status Maps</th><th>Keterangan</th></tr></thead>
+<thead><tr><th>No.</th><th>Nama Unit</th><th>Harga Weekday</th><th>Harga Weekend</th><th>Status Foto</th><th>Status Maps</th><th>Keterangan</th><th>Pemilik</th></tr></thead>
 <tbody>
 <tr><td>1</td><td><span class="unit">Lantai 7 Sudirman Suites</span><br><span class="category">Apartemen</span></td><td class="price">Rp 618.000</td><td><span class="status price-change">Harga diubah</span></td><td class="note">Harga diperbarui</td></tr>
 <tr><td>2</td><td><span class="unit">Lantai 11 Sudirman Suites</span><br><span class="category">Apartemen</span></td><td class="price">Rp 955.000</td><td><span class="status price-change">Harga diubah</span></td><td class="note">Harga diperbarui</td></tr>
@@ -128,6 +129,19 @@ const weekendPrices = {
   'Villa Casa M3': 5300000,
   'Villa Tree Vena': 5900000
 };
+const ownersByUnit = new Map([
+  ['Lantai 7 Sudirman Suites', 'Andri Fernando'],
+  ['Lantai 11 Sudirman Suites', 'Andri Fernando'],
+  ['Lantai 18 Sudirman Suites', 'Andri Fernando'],
+  ['Lantai 19 Sudirman Suites', 'Hardiman'],
+  ['Villa Forest Heal', 'Kwei Mei'],
+  ['Villa Casa Bliss', 'Veronica'],
+  ['Kosan De Orange Kost', 'House in Bandung'],
+  ['Villa De Bukit Dago', 'House in Bandung'],
+  ['De Villa Istana Bunga', 'House in Bandung'],
+  ['Davion House', 'House in Bandung'],
+  ['Apartment Galeri Ciumbuleuit 3', 'House in Bandung']
+]);
 
 function isPhotoUpdated(unitName) {
   return !dummyPhotoNames.has(unitName);
@@ -140,25 +154,19 @@ function renderPhotoStatus(row) {
   const noteCell = row.querySelector('.note');
   const weekdayCell = document.createElement('td');
   const weekendCell = document.createElement('td');
-  const weekendStatusCell = document.createElement('td');
   const hasWeekendPrice = weekendPriceNames.has(unitName);
   const weekdayPrice = Number(priceCell.textContent.replace(/[^0-9]/g, ''));
   const weekendPrice = weekendPrices[unitName] || 0;
-  const weekendIsHigher = weekendPrice > weekdayPrice;
   weekdayCell.className = 'price weekday-price';
   weekdayCell.textContent = priceCell.textContent;
   weekendCell.className = 'price weekend-price';
   weekendCell.textContent = hasWeekendPrice ? `Rp ${weekendPrice.toLocaleString('id-ID')}` : '-';
-  weekendStatusCell.innerHTML = `<span class="status ${weekendIsHigher ? 'price-change' : 'unchanged'}">${weekendIsHigher ? 'DONE' : 'Belum diubah'}</span>`;
-  if(generalStatusCell.querySelector('.status')) generalStatusCell.remove();
+  generalStatusCell.remove();
   const existingWeekendCell = row.querySelector('.weekend-price');
-  const existingWeekendStatusCell = row.querySelector('.weekend-status-cell');
   if(!existingWeekendCell){
     priceCell.replaceWith(weekdayCell);
     row.insertBefore(weekendCell, row.children[3]);
   }
-  weekendStatusCell.className = 'weekend-status-cell';
-  existingWeekendStatusCell ? existingWeekendStatusCell.replaceWith(weekendStatusCell) : row.insertBefore(weekendStatusCell, noteCell || null);
   const isUpdated = isPhotoUpdated(unitName);
   const existingCell = row.querySelector('.photo-cell');
   const cell = document.createElement('td');
@@ -181,6 +189,12 @@ function renderPhotoStatus(row) {
   mapCell.append(mapStatus);
   existingMapCell ? existingMapCell.replaceWith(mapCell) : row.append(mapCell);
   if(noteCell) row.append(noteCell);
+  const ownerCell = document.createElement('td');
+  ownerCell.className = 'owner-cell';
+  const ownerName = ownersByUnit.get(unitName) || 'Agen';
+  ownerCell.innerHTML = `<span class="owner">${ownerName}</span>`;
+  const existingOwnerCell = row.querySelector('.owner-cell');
+  existingOwnerCell ? existingOwnerCell.replaceWith(ownerCell) : row.append(ownerCell);
 }
 
 function updatePhotoCount() {

@@ -4,29 +4,11 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <meta name="theme-color" content="#a0522d" />
-  <title>Absensi Crew Apartemen</title>
+  <title>Check In Crew | YOUR HOME</title>
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
-
-  <!-- Firebase -->
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-analytics-compat.js"></script>
-  <script>
-    const firebaseConfig = {
-      apiKey: "AIzaSyDdYrCzwvIJIElihY65_1qKVsgyB1rvXVQ",
-      authDomain: "your-home-ae753.firebaseapp.com",
-      projectId: "your-home-ae753",
-      storageBucket: "your-home-ae753.firebasestorage.app",
-      messagingSenderId: "110505936236",
-      appId: "1:110505936236:web:7aed6ee94713f98fbf9f49",
-      measurementId: "G-KY50J93K11"
-    };
-
-    const firebaseApp = firebase.initializeApp(firebaseConfig);
-    if (typeof firebase.analytics === 'function') firebase.analytics(firebaseApp);
-  </script>
 
   <!-- Tailwind CSS via CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -175,8 +157,8 @@
         <div class="inline-flex items-center justify-center w-48 h-16 mb-3">
           <img src="https://ik.imagekit.io/o1hnx31yy/yh%20(2).png?updatedAt=1790230701085" alt="YOUR HOME" class="max-w-full h-full object-contain" />
         </div>
-        <h1 class="text-2xl font-bold text-gray-800">Absensi Crew</h1>
-        <p class="text-sm text-gray-500">Sistem Check-in Crew Sewa Apartemen</p>
+        <h1 class="text-2xl font-bold text-gray-800">Check In Crew</h1>
+        <p class="text-sm text-gray-500">Sistem Check-in Crew</p>
       </div>
 
       <!-- Form Login -->
@@ -195,22 +177,25 @@
           </select>
         </div>
 
+        <div>
+          <label for="crewPinInput" class="block text-sm font-semibold text-gray-700 mb-1.5">PIN Crew</label>
+          <input id="crewPinInput" type="password" maxlength="128" autocomplete="one-time-code"
+                 placeholder="Masukkan PIN"
+                 class="w-full px-4 py-3.5 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition text-base" />
+          <p class="text-xs text-gray-400 mt-1.5">PIN diberikan admin. Jangan bagikan ke orang lain.</p>
+        </div>
+
         <button id="loginBtn"
                 class="w-full bg-brand-600 hover:bg-brand-700 active:scale-[0.98] text-white font-bold py-4 rounded-xl text-base shadow-lg shadow-brand-600/30 transition disabled:opacity-50 disabled:cursor-not-allowed"
                 disabled>
-          Masuk
+          Check In
         </button>
 
-        <!-- Tombol masuk mode Admin (PIN) -->
-        <button id="adminEntryBtn"
-                class="w-full text-sm text-gray-400 hover:text-brand-600 py-2 transition">
-          Mode Admin
-        </button>
       </div>
 
       <p class="text-xs text-gray-400 text-center mt-6 leading-relaxed">
-        Data tersimpan di perangkat ini (localStorage).<br>
-        Tidak ada server, aman & offline-ready.
+        Data absensi tersimpan aman di server.<br>
+        Session nama crew tetap tersimpan di perangkat ini.
       </p>
     </div>
   </section>
@@ -229,12 +214,9 @@
           <h2 id="greetingCrew" class="text-xl font-bold">Crew</h2>
         </div>
         <div class="flex gap-2">
-          <button id="adminBtn" title="Mode Admin"
-                  class="w-10 h-10 rounded-xl bg-white/15 hover:bg-white/25 flex items-center justify-center transition">
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-            </svg>
-          </button>
+          <span id="pendingBadge" class="hidden text-xs px-2 py-1 rounded-lg bg-amber-500 text-white font-semibold self-center"></span>
+          <span id="networkStatusLight" class="w-3 h-3 rounded-full bg-red-500 self-center ring-2 ring-white/30" title="Offline" aria-label="Status jaringan: offline"></span>
+          <button type="button" id="flushPendingBtn" class="w-8 h-8 rounded-lg bg-white/15 hover:bg-white/25 text-white text-lg leading-none" title="Kirim data tertunda" aria-label="Kirim data tertunda">↻</button>
           <button id="logoutBtn" title="Keluar"
                   class="w-10 h-10 rounded-xl bg-white/15 hover:bg-white/25 flex items-center justify-center transition">
             <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -268,6 +250,10 @@
           Form Check-in
         </h3>
 
+        <div id="gpsMustOnHint" class="mb-4 bg-amber-50 border border-amber-300 rounded-xl p-3 text-xs text-amber-800 leading-relaxed">
+          <strong>WAJIB:</strong> Nyalakan GPS/Lokasi di HP sebelum check-in. Tanpa GPS, aplikasi tidak dapat menyimpan check-in. Berdiri di area terbuka, lalu tekan Check-in Sekarang.
+        </div>
+
         <!-- Tombol Check-in Sekarang (BESAR) -->
         <button id="getLocationBtn"
                 class="w-full bg-brand-600 hover:bg-brand-700 active:scale-[0.98] text-white font-bold py-5 rounded-2xl text-lg shadow-lg shadow-brand-600/30 transition flex items-center justify-center gap-2">
@@ -277,6 +263,7 @@
           </svg>
           Check-in Sekarang
         </button>
+        <p id="gpsStatusText" class="text-xs text-gray-500 mt-2">Status GPS: belum diambil — wajib dinyalakan</p>
 
         <!-- Info GPS setelah diambil -->
         <div id="gpsInfo" class="hidden mt-4 bg-brand-50 border border-brand-200 rounded-xl p-4 text-sm">
@@ -415,99 +402,24 @@
   </section>
 
   <!-- ============================================================
-       MODAL ADMIN (PIN + Dashboard)
-       ============================================================ -->
-  <div id="adminModal" class="hidden fixed inset-0 bg-black/50 z-40 flex items-end sm:items-center justify-center">
-    <div class="bg-white w-full sm:max-w-md rounded-t-3xl sm:rounded-3xl shadow-2xl max-h-[90vh] overflow-y-auto">
-
-      <!-- Header modal -->
-      <div class="sticky top-0 bg-white border-b border-gray-100 px-5 py-4 flex items-center justify-between">
-        <h3 class="font-bold text-gray-800 flex items-center gap-2">
-          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-brand-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-          </svg>
-          <span id="adminTitle">Mode Admin</span>
-        </h3>
-        <button id="closeAdminBtn" class="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-500 transition">
-          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        </button>
-      </div>
-
-      <!-- Konten admin -->
-      <div class="p-5">
-
-        <!-- Input PIN -->
-        <div id="adminPinSection">
-          <p class="text-sm text-gray-500 mb-3">Masukkan PIN Admin untuk melihat data semua crew.</p>
-          <div class="flex gap-2">
-            <input type="password" id="adminPinInput" inputmode="numeric" maxlength="4" placeholder="••••"
-                   class="flex-1 px-4 py-3.5 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-brand-500 outline-none transition text-center text-2xl tracking-[0.5em]" />
-            <button id="adminPinSubmit"
-                    class="bg-brand-600 hover:bg-brand-700 text-white font-bold px-5 rounded-xl transition">
-              OK
-            </button>
-          </div>
-          <p class="text-xs text-gray-400 mt-2">Default PIN: <code class="bg-gray-100 px-1.5 py-0.5 rounded">1234</code></p>
-        </div>
-
-        <!-- Dashboard admin (muncul setelah PIN benar) -->
-        <div id="adminDashboard" class="hidden space-y-5">
-
-          <!-- Tombol clear data -->
-          <div class="flex gap-2">
-            <button id="clearTodayBtn"
-                    class="flex-1 bg-red-50 hover:bg-red-100 text-red-700 font-semibold py-2.5 rounded-xl text-sm transition border border-red-200">
-              Clear Data Hari Ini
-            </button>
-            <button id="clearAllBtn"
-                    class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold py-2.5 rounded-xl text-sm transition">
-              Clear Semua Data
-            </button>
-          </div>
-
-          <!-- Statistik per crew -->
-          <div>
-            <h4 class="text-sm font-bold text-gray-700 mb-2">Total Unit per Crew (Hari Ini)</h4>
-            <div id="adminCrewStats" class="space-y-2">
-              <!-- diisi dinamis -->
-            </div>
-          </div>
-
-          <!-- Semua check-in hari ini -->
-          <div>
-            <h4 class="text-sm font-bold text-gray-700 mb-2">Semua Check-in Hari Ini</h4>
-            <div id="adminAllList" class="space-y-2">
-              <!-- diisi dinamis -->
-            </div>
-          </div>
-        </div>
-
-      </div>
-    </div>
-  </div>
-
-  <!-- ============================================================
        JAVASCRIPT
        ============================================================ -->
   <script>
+    // Data absensi: Cloudflare Worker (D1 + R2) — API your-home-checkin-api
   /* ============================================================
      KONFIGURASI
      ============================================================ */
   const CONFIG = {
-    ADMIN_PIN: '1234',
-    // Daftar 6 crew, bisa diganti di sini
-    CREW_LIST: ['Aji Agung', 'Rezza Afrian Sukarsah', 'Qeyla Viorentina', 'Yono Maryono Narsisno', 'Udin Komarudin'],
-    // Key utama di localStorage
-    STORAGE_KEY: 'absensi_crew_data',
+    API_BASE: 'https://your-home-checkin-api.saerobotic.workers.dev',
+    // Buka via localhost atau HTTPS, jangan double-click file://
     // Batas akurasi GPS (meter) untuk memunculkan peringatan
     ACCURACY_THRESHOLD: 100,
-    // Durasi simpan foto dalam localStorage (compress max)
+    // Batas ukuran foto sebelum diunggah ke Storage
     PHOTO_MAX_WIDTH: 640,
     PHOTO_MAX_BYTES: 250 * 1024,
     MAX_WORK_PHOTOS: 30
   };
+  const PENDING_KEY = 'pending_checkins_v1';
 
   /* ============================================================
      STATE APLIKASI
@@ -521,54 +433,94 @@
   };
 
   /* ============================================================
-     UTIL: ambil data dari localStorage (per hari)
+     DATA: Cloudflare Worker API
      ============================================================ */
-  function loadData() {
+  async function api(path, options = {}) {
+    const res = await fetch(CONFIG.API_BASE + path, {
+      ...options,
+      headers: {
+        'Content-Type': 'application/json',
+        ...(options.headers || {})
+      }
+    });
+    const text = await res.text();
+    let data = {};
     try {
-      const raw = localStorage.getItem(CONFIG.STORAGE_KEY);
-      if (!raw) return {};
-      const parsed = JSON.parse(raw);
-      // Auto-reset: hapus data hari kemarin (simpan hanya hari ini & opsional arsip)
-      const todayKey = state.today;
-      // Filter hanya data hari ini (opsional: keep semua untuk histori)
-      // Untuk versi ini kita simpan semua, tapi UI hanya tampilkan hari ini
-      if (!parsed[todayKey]) parsed[todayKey] = [];
-      return parsed;
-    } catch (e) {
-      console.error('Gagal load data:', e);
-      return {};
+      data = text ? JSON.parse(text) : {};
+    } catch {
+      data = {};
+    }
+    if (!res.ok || data.ok === false) {
+      throw new Error(data.error || data.message || text || ('HTTP ' + res.status));
+    }
+    return data;
+  }
+
+  function loadPending() {
+    try {
+      const value = localStorage.getItem(PENDING_KEY);
+      const parsed = value ? JSON.parse(value) : [];
+      return Array.isArray(parsed) ? parsed : [];
+    } catch (error) {
+      console.error('Gagal membaca antrian offline:', error);
+      return [];
     }
   }
 
-  function saveData(data) {
+  function savePending(list) {
     try {
-      localStorage.setItem(CONFIG.STORAGE_KEY, JSON.stringify(data));
-    } catch (e) {
-      console.error('Gagal simpan data:', e);
-      showToast('Gagal menyimpan data. Penyimpanan mungkin penuh.', 'error');
+      localStorage.setItem(PENDING_KEY, JSON.stringify(list));
+    } catch (error) {
+      console.error('Gagal menyimpan antrian offline:', error);
+      showToast('Penyimpanan offline penuh. Hapus data browser atau coba saat ada sinyal.', 'error');
     }
   }
 
-  function getTodayRecords() {
-    const data = loadData();
-    return data[state.today] || [];
+  function updatePendingBadge() {
+    const badge = document.getElementById('pendingBadge');
+    if (!badge) return;
+    const count = loadPending().length;
+    badge.textContent = count ? `${count} tertunda` : '';
+    badge.classList.toggle('hidden', count === 0);
   }
 
-  function addRecord(record) {
-    const data = loadData();
-    if (!data[state.today]) data[state.today] = [];
-    data[state.today].push(record);
-    saveData(data);
+  function updateNetworkStatus() {
+    const light = document.getElementById('networkStatusLight');
+    if (!light) return;
+    const online = navigator.onLine;
+    light.classList.toggle('bg-green-500', online);
+    light.classList.toggle('bg-red-500', !online);
+    light.title = online ? 'Online - sinyal tersedia' : 'Offline - tidak ada sinyal';
+    light.setAttribute('aria-label', `Status jaringan: ${online ? 'online' : 'offline'}`);
   }
 
-  function clearTodayData() {
-    const data = loadData();
-    data[state.today] = [];
-    saveData(data);
+  function isNetworkError(error) {
+    return !navigator.onLine || error instanceof TypeError || /failed to fetch|networkerror|load failed/i.test(error?.message || '');
   }
 
-  function clearAllData() {
-    localStorage.removeItem(CONFIG.STORAGE_KEY);
+  function fileUrl(value) {
+    if (!value) return '';
+    return value.startsWith('/') ? CONFIG.API_BASE + value : value;
+  }
+
+  function recordsFromResponse(response) {
+    const records = Array.isArray(response) ? response : (response.data || response.checkins || []);
+    return records.map(record => {
+      if (typeof record.work_photo_urls === 'string') {
+        try {
+          record.work_photo_urls = JSON.parse(record.work_photo_urls);
+        } catch {
+          record.work_photo_urls = [];
+        }
+      }
+      return record;
+    });
+  }
+
+  async function getTodayRecordsForCrew(crew) {
+    const query = `date=${state.today}&crew=${encodeURIComponent(crew)}&_=${Date.now()}`;
+    const response = await api(`/checkins?${query}`, { cache: 'no-store' });
+    return recordsFromResponse(response);
   }
 
   /* ============================================================
@@ -606,11 +558,31 @@
      ============================================================ */
   function formatTime(iso) {
     const d = new Date(iso);
-    return d.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+    if (Number.isNaN(d.getTime())) return '-';
+    return `${d.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' })} WIB`;
+  }
+  function formatWorkDate(value) {
+    if (!value) return '-';
+    return new Date(`${value}T00:00:00`).toLocaleDateString('id-ID', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric'
+    });
   }
   function formatToday() {
     const d = new Date();
     return d.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+  }
+  function formatCurrentWib() {
+    const d = new Date();
+    return d.toLocaleTimeString('id-ID', {
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit'
+    }) + ' WIB';
+  }
+  function renderTodayDateTime() {
+    document.getElementById('todayDate').textContent = `📅 ${formatToday()} · ${formatCurrentWib()}`;
   }
 
   /* ============================================================
@@ -656,21 +628,25 @@
   /* ============================================================
      INISIALISASI: cek apakah crew masih login (session)
      ============================================================ */
-  function init() {
+  async function init() {
     // Render tanggal hari ini
-    document.getElementById('todayDate').textContent = '📅 ' + formatToday();
+    renderTodayDateTime();
+    setInterval(renderTodayDateTime, 1000);
+    updatePendingBadge();
+    updateNetworkStatus();
 
-    // Cek session crew (localStorage juga simpan siapa yang lagi login)
-    const savedCrew = sessionStorage.getItem('current_crew') || localStorage.getItem('current_crew');
-    if (savedCrew) {
+    // Auto-login hanya jika nama crew dan token sesi tersedia.
+    const savedCrew = sessionStorage.getItem('current_crew');
+    const savedToken = sessionStorage.getItem('crew_token');
+    if (savedCrew && savedToken) {
       state.currentCrew = savedCrew;
-      showMainApp();
+      await showMainApp();
     } else {
       showLogin();
     }
 
     bindEvents();
-    renderHistory();
+    await renderHistory();
   }
 
   /* ============================================================
@@ -680,13 +656,49 @@
     document.getElementById('loginScreen').classList.remove('hidden');
     document.getElementById('mainApp').classList.add('hidden');
   }
-  function showMainApp() {
+  async function showMainApp() {
     document.getElementById('loginScreen').classList.add('hidden');
     document.getElementById('mainApp').classList.remove('hidden');
     document.getElementById('mainApp').classList.add('screen');
     document.getElementById('greetingCrew').textContent = state.currentCrew;
-    renderHistory();
-    updateStats();
+    await checkLocationAvailability();
+    updatePendingBadge();
+    await flushQueue();
+    await renderHistory();
+    await updateStats();
+  }
+
+  async function checkLocationAvailability() {
+    const button = document.getElementById('getLocationBtn');
+    if (!navigator.geolocation) {
+      button.disabled = true;
+      setGpsStatus('Status GPS: tidak didukung browser ini', 'error');
+      showToast('Browser tidak mendukung GPS. Gunakan browser yang mendukung lokasi.', 'error');
+      return;
+    }
+
+    try {
+      if (navigator.permissions?.query) {
+        const permission = await navigator.permissions.query({ name: 'geolocation' });
+        if (permission.state === 'denied') {
+          setGpsStatus('Status GPS: izin ditolak — aktifkan lokasi di pengaturan', 'error');
+          showToast('Izin lokasi ditolak. Aktifkan di pengaturan browser/HP.', 'error');
+        }
+      }
+    } catch (error) {
+      console.warn('Status izin GPS tidak dapat diperiksa:', error);
+    }
+  }
+
+  function setGpsStatus(message, type = 'default') {
+    const status = document.getElementById('gpsStatusText');
+    if (!status) return;
+    status.textContent = message;
+    status.className = 'text-xs mt-2 ' + (type === 'success'
+      ? 'text-green-700 font-semibold'
+      : type === 'error'
+        ? 'text-red-700 font-semibold'
+        : 'text-gray-500');
   }
 
   /* ============================================================
@@ -695,60 +707,74 @@
   function bindEvents() {
     // --- LOGIN ---
     const crewSelect = document.getElementById('crewSelect');
+    const crewPinInput = document.getElementById('crewPinInput');
     const loginBtn = document.getElementById('loginBtn');
-    crewSelect.addEventListener('change', () => {
-      loginBtn.disabled = !crewSelect.value;
-    });
-    loginBtn.addEventListener('click', () => {
-      if (!crewSelect.value) return;
-      state.currentCrew = crewSelect.value;
-      localStorage.setItem('current_crew', state.currentCrew);
-      sessionStorage.setItem('current_crew', state.currentCrew);
-      showMainApp();
-      showToast(`Selamat datang, ${state.currentCrew}!`, 'success');
+
+    const updateLoginButton = () => {
+      loginBtn.disabled = !crewSelect.value || crewPinInput.value.trim().length < 4;
+    };
+    crewSelect.addEventListener('change', updateLoginButton);
+    crewPinInput.addEventListener('input', updateLoginButton);
+    loginBtn.addEventListener('click', async () => {
+      const crew = crewSelect.value;
+      const pin = crewPinInput.value.trim();
+      if (!crew || pin.length < 4) return;
+
+      try {
+        showLoading('Memeriksa PIN…');
+        const response = await fetch(CONFIG.API_BASE + '/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ crew, pin })
+        });
+        const text = await response.text();
+        let data = {};
+        try {
+          data = text ? JSON.parse(text) : {};
+        } catch {
+          data = {};
+        }
+        if (!response.ok || data.ok === false) {
+          throw new Error(data.error || text || ('HTTP ' + response.status));
+        }
+
+        state.currentCrew = data.crew;
+        sessionStorage.setItem('current_crew', data.crew);
+        sessionStorage.setItem('crew_token', data.token);
+        localStorage.setItem('current_crew', data.crew);
+        crewPinInput.value = '';
+        await showMainApp();
+        showToast(`Selamat datang, ${data.crew}!`, 'success');
+      } catch (error) {
+        console.error('Login crew gagal:', error);
+        crewPinInput.value = '';
+        crewPinInput.focus();
+        updateLoginButton();
+        showToast(error.message || 'Login gagal.', 'error');
+      } finally {
+        hideLoading();
+      }
     });
 
     // --- LOGOUT ---
     document.getElementById('logoutBtn').addEventListener('click', () => {
       localStorage.removeItem('current_crew');
       sessionStorage.removeItem('current_crew');
+      sessionStorage.removeItem('crew_token');
+      localStorage.removeItem('crew_token');
       state.currentCrew = null;
+      crewPinInput.value = '';
+      crewSelect.value = '';
+      updateLoginButton();
       // Reset form
       resetForm();
       showLogin();
       showToast('Berhasil keluar.', 'info');
     });
-
-    // --- ADMIN ENTRY (dari halaman login) ---
-    document.getElementById('adminEntryBtn').addEventListener('click', () => openAdminModal());
-
-    // --- ADMIN (dari halaman utama) ---
-    document.getElementById('adminBtn').addEventListener('click', () => openAdminModal());
-    document.getElementById('closeAdminBtn').addEventListener('click', () => closeAdminModal());
-
-    // --- ADMIN PIN submit ---
-    document.getElementById('adminPinSubmit').addEventListener('click', handleAdminLogin);
-    document.getElementById('adminPinInput').addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') handleAdminLogin();
-    });
-
-    // --- Clear data ---
-    document.getElementById('clearTodayBtn').addEventListener('click', () => {
-      if (confirm('Hapus SEMUA check-in hari ini dari SEMUA crew? Tindakan ini tidak bisa dibatalkan.')) {
-        clearTodayData();
-        renderAdminDashboard();
-        showToast('Data hari ini dihapus.', 'success');
-      }
-    });
-    document.getElementById('clearAllBtn').addEventListener('click', () => {
-      if (confirm('Hapus SEMUA data absensi (termasuk hari sebelumnya)? Tindakan ini tidak bisa dibatalkan.')) {
-        clearAllData();
-        renderAdminDashboard();
-        renderHistory();
-        updateStats();
-        showToast('Semua data dihapus.', 'success');
-      }
-    });
+    document.getElementById('flushPendingBtn').addEventListener('click', flushQueue);
+    window.addEventListener('online', flushQueue);
+    window.addEventListener('online', updateNetworkStatus);
+    window.addEventListener('offline', updateNetworkStatus);
 
     // --- CHECK-IN: ambil GPS ---
     document.getElementById('getLocationBtn').addEventListener('click', getLocation);
@@ -777,9 +803,9 @@
     document.getElementById('saveCheckinBtn').addEventListener('click', saveCheckin);
 
     // --- Refresh riwayat ---
-    document.getElementById('refreshHistoryBtn').addEventListener('click', () => {
-      renderHistory();
-      updateStats();
+    document.getElementById('refreshHistoryBtn').addEventListener('click', async () => {
+      await renderHistory();
+      await updateStats();
       showToast('Riwayat diperbarui.', 'info');
     });
   }
@@ -789,7 +815,10 @@
      ============================================================ */
   function getLocation() {
     if (!navigator.geolocation) {
-      showToast('Browser tidak mendukung GPS.', 'error');
+      state.gpsData = null;
+      setGpsStatus('Status GPS: gagal — nyalakan GPS di HP', 'error');
+      showToast('GPS wajib. Browser tidak mendukung lokasi.', 'error');
+      validateForm();
       return;
     }
     showLoading('Mengambil lokasi GPS…');
@@ -797,7 +826,15 @@
       (position) => {
         hideLoading();
         const { latitude, longitude, accuracy } = position.coords;
+        if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
+          state.gpsData = null;
+          setGpsStatus('Status GPS: gagal — nyalakan GPS di HP', 'error');
+          showToast('Lokasi tidak valid. Nyalakan GPS lalu coba lagi.', 'error');
+          validateForm();
+          return;
+        }
         state.gpsData = { lat: latitude, lng: longitude, accuracy };
+        setGpsStatus(`Status GPS: aktif (±${Math.round(accuracy || 0)}m)`, 'success');
 
         // Tampilkan info GPS
         const gpsInfo = document.getElementById('gpsInfo');
@@ -836,11 +873,15 @@
       },
       (error) => {
         hideLoading();
-        let msg = 'Gagal mengambil lokasi GPS.';
-        if (error.code === 1) msg = 'Akses lokasi ditolak. Aktifkan izin lokasi di browser.';
-        else if (error.code === 2) msg = 'Lokasi tidak tersedia. Coba keluar ke area terbuka.';
-        else if (error.code === 3) msg = 'Timeout. Coba lagi.';
+        state.gpsData = null;
+        document.getElementById('gpsInfo').classList.add('hidden');
+        setGpsStatus('Status GPS: gagal — nyalakan GPS di HP', 'error');
+        let msg = 'GPS wajib. Nyalakan Lokasi/GPS di HP agar check-in bisa berjalan.';
+        if (error.code === 1) msg = 'Izin lokasi ditolak. Nyalakan GPS dan izinkan lokasi untuk situs ini.';
+        else if (error.code === 2) msg = 'Lokasi tidak tersedia. Nyalakan GPS di pengaturan HP, keluar ke area terbuka, lalu coba lagi.';
+        else if (error.code === 3) msg = 'Timeout GPS. Nyalakan GPS, tunggu sebentar di area terbuka, lalu tekan Check-in Sekarang lagi.';
         showToast(msg, 'error');
+        validateForm();
         console.error('GPS error:', error);
       },
       { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
@@ -962,7 +1003,12 @@
   /* ============================================================
      SIMPAN CHECK-IN
      ============================================================ */
-  function saveCheckin() {
+  async function saveCheckin() {
+    if (!state.gpsData) {
+      showToast('GPS wajib. Nyalakan GPS lalu tekan Check-in Sekarang terlebih dahulu.', 'error');
+      setGpsStatus('Status GPS: belum diambil — wajib dinyalakan', 'error');
+      return;
+    }
     const selectedUnit = document.getElementById('unitInput').value;
     const unit = selectedUnit === 'Lainnya'
       ? document.getElementById('customUnitInput').value.trim()
@@ -972,23 +1018,130 @@
       showToast('Lengkapi GPS, foto bukti, dan foto hasil kerja terlebih dahulu.', 'error');
       return;
     }
-    const record = {
+    const createdAt = new Date().toISOString();
+    const payload = {
       crew: state.currentCrew,
-      timestamp: new Date().toISOString(),
-      time: formatTime(new Date().toISOString()),
-      unit: unit,
-      jobType: jobType,
+      unit,
+      job_type: jobType,
+      jobType,
       lat: state.gpsData.lat,
       lng: state.gpsData.lng,
       accuracy: state.gpsData.accuracy,
-      photo: state.photoData,
-      workPhotos: state.workPhotos
+      selfie: state.photoData,
+      selfie_base64: state.photoData,
+      selfieBase64: state.photoData,
+      work_photos: state.workPhotos,
+      work_photos_base64: state.workPhotos,
+      workPhotosBase64: state.workPhotos,
+      work_date: state.today || createdAt.slice(0, 10),
+      workDate: state.today || createdAt.slice(0, 10),
+      created_at: createdAt,
+      createdAt
     };
-    addRecord(record);
-    showToast('Check-in berhasil disimpan! ✅', 'success');
-    resetForm();
-    renderHistory();
-    updateStats();
+    try {
+      showLoading('Menyimpan check-in…');
+      const url = CONFIG.API_BASE + '/checkin';
+      console.log('POST', url, {
+        crew: state.currentCrew,
+        unit,
+        jobType,
+        created_at: createdAt,
+        hasSelfie: typeof state.photoData === 'string' && state.photoData.startsWith('data:image/'),
+        workCount: state.workPhotos.length
+      });
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const text = await res.text();
+      let data = {};
+      try {
+        data = text ? JSON.parse(text) : {};
+      } catch {
+        data = {};
+      }
+      if (!res.ok || data.ok === false) {
+        throw new Error(data.error || data.message || text || ('HTTP ' + res.status));
+      }
+      showToast('Check-in berhasil disimpan! ✅', 'success');
+      resetForm();
+      await renderHistory();
+      await updateStats();
+    } catch (err) {
+      console.error('saveCheckin error', err);
+      if (!isNetworkError(err)) {
+        showToast('Gagal menyimpan: ' + (err.message || 'coba lagi'), 'error');
+      } else {
+        const pending = loadPending();
+        if (pending.length >= 5) {
+          showToast('Antrian offline penuh (maks 5). Coba saat ada sinyal.', 'error');
+        } else {
+          const item = {
+            id: crypto.randomUUID(),
+            payload,
+            savedAt: createdAt
+          };
+          pending.push(item);
+          savePending(pending);
+          updatePendingBadge();
+          console.log('Check-in disimpan ke antrian offline:', item.id);
+          showToast('Tidak ada sinyal. Check-in disimpan offline, akan dikirim nanti.', 'warning');
+          resetForm();
+        }
+      }
+    } finally {
+      hideLoading();
+      validateForm();
+    }
+  }
+
+  async function flushQueue() {
+    const pending = loadPending();
+    updatePendingBadge();
+    if (!pending.length) return;
+    if (!navigator.onLine) {
+      showToast('Masih offline. Data tertunda belum dikirim.', 'warning');
+      return;
+    }
+
+    showLoading('Mengirim data tertunda…');
+    const remaining = [];
+    let sent = 0;
+    try {
+      for (const item of pending) {
+        try {
+          console.log('Mengirim check-in tertunda:', item.id);
+          const response = await fetch(CONFIG.API_BASE + '/checkin', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(item.payload)
+          });
+          const text = await response.text();
+          let data = {};
+          try { data = text ? JSON.parse(text) : {}; } catch { data = {}; }
+          if (!response.ok || data.ok === false) {
+            throw new Error(data.error || data.message || text || `HTTP ${response.status}`);
+          }
+          sent += 1;
+        } catch (error) {
+          console.error('Gagal mengirim check-in tertunda:', item.id, error);
+          remaining.push(item);
+        }
+      }
+
+      savePending(remaining);
+      updatePendingBadge();
+      if (sent > 0) {
+        showToast(`${sent} check-in tertunda berhasil dikirim${remaining.length ? `, ${remaining.length} masih tertunda` : ''}.`, 'success');
+        await renderHistory();
+        await updateStats();
+      } else if (remaining.length) {
+        showToast('Data tertunda belum berhasil dikirim.', 'warning');
+      }
+    } finally {
+      hideLoading();
+    }
   }
 
   /* ============================================================
@@ -1016,13 +1169,21 @@
   /* ============================================================
      RENDER: riwayat hari ini (khusus crew yang login)
      ============================================================ */
-  function renderHistory() {
+  async function renderHistory() {
     const list = document.getElementById('historyList');
     const empty = document.getElementById('historyEmpty');
     if (!state.currentCrew) return;
 
-    const allRecords = getTodayRecords();
-    const myRecords = allRecords.filter(r => r.crew === state.currentCrew);
+    let myRecords;
+    try {
+      myRecords = await getTodayRecordsForCrew(state.currentCrew);
+    } catch (error) {
+      console.error('Gagal memuat riwayat check-in:', error);
+      list.innerHTML = '';
+      empty.classList.remove('hidden');
+      showToast('Gagal memuat riwayat check-in.', 'error');
+      return;
+    }
 
     if (myRecords.length === 0) {
       list.innerHTML = '';
@@ -1031,19 +1192,16 @@
     }
     empty.classList.add('hidden');
 
-    // Urutkan dari yang paling baru
-    myRecords.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-
     list.innerHTML = myRecords.map(r => `
       <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 flex gap-3">
-        <img src="${r.photo}" class="thumb flex-shrink-0" alt="foto" />
+        <img src="${fileUrl(r.selfie_url)}" class="thumb flex-shrink-0" alt="foto" />
         <div class="flex-1 min-w-0">
           <div class="flex items-start justify-between gap-2">
             <div class="min-w-0">
               <p class="font-bold text-gray-800 truncate">${escapeHtml(r.unit)}</p>
-              <p class="text-xs text-brand-600 font-semibold">${r.jobType}</p>
+              <p class="text-xs text-brand-600 font-semibold">${escapeHtml(r.job_type)}</p>
             </div>
-            <span class="text-xs text-gray-400 flex-shrink-0">${r.time}</span>
+            <span class="text-xs text-gray-400 flex-shrink-0">${formatWorkDate(r.work_date)} · ${formatTime(r.created_at)}</span>
           </div>
           <div class="flex items-center gap-2 mt-2 text-xs text-gray-500">
             <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 text-brand-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -1058,7 +1216,7 @@
              class="inline-flex items-center gap-1 mt-1.5 text-xs text-brand-600 hover:underline font-medium">
             Buka di Google Maps ↗
           </a>
-          ${r.workPhotos?.length ? `<div class="mt-3"><p class="text-xs text-gray-500 mb-1">Foto hasil kerja (${r.workPhotos.length})</p><div class="work-photo-grid">${r.workPhotos.map((photo, index) => `<img src="${photo}" class="work-photo-thumb" alt="Foto hasil kerja ${index + 1}" />`).join('')}</div></div>` : ''}
+          ${r.work_photo_urls?.length ? `<div class="mt-3"><p class="text-xs text-gray-500 mb-1">Foto hasil kerja (${r.work_photo_urls.length})</p><div class="work-photo-grid">${r.work_photo_urls.map((photo, index) => `<img src="${fileUrl(photo)}" class="work-photo-thumb" alt="Foto hasil kerja ${index + 1}" />`).join('')}</div></div>` : ''}
         </div>
       </div>
     `).join('');
@@ -1067,105 +1225,19 @@
   /* ============================================================
      UPDATE STATISTIK di header
      ============================================================ */
-  function updateStats() {
+  async function updateStats() {
     if (!state.currentCrew) return;
-    const records = getTodayRecords().filter(r => r.crew === state.currentCrew);
+    let records;
+    try {
+      records = await getTodayRecordsForCrew(state.currentCrew);
+    } catch (error) {
+      console.error('Gagal memuat statistik check-in:', error);
+      return;
+    }
     document.getElementById('statTotal').textContent = records.length;
     // Total unit unik (case-insensitive, trimmed)
     const uniqueUnits = new Set(records.map(r => r.unit.trim().toLowerCase()));
     document.getElementById('statUnits').textContent = uniqueUnits.size;
-  }
-
-  /* ============================================================
-     ADMIN MODAL
-     ============================================================ */
-  function openAdminModal() {
-    document.getElementById('adminModal').classList.remove('hidden');
-    document.getElementById('adminPinSection').classList.remove('hidden');
-    document.getElementById('adminDashboard').classList.add('hidden');
-    document.getElementById('adminPinInput').value = '';
-    setTimeout(() => document.getElementById('adminPinInput').focus(), 100);
-  }
-  function closeAdminModal() {
-    document.getElementById('adminModal').classList.add('hidden');
-  }
-
-  function handleAdminLogin() {
-    const pin = document.getElementById('adminPinInput').value;
-    if (pin === CONFIG.ADMIN_PIN) {
-      document.getElementById('adminPinSection').classList.add('hidden');
-      document.getElementById('adminDashboard').classList.remove('hidden');
-      renderAdminDashboard();
-      showToast('Selamat datang, Admin!', 'success');
-    } else {
-      showToast('PIN salah. Coba lagi.', 'error');
-      document.getElementById('adminPinInput').value = '';
-      document.getElementById('adminPinInput').focus();
-    }
-  }
-
-  /* ============================================================
-     RENDER: dashboard admin (semua crew)
-     ============================================================ */
-  function renderAdminDashboard() {
-    const records = getTodayRecords();
-
-    // --- Statistik per crew ---
-    const crewStatsEl = document.getElementById('adminCrewStats');
-    const stats = {};
-    CONFIG.CREW_LIST.forEach(c => stats[c] = { total: 0, units: new Set() });
-    records.forEach(r => {
-      if (stats[r.crew]) {
-        stats[r.crew].total++;
-        stats[r.crew].units.add(r.unit.trim().toLowerCase());
-      }
-    });
-
-    crewStatsEl.innerHTML = CONFIG.CREW_LIST.map(c => {
-      const s = stats[c];
-      const unitCount = s.units.size;
-      return `
-        <div class="flex items-center justify-between bg-gray-50 rounded-xl px-4 py-3 border border-gray-100">
-          <span class="font-semibold text-gray-700 text-sm">${c}</span>
-          <div class="flex gap-4 text-sm">
-            <div class="text-center">
-              <p class="text-xs text-gray-400">Check-in</p>
-              <p class="font-bold text-gray-800">${s.total}</p>
-            </div>
-            <div class="text-center">
-              <p class="text-xs text-gray-400">Unit</p>
-              <p class="font-bold text-brand-600">${unitCount}</p>
-            </div>
-          </div>
-        </div>
-      `;
-    }).join('');
-
-    // --- Semua check-in hari ini ---
-    const allListEl = document.getElementById('adminAllList');
-    if (records.length === 0) {
-      allListEl.innerHTML = `<p class="text-sm text-gray-400 text-center py-4">Belum ada check-in hari ini.</p>`;
-      return;
-    }
-    // Urutkan dari terbaru
-    records.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-    allListEl.innerHTML = records.map(r => `
-      <div class="bg-gray-50 rounded-xl p-3 border border-gray-100 flex gap-3">
-        <img src="${r.photo}" class="thumb flex-shrink-0" alt="foto" />
-        <div class="flex-1 min-w-0">
-          <div class="flex items-start justify-between gap-2">
-            <p class="font-bold text-gray-800 text-sm truncate">${escapeHtml(r.unit)}</p>
-            <span class="text-xs text-gray-400 flex-shrink-0">${r.time}</span>
-          </div>
-          <p class="text-xs text-brand-600 font-semibold">${r.crew} · ${r.jobType}</p>
-          <a href="https://www.google.com/maps?q=${r.lat},${r.lng}" target="_blank" rel="noopener"
-             class="inline-flex items-center gap-1 mt-1 text-xs text-brand-600 hover:underline">
-            Maps ↗ (${r.lat.toFixed(5)}, ${r.lng.toFixed(5)})
-          </a>
-          ${r.workPhotos?.length ? `<div class="mt-3"><p class="text-xs text-gray-500 mb-1">Foto hasil kerja (${r.workPhotos.length})</p><div class="work-photo-grid">${r.workPhotos.map((photo, index) => `<img src="${photo}" class="work-photo-thumb" alt="Foto hasil kerja ${index + 1}" />`).join('')}</div></div>` : ''}
-        </div>
-      </div>
-    `).join('');
   }
 
   /* ============================================================

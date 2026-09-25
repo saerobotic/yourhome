@@ -1,0 +1,1126 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#3e2723" />
+  <title>Check In Crew Dashboard | YOUR HOME</title>
+  <style>
+    :root{--coffee:#3e2723;--coffee-soft:#5d4037;--terracotta:#a0522d;--cream:#faf7f2;--paper:#fff;--line:#e2dbd0;--muted:#776f66;--green:#3f5a3a;--danger:#b42318;--gold:#8a6d1f;--shadow:0 12px 30px rgba(62,39,35,.1)}
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--cream);color:var(--coffee);font-family:Inter,Arial,sans-serif}
+    button,input,select{font:inherit}
+    button{cursor:pointer}
+    .page{max-width:1280px;margin:0 auto;padding:28px 20px 56px}
+    .topbar{display:flex;justify-content:space-between;align-items:center;gap:18px;margin-bottom:28px}
+    .brand{display:flex;align-items:center;gap:14px;min-width:0}
+    .brand-mark{width:192px;height:192px;flex:0 0 auto;border:0;background:transparent;display:block;object-fit:contain;padding:0}
+    h1,h2,h3,p{margin:0}
+    h1{font:600 1.65rem/1.1 Georgia,serif;color:var(--coffee)}
+    .subtitle{color:var(--muted);font-size:.86rem;margin-top:5px}
+    .top-actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+    .button{border:1px solid var(--line);background:var(--paper);color:var(--coffee);padding:10px 14px;border-radius:9px;font-weight:700;font-size:.82rem;text-decoration:none}
+    .button.primary{background:var(--terracotta);border-color:var(--terracotta);color:#fff}
+    .button.danger{background:var(--danger);color:#fff;border-color:var(--danger)}
+    .button:hover{filter:brightness(.97);transform:translateY(-1px)}
+    .summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-bottom:16px}
+    .stat,.panel{background:var(--paper);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow)}
+    .stat{padding:18px}
+    .stat-label{font-size:.73rem;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+    .stat-value{display:block;font:700 1.8rem Georgia,serif;color:var(--terracotta);margin-top:7px}
+    .stat-value.small{font-size:1.35rem}
+    .filters{display:grid;grid-template-columns:1fr 1fr 1fr 1fr 1fr auto;gap:10px;padding:14px;margin-bottom:16px}
+    .field{display:flex;flex-direction:column;gap:5px}
+    .field label{font-size:.7rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em}
+    .field input,.field select{width:100%;border:1px solid var(--line);border-radius:8px;background:#fff;padding:10px 11px;color:var(--coffee);outline:none}
+    .field input:focus,.field select:focus{border-color:var(--terracotta);box-shadow:0 0 0 3px rgba(160,82,45,.12)}
+    .filter-actions{display:flex;align-items:flex-end}
+    .records{overflow:hidden;margin-bottom:16px}
+    .records-head{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:18px 20px;border-bottom:1px solid var(--line)}
+    .records-head h2{font:700 1.05rem Georgia,serif}
+    .records-count{font-size:.78rem;color:var(--muted)}
+    .table-wrap{overflow:auto}
+    table{width:100%;border-collapse:collapse;min-width:960px}
+    th,td{text-align:left;padding:13px 16px;border-bottom:1px solid var(--line);vertical-align:middle}
+    th{background:#f1ece2;color:#665c52;font-size:.7rem;text-transform:uppercase;letter-spacing:.08em;white-space:nowrap}
+    td{font-size:.84rem}
+    tbody tr:hover{background:#fffaf6}
+    .crew{font-weight:700;color:var(--coffee)}
+    .unit{font-weight:700;color:var(--coffee)}
+    .muted{font-size:.75rem;color:var(--muted);margin-top:3px}
+    .job{display:inline-flex;padding:5px 8px;border-radius:999px;background:#f8eee8;color:var(--terracotta);font-size:.7rem;font-weight:700;white-space:nowrap}
+    .photo-count{color:var(--green);font-weight:700;white-space:nowrap}
+    .source-badge{display:inline-flex;padding:5px 8px;border-radius:999px;font-size:.7rem;font-weight:700;white-space:nowrap}
+    .source-badge.admin{background:#e9eef8;color:#31598c}
+    .source-badge.crew{background:#e9f3e2;color:var(--green)}
+    .gps-link{color:var(--terracotta);font-size:.75rem;font-weight:700;text-decoration:none;white-space:nowrap}
+    .gps-link:hover{text-decoration:underline}
+    .detail-btn{border:0;background:none;color:var(--terracotta);font-size:.78rem;font-weight:700;padding:5px 0}
+    .admin-actions{display:flex;gap:8px;flex-wrap:wrap}
+    .pagination{display:flex;justify-content:center;align-items:center;gap:10px;padding:14px 16px;border-top:1px solid var(--line)}
+    .pagination button{border:1px solid var(--line);background:var(--paper);color:var(--coffee);padding:7px 11px;border-radius:8px;font-size:.78rem;font-weight:700}
+    .pagination button:hover:not(:disabled){border-color:var(--terracotta);color:var(--terracotta)}
+    .pagination button:disabled{cursor:not-allowed;opacity:.45}
+    .pagination span{color:var(--muted);font-size:.78rem;font-weight:700}
+    .matrix-table{min-width:760px}
+    .matrix-table th:first-child,.matrix-table td:first-child{position:sticky;left:0;z-index:1;background:var(--paper)}
+    .matrix-table th:first-child{background:#f1ece2}
+    .matrix-table .matrix-label{font-weight:700;color:var(--coffee);white-space:nowrap}
+    .matrix-table .matrix-number{text-align:right;font-weight:700;color:#173b67;white-space:nowrap}
+    .matrix-table .matrix-total td{background:#cfe3bc;font-weight:700}
+    .matrix-table .matrix-total td:first-child{background:#cfe3bc}
+    .matrix-table .matrix-absence td{background:#fffca3}
+    .matrix-table .matrix-absence td:first-child{background:#fffca3}
+    .matrix-table .matrix-paid td{background:#cfe3bc}
+    .matrix-table .matrix-paid td:first-child{background:#cfe3bc}
+    .honor{font-weight:700;color:var(--gold);white-space:nowrap}
+    .honor-chip{display:inline-flex;padding:5px 9px;border-radius:8px;background:#fbf4e0;color:var(--gold);font-size:.74rem;font-weight:700;white-space:nowrap}
+    .honor-total{font-weight:700;color:var(--terracotta);white-space:nowrap}
+    .empty{padding:48px 20px;text-align:center;color:var(--muted);display:none}
+    .empty strong{display:block;color:var(--coffee);font:600 1.15rem Georgia,serif;margin-bottom:6px}
+    .modal{position:fixed;inset:0;background:rgba(34,22,18,.66);display:none;align-items:center;justify-content:center;padding:18px;z-index:10}
+    .modal.open{display:flex}
+    .modal-card{background:var(--paper);border-radius:14px;width:min(900px,100%);max-height:92vh;overflow:auto;box-shadow:0 24px 70px rgba(0,0,0,.25)}
+    .modal-head{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;padding:20px;border-bottom:1px solid var(--line);position:sticky;top:0;background:rgba(255,255,255,.96);z-index:1}
+    .modal-head h2{font:600 1.45rem Georgia,serif}
+    .close{border:0;background:#f1ece2;color:var(--coffee);width:34px;height:34px;border-radius:50%;font-size:1.25rem;line-height:1}
+    .detail-meta{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:18px 20px 4px}
+    .edit-form{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;padding:20px}
+    .edit-form .field{min-width:0}
+    .edit-form .edit-actions{grid-column:1 / -1;display:flex;justify-content:flex-end;gap:8px;padding-top:4px}
+    .meta-item{background:#faf7f2;border-radius:9px;padding:11px}
+    .meta-item.gold{background:#fbf4e0}
+    .meta-label{display:block;font-size:.68rem;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+    .meta-value{display:block;font-weight:700;font-size:.86rem;margin-top:4px}
+    .meta-value.gold{color:var(--gold)}
+    .photo-section{padding:16px 20px 22px}
+    .photo-section h3{font:700 1rem Georgia,serif;margin-bottom:10px}
+    .photo-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:9px}
+    .photo-grid button{border:0;background:none;padding:0;aspect-ratio:1;overflow:hidden;border-radius:9px}
+    .photo-grid img{width:100%;height:100%;object-fit:cover;display:block}
+    .photo-grid button:hover img{transform:scale(1.04)}
+    .no-photo{color:var(--muted);font-size:.82rem;padding:18px;background:#faf7f2;border-radius:9px}
+    .lightbox{position:fixed;inset:0;background:rgba(0,0,0,.88);display:none;place-items:center;z-index:20;padding:18px}
+    .lightbox.open{display:grid}
+    .lightbox img{max-width:94vw;max-height:88vh;object-fit:contain;border-radius:8px}
+    .lightbox button{position:absolute;top:20px;right:22px;border:0;background:#fff;color:#222;width:38px;height:38px;border-radius:50%;font-size:1.4rem}
+    .hint{color:var(--muted);font-size:.76rem;margin-top:10px}
+    .hadir{color:var(--green);font-weight:700;white-space:nowrap}
+    .absen{color:var(--danger);font-weight:700;white-space:nowrap}
+    .potongan{color:var(--danger);font-weight:700;white-space:nowrap}
+    .bayar{font-weight:700;color:var(--terracotta);white-space:nowrap}
+    .slip-period{font-weight:700;color:var(--coffee);font-size:.86rem}
+    .slip-calendar{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;padding:18px 20px 4px}
+    .cal-day{aspect-ratio:1;border-radius:9px;display:flex;flex-direction:column;justify-content:center;align-items:center;font-size:.7rem;border:1px solid var(--line);min-height:62px}
+    .cal-day.worked{background:#e9f3e2;color:var(--green);border-color:#cfe2c4}
+    .cal-day.absent{background:#fbeae8;color:var(--danger);border-color:#f3d4cf}
+    .cal-day.future{background:#f5f1e9;color:var(--muted);border-color:var(--line);opacity:.6}
+    .cal-num{font-weight:700;font-size:.95rem}
+    .cal-label{font-size:.62rem;margin-top:3px;text-transform:uppercase;letter-spacing:.04em}
+    .legend{display:flex;gap:14px;flex-wrap:wrap;padding:0 20px 18px;font-size:.74rem;color:var(--muted)}
+    .legend span{display:inline-flex;align-items:center;gap:6px}
+    .legend i{width:11px;height:11px;border-radius:3px;display:inline-block}
+    .recap-section{padding:8px 20px 8px}
+    .recap-head{display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin-bottom:10px;flex-wrap:wrap}
+    .recap-head h3{font:700 1rem Georgia,serif}
+    .recap-summary{font-size:.78rem;color:var(--muted)}
+    .recap-summary strong{color:var(--terracotta)}
+    .recap-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px}
+    .recap-item{background:#faf7f2;border:1px solid var(--line);border-radius:9px;padding:12px;display:flex;flex-direction:column;gap:4px}
+    .recap-name{font-weight:700;color:var(--coffee);font-size:.86rem;line-height:1.3}
+    .recap-stats{font-size:.74rem;color:var(--muted)}
+    .recap-stats .chip{display:inline-flex;padding:2px 7px;border-radius:999px;background:#fff;margin-right:4px;font-weight:700}
+    .recap-stats .chip.days{background:#e9f3e2;color:var(--green)}
+    .recap-stats .chip.visits{background:#f8eee8;color:var(--terracotta)}
+    .recap-honor{font-weight:700;color:var(--gold);font-size:.95rem;margin-top:6px;font-family:Georgia,serif}
+    .recap-total{grid-column:1 / -1;background:#fbf4e0;border-color:#ecdfb8;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-top:6px}
+    .recap-total-label{font-size:.74rem;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;font-weight:700}
+    .recap-total-value{font-weight:700;color:var(--terracotta);font-size:1.45rem;font-family:Georgia,serif}
+    .no-recap{color:var(--muted);font-size:.82rem;padding:18px;background:#faf7f2;border-radius:9px;text-align:center}
+    .pin-panel-body{padding:18px 20px 20px}
+    .pin-form{display:grid;grid-template-columns:1.2fr 1fr 1fr auto;gap:10px;align-items:end}
+    .pin-message{min-height:1.2em;margin-top:12px;font-size:.8rem;font-weight:700}
+    .pin-message.success{color:var(--green)}
+    .pin-message.error{color:var(--danger)}
+    .hidden{display:none!important}
+    .admin-gate{min-height:100vh;display:grid;place-items:center;padding:24px;background:var(--cream)}
+    .admin-gate-card{width:min(420px,100%);background:var(--paper);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:24px}
+    .admin-gate-card h1{margin-bottom:8px}
+    .admin-gate-form{display:grid;gap:12px;margin-top:20px}
+    .admin-gate-message{min-height:1.2em;font-size:.8rem;font-weight:700;color:var(--danger)}
+    .password-input-wrap{position:relative;display:block}
+    .password-input-wrap input{padding-right:46px}
+    .password-toggle{position:absolute;right:8px;top:50%;transform:translateY(-50%);border:0;background:transparent;color:var(--muted);padding:6px;font-size:1rem;line-height:1}
+    .site-footer{border-top:1px solid var(--line);margin-top:28px;padding:18px 4px 0;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;color:var(--muted);font-size:.74rem}
+    .site-footer strong{color:var(--coffee);font-family:Georgia,serif;font-size:.86rem}
+    .site-footer-meta{display:flex;gap:10px;flex-wrap:wrap}
+    @media(max-width:520px){.site-footer{align-items:flex-start;flex-direction:column;gap:6px}}
+    @media(max-width:850px){.brand-mark{width:150px;height:150px}h1{font-size:1.45rem}.summary{grid-template-columns:repeat(2,1fr)}.filters{grid-template-columns:repeat(2,1fr)}.filter-actions{align-items:stretch}.filter-actions .button{width:100%}.detail-meta{grid-template-columns:1fr 1fr}.photo-grid{grid-template-columns:repeat(3,1fr)}}
+    @media(max-width:520px){.page{padding:20px 12px 40px}.topbar{align-items:flex-start;flex-direction:column}.brand{align-items:center;gap:10px}.brand-mark{width:96px;height:96px}h1{font-size:1.2rem}.subtitle{font-size:.78rem}.top-actions{justify-content:flex-start}.summary{gap:8px}.stat{padding:13px}.stat-value{font-size:1.45rem}.filters{grid-template-columns:1fr}.records-head{padding:15px}.detail-meta{grid-template-columns:1fr}.edit-form{grid-template-columns:1fr}.edit-form .edit-actions{grid-column:auto}.photo-grid{grid-template-columns:repeat(2,1fr)}.recap-grid{grid-template-columns:1fr}.pin-form{grid-template-columns:1fr}.pin-form .button{width:100%}}
+  </style>
+</head>
+<body>
+  <section id="adminLoginScreen" class="admin-gate">
+    <div class="admin-gate-card">
+      <h1>Login Admin</h1>
+      <p class="subtitle">Masukkan password admin untuk membuka dashboard.</p>
+      <form id="adminLoginForm" class="admin-gate-form">
+        <label class="field" for="adminPasswordInput"><span class="meta-label">Password Admin</span><span class="password-input-wrap"><input id="adminPasswordInput" type="password" autocomplete="current-password" required /><button id="toggleAdminPassword" class="password-toggle" type="button" aria-label="Tampilkan password" title="Tampilkan password">&#128065;</button></span></label>
+        <button class="button primary" type="submit">Masuk Dashboard</button>
+        <p id="adminLoginMessage" class="admin-gate-message" role="alert" aria-live="polite"></p>
+      </form>
+    </div>
+  </section>
+
+  <main id="dashboardApp" class="page hidden">
+    <header class="topbar">
+      <div class="brand">
+        <img class="brand-mark" src="https://ik.imagekit.io/o1hnx31yy/yh%20(2).png?updatedAt=1790230701085" alt="YOUR HOME" />
+        <div><h1>Check In Crew Dashboard</h1><p class="subtitle">Pantau pekerjaan crew dan bukti foto YOUR HOME</p></div>
+      </div>
+      <div class="top-actions">
+        <a class="button" href="check-in-crew.html">Lihat ke Check In Crew</a>
+        <button class="button" id="exportPdfBtn" type="button">Download PDF</button>
+        <button class="button primary" id="exportExcelBtn" type="button">Download Excel</button>
+        <button class="button" id="manualEntryBtn" type="button">Tambah Data Manual</button>
+        <button class="button danger" id="adminLogoutBtn" type="button">Logout</button>
+        <button class="button" id="deleteAllBtn" type="button">Hapus Semua Data</button>
+      </div>
+    </header>
+
+    <section class="summary" aria-label="Ringkasan absensi">
+      <div class="stat"><span class="stat-label">Total check-in</span><strong class="stat-value" id="totalRecords">0</strong></div>
+      <div class="stat"><span class="stat-label">Crew aktif</span><strong class="stat-value" id="totalCrew">0</strong></div>
+      <div class="stat"><span class="stat-label">Unit dikerjakan</span><strong class="stat-value" id="totalUnits">0</strong></div>
+      <div class="stat"><span class="stat-label">Foto kerja</span><strong class="stat-value" id="totalPhotos">0</strong></div>
+      <div class="stat"><span class="stat-label">Total Honor</span><strong class="stat-value small" id="totalHonor">Rp 0</strong></div>
+    </section>
+
+    <section class="panel filters" aria-label="Filter Check In Crew">
+      <div class="field"><label for="monthFilter">Bulan</label><input id="monthFilter" type="month" /></div>
+      <div class="field"><label for="dateFilter">Tanggal</label><input id="dateFilter" type="date" /></div>
+      <div class="field"><label for="crewFilter">Crew</label><select id="crewFilter"><option value="">Semua crew</option></select></div>
+      <div class="field"><label for="unitFilter">Properti</label><select id="unitFilter"><option value="">Semua properti</option></select></div>
+      <div class="field"><label for="jobFilter">Pekerjaan</label><select id="jobFilter"><option value="">Semua pekerjaan</option></select></div>
+      <div class="filter-actions"><button class="button" id="resetBtn" type="button">Reset</button></div>
+    </section>
+
+    <section class="panel records">
+      <div class="records-head"><h2>Riwayat Pekerjaan</h2><span class="records-count" id="recordsCount">0 data</span></div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Waktu</th><th>Crew</th><th>Properti</th><th>Pekerjaan</th><th>Honor/Properti</th><th>GPS</th><th>Bukti Foto</th><th>Sumber</th><th>Aksi</th></tr></thead>
+          <tbody id="recordsBody"></tbody>
+        </table>
+        <div class="empty" id="emptyState"><strong>Belum ada data absensi</strong><span>Data check-in akan muncul di sini setelah crew menyimpan pekerjaan.</span></div>
+      </div>
+      <div class="pagination" id="historyPagination" aria-label="Navigasi riwayat pekerjaan"></div>
+    </section>
+
+    <section class="panel records" id="slipPanel">
+      <div class="records-head"><h2>Slip Gaji Bulanan</h2><span class="slip-period" id="slipPeriod">-</span></div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Crew</th><th>Hari di Bulan</th><th>Hari Check In</th><th>Tidak Check In</th><th>Potongan</th><th>Gaji Dibayar</th><th>Properti Dikerjakan</th><th>Aksi</th></tr></thead>
+          <tbody id="slipBody"></tbody>
+        </table>
+        <div class="empty" id="slipEmpty" style="display:none"><strong>Belum ada data</strong><span>Pilih bulan di filter atas untuk melihat slip gaji crew.</span></div>
+      </div>
+      <p class="hint">Potongan = (Tidak Check In × Rp 100.000). Gaji Dibayar = (Hari Check In × Rp 100.000). Tidak Check In = Hari di Bulan dikurangi Hari Check In (jumlah tanggal unik crew check-in di bulan itu).</p>
+    </section>
+
+    <section class="panel records" id="monthlyMatrixPanel">
+      <div class="records-head"><h2>Rekap Bulanan Semua Crew</h2><span class="records-count" id="matrixPeriod">-</span></div>
+      <div class="table-wrap">
+        <table class="matrix-table">
+          <thead id="monthlyMatrixHead"></thead>
+          <tbody id="monthlyMatrixBody"></tbody>
+        </table>
+        <div class="empty" id="monthlyMatrixEmpty"><strong>Belum ada rekap bulanan</strong><span>Data rekap crew akan muncul setelah ada absensi pada bulan yang dipilih.</span></div>
+      </div>
+    </section>
+
+    <section class="panel records" id="pinManagementPanel">
+      <div class="records-head"><h2>Kelola PIN Crew</h2></div>
+      <div class="pin-panel-body">
+        <p class="hint">PIN crew wajib 6 digit. PIN disimpan di server sebagai hash. Setelah disimpan, PIN tidak bisa dilihat lagi. Butuh PIN Admin untuk mengubah.</p>
+        <div class="pin-form">
+          <label class="field" for="pinCrewSelect"><span class="meta-label">Crew</span><select id="pinCrewSelect"><option value="">Pilih crew</option></select></label>
+          <label class="field" for="pinNewInput"><span class="meta-label">PIN Baru</span><input id="pinNewInput" type="password" inputmode="numeric" maxlength="6" placeholder="PIN baru (6 digit)" /></label>
+          <label class="field" for="pinAdminInput"><span class="meta-label">PIN Admin</span><input id="pinAdminInput" type="password" placeholder="PIN Admin" /></label>
+          <button class="button primary" id="pinSaveBtn" type="button">Simpan PIN Crew</button>
+        </div>
+        <p id="pinMessage" class="pin-message" role="status" aria-live="polite"></p>
+      </div>
+    </section>
+
+    <footer class="site-footer">
+      <strong>YOUR HOME · Check In Crew Dashboard</strong>
+      <div class="site-footer-meta">
+        <span>Data absensi dan honor crew</span>
+        <span>Terakhir diperbarui: <time id="footerUpdatedAt">-</time></span>
+        <span>&copy; 2026 YOUR HOME</span>
+      </div>
+    </footer>
+  </main>
+
+  <div class="modal" id="detailModal" role="dialog" aria-modal="true" aria-labelledby="detailTitle">
+    <div class="modal-card">
+      <div class="modal-head"><div><h2 id="detailTitle">Detail pekerjaan</h2><p class="subtitle" id="detailSubtitle"></p></div><div class="admin-actions"><button class="button" id="detailEditBtn" type="button">Edit</button><button class="button danger" id="detailDeleteBtn" type="button">Hapus</button><button class="close" type="button" data-close="detailModal" aria-label="Tutup">&times;</button></div></div>
+      <div class="detail-meta" id="detailMeta"></div>
+      <div class="photo-section"><h3>Selfie bukti lokasi</h3><div class="photo-grid" id="selfieGrid"></div></div>
+      <div class="photo-section"><h3>Foto hasil kerja</h3><div class="photo-grid" id="workGrid"></div></div>
+    </div>
+  </div>
+  <div class="modal" id="slipModal" role="dialog" aria-modal="true" aria-labelledby="slipTitle">
+    <div class="modal-card">
+      <div class="modal-head"><div><h2 id="slipTitle">Slip Gaji Crew</h2><p class="subtitle" id="slipSubtitle"></p></div><button class="close" type="button" data-close="slipModal" aria-label="Tutup">&times;</button></div>
+      <div class="detail-meta" id="slipMeta"></div>
+      <div class="photo-section"><h3>Kalender Kehadiran</h3><div class="slip-calendar" id="slipCalendar"></div></div>
+      <div class="legend">
+        <span><i style="background:#e9f3e2;border:1px solid #cfe2c4"></i> Check In</span>
+        <span><i style="background:#fbeae8;border:1px solid #f3d4cf"></i> Tidak Check In</span>
+        <span><i style="background:#f5f1e9;border:1px solid var(--line)"></i> Tanggal Berikutnya</span>
+      </div>
+      <div class="recap-section">
+        <div class="recap-head">
+          <h3>Rekap Honor per Properti</h3>
+          <span class="recap-summary" id="recapSummary"></span>
+        </div>
+        <div class="recap-grid" id="recapGrid"></div>
+      </div>
+    </div>
+  </div>
+  <div class="modal" id="editModal" role="dialog" aria-modal="true" aria-labelledby="editTitle">
+    <div class="modal-card">
+      <div class="modal-head"><div><h2 id="editTitle">Edit Data Check In</h2><p class="subtitle" id="editSubtitle">Perbarui data pekerjaan crew.</p></div><button class="close" type="button" data-close="editModal" aria-label="Tutup">&times;</button></div>
+      <form class="edit-form" id="editForm">
+        <label class="field"><span class="meta-label">Crew</span><select id="editCrew" required><option value="">Pilih crew</option></select></label>
+        <label class="field"><span class="meta-label">Properti</span><select id="editUnit" required>
+          <option value="">Pilih properti</option>
+          <optgroup label="Apartemen">
+            <option>Lantai 7 Sudirman Suites</option><option>Lantai 11 Sudirman Suites</option><option>Lantai 18 Sudirman Suites</option><option>Lantai 19 Sudirman Suites</option><option>Apartment Galeri Ciumbuleuit 3</option>
+          </optgroup>
+          <optgroup label="Villa">
+            <option>Villa Aurum</option><option>Villa Putih</option><option>Villa Alam 1</option><option>Villa Alam 2</option><option>Villa Alam 1 &amp; 2</option><option>Villa Trinity Garden Villa</option><option>Villa X4</option><option>Villa X7</option><option>Villa X47</option><option>Villa AWN</option><option>Villa Casa Kemilau Bintang</option><option>Villa Casa Bliss</option><option>Villa De Bukit Dago</option><option>Villa Ferrum</option><option>Villa Rustic Nine</option><option>Villa Alba Uno</option><option>Villa Alba Duo</option><option>Villa Forest Heal</option><option>Villa Tree Vena</option><option>Villa Sananda</option><option>Villa Aprilia</option><option>Villa Halimun</option><option>Villa Halimpu</option><option>Villa Manakala</option><option>Villa De Green</option><option>Villa Casa M3</option>
+          </optgroup>
+          <optgroup label="Guest House"><option>Davion House</option><option>Guest House Tatar Banyak Sumba</option></optgroup>
+          <optgroup label="Kosan"><option>Kosan De Orange Kost</option></optgroup>
+          <option value="Lainnya">Lainnya</option>
+        </select><input id="editCustomUnit" class="hidden" placeholder="Tulis nama properti atau unit" /></label>
+        <label class="field"><span class="meta-label">Pekerjaan</span><select id="editJobType" required><option value="">Pilih jenis pekerjaan</option><option value="Check-in Tamu">Check-in Tamu</option><option value="Cleaning">Cleaning</option><option value="Maintenance">Maintenance</option><option value="Laundry">Laundry</option><option value="Lainnya">Lainnya</option></select></label>
+        <label class="field"><span class="meta-label">Tanggal</span><input id="editDate" type="date" required /></label>
+        <div class="edit-actions"><button class="button" type="button" data-close="editModal">Batal</button><button class="button primary" id="editSubmitBtn" type="submit">Simpan Perubahan</button></div>
+      </form>
+    </div>
+  </div>
+  <div class="lightbox" id="lightbox"><button type="button" data-close="lightbox" aria-label="Tutup foto">&times;</button><img id="lightboxImage" alt="Foto diperbesar" /></div>
+
+  <script>
+    const API_BASE = 'https://your-home-checkin-api.saerobotic.workers.dev';
+    // Data absensi: Cloudflare Worker (D1 + R2)
+    const DAILY_SALARY = 100000; // Rp 3.000.000/bulan ÷ 30 hari
+    const PAGE_SIZE = 15;
+    function getLocalDateKey() {
+      const date = new Date();
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    }
+    const todayKey = getLocalDateKey();
+    if (sessionStorage.getItem('dashboard_admin_login_date') !== todayKey) {
+      sessionStorage.removeItem('dashboard_admin_token');
+      sessionStorage.removeItem('dashboard_admin_login_date');
+    }
+    const state = { records: [], filtered: [], salaryMap: {}, honorMap: {}, historyPage: 1, adminToken: sessionStorage.getItem('dashboard_admin_token') || '' };
+    let refreshInProgress = false;
+    let detailRecord = null;
+    let manualEntryMode = false;
+    const KNOWN_CREWS = ['Aji Agung', 'Rezza Afrian Sukarsah', 'Qeyla Viorentina', 'Yono Maryono Narsisno', 'Udin Komarudin'];
+    const el = id => document.getElementById(id);
+
+    function escapeHtml(value) {
+      return String(value ?? '').replace(/[&<>'"]/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[char]));
+    }
+    function formatRupiah(amount) {
+      const rounded = Math.round(Number(amount) || 0);
+      return 'Rp ' + rounded.toLocaleString('id-ID');
+    }
+    function parseWorkPhotos(value) {
+      if (Array.isArray(value)) return value.filter(Boolean);
+      if (typeof value !== 'string' || !value.trim()) return [];
+      try {
+        const parsed = JSON.parse(value);
+        if (Array.isArray(parsed)) return parsed.filter(Boolean);
+      } catch (error) {
+        return [];
+      }
+      return [];
+    }
+    function mapApiRecord(row) {
+      const createdAt = row.created_at || '';
+      const hasGps = !(Number(row.lat) === 0 && Number(row.lng) === 0);
+      const workPhotos = parseWorkPhotos(row.work_photo_urls);
+      const isManual = !hasGps && !row.selfie_url && workPhotos.length === 0;
+      return {
+        id: row.id,
+        crew: String(row.crew || '').trim(),
+        unit: String(row.unit || '').trim(),
+        jobType: String(row.job_type || '').trim(),
+        lat: hasGps ? row.lat : null,
+        lng: hasGps ? row.lng : null,
+        accuracy: row.accuracy,
+        photo: row.selfie_url || '',
+        workPhotos,
+        source: isManual ? 'admin' : 'crew',
+        created_at: createdAt,
+        timestamp: createdAt,
+        date: String(row.work_date || createdAt.slice(0, 10)).slice(0, 10),
+        time: createdAt ? formatTimeWib(createdAt) : '-'
+      };
+    }
+    async function readRecords() {
+      const url = API_BASE + '/checkins?_=' + Date.now();
+      console.log('FETCH URL', url);
+      const res = await fetch(url, {
+        cache: 'no-store',
+        headers: state.adminToken ? { Authorization: `Bearer ${state.adminToken}` } : {}
+      });
+      console.log('FETCH status', res.status);
+      const json = await res.json();
+      console.log('API checkins', JSON.stringify(json).slice(0, 500));
+      if (!res.ok || json.ok === false) {
+        throw new Error((json && json.error) || ('HTTP ' + res.status));
+      }
+      const rows = Array.isArray(json.data) ? json.data : [];
+      return rows.map(mapApiRecord);
+    }
+    function formatDate(value) {
+      if (!value) return '-';
+      return new Date(`${value}T00:00:00`).toLocaleDateString('id-ID', { day:'2-digit', month:'short', year:'numeric' });
+    }
+    function formatTimeWib(value) {
+      const date = new Date(value);
+      if (Number.isNaN(date.getTime())) return '-';
+      return `${date.toLocaleTimeString('id-ID', { hour:'2-digit', minute:'2-digit', second:'2-digit' })} WIB`;
+    }
+    function formatLocalDateTimeWib(value = new Date()) {
+      return `${value.toLocaleString('id-ID', { dateStyle:'medium', timeStyle:'short' })} WIB`;
+    }
+    function formatTime(record) {
+      if (record.created_at || record.timestamp) return formatTimeWib(record.created_at || record.timestamp);
+      return record.time || '-';
+    }
+    function uniqueValues(records, key) {
+      return [...new Set(records.map(record => record[key]).filter(Boolean))].sort((a,b) => a.localeCompare(b,'id'));
+    }
+    function daysInMonth(yearMonth) {
+      if (!yearMonth) return 0;
+      const [y, m] = yearMonth.split('-').map(Number);
+      return new Date(y, m, 0).getDate(); // m=0..11, ambil tanggal 0 = hari terakhir bln sebelumnya
+    }
+    function formatMonth(yearMonth) {
+      if (!yearMonth) return '-';
+      const [y, m] = yearMonth.split('-').map(Number);
+      return new Date(y, m-1, 1).toLocaleDateString('id-ID', { month:'long', year:'numeric' });
+    }
+    function getActiveMonth() {
+      // Bulan default = bulan berjalan kalau filter Bulan kosong.
+      const fromFilter = el('monthFilter').value;
+      if (fromFilter) return fromFilter;
+      return new Date().toISOString().slice(0,7);
+    }
+    function fillSelect(select, values, label) {
+      select.innerHTML = `<option value="">${label}</option>` + values.map(value => `<option value="${escapeHtml(value)}">${escapeHtml(value)}</option>`).join('');
+    }
+    function populateFilters() {
+      fillSelect(el('crewFilter'), uniqueValues(state.records, 'crew'), 'Semua crew');
+      fillSelect(el('unitFilter'), uniqueValues(state.records, 'unit'), 'Semua properti');
+      fillSelect(el('jobFilter'), uniqueValues(state.records, 'jobType'), 'Semua pekerjaan');
+    }
+    // Hitung peta honor per crew+tanggal.
+    // Kunci: `${crew}|${date}`. Setiap crew+date dapat 1 hari kerja (Rp 100.000),
+    // lalu dibagi rata ke jumlah properti unik yang dikunjungi hari itu.
+    function computeSalaryMap(records) {
+      const groups = {};
+      records.forEach(record => {
+        if (!record.crew || !record.date) return;
+        const key = `${record.crew}|${record.date}`;
+        if (!groups[key]) groups[key] = { crew: record.crew, date: record.date, units: new Set(), visits: 0 };
+        groups[key].units.add(record.unit || '(tanpa nama)');
+        groups[key].visits += 1;
+      });
+      const map = {};
+      Object.keys(groups).forEach(key => {
+        const g = groups[key];
+        const count = Math.max(1, g.units.size);
+        map[key] = {
+          crew: g.crew,
+          date: g.date,
+          uniqueProperties: count,
+          visits: g.visits,
+          perProperty: DAILY_SALARY / count,
+          totalForDay: DAILY_SALARY
+        };
+      });
+      return map;
+    }
+    function salaryKey(record) {
+      return `${record.crew}|${record.date}`;
+    }
+    // Hitung rincian honor per crew (akumulasi dari seluruh data, bukan filter).
+    function computeHonorMap(records, salaryMap) {
+      const map = {};
+      Object.keys(salaryMap).forEach(key => {
+        const item = salaryMap[key];
+        if (!map[item.crew]) {
+          map[item.crew] = { crew: item.crew, daysWorked: 0, totalVisits: 0, uniqueUnits: new Set(), totalHonor: 0 };
+        }
+        map[item.crew].daysWorked += 1;
+        map[item.crew].totalVisits += item.visits;
+        map[item.crew].totalHonor += DAILY_SALARY;
+      });
+      // Akumulasi properti unik per crew dari records
+      records.forEach(record => {
+        if (!record.crew || !map[record.crew]) return;
+        if (record.unit) map[record.crew].uniqueUnits.add(record.unit);
+      });
+      return map;
+    }
+    function applyFilters() {
+      const month = el('monthFilter').value; // format: YYYY-MM
+      const date = el('dateFilter').value;
+      const crew = el('crewFilter').value;
+      const unit = el('unitFilter').value;
+      const job = el('jobFilter').value;
+      state.filtered = state.records.filter(record =>
+        (!month || (record.date && record.date.slice(0,7) === month)) &&
+        (!date || record.date === date) &&
+        (!crew || record.crew === crew) &&
+        (!unit || record.unit === unit) &&
+        (!job || record.jobType === job)
+      ).sort((a,b) => new Date(b.timestamp || `${b.date}T00:00:00`) - new Date(a.timestamp || `${a.date}T00:00:00`));
+      renderSummary();
+      state.historyPage = 1;
+      renderRows();
+      renderSlipGaji();
+    }
+    function renderSummary() {
+      const records = state.filtered;
+      el('totalRecords').textContent = records.length;
+      el('totalCrew').textContent = new Set(records.map(record => record.crew).filter(Boolean)).size;
+      el('totalUnits').textContent = new Set(records.map(record => record.unit).filter(Boolean)).size;
+      el('totalPhotos').textContent = records.reduce((sum, record) => sum + (record.workPhotos?.length || 0) + (record.photo ? 1 : 0), 0);
+      el('recordsCount').textContent = `${records.length} data`;
+      // Total honor dihitung dari state.filtered (mengikuti filter saat ini).
+      // Tiap kombinasi crew+date menyumbang 1 hari kerja = Rp 100.000.
+      const workDays = new Set(records.filter(r => r.crew && r.date).map(r => `${r.crew}|${r.date}`)).size;
+      el('totalHonor').textContent = formatRupiah(workDays * DAILY_SALARY);
+    }
+    function renderRows() {
+      const body = el('recordsBody');
+      const pagination = el('historyPagination');
+      const totalPages = Math.ceil(state.filtered.length / PAGE_SIZE);
+      state.historyPage = Math.max(1, Math.min(state.historyPage, totalPages || 1));
+      const pageStart = (state.historyPage - 1) * PAGE_SIZE;
+      const pageRecords = state.filtered.slice(pageStart, pageStart + PAGE_SIZE);
+      el('emptyState').style.display = state.filtered.length ? 'none' : 'block';
+      body.innerHTML = pageRecords.map((record, index) => {
+        const photoCount = (record.workPhotos?.length || 0) + (record.photo ? 1 : 0);
+        const salary = state.salaryMap[salaryKey(record)];
+        const perProperti = salary ? formatRupiah(salary.perProperty) : '-';
+        const propCount = salary ? salary.uniqueProperties : 1;
+        const gps = record.lat != null && record.lng != null ? `<a class="gps-link" href="https://www.google.com/maps?q=${Number(record.lat)},${Number(record.lng)}" target="_blank" rel="noopener">${Number(record.lat).toFixed(4)}, ${Number(record.lng).toFixed(4)} ↗</a>` : '-';
+        const sourceLabel = record.source === 'admin' ? 'Admin' : 'Crew';
+        const sourceClass = record.source === 'admin' ? 'admin' : 'crew';
+        return `<tr><td><strong>${formatDate(record.date)}</strong><div class="muted">${formatTime(record)}</div></td><td class="crew">${escapeHtml(record.crew || '-')}</td><td><div class="unit">${escapeHtml(record.unit || '-')}</div><div class="muted">${escapeHtml(record.jobType || '-')}</div></td><td><span class="job">${escapeHtml(record.jobType || '-')}</span></td><td><span class="honor-chip">${perProperti}</span><div class="muted">dari ${propCount} properti hari itu</div></td><td>${gps}</td><td class="photo-count">${photoCount} foto</td><td><span class="source-badge ${sourceClass}">${sourceLabel}</span></td><td><button class="detail-btn" type="button" data-detail="${index}">Lihat detail</button></td></tr>`;
+      }).join('');
+      body.querySelectorAll('[data-detail]').forEach(button => button.addEventListener('click', () => openDetail(state.filtered[pageStart + Number(button.dataset.detail)])));
+      if (totalPages > 1) {
+        pagination.innerHTML = `<button type="button" data-page="prev" ${state.historyPage === 1 ? 'disabled' : ''}>Sebelumnya</button><span>Halaman ${state.historyPage} dari ${totalPages}</span><button type="button" data-page="next" ${state.historyPage === totalPages ? 'disabled' : ''}>Berikutnya</button>`;
+        pagination.querySelector('[data-page="prev"]').addEventListener('click', () => { state.historyPage -= 1; renderRows(); });
+        pagination.querySelector('[data-page="next"]').addEventListener('click', () => { state.historyPage += 1; renderRows(); });
+      } else {
+        pagination.innerHTML = '';
+      }
+    }
+    // Bangun rekap honor per properti untuk crew pada bulan tertentu.
+    // Mengembalikan: { propertyStats: [{unit, days:Set, visits, honor}], totalHonor, totalDays, totalProperties }
+    function buildPropertyRecap(crew, month) {
+      const propertyStats = {};
+      state.records.forEach(r => {
+        if (r.crew !== crew || !r.date || r.date.slice(0,7) !== month) return;
+        const unit = r.unit || '(tanpa nama)';
+        if (!propertyStats[unit]) {
+          propertyStats[unit] = { unit, days: new Set(), visits: 0, honor: 0 };
+        }
+        propertyStats[unit].days.add(r.date);
+        propertyStats[unit].visits += 1;
+      });
+      // Hitung honor per properti berdasarkan pembagian honor harian ke seluruh properti yang dikunjungi hari itu.
+      Object.keys(propertyStats).forEach(unit => {
+        propertyStats[unit].honor = 0;
+        propertyStats[unit].days.forEach(date => {
+          const dayProperties = new Set();
+          state.records.forEach(r => {
+            if (r.crew === crew && r.date === date && r.unit) dayProperties.add(r.unit);
+          });
+          const propCount = Math.max(1, dayProperties.size);
+          propertyStats[unit].honor += DAILY_SALARY / propCount;
+        });
+      });
+      const list = Object.values(propertyStats).sort((a,b) => b.honor - a.honor || a.unit.localeCompare(b.unit, 'id'));
+      const totalHonor = list.reduce((sum, s) => sum + s.honor, 0);
+      const totalDays = new Set(state.records.filter(r => r.crew === crew && r.date && r.date.slice(0,7) === month).map(r => r.date)).size;
+      const totalProperties = list.length;
+      return { list, totalHonor, totalDays, totalProperties };
+    }
+    function renderMonthlyMatrix(month) {
+      const head = el('monthlyMatrixHead');
+      const body = el('monthlyMatrixBody');
+      const empty = el('monthlyMatrixEmpty');
+      const monthRecords = state.records.filter(record => record.date && record.date.slice(0,7) === month);
+      const crews = [...new Set(monthRecords.map(record => record.crew).filter(Boolean))].sort((a,b) => a.localeCompare(b, 'id'));
+      const properties = [...new Set(monthRecords.map(record => record.unit).filter(Boolean))].sort((a,b) => a.localeCompare(b, 'id'));
+      el('matrixPeriod').textContent = formatMonth(month);
+
+      if (!crews.length) {
+        head.innerHTML = '';
+        body.innerHTML = '';
+        empty.style.display = 'block';
+        return;
+      }
+
+      empty.style.display = 'none';
+      const recaps = Object.fromEntries(crews.map(crew => [crew, buildPropertyRecap(crew, month)]));
+      const values = {};
+      crews.forEach(crew => {
+        values[crew] = Object.fromEntries(recaps[crew].list.map(item => [item.unit, item.honor]));
+      });
+      head.innerHTML = `<tr><th>Properti / Rekap</th>${crews.map(crew => `<th>${escapeHtml(crew)}</th>`).join('')}</tr>`;
+      const propertyRows = properties.map(property => `<tr><td class="matrix-label">${escapeHtml(property)}</td>${crews.map(crew => `<td class="matrix-number">${values[crew][property] ? formatRupiah(values[crew][property]) : '-'}</td>`).join('')}</tr>`).join('');
+      const totalRow = `<tr class="matrix-total"><td class="matrix-label">TOTAL HONOR</td>${crews.map(crew => `<td class="matrix-number">${formatRupiah(recaps[crew].totalHonor)}</td>`).join('')}</tr>`;
+      const workDaysRow = `<tr><td class="matrix-label">HARI CHECK IN</td>${crews.map(crew => `<td class="matrix-number">${recaps[crew].totalDays}</td>`).join('')}</tr>`;
+      const absenceRow = `<tr class="matrix-absence"><td class="matrix-label">ABSEN</td>${crews.map(crew => `<td class="matrix-number">${Math.max(0, daysInMonth(month) - recaps[crew].totalDays)}</td>`).join('')}</tr>`;
+      const paidRow = `<tr class="matrix-paid"><td class="matrix-label">GAJI DIBAYAR</td>${crews.map(crew => `<td class="matrix-number">${formatRupiah(recaps[crew].totalDays * DAILY_SALARY)}</td>`).join('')}</tr>`;
+      body.innerHTML = propertyRows + totalRow + workDaysRow + absenceRow + paidRow;
+    }
+    function renderSlipGaji() {
+      const body = el('slipBody');
+      const month = getActiveMonth();
+      const totalDays = daysInMonth(month);
+      const crewFilter = el('crewFilter').value;
+      const today = new Date().getDate();
+      const activeYearMonth = new Date().toISOString().slice(0,7);
+      const isCurrentMonth = month === activeYearMonth;
+      // Kumpulkan tanggal unik check-in per crew untuk bulan terpilih.
+      // Sengaja tidak ikut filter unit/job/date supaya potongan & gaji bulanan akurat.
+      const crewDates = {};
+      state.records.forEach(r => {
+        if (!r.crew || !r.date || r.date.slice(0,7) !== month) return;
+        if (crewFilter && r.crew !== crewFilter) return;
+        if (!crewDates[r.crew]) crewDates[r.crew] = new Set();
+        crewDates[r.crew].add(r.date);
+      });
+      const crews = Object.keys(crewDates).sort((a,b) => a.localeCompare(b,'id'));
+      el('slipPeriod').textContent = `${formatMonth(month)} · ${totalDays} hari`;
+      renderMonthlyMatrix(month);
+      el('slipEmpty').style.display = crews.length ? 'none' : 'block';
+      body.innerHTML = crews.map(crew => {
+        const checkInDays = crewDates[crew].size;
+        const tidakCheckIn = Math.max(0, totalDays - checkInDays);
+        const potongan = tidakCheckIn * DAILY_SALARY;
+        const dibayar = checkInDays * DAILY_SALARY;
+        const recap = buildPropertyRecap(crew, month);
+        const propertiInfo = recap.totalProperties > 0
+          ? `<span class="honor-chip">${recap.totalProperties} properti</span><div class="muted">${checkInDays} hari · ${recap.totalProperties > 1 ? 'multi-properti' : '1 properti'}</div>`
+          : `<span class="muted">-</span>`;
+        return `<tr><td class="crew">${escapeHtml(crew)}</td><td>${totalDays} hari</td><td><span class="hadir">${checkInDays} hari</span></td><td><span class="absen">${tidakCheckIn} hari</span></td><td class="potongan">- ${formatRupiah(potongan)}</td><td class="bayar">${formatRupiah(dibayar)}</td><td>${propertiInfo}</td><td><button class="detail-btn" type="button" data-slip="${escapeHtml(crew)}">Lihat slip</button></td></tr>`;
+      }).join('');
+      body.querySelectorAll('[data-slip]').forEach(btn => btn.addEventListener('click', () => openSlip(btn.dataset.slip, month)));
+    }
+    function openSlip(crew, month) {
+      const totalDays = daysInMonth(month);
+      const today = new Date().getDate();
+      const activeYearMonth = new Date().toISOString().slice(0,7);
+      const isCurrentMonth = month === activeYearMonth;
+      const workDates = new Set();
+      state.records.forEach(r => {
+        if (r.crew === crew && r.date && r.date.slice(0,7) === month) workDates.add(r.date);
+      });
+      const checkInDays = workDates.size;
+      const tidakCheckIn = Math.max(0, totalDays - checkInDays);
+      const potongan = tidakCheckIn * DAILY_SALARY;
+      const dibayar = checkInDays * DAILY_SALARY;
+      const [y, m] = month.split('-').map(Number);
+      const firstWeekday = new Date(y, m-1, 1).getDay(); // 0=Min
+      const cells = [];
+      for (let i = 0; i < firstWeekday; i++) cells.push('<div class="cal-day future"></div>');
+      for (let d = 1; d <= totalDays; d++) {
+        const dd = String(d).padStart(2,'0');
+        const dateStr = `${month}-${dd}`;
+        const worked = workDates.has(dateStr);
+        const isFuture = isCurrentMonth && d > today;
+        const cls = isFuture ? 'future' : (worked ? 'worked' : 'absent');
+        const label = isFuture ? '-' : (worked ? 'Check In' : 'Tidak Check In');
+        cells.push(`<div class="cal-day ${cls}"><span class="cal-num">${d}</span><span class="cal-label">${label}</span></div>`);
+      }
+      el('slipTitle').textContent = `Slip Gaji ${crew}`;
+      el('slipSubtitle').textContent = `${formatMonth(month)} · ${checkInDays} hari check-in · ${tidakCheckIn} hari tidak check-in`;
+      el('slipMeta').innerHTML = `
+        <div class="meta-item"><span class="meta-label">Total Hari di Bulan</span><span class="meta-value">${totalDays} hari</span></div>
+        <div class="meta-item"><span class="meta-label">Hari Check In</span><span class="meta-value hadir">${checkInDays} hari</span></div>
+        <div class="meta-item"><span class="meta-label">Tidak Check In</span><span class="meta-value absen">${tidakCheckIn} hari</span></div>
+        <div class="meta-item"><span class="meta-label">Honor per Hari</span><span class="meta-value">${formatRupiah(DAILY_SALARY)}</span></div>
+        <div class="meta-item"><span class="meta-label">Potongan</span><span class="meta-value potongan">- ${formatRupiah(potongan)}</span></div>
+        <div class="meta-item gold"><span class="meta-label">Gaji Dibayar</span><span class="meta-value gold">${formatRupiah(dibayar)}</span></div>`;
+      el('slipCalendar').innerHTML = cells.join('');
+
+      // === Rekap Honor per Properti ===
+      const recap = buildPropertyRecap(crew, month);
+      el('recapSummary').innerHTML = recap.totalProperties > 0
+        ? `<strong>${recap.totalDays} hari</strong> kerja · <strong>${recap.totalProperties} properti</strong> dikerjakan`
+        : 'Belum ada properti pada bulan ini';
+      if (recap.list.length === 0) {
+        el('recapGrid').innerHTML = '<div class="no-recap">Tidak ada data properti untuk bulan ini.</div>';
+      } else {
+        const items = recap.list.map(stat => {
+          const dayText = stat.days.size === 1 ? '1 hari' : `${stat.days.size} hari`;
+          const visitText = stat.visits === 1 ? '1 kunjungan' : `${stat.visits} kunjungan`;
+          return `<div class="recap-item">
+            <div class="recap-name">${escapeHtml(stat.unit)}</div>
+            <div class="recap-stats">
+              <span class="chip days">${dayText}</span>
+              <span class="chip visits">${visitText}</span>
+            </div>
+            <div class="recap-honor">${formatRupiah(stat.honor)}</div>
+          </div>`;
+        }).join('');
+        const total = `<div class="recap-total">
+          <div>
+            <div class="recap-total-label">Total Honor (${recap.totalDays} hari · ${recap.totalProperties} properti)</div>
+            <div class="recap-total-value">${formatRupiah(recap.totalHonor)}</div>
+          </div>
+        </div>`;
+        el('recapGrid').innerHTML = items + total;
+      }
+
+      el('slipModal').classList.add('open');
+    }
+    function photoButton(src, alt) {
+      return `<button type="button" data-photo="${escapeHtml(src)}"><img src="${escapeHtml(src)}" alt="${escapeHtml(alt)}" loading="lazy" /></button>`;
+    }
+    function openDetail(record) {
+      detailRecord = record;
+      el('detailTitle').textContent = record.unit || 'Detail pekerjaan';
+      el('detailSubtitle').textContent = `${record.crew || '-'} · ${formatDate(record.date)} ${formatTime(record)}`;
+      const gps = record.lat != null && record.lng != null ? `${Number(record.lat).toFixed(6)}, ${Number(record.lng).toFixed(6)}` : '-';
+      const gpsLink = record.lat != null && record.lng != null ? `<a class="gps-link" href="https://www.google.com/maps?q=${Number(record.lat)},${Number(record.lng)}" target="_blank" rel="noopener">${gps} ↗</a>` : '-';
+      const salary = state.salaryMap[salaryKey(record)];
+      const honorPerProperti = salary ? formatRupiah(salary.perProperty) : formatRupiah(DAILY_SALARY);
+      const propCount = salary ? salary.uniqueProperties : 1;
+      const totalDay = salary ? formatRupiah(salary.totalForDay) : formatRupiah(DAILY_SALARY);
+      const sourceLabel = record.source === 'admin' ? 'Admin pusat' : 'Crew';
+      const sourceClass = record.source === 'admin' ? 'admin' : 'crew';
+      el('detailMeta').innerHTML = `
+        <div class="meta-item"><span class="meta-label">Crew</span><span class="meta-value">${escapeHtml(record.crew || '-')}</span></div>
+        <div class="meta-item"><span class="meta-label">Pekerjaan</span><span class="meta-value">${escapeHtml(record.jobType || '-')}</span></div>
+        <div class="meta-item"><span class="meta-label">Sumber Data</span><span class="meta-value"><span class="source-badge ${sourceClass}">${sourceLabel}</span></span></div>
+        <div class="meta-item"><span class="meta-label">Lokasi GPS</span><span class="meta-value">${gpsLink}</span></div>
+        <div class="meta-item gold"><span class="meta-label">Honor per Properti</span><span class="meta-value gold">${honorPerProperti}</span></div>
+        <div class="meta-item gold"><span class="meta-label">Properti Dikunjungi Hari Ini</span><span class="meta-value gold">${propCount} properti</span></div>
+        <div class="meta-item gold"><span class="meta-label">Total Honor Hari Ini</span><span class="meta-value gold">${totalDay}</span></div>`;
+      el('selfieGrid').innerHTML = record.photo ? photoButton(record.photo, 'Selfie bukti lokasi') : '<div class="no-photo">Tidak ada selfie tersimpan.</div>';
+      el('workGrid').innerHTML = record.workPhotos?.length ? record.workPhotos.map((photo, index) => photoButton(photo, `Foto hasil kerja ${index + 1}`)).join('') : '<div class="no-photo">Tidak ada foto hasil kerja tersimpan.</div>';
+      document.querySelectorAll('[data-photo]').forEach(button => button.addEventListener('click', () => { el('lightboxImage').src = button.dataset.photo; el('lightbox').classList.add('open'); }));
+      el('detailModal').classList.add('open');
+    }
+    function closeModal(id) { el(id).classList.remove('open'); }
+    function confirmPhrase(actionLabel, expectedPhrase) {
+      const answer = window.prompt(`Konfirmasi ${actionLabel}. Ketik ${expectedPhrase} untuk melanjutkan:`);
+      return answer === expectedPhrase;
+    }
+    function resetFilters() { el('monthFilter').value = ''; el('dateFilter').value = ''; el('crewFilter').value = ''; el('unitFilter').value = ''; el('jobFilter').value = ''; applyFilters(); }
+    function exportCsv() {
+      const headers = ['Tanggal','Waktu','Crew','Properti','Pekerjaan','Properti Dikunjungi Hari Itu','Honor per Properti (Rp)','Total Honor Hari Itu (Rp)','Latitude','Longitude','Jumlah Foto'];
+      const rows = state.filtered.map(record => {
+        const salary = state.salaryMap[salaryKey(record)];
+        const propCount = salary ? salary.uniqueProperties : 1;
+        const perProperti = salary ? Math.round(salary.perProperty) : DAILY_SALARY;
+        const totalDay = salary ? Math.round(salary.totalForDay) : DAILY_SALARY;
+        return [
+          record.date,
+          formatTime(record),
+          record.crew || '',
+          record.unit || '',
+          record.jobType || '',
+          propCount,
+          perProperti,
+          totalDay,
+          record.lat ?? '',
+          record.lng ?? '',
+          (record.workPhotos?.length || 0) + (record.photo ? 1 : 0)
+        ];
+      });
+      const csv = [headers, ...rows].map(row => row.map(value => `"${String(value).replace(/"/g,'""')}"`).join(',')).join('\n');
+      const link = document.createElement('a'); link.href = URL.createObjectURL(new Blob([csv], { type:'text/csv;charset=utf-8' })); link.download = 'output-absensi-honor.csv'; link.click(); URL.revokeObjectURL(link.href);
+    }
+    function exportSlipCsv() {
+      const month = getActiveMonth();
+      const totalDays = daysInMonth(month);
+      const crewFilter = el('crewFilter').value;
+      const crewDates = {};
+      state.records.forEach(r => {
+        if (!r.crew || !r.date || r.date.slice(0,7) !== month) return;
+        if (crewFilter && r.crew !== crewFilter) return;
+        if (!crewDates[r.crew]) crewDates[r.crew] = new Set();
+        crewDates[r.crew].add(r.date);
+      });
+      const headers = ['Crew','Bulan','Hari di Bulan','Hari Check In','Tidak Check In','Honor per Hari (Rp)','Potongan (Rp)','Gaji Dibayar (Rp)'];
+      const rows = Object.keys(crewDates).sort((a,b) => a.localeCompare(b,'id')).map(crew => {
+        const checkInDays = crewDates[crew].size;
+        const tidakCheckIn = Math.max(0, totalDays - checkInDays);
+        return [crew, month, totalDays, checkInDays, tidakCheckIn, DAILY_SALARY, tidakCheckIn * DAILY_SALARY, checkInDays * DAILY_SALARY];
+      });
+      const csv = [headers, ...rows].map(row => row.map(value => `"${String(value).replace(/"/g,'""')}"`).join(',')).join('\n');
+      const link = document.createElement('a'); link.href = URL.createObjectURL(new Blob([csv], { type:'text/csv;charset=utf-8' })); link.download = `slip-gaji-${month}.csv`; link.click(); URL.revokeObjectURL(link.href);
+    }
+    async function workerRequest(url, options = {}) {
+      const response = await fetch(url, {
+        ...options,
+        headers: {
+          'Content-Type': 'application/json',
+          ...(state.adminToken ? { Authorization: `Bearer ${state.adminToken}` } : {}),
+          ...(options.headers || {})
+        }
+      });
+      const text = await response.text();
+      let payload = {};
+      try { payload = text ? JSON.parse(text) : {}; } catch (error) { payload = {}; }
+      if (!response.ok || payload.ok === false) throw new Error(payload.error || payload.message || text || `HTTP ${response.status}`);
+      return payload;
+    }
+    async function loadCrewOptionsForPin() {
+      const fallbackCrews = ['Aji Agung', 'Rezza Afrian Sukarsah', 'Qeyla Viorentina', 'Yono Maryono Narsisno', 'Udin Komarudin'];
+      const select = el('pinCrewSelect');
+      try {
+        const response = await workerRequest(`${API_BASE}/crews?_=${Date.now()}`);
+        const crews = Array.isArray(response.data) ? response.data.map(item => String(item.name || '').trim()).filter(Boolean) : [];
+        if (!crews.length) throw new Error('Daftar crew kosong');
+        select.innerHTML = '<option value="">Pilih crew</option>' + crews.map(name => `<option value="${escapeHtml(name)}">${escapeHtml(name)}</option>`).join('');
+      } catch (error) {
+        console.error('Gagal memuat daftar crew untuk PIN:', error);
+        select.innerHTML = '<option value="">Pilih crew</option>' + fallbackCrews.map(name => `<option value="${escapeHtml(name)}">${escapeHtml(name)}</option>`).join('');
+      }
+    }
+    async function saveCrewPin() {
+      const name = el('pinCrewSelect').value.trim();
+      const pin = el('pinNewInput').value.trim();
+      const adminPin = el('pinAdminInput').value.trim();
+      const message = el('pinMessage');
+
+      if (!name || !/^\d{6}$/.test(pin) || !adminPin) {
+        message.className = 'pin-message error';
+        message.textContent = 'Pilih crew dan isi PIN baru tepat 6 digit serta PIN Admin.';
+        return;
+      }
+
+      const button = el('pinSaveBtn');
+      button.disabled = true;
+      message.className = 'pin-message';
+      message.textContent = 'Menyimpan PIN...';
+      try {
+        const response = await workerRequest(`${API_BASE}/admin/set-pin`, {
+          method: 'POST',
+          body: JSON.stringify({ name, pin, admin_pin: adminPin })
+        });
+        message.className = 'pin-message success';
+        message.textContent = `PIN ${response.name || name} berhasil disimpan`;
+        el('pinNewInput').value = '';
+        el('pinAdminInput').value = '';
+      } catch (error) {
+        message.className = 'pin-message error';
+        message.textContent = error.message || 'PIN gagal disimpan.';
+      } finally {
+        button.disabled = false;
+      }
+    }
+    async function refreshDashboardData() {
+      if (refreshInProgress) return;
+      refreshInProgress = true;
+      const filterIds = ['monthFilter','dateFilter','crewFilter','unitFilter','jobFilter'];
+      const selectedFilters = Object.fromEntries(filterIds.map(id => [id, el(id).value]));
+      try {
+        state.records = await readRecords();
+        rebuildSalaryData();
+        populateFilters();
+        filterIds.forEach(id => { el(id).value = selectedFilters[id]; });
+        el('footerUpdatedAt').textContent = formatLocalDateTimeWib();
+        applyFilters();
+      } finally {
+        refreshInProgress = false;
+      }
+    }
+    async function deleteRecord(record) {
+      if (!record?.id) return;
+      if (!confirmPhrase(`hapus check-in ${record.crew || ''} di ${record.unit || ''}`, 'HAPUS DATA')) return;
+      try {
+        await workerRequest(`${API_BASE}/checkins/${encodeURIComponent(record.id)}`, { method:'DELETE' });
+        closeModal('detailModal');
+        await refreshDashboardData();
+      } catch (error) {
+        console.error('Gagal menghapus check-in per ID:', error);
+        alert('Data belum dihapus. Worker belum menyediakan endpoint DELETE /checkins/{id}. Tidak ada data lain yang dihapus.');
+      }
+    }
+    let editingRecord = null;
+    function openManualEntry() {
+      manualEntryMode = true;
+      editingRecord = null;
+      fillEditSelect('editCrew', 'crew', '');
+      el('editUnit').value = '';
+      el('editCustomUnit').value = '';
+      el('editCustomUnit').classList.add('hidden');
+      el('editJobType').value = '';
+      el('editDate').value = '';
+      el('editTitle').textContent = 'Tambah Data Manual';
+      el('editSubtitle').textContent = 'Masukkan check-in historis tanpa foto dan GPS.';
+      el('editSubmitBtn').textContent = 'Simpan Data Manual';
+      el('editModal').classList.add('open');
+    }
+    function editRecord(record) {
+      manualEntryMode = false;
+      if (!record?.id) return;
+      editingRecord = record;
+      fillEditSelect('editCrew', 'crew', record.crew);
+      setEditSelectValue('editUnit', record.unit, 'Properti lama');
+      setEditSelectValue('editJobType', record.jobType, 'Pekerjaan lama');
+      el('editCustomUnit').value = '';
+      el('editCustomUnit').classList.toggle('hidden', el('editUnit').value !== 'Lainnya');
+      if (el('editUnit').value === 'Lainnya') el('editCustomUnit').value = record.unit || '';
+      el('editDate').value = record.date || '';
+      el('editTitle').textContent = 'Edit Data Check In';
+      el('editSubtitle').textContent = 'Perbarui data pekerjaan crew.';
+      el('editSubmitBtn').textContent = 'Simpan Perubahan';
+      el('editModal').classList.add('open');
+    }
+    function fillEditSelect(id, key, selectedValue) {
+      const knownValues = key === 'crew' ? KNOWN_CREWS : [];
+      const values = [...new Set([...knownValues, ...state.records.map(record => record[key]).filter(Boolean)])];
+      if (selectedValue && !values.includes(selectedValue)) values.push(selectedValue);
+      values.sort((a, b) => a.localeCompare(b, 'id'));
+      const placeholder = key === 'crew' ? 'Pilih crew' : `Pilih ${key}`;
+      el(id).innerHTML = `<option value="">${placeholder}</option>` + values.map(value => `<option value="${escapeHtml(value)}">${escapeHtml(value)}</option>`).join('');
+      el(id).value = selectedValue || '';
+    }
+    function setEditSelectValue(id, value, fallbackLabel) {
+      const select = el(id);
+      const optionExists = [...select.options].some(option => option.value === value);
+      if (value && !optionExists) select.insertAdjacentHTML('beforeend', `<option value="${escapeHtml(value)}">${escapeHtml(fallbackLabel)}: ${escapeHtml(value)}</option>`);
+      select.value = value || '';
+    }
+    function getEditUnitValue() {
+      return el('editUnit').value === 'Lainnya' ? el('editCustomUnit').value.trim() : el('editUnit').value.trim();
+    }
+    async function saveEdit(event) {
+      event.preventDefault();
+      if (manualEntryMode) {
+        const crew = el('editCrew').value.trim();
+        const unit = getEditUnitValue();
+        const jobType = el('editJobType').value.trim();
+        const workDate = el('editDate').value;
+        if (!crew || !unit || !jobType || !workDate) {
+          alert('Lengkapi crew, properti, pekerjaan, dan tanggal terlebih dahulu.');
+          return;
+        }
+        if (!confirmPhrase('tambah data manual', 'TAMBAH DATA')) return;
+        try {
+          await workerRequest(`${API_BASE}/checkins/manual`, {
+            method: 'POST',
+            body: JSON.stringify({
+              crew,
+              unit,
+              job_type: jobType,
+              work_date: workDate
+            })
+          });
+          closeModal('editModal');
+          await refreshDashboardData();
+        } catch (error) {
+          console.error('Gagal menambah data manual:', error);
+          alert(`Gagal menyimpan data manual: ${error.message || 'Worker tidak merespons.'}`);
+        }
+        return;
+      }
+      if (!editingRecord?.id) return;
+      if (!getEditUnitValue()) {
+        alert('Pilih properti atau isi nama properti lainnya terlebih dahulu.');
+        return;
+      }
+      try {
+        await workerRequest(`${API_BASE}/checkins/${encodeURIComponent(editingRecord.id)}`, {
+          method: 'PATCH',
+          body: JSON.stringify({
+            crew: el('editCrew').value.trim(),
+            unit: getEditUnitValue(),
+            job_type: el('editJobType').value.trim(),
+            work_date: el('editDate').value
+          })
+        });
+        closeModal('editModal');
+        await refreshDashboardData();
+      } catch (error) {
+        console.error('Gagal mengedit check-in:', error);
+        alert('Gagal mengedit data. Pastikan Worker mendukung PATCH /checkins/{id}.');
+      }
+    }
+    async function deleteAllRecords() {
+      if (!state.records.length) return;
+      if (!confirmPhrase('hapus semua data check-in. Tindakan ini tidak bisa dibatalkan', 'HAPUS SEMUA')) return;
+      try {
+        await workerRequest(`${API_BASE}/checkins?all=1`, { method:'DELETE' });
+        await refreshDashboardData();
+      } catch (error) {
+        console.error('Gagal menghapus semua check-in:', error);
+        alert('Gagal menghapus semua data check-in.');
+      }
+    }
+    function exportExcel() {
+      const headers = ['Tanggal','Waktu','Crew','Properti','Pekerjaan','Latitude','Longitude','Akurasi','Jumlah Foto'];
+      const rows = state.filtered.map(record => [record.date, formatTime(record), record.crew || '', record.unit || '', record.jobType || '', record.lat ?? '', record.lng ?? '', record.accuracy ?? '', (record.workPhotos?.length || 0) + (record.photo ? 1 : 0)]);
+      const content = [headers, ...rows].map(row => row.map(value => String(value ?? '').replace(/[\t\r\n]/g, ' ')).join('\t')).join('\r\n');
+      const link = document.createElement('a'); link.href = URL.createObjectURL(new Blob([content], { type:'application/vnd.ms-excel' })); link.download = 'absensi-crew.xls'; link.click(); URL.revokeObjectURL(link.href);
+    }
+    function exportPdf() {
+      const popup = window.open('', '_blank', 'width=1100,height=800');
+      if (!popup) { alert('Izinkan pop-up untuk mencetak PDF.'); return; }
+      const rows = state.filtered.map(record => `<tr><td>${escapeHtml(record.date)}</td><td>${escapeHtml(formatTime(record))}</td><td>${escapeHtml(record.crew || '')}</td><td>${escapeHtml(record.unit || '')}</td><td>${escapeHtml(record.jobType || '')}</td><td>${escapeHtml(record.lat ?? '')}, ${escapeHtml(record.lng ?? '')}</td></tr>`).join('');
+      popup.document.open();
+      popup.document.close();
+      popup.document.title = 'Laporan Absensi Crew';
+      const style = popup.document.createElement('style');
+      style.textContent = 'body{font-family:Arial,sans-serif;padding:24px;color:#222}table{width:100%;border-collapse:collapse;font-size:12px}th,td{border:1px solid #bbb;padding:7px;text-align:left}th{background:#eee}';
+      popup.document.head.appendChild(style);
+      popup.document.body.innerHTML = '<h1>YOUR HOME - Laporan Absensi Crew</h1><p>Dibuat: ' + escapeHtml(formatLocalDateTimeWib()) + '</p><table><thead><tr><th>Tanggal</th><th>Waktu</th><th>Crew</th><th>Properti</th><th>Pekerjaan</th><th>GPS</th></tr></thead><tbody>' + rows + '</tbody></table>';
+      popup.focus();
+      popup.print();
+    }
+    function rebuildSalaryData() {
+      state.salaryMap = computeSalaryMap(state.records);
+      state.honorMap = computeHonorMap(state.records, state.salaryMap);
+    }
+    async function initializeDashboard() {
+      try {
+        state.records = await readRecords();
+      } catch (e) {
+        console.error('readRecords failed', e);
+        if (e.message === 'Login admin diperlukan') throw e;
+        state.records = [];
+      }
+      console.log('records loaded', state.records.length, state.records);
+      document.getElementById('footerUpdatedAt').textContent = formatLocalDateTimeWib();
+      rebuildSalaryData();
+      populateFilters();
+      ['monthFilter','dateFilter','crewFilter','unitFilter','jobFilter'].forEach(function (id) {
+        document.getElementById(id).addEventListener('change', applyFilters);
+      });
+      document.getElementById('resetBtn').addEventListener('click', resetFilters);
+      document.getElementById('exportPdfBtn').addEventListener('click', exportPdf);
+      document.getElementById('exportExcelBtn').addEventListener('click', exportExcel);
+      document.getElementById('manualEntryBtn').addEventListener('click', openManualEntry);
+      document.getElementById('adminLogoutBtn').addEventListener('click', logoutAdmin);
+      document.getElementById('deleteAllBtn').addEventListener('click', deleteAllRecords);
+      document.getElementById('pinSaveBtn').addEventListener('click', saveCrewPin);
+      document.getElementById('detailEditBtn').addEventListener('click', () => {
+        closeModal('detailModal');
+        editRecord(detailRecord);
+      });
+      document.getElementById('detailDeleteBtn').addEventListener('click', () => deleteRecord(detailRecord));
+      document.getElementById('editForm').addEventListener('submit', saveEdit);
+      document.getElementById('editUnit').addEventListener('change', () => {
+        const isOther = el('editUnit').value === 'Lainnya';
+        el('editCustomUnit').classList.toggle('hidden', !isOther);
+        if (!isOther) el('editCustomUnit').value = '';
+      });
+      document.querySelectorAll('[data-close]').forEach(function (button) {
+        button.addEventListener('click', function () { closeModal(button.dataset.close); });
+      });
+      document.querySelectorAll('.modal,.lightbox').forEach(function (layer) {
+        layer.addEventListener('click', function (event) {
+          if (event.target === layer) closeModal(layer.id);
+        });
+      });
+      await loadCrewOptionsForPin();
+      applyFilters();
+      setInterval(() => {
+        if (getLocalDateKey() !== sessionStorage.getItem('dashboard_admin_login_date')) {
+          logoutAdmin();
+          return;
+        }
+        if (!document.hidden) {
+          refreshDashboardData().catch(error => console.error('Dashboard refresh gagal:', error));
+        }
+      }, 5000);
+    }
+    function logoutAdmin() {
+      sessionStorage.removeItem('dashboard_admin_token');
+      sessionStorage.removeItem('dashboard_admin_login_date');
+      window.location.reload();
+    }
+    async function loginAdmin(event) {
+      event.preventDefault();
+      const passwordInput = el('adminPasswordInput');
+      const message = el('adminLoginMessage');
+      const submitButton = event.currentTarget.querySelector('button[type="submit"]');
+      submitButton.disabled = true;
+      message.textContent = '';
+      try {
+        const response = await workerRequest(`${API_BASE}/admin/login`, {
+          method: 'POST',
+          body: JSON.stringify({ password: passwordInput.value })
+        });
+        state.adminToken = response.token;
+        sessionStorage.setItem('dashboard_admin_token', state.adminToken);
+        sessionStorage.setItem('dashboard_admin_login_date', getLocalDateKey());
+        await initializeDashboard();
+        el('adminLoginScreen').classList.add('hidden');
+        el('dashboardApp').classList.remove('hidden');
+        passwordInput.value = '';
+      } catch (error) {
+        state.adminToken = '';
+        sessionStorage.removeItem('dashboard_admin_token');
+        sessionStorage.removeItem('dashboard_admin_login_date');
+        message.textContent = error.message || 'Login admin gagal.';
+        passwordInput.value = '';
+        passwordInput.focus();
+      } finally {
+        submitButton.disabled = false;
+      }
+    }
+    async function init() {
+      document.getElementById('toggleAdminPassword').addEventListener('click', () => {
+        const input = document.getElementById('adminPasswordInput');
+        const visible = input.type === 'text';
+        input.type = visible ? 'password' : 'text';
+        const button = document.getElementById('toggleAdminPassword');
+        button.setAttribute('aria-label', visible ? 'Tampilkan password' : 'Sembunyikan password');
+        button.title = visible ? 'Tampilkan password' : 'Sembunyikan password';
+      });
+      document.getElementById('adminLoginForm').addEventListener('submit', loginAdmin);
+      if (!state.adminToken) return;
+
+      try {
+        await initializeDashboard();
+        el('adminLoginScreen').classList.add('hidden');
+        el('dashboardApp').classList.remove('hidden');
+      } catch (error) {
+        state.adminToken = '';
+        sessionStorage.removeItem('dashboard_admin_token');
+        sessionStorage.removeItem('dashboard_admin_login_date');
+      }
+    }
+    init();
+  </script>
+</body>
+</html>
