@@ -1,0 +1,1 @@
+ALTER TABLE properties ADD COLUMN map_embed TEXT NOT NULL DEFAULT '';
