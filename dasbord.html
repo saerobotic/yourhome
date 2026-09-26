@@ -69,6 +69,8 @@
     body *{visibility:hidden!important;}
     #view-laporan,#view-laporan *{visibility:visible!important;}
     #view-laporan{display:block!important;position:absolute;inset:0;width:100%;padding:0!important;}
+    #view-bagi-hasil,#view-bagi-hasil *{visibility:visible!important;}
+    #view-bagi-hasil{display:block!important;position:absolute;inset:0;width:100%;padding:0!important;}
     #reportToolbar{display:none!important;}
     #reportContent .bg-white{border-color:#ddd!important;box-shadow:none!important;break-inside:avoid;}
     #reportContent table{font-size:9pt!important;}
@@ -147,6 +149,10 @@
       <button onclick="switchView('laporan')" class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left">
         <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
         <span>Laporan Owner</span>
+      </button>
+      <button onclick="switchView('bagi-hasil')" class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left">
+        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 3v18m5-14H9.5a3.5 3.5 0 100 7h5a3.5 3.5 0 110 7H6"/></svg>
+        <span>Kalkulator Bagi Hasil</span>
       </button>
       <button onclick="switchView('owner')" class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left">
         <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 20h5v-2a4 4 0 00-3-3.87M9 20H4v-2a4 4 0 013-3.87m6-1.13a4 4 0 10-4-4 4 4 0 004 4zm6 0a3 3 0 10-3-3"/></svg>
@@ -652,6 +658,42 @@
       </div>
 
       <!-- =========================================== -->
+      <!-- OWNER SHARE CALCULATOR                      -->
+      <!-- =========================================== -->
+      <div id="view-bagi-hasil" class="view">
+        <section class="bg-white border border-slate-200 rounded-xl p-4 sm:p-5 mb-5">
+          <div class="grid grid-cols-1 sm:grid-cols-[1fr_220px] gap-3 items-end">
+            <label class="block">
+              <span class="block text-xs text-slate-500 font-semibold mb-1">Owner</span>
+              <select id="shareCalcOwner" onchange="renderShareCalculatorInputs()" class="w-full text-sm border border-slate-200 rounded-lg px-3 py-2.5 bg-white"></select>
+            </label>
+            <label class="block">
+              <span class="block text-xs text-slate-500 font-semibold mb-1">Bulan laporan</span>
+              <input id="shareCalcMonth" type="month" class="w-full text-sm border border-slate-200 rounded-lg px-3 py-2.5 bg-white">
+            </label>
+          </div>
+        </section>
+
+        <section class="bg-white border border-slate-200 rounded-xl overflow-hidden mb-5">
+          <div class="p-4 sm:p-5 border-b border-slate-100">
+            <h2 class="font-bold text-slate-900">Aturan per properti</h2>
+            <p class="text-xs text-slate-500 mt-1">Persentase awal mengikuti pengaturan properti. Pengurang tambahan dan persentase di sini hanya berlaku untuk kalkulasi ini.</p>
+          </div>
+          <div id="shareCalcPropertyInputs" class="divide-y divide-slate-100"></div>
+          <div class="p-4 sm:p-5 flex flex-wrap items-center justify-between gap-3">
+            <p class="text-xs text-slate-500">Dasar: booking + pemasukan tambahan - fee platform - biaya tercatat - pengurang tambahan. Booking masuk ke bulan tanggal check-in.</p>
+            <button type="button" onclick="generateOwnerShareCalculation()" class="inline-flex items-center gap-2 bg-emerald-700 hover:bg-emerald-800 text-white text-sm font-semibold px-4 py-2.5 rounded-lg">
+              <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M5 3h12l4 4v14H3V3h2z"/><path d="M7 3v6h10V3M7 21v-8h10v8"/></svg>
+              Generate Bagi Hasil
+            </button>
+          </div>
+          <p id="shareCalcStatus" class="px-4 sm:px-5 pb-4 text-sm" role="status" aria-live="polite"></p>
+        </section>
+
+        <div id="shareCalcResult"></div>
+      </div>
+
+      <!-- =========================================== -->
       <!-- CONTACT IT VIEW                             -->
       <!-- =========================================== -->
       <div id="view-bantuan" class="view">
@@ -1036,6 +1078,20 @@
         <button type="button" onclick="closeModal('modal-property')" class="flex-1 text-sm font-semibold px-4 py-2.5 border border-slate-200 rounded-lg hover:bg-slate-50">Batal</button>
         <button id="propertySubmitButton" type="submit" class="flex-1 text-sm font-semibold px-4 py-2.5 bg-brand-600 hover:bg-brand-700 text-white rounded-lg">Simpan Properti</button>
       </div>
+    </form>
+  </div>
+</div>
+
+<div id="modal-delete-property" class="modal-overlay fixed inset-0 bg-slate-900/50 z-50 hidden items-center justify-center p-4">
+  <div class="modal-panel bg-white rounded-xl max-w-sm w-full p-5">
+    <div class="flex items-center justify-between mb-3"><h3 class="font-bold text-lg text-slate-900">Hapus Properti</h3><button type="button" onclick="closeModal('modal-delete-property')" aria-label="Tutup" class="p-1 hover:bg-slate-100 rounded-lg"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg></button></div>
+    <p id="deletePropertyDescription" class="text-sm text-slate-600"></p>
+    <p class="text-xs text-slate-500 mt-2">Properti diarsipkan dari daftar dan booking baru. Histori booking dan keuangan tetap tersimpan.</p>
+    <form id="deletePropertyForm" class="mt-4 space-y-3">
+      <input id="deletePropertyId" type="hidden">
+      <label class="block"><span class="block text-xs font-semibold text-slate-600 mb-1">PIN Master (4 digit)</span><input id="deletePropertyPin" type="password" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" required autocomplete="off" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm" placeholder="PIN persetujuan Master"></label>
+      <p id="deletePropertyStatus" class="text-sm" role="status" aria-live="polite"></p>
+      <div class="flex gap-2"><button type="button" onclick="closeModal('modal-delete-property')" class="flex-1 border border-slate-200 rounded-lg px-4 py-2 text-sm font-semibold">Batal</button><button id="deletePropertyButton" type="submit" class="flex-1 bg-rose-600 hover:bg-rose-700 text-white rounded-lg px-4 py-2 text-sm font-semibold">Hapus Properti</button></div>
     </form>
   </div>
 </div>
@@ -1686,6 +1742,7 @@ const VIEW_META = {
   'booking': { title:'Booking Management', sub:'Kelola booking dari semua platform' },
   'pengeluaran': { title:'Keuangan', sub:'Catat pemasukan dan pantau pengeluaran properti' },
   'laporan': { title:'Laporan Owner', sub:'Generate laporan keuangan per owner' },
+  'bagi-hasil': { title:'Kalkulator Bagi Hasil', sub:'Hitung pembagian bulanan sesuai perjanjian owner' },
   'owner': { title:'Owner', sub:'Daftar pemilik properti dengan persentase kepemilikan' },
   'bantuan': { title:'Bantuan', sub:'Laporkan bug atau kendala teknis kepada tim IT' },
   'pengaturan': { title:'Pengaturan', sub:'User role, komisi, notifikasi & konfigurasi sistem' }
@@ -1707,6 +1764,7 @@ function switchView(name){
   if(name==='pengeluaran'){ renderExpenseTable(); renderExpenseSummary(); populatePropSelects(); }
   if(name==='owner') renderOwners();
   if(name==='laporan'){ populateOwnerSelect(); renderReport(); }
+  if(name==='bagi-hasil'){ populateShareCalculatorOwners(); renderShareCalculatorInputs(); }
   if(name==='pengaturan') renderUsers();
   /* Close mobile sidebar */
   if(window.innerWidth < 1024){
@@ -1869,7 +1927,7 @@ function renderDashboard(){
     </tr>`).join('');
 
   /* Top properties */
-  const propStats = PROPERTIES.map(p => {
+  const propStats = PROPERTIES.filter(property => property.active !== false).map(p => {
     const allBookings = BOOKINGS.filter(b => b.propId === p.id && isDateInReportPeriod(b.checkin));
     const bk = allBookings.filter(b => !isBookingCancelled(b));
     const bookingRev = allBookings.reduce((sum, booking) => sum + getBookingNetAmount(booking), 0);
@@ -1992,7 +2050,8 @@ function setChartTab(btn,mode){
 function renderProperties(){
   const grid = document.getElementById('propertiGrid');
   updatePropertyCounts();
-  const filtered = currentPropFilter==='all' ? PROPERTIES : PROPERTIES.filter(p=>p.type===currentPropFilter);
+  const activeProperties = PROPERTIES.filter(property => property.active !== false);
+  const filtered = currentPropFilter==='all' ? activeProperties : activeProperties.filter(p=>p.type===currentPropFilter);
   grid.innerHTML = filtered.map(p => {
     const allBookings = BOOKINGS.filter(b => b.propId === p.id && isDateInReportPeriod(b.checkin));
     const bk = allBookings.filter(b => !isBookingCancelled(b));
@@ -2020,7 +2079,10 @@ function renderProperties(){
               <h3 class="font-bold text-slate-900 truncate">${escapeHtml(p.name)}</h3>
               <p class="text-xs text-slate-500 truncate">${escapeHtml(p.area)}</p>
             </div>
-            <button onclick="openPropertyModal('${p.id}')" aria-label="Atur ${escapeHtml(p.name)}" class="p-1 hover:bg-slate-100 rounded-md text-slate-400"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 5v.01M12 12v.01M12 19v.01"/></svg></button>
+            <div class="flex items-center gap-1">
+              <button type="button" onclick="openPropertyModal('${p.id}')" aria-label="Edit ${escapeHtml(p.name)}" class="inline-flex items-center gap-1.5 px-2 py-1 text-xs font-semibold text-slate-600 hover:text-brand-700 hover:bg-brand-50 rounded-md"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 013 3L8 18l-4 1 1-4Z"/></svg>Edit</button>
+              ${currentDashboardAccount?.role !== 'IT' ? `<button type="button" onclick="openPropertyDeleteModal('${p.id}')" aria-label="Hapus ${escapeHtml(p.name)}" title="Hapus properti (PIN Master)" class="p-1.5 rounded-md text-slate-400 hover:text-rose-700 hover:bg-rose-50"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2m-9 0 1 14h8l1-14M10 11v5m4-5v5"/></svg></button>` : ''}
+            </div>
           </div>
           <div class="flex flex-wrap gap-1 mb-3">${ownerChips}${agentChips}</div>
           <div class="grid grid-cols-3 gap-2 pt-3 border-t border-slate-100 text-center">
@@ -2045,10 +2107,11 @@ function updatePropertyCounts(){
     guesthouse:'propCountGuesthouse', kos:'propCountKos'
   };
   const navCount = document.getElementById('propertyNavCount');
-  if(navCount) navCount.textContent = PROPERTIES.length;
+  const activeProperties = PROPERTIES.filter(property => property.active !== false);
+  if(navCount) navCount.textContent = activeProperties.length;
   Object.entries(countIds).forEach(([type, id]) => {
     const count = document.getElementById(id);
-    if(count) count.textContent = type === 'all' ? PROPERTIES.length : PROPERTIES.filter(property => property.type === type).length;
+    if(count) count.textContent = type === 'all' ? activeProperties.length : activeProperties.filter(property => property.type === type).length;
   });
 }
 
@@ -2065,7 +2128,7 @@ function openPropertyModal(propertyId=''){
   populatePropertyOwnerSelect();
   document.getElementById('propertyEditId').value = propertyId;
   document.getElementById('propertyFormStatus').textContent = '';
-  document.getElementById('propertyModalTitle').textContent = propertyId ? 'Atur Properti' : 'Tambah Properti';
+  document.getElementById('propertyModalTitle').textContent = propertyId ? 'Edit Properti' : 'Tambah Properti';
   document.getElementById('propertySubmitButton').textContent = propertyId ? 'Simpan Perubahan' : 'Simpan Properti';
   document.getElementById('newPropertyOwnerShare').value = 100;
   document.getElementById('newPropertyAgentShare').value = 0;
@@ -2146,10 +2209,90 @@ function submitProperty(){
   if(currentView === 'dashboard') renderDashboard();
   if(currentView === 'owner') renderOwners();
   if(currentView === 'laporan') renderReport();
+  if(currentView === 'bagi-hasil'){
+    const recalculate = document.getElementById('shareCalcResult').dataset.generated === 'true';
+    renderShareCalculatorInputs();
+    if(recalculate) generateOwnerShareCalculation();
+  }
   closeModal('modal-property');
   showToast(savedLocally
     ? (existing ? 'Pengaturan properti berhasil disimpan di browser.' : 'Properti berhasil disimpan di browser.')
     : 'Penyimpanan browser gagal; data belum tersimpan setelah halaman ditutup.');
+}
+
+function openPropertyDeleteModal(propertyId){
+  const property = PROPERTIES.find(item => item.id === propertyId && item.active !== false);
+  if(!property || currentDashboardAccount?.role === 'IT') return;
+  document.getElementById('deletePropertyForm').reset();
+  document.getElementById('deletePropertyId').value = property.id;
+  document.getElementById('deletePropertyDescription').textContent = `Arsipkan ${property.name} (${property.code})? Properti tidak akan tersedia untuk booking baru.`;
+  document.getElementById('deletePropertyStatus').textContent = '';
+  openModal('modal-delete-property');
+}
+
+async function submitPropertyDelete(event){
+  event.preventDefault();
+  const propertyId = document.getElementById('deletePropertyId').value;
+  const pinInput = document.getElementById('deletePropertyPin');
+  const status = document.getElementById('deletePropertyStatus');
+  const button = document.getElementById('deletePropertyButton');
+  const property = PROPERTIES.find(item => item.id === propertyId && item.active !== false);
+  if(!property){
+    status.className = 'text-sm text-rose-600';
+    status.textContent = 'Properti tidak ditemukan atau sudah diarsipkan.';
+    return;
+  }
+  if(currentDashboardAccount?.role === 'IT'){
+    status.className = 'text-sm text-rose-600';
+    status.textContent = 'Role IT tidak dapat mengarsipkan properti.';
+    return;
+  }
+  if(!/^\d{4}$/.test(pinInput.value)){
+    status.className = 'text-sm text-rose-600';
+    status.textContent = 'Masukkan PIN Master tepat 4 digit.';
+    return;
+  }
+  button.disabled = true;
+  status.className = 'text-sm text-slate-500';
+  status.textContent = 'Memverifikasi PIN Master...';
+  try {
+    await dashboardApi('/dashboard/verify-delete-pin', {
+      method:'POST', body:JSON.stringify({ pin:pinInput.value })
+    });
+    const previousActive = property.active;
+    const previousArchivedAt = property.archivedAt;
+    property.active = false;
+    property.archivedAt = new Date().toISOString();
+    if(!persistDashboardData()){
+      if(previousActive === undefined) delete property.active;
+      else property.active = previousActive;
+      if(previousArchivedAt === undefined) delete property.archivedAt;
+      else property.archivedAt = previousArchivedAt;
+      throw new Error('Properti gagal disimpan ke browser.');
+    }
+    populatePropSelects();
+    renderProperties();
+    if(currentView === 'dashboard') renderDashboard();
+    if(currentView === 'booking'){
+      renderCalendar();
+      renderBookingsTable();
+    }
+    if(currentView === 'pengeluaran'){
+      renderExpenseTable();
+      renderExpenseSummary();
+    }
+    if(currentView === 'owner') renderOwners();
+    if(currentView === 'laporan') renderReport();
+    if(currentView === 'bagi-hasil') renderShareCalculatorInputs();
+    closeModal('modal-delete-property');
+    showToast(`${property.name} diarsipkan. Histori booking dan keuangan tetap tersimpan.`);
+  } catch(error) {
+    status.className = 'text-sm text-rose-600';
+    status.textContent = error.message || 'Properti gagal diarsipkan.';
+    pinInput.value = '';
+  } finally {
+    button.disabled = false;
+  }
 }
 
 /* ============== BOOKING ============== */
@@ -2177,9 +2320,10 @@ function renderCalendar(){
   const body = document.getElementById('calendarBody');
   const propertyCategory = document.getElementById('filterPropBooking')?.value || 'all';
   const platformFilter = document.getElementById('filterPlatformBooking')?.value || 'all';
+  const activeProperties = PROPERTIES.filter(property => property.active !== false);
   const calendarProperties = propertyCategory === 'all'
-    ? PROPERTIES
-    : PROPERTIES.filter(property => property.type === propertyCategory);
+    ? activeProperties
+    : activeProperties.filter(property => property.type === propertyCategory);
   body.innerHTML = calendarProperties.map(p => {
     const dayCells = [];
     for(let d=1; d<=daysInMonth; d++){
@@ -2231,7 +2375,7 @@ function populatePropSelects(){
     const options = [];
     if(includeAll) options.push(new Option('Semua Properti', 'all'));
     if(includeGeneral) options.push(new Option('Operasional Umum / tanpa properti', ''));
-    options.push(...PROPERTIES.map(property => new Option(`${property.name} (${property.code})`, property.id)));
+    options.push(...PROPERTIES.filter(property => property.active !== false).map(property => new Option(`${property.name} (${property.code})`, property.id)));
     select.replaceChildren(...options);
     if(Array.from(select.options).some(option => option.value === selected)) select.value = selected;
   };
@@ -2904,6 +3048,10 @@ function submitOwner(event){
   populateOwnerSelect();
   renderOwners();
   if(currentView === 'laporan') renderReport();
+  if(currentView === 'bagi-hasil'){
+    populateShareCalculatorOwners();
+    renderShareCalculatorInputs();
+  }
   document.getElementById('ownerForm').reset();
   closeModal('modal-owner');
   showToast(`${name} berhasil ditambahkan. Pilih owner ini saat mengatur properti.`);
@@ -3209,6 +3357,177 @@ function renderReport(){
   `;
 }
 
+function populateShareCalculatorOwners(){
+  const select = document.getElementById('shareCalcOwner');
+  const selectedOwner = select.value;
+  select.innerHTML = OWNERS.map(owner => `<option value="${escapeHtml(owner.id)}">${escapeHtml(owner.name)}</option>`).join('');
+  if(OWNERS.some(owner => owner.id === selectedOwner)) select.value = selectedOwner;
+  else if(OWNERS.length) select.value = OWNERS[0].id;
+  const monthInput = document.getElementById('shareCalcMonth');
+  if(!monthInput.value){
+    const today = new Date();
+    monthInput.value = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
+  }
+}
+
+function renderShareCalculatorInputs(){
+  const ownerId = document.getElementById('shareCalcOwner').value;
+  const properties = getOwnerProps(ownerId);
+  const unlinkedProperties = Array.from(new Map(BOOKINGS
+    .filter(booking => booking.propId && !PROPERTIES.some(property => property.id === booking.propId))
+    .map(booking => [booking.propId, booking])).values());
+  const container = document.getElementById('shareCalcPropertyInputs');
+  const previousValues = container.dataset.ownerId === ownerId
+    ? new Map(Array.from(container.querySelectorAll('input')).map(input => [input.id, input.value]))
+    : new Map();
+  container.dataset.ownerId = ownerId;
+  const result = document.getElementById('shareCalcResult');
+  result.innerHTML = '';
+  delete result.dataset.generated;
+  document.getElementById('shareCalcStatus').textContent = '';
+  if(!properties.length && !unlinkedProperties.length){
+    container.innerHTML = '<p class="p-5 text-sm text-slate-500">Owner ini belum terhubung ke properti.</p>';
+    return;
+  }
+  const propertyInputs = properties.map(property => {
+    const ownerShare = property.owners.find(item => item.id === ownerId)?.share ?? 0;
+    return `
+      <div class="grid grid-cols-1 sm:grid-cols-[minmax(0,1fr)_180px_150px_140px] gap-3 items-center p-4 sm:px-5">
+        <div class="min-w-0"><div class="text-sm font-semibold text-slate-900">${escapeHtml(property.name)}</div><div class="text-xs text-slate-500">${escapeHtml(property.code)} · ${escapeHtml(property.area)}</div></div>
+        <label class="block"><span class="block text-xs text-slate-500 mb-1">Nama pengurang</span><input id="shareCalcDeductionLabel-${escapeHtml(property.id)}" type="text" maxlength="60" placeholder="Contoh: dana renovasi" class="w-full text-sm border border-slate-200 rounded-lg px-3 py-2"></label>
+        <label class="block"><span class="block text-xs text-slate-500 mb-1">Pengurang (Rp)</span><input id="shareCalcDeduction-${escapeHtml(property.id)}" type="number" min="0" step="1" value="0" class="w-full text-sm border border-slate-200 rounded-lg px-3 py-2"></label>
+        <label class="block"><span class="block text-xs text-slate-500 mb-1">Bagian owner (%)</span><input id="shareCalcPercent-${escapeHtml(property.id)}" type="number" min="0" max="100" step="0.01" value="${Number(ownerShare)}" class="w-full text-sm border border-slate-200 rounded-lg px-3 py-2"></label>
+      </div>`;
+  }).join('');
+  const unlinkedInputs = unlinkedProperties.map(booking => {
+    const bookingCount = BOOKINGS.filter(item => item.propId === booking.propId).length;
+    return `
+      <div class="flex flex-wrap items-center justify-between gap-3 p-4 sm:px-5 bg-amber-50/70">
+        <div><div class="text-sm font-semibold text-slate-900">${escapeHtml(booking.propName || 'Properti dari booking')}</div><div class="text-xs text-amber-800">Belum terhubung ke daftar properti · ${bookingCount} booking · kode ${escapeHtml(booking.propCode || booking.propId)}</div></div>
+        <button type="button" onclick="attachUnlinkedPropertyToOwner('${escapeHtml(booking.propId)}','${escapeHtml(ownerId)}')" class="text-sm font-semibold text-white bg-brand-600 hover:bg-brand-700 px-3 py-2 rounded-lg">Hubungkan ke ${escapeHtml(OWNERS.find(owner => owner.id === ownerId)?.name || 'owner')} · 100%</button>
+      </div>`;
+  }).join('');
+  container.innerHTML = unlinkedInputs + propertyInputs;
+  container.querySelectorAll('input').forEach(input => {
+    if(previousValues.has(input.id)) input.value = previousValues.get(input.id);
+  });
+}
+
+function attachUnlinkedPropertyToOwner(propertyId, ownerId){
+  const booking = BOOKINGS.find(item => item.propId === propertyId);
+  const owner = OWNERS.find(item => item.id === ownerId);
+  if(!booking || !owner || PROPERTIES.some(property => property.id === propertyId)) return;
+  const type = /^villa\b/i.test(booking.propName || '') ? 'villa' : 'apartment';
+  const property = {
+    id:propertyId,
+    name:booking.propName || `Properti ${propertyId}`,
+    code:booking.propCode || propertyId,
+    type,
+    area:'',
+    beds:0,
+    baths:0,
+    guests:0,
+    price:0,
+    gradient:type === 'villa' ? 'from-emerald-500 to-teal-700' : 'from-blue-500 to-cyan-600',
+    owners:[{ id:ownerId, share:100 }],
+    agents:[]
+  };
+  PROPERTIES.push(property);
+  persistDashboardData();
+  updatePropertyCounts();
+  populatePropSelects();
+  renderShareCalculatorInputs();
+  showToast(`${property.name} dihubungkan ke ${owner.name} dengan bagian 100%.`);
+}
+
+function generateOwnerShareCalculation(){
+  const ownerId = document.getElementById('shareCalcOwner').value;
+  const month = document.getElementById('shareCalcMonth').value;
+  const status = document.getElementById('shareCalcStatus');
+  const owner = OWNERS.find(item => item.id === ownerId);
+  const properties = getOwnerProps(ownerId);
+  if(!owner || !/^\d{4}-\d{2}$/.test(month) || Number(month.slice(5)) < 1 || Number(month.slice(5)) > 12){
+    status.className = 'px-4 sm:px-5 pb-4 text-sm text-rose-600';
+    status.textContent = 'Pilih owner dan bulan laporan yang valid.';
+    return;
+  }
+  if(!properties.length){
+    status.className = 'px-4 sm:px-5 pb-4 text-sm text-rose-600';
+    status.textContent = 'Owner ini belum memiliki properti untuk dihitung.';
+    return;
+  }
+  const start = `${month}-01`;
+  const nextMonth = new Date(Date.UTC(Number(month.slice(0, 4)), Number(month.slice(5)), 1)).toISOString().slice(0, 10);
+  const range = { start, endExclusive:nextMonth };
+  const rows = [];
+  for(const property of properties){
+    const percentInput = document.getElementById(`shareCalcPercent-${property.id}`);
+    const deductionInput = document.getElementById(`shareCalcDeduction-${property.id}`);
+    const deductionLabelInput = document.getElementById(`shareCalcDeductionLabel-${property.id}`);
+    const ownerPercent = Number(percentInput?.value);
+    const additionalDeduction = Number(deductionInput?.value);
+    if(!Number.isFinite(ownerPercent) || ownerPercent < 0 || ownerPercent > 100 || !Number.isFinite(additionalDeduction) || additionalDeduction < 0){
+      status.className = 'px-4 sm:px-5 pb-4 text-sm text-rose-600';
+      status.textContent = `Periksa persentase dan pengurang tambahan untuk ${property.name}.`;
+      return;
+    }
+    const bookings = BOOKINGS.filter(item => item.propId === property.id && isDateInCustomReportRange(item.checkin, range));
+    const bookingRevenue = bookings.reduce((sum, item) => sum + getBookingNetAmount(item), 0);
+    const platformFee = bookings.reduce((sum, item) => sum + getBookingNetAmount(item) * Number(item.platformFeePct || 0) / 100, 0);
+    const otherIncome = INCOMES.filter(item => item.propId === property.id && !['income-opening-balance', 'income-booking'].includes(item.categoryId) && isDateInCustomReportRange(item.date, range))
+      .reduce((sum, item) => sum + Number(item.amount || 0), 0);
+    const expenses = [...EXPENSES, ...OWNER_CREW_EXPENSES].filter(item => financeEntryMatchesProperty(item, property) && isDateInCustomReportRange(item.date, range));
+    const operatingExpenses = expenses.reduce((sum, item) => sum + Number(item.amount || 0), 0);
+    const netBase = bookingRevenue + otherIncome - platformFee - operatingExpenses - additionalDeduction;
+    const additionalDeductionLabel = deductionLabelInput?.value.trim() || 'Pengurang tambahan';
+    rows.push({ property, bookingCount:bookings.filter(item => !isBookingCancelled(item)).length, bookingRevenue, otherIncome, platformFee, operatingExpenses, additionalDeduction, additionalDeductionLabel, netBase, ownerPercent, ownerShare:Math.max(0, netBase) * ownerPercent / 100 });
+  }
+  const totals = rows.reduce((result, row) => {
+    result.bookingRevenue += row.bookingRevenue;
+    result.otherIncome += row.otherIncome;
+    result.platformFee += row.platformFee;
+    result.operatingExpenses += row.operatingExpenses;
+    result.additionalDeduction += row.additionalDeduction;
+    result.netBase += row.netBase;
+    result.ownerShare += row.ownerShare;
+    result.deficit += Math.max(0, -row.netBase);
+    result.bookingCount += row.bookingCount;
+    return result;
+  }, { bookingRevenue:0, otherIncome:0, platformFee:0, operatingExpenses:0, additionalDeduction:0, netBase:0, ownerShare:0, deficit:0, bookingCount:0 });
+  const monthLabel = new Date(`${start}T00:00:00`).toLocaleDateString('id-ID', { month:'long', year:'numeric' });
+  status.className = 'px-4 sm:px-5 pb-4 text-sm text-emerald-700';
+  status.textContent = `Kalkulasi ${owner.name} untuk ${monthLabel} berhasil dibuat.`;
+  document.getElementById('shareCalcResult').dataset.generated = 'true';
+  document.getElementById('shareCalcResult').innerHTML = `
+    <section class="bg-white border border-slate-200 rounded-xl overflow-hidden">
+      <div class="p-4 sm:p-5 border-b border-slate-100 flex flex-wrap items-start justify-between gap-3">
+        <div><h2 class="text-lg font-bold text-slate-900">Hasil Bagi Hasil</h2><p class="text-sm text-slate-500">${escapeHtml(owner.name)} · ${monthLabel} · ${totals.bookingCount} booking</p></div>
+        <div class="text-right"><div class="text-xs font-semibold uppercase text-slate-500">Total hak owner</div><div class="text-2xl font-extrabold text-emerald-700">${fmtRp(totals.ownerShare)}</div></div>
+      </div>
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 p-4 sm:p-5 border-b border-slate-100">
+        <div><div class="text-xs text-slate-500">Booking + pemasukan lain</div><div class="font-bold text-slate-900">${fmtRp(totals.bookingRevenue + totals.otherIncome)}</div></div>
+        <div><div class="text-xs text-slate-500">Fee + biaya tercatat</div><div class="font-bold text-rose-700">- ${fmtRp(totals.platformFee + totals.operatingExpenses)}</div></div>
+        <div><div class="text-xs text-slate-500">Pengurang tambahan</div><div class="font-bold text-rose-700">- ${fmtRp(totals.additionalDeduction)}</div></div>
+        <div><div class="text-xs text-slate-500">Dasar bersih total</div><div class="font-bold ${totals.netBase < 0 ? 'text-rose-700' : 'text-slate-900'}">${fmtRp(totals.netBase)}</div></div>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm min-w-[950px]">
+          <thead class="bg-slate-50 text-xs text-slate-500"><tr><th class="text-left px-4 py-3">Properti</th><th class="text-right px-3 py-3">Jumlah booking</th><th class="text-right px-3 py-3">Pemasukan booking</th><th class="text-right px-3 py-3">Pemasukan lain</th><th class="text-right px-3 py-3">Fee platform</th><th class="text-right px-3 py-3">Biaya tercatat</th><th class="text-right px-3 py-3">Pengurang khusus</th><th class="text-right px-3 py-3">Dasar bersih</th><th class="text-right px-4 py-3">Owner %</th><th class="text-right px-4 py-3">Hak owner</th></tr></thead>
+          <tbody class="divide-y divide-slate-100">${rows.map(row => `
+            <tr><td class="px-4 py-3 font-semibold text-slate-800">${escapeHtml(row.property.name)}</td><td class="px-3 py-3 text-right">${row.bookingCount}</td><td class="px-3 py-3 text-right">${fmtRp(row.bookingRevenue)}</td><td class="px-3 py-3 text-right">${fmtRp(row.otherIncome)}</td><td class="px-3 py-3 text-right text-rose-700">- ${fmtRp(row.platformFee)}</td><td class="px-3 py-3 text-right text-rose-700">- ${fmtRp(row.operatingExpenses)}</td><td class="px-3 py-3 text-right text-rose-700"><span class="block max-w-36 truncate ml-auto" title="${escapeHtml(row.additionalDeductionLabel)}">${escapeHtml(row.additionalDeductionLabel)}</span>- ${fmtRp(row.additionalDeduction)}</td><td class="px-3 py-3 text-right font-semibold ${row.netBase < 0 ? 'text-rose-700' : ''}">${fmtRp(row.netBase)}</td><td class="px-4 py-3 text-right">${row.ownerPercent}%</td><td class="px-4 py-3 text-right font-bold text-emerald-700">${fmtRp(row.ownerShare)}</td></tr>`).join('')}
+            <tr class="bg-slate-50 font-bold"><td class="px-4 py-3">TOTAL</td><td class="px-3 py-3 text-right">${totals.bookingCount}</td><td class="px-3 py-3 text-right">${fmtRp(totals.bookingRevenue)}</td><td class="px-3 py-3 text-right">${fmtRp(totals.otherIncome)}</td><td class="px-3 py-3 text-right text-rose-700">- ${fmtRp(totals.platformFee)}</td><td class="px-3 py-3 text-right text-rose-700">- ${fmtRp(totals.operatingExpenses)}</td><td class="px-3 py-3 text-right text-rose-700">- ${fmtRp(totals.additionalDeduction)}</td><td class="px-3 py-3 text-right">${fmtRp(totals.netBase)}</td><td class="px-4 py-3 text-right">—</td><td class="px-4 py-3 text-right text-emerald-700">${fmtRp(totals.ownerShare)}</td></tr>
+          </tbody>
+        </table>
+      </div>
+      ${totals.deficit ? `<p class="px-4 sm:px-5 py-3 text-xs text-amber-700 border-t border-slate-100">Dasar negatif ${fmtRp(totals.deficit)} ditampilkan sebagai defisit dan tidak dihitung sebagai nilai transfer owner.</p>` : ''}
+    </section>`;
+}
+
+function refreshGeneratedShareCalculation(){
+  const result = document.getElementById('shareCalcResult');
+  if(currentView === 'bagi-hasil' && result.dataset.generated === 'true') generateOwnerShareCalculation();
+}
+
 function exportReportExcel(){
   if(!lastReportSummary){
     showToast('Pilih rentang tanggal laporan yang valid terlebih dahulu.');
@@ -3422,6 +3741,7 @@ async function submitBooking(){
     if(savedIndex >= 0) BOOKINGS[savedIndex] = savedBooking;
     else BOOKINGS.push(savedBooking);
     persistDashboardData();
+    refreshGeneratedShareCalculation();
     if(!editId){
       currentBookingStatus = 'all';
       document.querySelectorAll('#view-booking .tab-btn').forEach((tab,index)=>tab.classList.toggle('active', index === 0));
@@ -3450,6 +3770,7 @@ async function submitBooking(){
       renderDashboard();
       if(currentView === 'owner') renderOwners();
       if(currentView === 'laporan') renderReport();
+      refreshGeneratedShareCalculation();
     } catch(refreshError) {
       console.warn('Refresh booking setelah simpan gagal.', refreshError);
       showToast(`Booking tersimpan. Data tampil lokal; refresh server gagal: ${refreshError.message}`);
@@ -3568,6 +3889,7 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('newBookingExtraBedQuantity').addEventListener('input', updateBookingExtraBedTotal);
   document.getElementById('newBookingExtraBedPrice').addEventListener('input', updateBookingExtraBedTotal);
   document.getElementById('deleteFinanceForm').addEventListener('submit', submitFinanceDelete);
+  document.getElementById('deletePropertyForm').addEventListener('submit', submitPropertyDelete);
   document.getElementById('editFinanceForm').addEventListener('submit', submitExpenseEdit);
   document.getElementById('editExpProof').addEventListener('change', handleEditExpenseProofSelection);
   document.getElementById('cancelBookingForm').addEventListener('submit', submitBookingCancellation);

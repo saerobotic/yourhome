@@ -1264,6 +1264,26 @@ export default {
         return json({ ok:true, data:{ delete_pin_must_change:false } });
       }
 
+      if (request.method === 'POST' && path === '/dashboard/verify-delete-pin') {
+        const adminSecret = String(env.ADMIN_DASHBOARD_SECRET || '').trim();
+        const tokenData = await getAdminTokenPayload(request, adminSecret);
+        if (!['master', 'admin'].includes(tokenData?.account_id) || !['Master', 'Admin'].includes(tokenData?.role)) {
+          return bad('Hanya Master atau Admin yang dapat meminta persetujuan PIN Master.', 403);
+        }
+        const body = await request.json();
+        const pin = String(body.pin || '').trim();
+        if (!/^\d{4}$/.test(pin)) return bad('PIN Master harus tepat 4 digit.');
+        const master = await env.DB.prepare(`
+          SELECT delete_pin_salt, delete_pin_hash FROM dashboard_users
+          WHERE account_id = 'master' AND active = 1
+        `).first();
+        if (!master) return bad('Akun Master tidak ditemukan.', 404);
+        if (!master.delete_pin_hash) return bad('PIN Master belum diinisialisasi. Login sebagai Master terlebih dahulu.', 409);
+        const attemptedHash = await hashDashboardPassword(pin, master.delete_pin_salt);
+        if (!constantTimeEqual(attemptedHash, master.delete_pin_hash)) return bad('PIN Master salah.', 403);
+        return json({ ok:true });
+      }
+
       if (request.method === 'GET' && path === '/dashboard/bookings') {
         const adminSecret = String(env.ADMIN_DASHBOARD_SECRET || '').trim();
         const tokenData = await getAdminTokenPayload(request, adminSecret);
