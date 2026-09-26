@@ -139,6 +139,10 @@
     .no-recap{color:var(--muted);font-size:.82rem;padding:18px;background:#faf7f2;border-radius:9px;text-align:center}
     .pin-panel-body{padding:18px 20px 20px}
     .pin-form{display:grid;grid-template-columns:1.2fr 1fr 1fr auto;gap:10px;align-items:end}
+    .crew-management-form{display:grid;grid-template-columns:1.2fr 1fr 1fr auto auto;gap:10px;align-items:end}
+    .crew-status{display:inline-flex;padding:4px 9px;border-radius:999px;font-size:.72rem;font-weight:700}
+    .crew-status.active{background:#e9f3e2;color:var(--green)}
+    .crew-status.inactive{background:#f3eee8;color:var(--muted)}
     .pin-message{min-height:1.2em;margin-top:12px;font-size:.8rem;font-weight:700}
     .pin-message.success{color:var(--green)}
     .pin-message.error{color:var(--danger)}
@@ -154,7 +158,7 @@
     .site-footer{border-top:1px solid var(--line);margin-top:28px;padding:18px 4px 0;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;color:var(--muted);font-size:.74rem}
     .site-footer strong{color:var(--coffee);font-family:Georgia,serif;font-size:.86rem}
     .site-footer-meta{display:flex;gap:10px;flex-wrap:wrap}
-    @media(max-width:520px){.site-footer{align-items:flex-start;flex-direction:column;gap:6px}}
+    @media(max-width:520px){.site-footer{align-items:flex-start;flex-direction:column;gap:6px}.crew-management-form{grid-template-columns:1fr 1fr}.crew-management-form .field:first-of-type{grid-column:1/-1}}
     @media(max-width:850px){.brand-mark{width:150px;height:150px}h1{font-size:1.45rem}.summary{grid-template-columns:repeat(2,1fr)}.filters{grid-template-columns:repeat(2,1fr)}.filter-actions{align-items:stretch}.filter-actions .button{width:100%}.detail-meta{grid-template-columns:1fr 1fr}.photo-grid{grid-template-columns:repeat(3,1fr)}}
     @media(max-width:520px){.page{padding:20px 12px 40px}.topbar{align-items:flex-start;flex-direction:column}.brand{align-items:center;gap:10px}.brand-mark{width:96px;height:96px}h1{font-size:1.2rem}.subtitle{font-size:.78rem}.top-actions{justify-content:flex-start}.summary{gap:8px}.stat{padding:13px}.stat-value{font-size:1.45rem}.filters{grid-template-columns:1fr}.records-head{padding:15px}.detail-meta{grid-template-columns:1fr}.edit-form{grid-template-columns:1fr}.edit-form .edit-actions{grid-column:auto}.photo-grid{grid-template-columns:repeat(2,1fr)}.recap-grid{grid-template-columns:1fr}.pin-form{grid-template-columns:1fr}.pin-form .button{width:100%}}
   </style>
@@ -242,16 +246,21 @@
     </section>
 
     <section class="panel records" id="pinManagementPanel">
-      <div class="records-head"><h2>Kelola PIN Crew</h2></div>
+      <div class="records-head"><h2>Kelola Data Crew</h2></div>
       <div class="pin-panel-body">
-        <p class="hint">PIN crew wajib 6 digit. PIN disimpan di server sebagai hash. Setelah disimpan, PIN tidak bisa dilihat lagi. Butuh PIN Admin untuk mengubah.</p>
-        <div class="pin-form">
-          <label class="field" for="pinCrewSelect"><span class="meta-label">Crew</span><select id="pinCrewSelect"><option value="">Pilih crew</option></select></label>
-          <label class="field" for="pinNewInput"><span class="meta-label">PIN Baru</span><input id="pinNewInput" type="password" inputmode="numeric" maxlength="6" placeholder="PIN baru (6 digit)" /></label>
-          <label class="field" for="pinAdminInput"><span class="meta-label">PIN Admin</span><input id="pinAdminInput" type="password" placeholder="PIN Admin" /></label>
-          <button class="button primary" id="pinSaveBtn" type="button">Simpan PIN Crew</button>
+        <p class="hint">Tentukan nama, ID Crew, dan PIN login 6 digit. ID dan PIN digunakan crew untuk masuk di halaman Check In Crew. PIN tidak ditampilkan kembali setelah disimpan.</p>
+        <form id="crewManagementForm" class="crew-management-form">
+          <input id="crewRecordId" type="hidden">
+          <label class="field" for="crewNameInput"><span class="meta-label">Nama Crew</span><input id="crewNameInput" type="text" maxlength="80" placeholder="Nama lengkap" required /></label>
+          <label class="field" for="crewCodeInput"><span class="meta-label">ID Crew</span><input id="crewCodeInput" type="text" minlength="3" maxlength="20" pattern="[A-Za-z0-9_-]{3,20}" placeholder="Contoh: CR-AJI01" required /></label>
+          <label class="field" for="crewPinInput"><span class="meta-label">PIN Crew</span><input id="crewPinInput" type="password" inputmode="numeric" maxlength="6" pattern="[0-9]{6}" placeholder="6 digit" /></label>
+          <button class="button primary" id="crewSaveBtn" type="submit">Tambah Crew</button>
+          <button class="button" id="crewCancelEditBtn" type="button" hidden>Batal Edit</button>
+        </form>
+        <p id="crewManagementMessage" class="pin-message" role="status" aria-live="polite"></p>
+        <div class="table-wrap">
+          <table><thead><tr><th>Nama Crew</th><th>ID Crew</th><th>Status</th><th>Aksi</th></tr></thead><tbody id="crewManagementRows"></tbody></table>
         </div>
-        <p id="pinMessage" class="pin-message" role="status" aria-live="polite"></p>
       </div>
     </section>
 
@@ -812,48 +821,92 @@
       if (!response.ok || payload.ok === false) throw new Error(payload.error || payload.message || text || `HTTP ${response.status}`);
       return payload;
     }
-    async function loadCrewOptionsForPin() {
-      const select = el('pinCrewSelect');
+    let crewManagementItems = [];
+    async function loadCrewManagement() {
+      const rows = el('crewManagementRows');
       try {
-        const response = await workerRequest(`${API_BASE}/crews?_=${Date.now()}`);
-        const crews = Array.isArray(response.data) ? response.data.map(item => String(item.name || '').trim()).filter(Boolean) : [];
-        if (!crews.length) throw new Error('Daftar crew kosong');
-        select.innerHTML = '<option value="">Pilih crew</option>' + crews.map(name => `<option value="${escapeHtml(name)}">${escapeHtml(name)}</option>`).join('');
+        const response = await workerRequest(`${API_BASE}/dashboard/crews?_=${Date.now()}`);
+        crewManagementItems = Array.isArray(response.data) ? response.data : [];
+        rows.innerHTML = crewManagementItems.length ? crewManagementItems.map(crew => `
+          <tr>
+            <td>${escapeHtml(crew.name)}</td>
+            <td><strong>${escapeHtml(crew.crew_code || 'ID belum ada')}</strong></td>
+            <td><span class="crew-status ${Number(crew.active) ? 'active' : 'inactive'}">${Number(crew.active) ? 'Aktif' : 'Nonaktif'}</span></td>
+            <td><div class="actions"><button class="button" type="button" data-crew-action="edit" data-crew-id="${escapeHtml(crew.id)}">Edit</button>${Number(crew.active) ? `<button class="button danger" type="button" data-crew-action="disable" data-crew-id="${escapeHtml(crew.id)}">Nonaktifkan</button>` : ''}</div></td>
+          </tr>`).join('') : '<tr><td colspan="4" class="empty-cell">Belum ada data crew.</td></tr>';
       } catch (error) {
-        console.error('Gagal memuat daftar crew untuk PIN:', error);
-        select.innerHTML = '<option value="">Daftar crew tidak tersedia</option>';
+        rows.innerHTML = '<tr><td colspan="4" class="empty-cell">Daftar crew gagal dimuat.</td></tr>';
+        throw error;
       }
     }
-    async function saveCrewPin() {
-      const name = el('pinCrewSelect').value.trim();
-      const pin = el('pinNewInput').value.trim();
-      const adminPin = el('pinAdminInput').value.trim();
-      const message = el('pinMessage');
-
-      if (!name || !/^\d{6}$/.test(pin) || !adminPin) {
+    function resetCrewManagementForm() {
+      el('crewManagementForm').reset();
+      el('crewRecordId').value = '';
+      el('crewPinInput').required = true;
+      el('crewSaveBtn').textContent = 'Tambah Crew';
+      el('crewCancelEditBtn').hidden = true;
+    }
+    function editCrewManagementItem(crew) {
+      el('crewRecordId').value = crew.id;
+      el('crewNameInput').value = crew.name;
+      el('crewCodeInput').value = crew.crew_code || '';
+      el('crewPinInput').value = '';
+      el('crewPinInput').required = false;
+      el('crewSaveBtn').textContent = 'Simpan Perubahan';
+      el('crewCancelEditBtn').hidden = false;
+      el('crewNameInput').focus();
+    }
+    async function submitCrewManagement(event) {
+      event.preventDefault();
+      const id = el('crewRecordId').value;
+      const name = el('crewNameInput').value.trim();
+      const crewCode = el('crewCodeInput').value.trim().toUpperCase();
+      const pin = el('crewPinInput').value.trim();
+      const message = el('crewManagementMessage');
+      if (!name || !/^[A-Z0-9_-]{3,20}$/.test(crewCode) || (!id && !/^\d{6}$/.test(pin)) || (pin && !/^\d{6}$/.test(pin))) {
         message.className = 'pin-message error';
-        message.textContent = 'Pilih crew dan isi PIN baru tepat 6 digit serta PIN Admin.';
+        message.textContent = 'Isi nama, ID Crew 3–20 karakter, dan PIN 6 digit' + (id ? ' (PIN boleh kosong jika tidak diganti).' : '.');
         return;
       }
-
-      const button = el('pinSaveBtn');
+      const button = el('crewSaveBtn');
       button.disabled = true;
       message.className = 'pin-message';
-      message.textContent = 'Menyimpan PIN...';
+      message.textContent = id ? 'Menyimpan perubahan data crew...' : 'Menambahkan crew...';
       try {
-        const response = await workerRequest(`${API_BASE}/admin/set-pin`, {
-          method: 'POST',
-          body: JSON.stringify({ name, pin, admin_pin: adminPin })
+        await workerRequest(id ? `${API_BASE}/dashboard/crews/${encodeURIComponent(id)}` : `${API_BASE}/dashboard/crews`, {
+          method: id ? 'PATCH' : 'POST',
+          body: JSON.stringify({ name, crew_code:crewCode, ...(pin ? { pin } : {}) })
         });
+        resetCrewManagementForm();
         message.className = 'pin-message success';
-        message.textContent = `PIN ${response.name || name} berhasil disimpan`;
-        el('pinNewInput').value = '';
-        el('pinAdminInput').value = '';
+        message.textContent = id ? 'Data crew berhasil diperbarui.' : 'Crew berhasil ditambahkan.';
+        await loadCrewManagement();
       } catch (error) {
         message.className = 'pin-message error';
-        message.textContent = error.message || 'PIN gagal disimpan.';
+        message.textContent = error.message || 'Data crew gagal disimpan.';
       } finally {
         button.disabled = false;
+      }
+    }
+    async function handleCrewManagementAction(event) {
+      const button = event.target.closest('[data-crew-action]');
+      if (!button) return;
+      const crew = crewManagementItems.find(item => item.id === button.dataset.crewId);
+      if (!crew) return;
+      if (button.dataset.crewAction === 'edit') {
+        editCrewManagementItem(crew);
+        return;
+      }
+      if (!window.confirm(`Nonaktifkan ${crew.name}? Crew tidak dapat login, tetapi riwayat check-in tetap tersimpan.`)) return;
+      const message = el('crewManagementMessage');
+      try {
+        await workerRequest(`${API_BASE}/dashboard/crews/${encodeURIComponent(crew.id)}`, { method:'DELETE' });
+        message.className = 'pin-message success';
+        message.textContent = `${crew.name} dinonaktifkan.`;
+        await loadCrewManagement();
+      } catch (error) {
+        message.className = 'pin-message error';
+        message.textContent = error.message || 'Crew gagal dinonaktifkan.';
       }
     }
     async function refreshDashboardData() {
@@ -1048,7 +1101,9 @@
       document.getElementById('manualEntryBtn').addEventListener('click', openManualEntry);
       document.getElementById('adminLogoutBtn').addEventListener('click', logoutAdmin);
       document.getElementById('deleteAllBtn').addEventListener('click', deleteAllRecords);
-      document.getElementById('pinSaveBtn').addEventListener('click', saveCrewPin);
+      el('crewManagementForm').addEventListener('submit', submitCrewManagement);
+      el('crewManagementRows').addEventListener('click', handleCrewManagementAction);
+      el('crewCancelEditBtn').addEventListener('click', resetCrewManagementForm);
       document.getElementById('detailEditBtn').addEventListener('click', () => {
         closeModal('detailModal');
         editRecord(detailRecord);
@@ -1068,7 +1123,7 @@
           if (event.target === layer) closeModal(layer.id);
         });
       });
-      await loadCrewOptionsForPin();
+      await loadCrewManagement();
       applyFilters();
       setInterval(() => {
         if (getLocalDateKey() !== sessionStorage.getItem('dashboard_admin_login_date')) {

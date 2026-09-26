@@ -1114,38 +1114,51 @@ export default {
       if (path === '/dashboard/crews') {
         const adminSecret = String(env.ADMIN_DASHBOARD_SECRET || '').trim();
         const tokenData = await getAdminTokenPayload(request, adminSecret);
-        if (!tokenData?.account_id || !['master', 'admin', 'it'].includes(tokenData.account_id)) {
+        const dashboardAccount = ['master', 'admin', 'it'].includes(tokenData?.account_id);
+        const legacyAdmin = Boolean(tokenData && !tokenData.account_id && !tokenData.role);
+        if (!dashboardAccount && !legacyAdmin) {
           return bad('Login dashboard diperlukan', 401);
         }
 
         if (request.method === 'GET') {
-          const result = await env.DB.prepare('SELECT id, name, active FROM crews ORDER BY active DESC, name COLLATE NOCASE ASC').all();
+          let result;
+          try {
+            result = await env.DB.prepare('SELECT id, crew_code, name, active FROM crews ORDER BY active DESC, name COLLATE NOCASE ASC').all();
+          } catch (error) {
+            if (/no such column: crew_code/i.test(String(error?.message || error))) return bad('ID Crew belum tersedia. Jalankan migration-crew-id.sql di D1.', 503);
+            throw error;
+          }
           return json({ ok:true, data:result.results || [] });
         }
 
-        if (!['master', 'admin'].includes(tokenData.account_id) || !['Master', 'Admin'].includes(tokenData.role)) {
+        if (tokenData.account_id === 'it' || (dashboardAccount && (!['master', 'admin'].includes(tokenData.account_id) || !['Master', 'Admin'].includes(tokenData.role)))) {
           return bad('Hanya Master atau Admin yang dapat mengelola karyawan.', 403);
         }
 
         if (request.method === 'POST') {
           const body = await request.json();
           const name = String(body.name || '').trim().replace(/\s+/g, ' ');
+          const crewCode = String(body.crew_code || '').trim().toUpperCase();
           const pin = String(body.pin || '').trim();
-          if (name.length < 2 || name.length > 80 || !/^\d{6}$/.test(pin)) {
-            return bad('Nama wajib 2 sampai 80 karakter dan PIN login harus tepat 6 digit.');
+          if (name.length < 2 || name.length > 80 || !/^[A-Z0-9_-]{3,20}$/.test(crewCode) || !/^\d{6}$/.test(pin)) {
+            return bad('Nama, ID Crew (3–20 karakter), dan PIN login tepat 6 digit wajib diisi.');
           }
-          const existing = await env.DB.prepare('SELECT id, active FROM crews WHERE name = ? COLLATE NOCASE').bind(name).first();
-          if (existing?.active) return bad('Nama karyawan tersebut sudah terdaftar.', 409);
+          const [existingName, existingCode] = await Promise.all([
+            env.DB.prepare('SELECT id, active FROM crews WHERE name = ? COLLATE NOCASE').bind(name).first(),
+            env.DB.prepare('SELECT id FROM crews WHERE crew_code = ? COLLATE NOCASE').bind(crewCode).first(),
+          ]);
+          if (existingCode && existingCode.id !== existingName?.id) return bad('ID Crew tersebut sudah digunakan.', 409);
+          if (existingName?.active) return bad('Nama crew tersebut sudah terdaftar.', 409);
           const pinHash = await sha256Hex(pin);
-          if (existing) {
-            await env.DB.prepare('UPDATE crews SET name = ?, pin_hash = ?, active = 1 WHERE id = ?')
-              .bind(name, pinHash, existing.id).run();
-            return json({ ok:true, data:{ id:existing.id, name, active:1 } });
+          if (existingName) {
+            await env.DB.prepare('UPDATE crews SET crew_code = ?, name = ?, pin_hash = ?, active = 1 WHERE id = ?')
+              .bind(crewCode, name, pinHash, existingName.id).run();
+            return json({ ok:true, data:{ id:existingName.id, crew_code:crewCode, name, active:1 } });
           }
           const id = crypto.randomUUID();
-          await env.DB.prepare('INSERT INTO crews (id, name, pin_hash, active) VALUES (?, ?, ?, 1)')
-            .bind(id, name, pinHash).run();
-          return json({ ok:true, data:{ id, name, active:1 } }, 201);
+          await env.DB.prepare('INSERT INTO crews (id, crew_code, name, pin_hash, active) VALUES (?, ?, ?, ?, 1)')
+            .bind(id, crewCode, name, pinHash).run();
+          return json({ ok:true, data:{ id, crew_code:crewCode, name, active:1 } }, 201);
         }
       }
 
@@ -1153,11 +1166,12 @@ export default {
       if (dashboardCrewMatch && ['PATCH', 'DELETE'].includes(request.method)) {
         const adminSecret = String(env.ADMIN_DASHBOARD_SECRET || '').trim();
         const tokenData = await getAdminTokenPayload(request, adminSecret);
-        if (!['master', 'admin'].includes(tokenData?.account_id) || !['Master', 'Admin'].includes(tokenData?.role)) {
+        const legacyAdmin = Boolean(tokenData && !tokenData.account_id && !tokenData.role);
+        if (!legacyAdmin && (!['master', 'admin'].includes(tokenData?.account_id) || !['Master', 'Admin'].includes(tokenData?.role))) {
           return bad('Hanya Master atau Admin yang dapat mengelola karyawan.', 403);
         }
         const id = decodeURIComponent(dashboardCrewMatch[1]);
-        const crew = await env.DB.prepare('SELECT id, name, active FROM crews WHERE id = ?').bind(id).first();
+        const crew = await env.DB.prepare('SELECT id, crew_code, name, active FROM crews WHERE id = ?').bind(id).first();
         if (!crew) return bad('Karyawan tidak ditemukan.', 404);
 
         if (request.method === 'DELETE') {
@@ -1167,12 +1181,23 @@ export default {
 
         const body = await request.json();
         const name = String(body.name || '').trim().replace(/\s+/g, ' ');
-        if (name.length < 2 || name.length > 80) return bad('Nama wajib 2 sampai 80 karakter.');
+        const crewCode = String(body.crew_code || '').trim().toUpperCase();
+        const pin = String(body.pin || '').trim();
+        if (name.length < 2 || name.length > 80 || !/^[A-Z0-9_-]{3,20}$/.test(crewCode)) return bad('Nama dan ID Crew (3–20 karakter) wajib valid.');
+        if (pin && !/^\d{6}$/.test(pin)) return bad('PIN Crew harus tepat 6 digit.');
         const duplicate = await env.DB.prepare('SELECT id FROM crews WHERE name = ? COLLATE NOCASE AND id <> ? LIMIT 1')
           .bind(name, id).first();
         if (duplicate) return bad('Nama karyawan tersebut sudah digunakan.', 409);
-        await env.DB.prepare('UPDATE crews SET name = ? WHERE id = ?').bind(name, id).run();
-        return json({ ok:true, data:{ id, name, active:Number(crew.active) } });
+        const duplicateCode = await env.DB.prepare('SELECT id FROM crews WHERE crew_code = ? COLLATE NOCASE AND id <> ? LIMIT 1')
+          .bind(crewCode, id).first();
+        if (duplicateCode) return bad('ID Crew tersebut sudah digunakan.', 409);
+        if (pin) {
+          await env.DB.prepare('UPDATE crews SET crew_code = ?, name = ?, pin_hash = ? WHERE id = ?')
+            .bind(crewCode, name, await sha256Hex(pin), id).run();
+        } else {
+          await env.DB.prepare('UPDATE crews SET crew_code = ?, name = ? WHERE id = ?').bind(crewCode, name, id).run();
+        }
+        return json({ ok:true, data:{ id, crew_code:crewCode, name, active:Number(crew.active) } });
       }
 
       if (request.method === 'POST' && path === '/dashboard/password') {
@@ -1935,7 +1960,7 @@ export default {
         return json({ ok: true, id, image_url: mainImage ? mainUrl : existingMainUrl, image_urls: images.length ? imageUrls : undefined });
       }
 
-      // POST /login { crew, pin }
+      // POST /login { crew_id, pin }
       if (request.method === 'POST' && path === '/login') {
         const rate = await reserveLoginAttempt(env, request, 'crew-login');
         if (rate.unavailable) return bad('Tabel pembatas login belum tersedia. Jalankan migration-auth-login-rate-limits.sql di D1.', 503);
@@ -1943,18 +1968,23 @@ export default {
         const adminSecret = String(env.ADMIN_DASHBOARD_SECRET || '').trim();
         if (!adminSecret) return bad('Secret sesi Worker belum dikonfigurasi.', 503);
         const body = await request.json();
-        const crew = String(body.crew || '').trim();
+        const crewCode = String(body.crew_id || '').trim();
         const pin = String(body.pin || '').trim();
 
-        if (!crew || !pin) {
-          return bad('Nama crew dan PIN wajib diisi');
+        if (!crewCode || !pin) {
+          return bad('ID Crew dan PIN wajib diisi.');
         }
 
-        const row = await env.DB.prepare(
-          'SELECT id, name, pin_hash, active FROM crews WHERE name = ? AND active = 1'
-        )
-          .bind(crew)
-          .first();
+        let row;
+        try {
+          row = await env.DB.prepare(`
+            SELECT id, crew_code, name, pin_hash, active FROM crews
+            WHERE crew_code = ? COLLATE NOCASE AND active = 1
+          `).bind(crewCode).first();
+        } catch (error) {
+          if (/no such column: crew_code/i.test(String(error?.message || error))) return bad('ID Crew belum tersedia. Jalankan migration-crew-id.sql di D1.', 503);
+          throw error;
+        }
 
         if (!row) {
           return bad('PIN salah atau crew tidak aktif', 401);
@@ -1972,6 +2002,7 @@ export default {
         return json({
           ok: true,
           crew: row.name,
+          crew_id: row.crew_code,
           token: await createCrewToken(adminSecret, row.name),
         });
       }

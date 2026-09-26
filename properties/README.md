@@ -16,6 +16,8 @@ Untuk menyimpan logo dan kontak website, jalankan `migration-site-settings.sql` 
 
 Untuk daftar karyawan/crew, jalankan `migration-dashboard-crews.sql` satu kali pada D1 sebelum deploy Worker terbaru. Jika tabel `crews` sudah tersedia untuk Check In Crew, migration ini tidak mengubah data. Master/Admin mengelola nama dari **Dashboard → Pengaturan → Daftar Karyawan / Crew**; kru baru memerlukan PIN login 6 digit. Penghapusan menonaktifkan kru agar histori check-in tetap utuh. Check In Crew memuat nama aktif dari `GET /crews`.
 
+Setelah tabel `crews` tersedia, jalankan `migration-crew-id.sql` satu kali. Migration ini menambahkan ID Crew unik dan memberi ID awal otomatis kepada crew lama. Di **Check In Crew Dashboard → Kelola Data Crew**, admin dapat menambah/mengubah nama, ID Crew, dan PIN 6 digit. Crew masuk dari halaman Check In memakai ID Crew dan PIN; histori tetap menampilkan nama crew.
+
 ## Dashboard finance dan akun
 
 Jalankan `migration-dashboard-finance.sql` satu kali pada database D1 `your-home-checkin`. Migrasi ini menambahkan akun Master/Admin, kategori pemasukan/pengeluaran, dan ledger transaksi; tidak menghapus tabel atau data yang sudah ada.
@@ -34,7 +36,7 @@ Jalankan `migration-dashboard-refund-net-income.sql` setelah migration finance, 
 
 Jalankan `migration-auth-login-rate-limits.sql` satu kali sebelum deploy Worker yang menerapkan pembatas percobaan login. Tabel ini menyimpan HMAC alamat IP, bukan alamat IP mentah, dan counter direset setelah autentikasi sukses.
 
-Deploy versi terbaru `worker-checkin-api.js` setelah sepuluh migration dashboard: finance, kategori Fee untuk Crew, akun IT, PIN delete, booking, Extra Bed, bukti finance, refund net income, login rate limits, dan karyawan/crew. Publikasikan juga versi terbaru `check-in-crew.html` dan `check-in-crew-dashboard.html` bersamaan dengan Worker: login crew memakai nama yang diketik dan nama crew tidak lagi ditanam di halaman publik. Pada Cloudflare Worker `your-home-checkin-api`, atur secrets berikut di **Settings → Variables and Secrets**:
+Deploy versi terbaru `worker-checkin-api.js` setelah sebelas migration dashboard: finance, kategori Fee untuk Crew, akun IT, PIN delete, booking, Extra Bed, bukti finance, refund net income, login rate limits, karyawan/crew, dan ID Crew. Publikasikan juga versi terbaru `check-in-crew.html` dan `check-in-crew-dashboard.html` bersamaan dengan Worker. Halaman Check In meminta ID Crew; daftar nama dan ID hanya tersedia setelah admin login. Pada Cloudflare Worker `your-home-checkin-api`, atur secrets berikut di **Settings → Variables and Secrets**:
 
 - `ADMIN_DASHBOARD_SECRET`: secret signing session yang sudah dipakai Worker. Jangan ganti bersamaan dengan password akun.
 - `MASTER_INITIAL_PASSWORD`: password awal Master, minimal 12 karakter.
@@ -57,7 +59,7 @@ Frekuensi rutin pada ledger saat ini adalah penanda transaksi yang dicatat; sist
 
 Honor check-in crew otomatis direkonsiliasi sebagai beban owner kategori Fee untuk Crew, bukan pengeluaran kantor umum. Satu crew memperoleh total Rp100.000 per tanggal kerja, dibagi rata ke properti unik yang dikunjungi pada tanggal itu; sisa pembulatan rupiah dibagikan deterministik agar total tetap tepat Rp100.000. Keterangan transaksi menampilkan nama crew dan jenis pekerjaan (mis. `Aji Agung - Cleaning`) tanpa kata Gaji. Entri ditautkan ke properti D1 agar beban masuk ke rekap properti/owner dan memakai ID stabil agar refresh tidak menggandakan biaya. Check-in baru, edit, dan hapus memperbarui pembagian; dashboard Check In Crew melakukan rekonsiliasi awal untuk riwayat lama. Entri tersimpan untuk audit tetapi disembunyikan dari menu Pengeluaran umum; lihat pada laporan owner. Untuk mengoreksi nominal, edit atau hapus check-in sumbernya.
 
-Login check-in tidak lagi memuat daftar nama crew publik; crew memasukkan nama dan PIN. Worker menerbitkan sesi bertanda tangan berlaku 24 jam; submit check-in dan riwayat crew wajib membawa sesi ini. Crew hanya dapat membaca check-in miliknya, sedangkan daftar seluruh crew dan riwayat lengkap memerlukan sesi admin. Login crew, admin lama, dan dashboard dibatasi 10 percobaan per IP dalam 15 menit. CORS API mengizinkan `https://yourhome.id` serta origin XAMPP tepat `http://localhost` dan `http://127.0.0.1` (port lokal opsional); origin `null` dari `file://` tetap ditolak.
+Login check-in memakai ID Crew dan PIN 6 digit. Worker menerbitkan sesi bertanda tangan berlaku 24 jam; submit check-in dan riwayat crew wajib membawa sesi ini. Crew hanya dapat membaca check-in miliknya, sedangkan daftar seluruh crew dan riwayat lengkap memerlukan sesi admin. Login crew, admin lama, dan dashboard dibatasi 10 percobaan per IP dalam 15 menit. CORS API mengizinkan `https://yourhome.id` serta origin XAMPP tepat `http://localhost` dan `http://127.0.0.1` (port lokal opsional); origin `null` dari `file://` tetap ditolak.
 
 Booking dapat mencatat jumlah dan harga per Extra Bed. Subtotal Extra Bed dibuat sebagai transaksi pemasukan kategori Extra Bed terpisah dari nilai booking, tidak terkena platform fee, dan ikut diperhitungkan pada batas refund pembatalan.
 

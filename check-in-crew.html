@@ -164,10 +164,10 @@
       <!-- Form Login -->
       <div class="space-y-4">
         <div>
-             <label for="crewSelect" class="block text-sm font-semibold text-gray-700 mb-1.5">Nama Crew</label>
-             <input id="crewSelect" type="text" maxlength="120" autocomplete="username" placeholder="Masukkan nama sesuai data crew"
+             <label for="crewSelect" class="block text-sm font-semibold text-gray-700 mb-1.5">ID Crew</label>
+             <input id="crewSelect" type="text" maxlength="20" pattern="[A-Za-z0-9_-]{3,20}" autocomplete="username" placeholder="Masukkan ID Crew"
                class="w-full px-4 py-3.5 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition text-base" />
-             <p id="crewListStatus" class="text-xs text-gray-500 mt-1.5" role="status" aria-live="polite">Masukkan nama crew yang terdaftar.</p>
+             <p id="crewListStatus" class="text-xs text-gray-500 mt-1.5" role="status" aria-live="polite">ID Crew diberikan oleh admin.</p>
         </div>
 
         <div>
@@ -188,7 +188,7 @@
 
       <p class="text-xs text-gray-400 text-center mt-6 leading-relaxed">
         Data absensi tersimpan aman di server.<br>
-        Session nama crew tetap tersimpan di perangkat ini.
+        Sesi crew tetap tersimpan di perangkat ini.
       </p>
     </div>
   </section>
@@ -297,10 +297,6 @@
               Buka Kamera Selfie
             </button>
           </div>
-          <button type="button" id="uploadSelfieBtn" class="w-full mt-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold py-3 rounded-xl text-center text-sm transition">
-            Pilih Selfie dari HP
-          </button>
-          <input type="file" id="selfieFileInput" accept="image/*" capture="user" class="hidden" />
           <p class="text-xs text-gray-400 mt-1">Ambil selfie saat berada di lokasi untuk bukti check-in.</p>
         </div>
 
@@ -709,21 +705,21 @@
     const loginBtn = document.getElementById('loginBtn');
 
     const updateLoginButton = () => {
-      loginBtn.disabled = !crewSelect.value || crewPinInput.value.trim().length < 4;
+      loginBtn.disabled = !/^[A-Za-z0-9_-]{3,20}$/.test(crewSelect.value.trim()) || crewPinInput.value.trim().length !== 6;
     };
     crewSelect.addEventListener('input', updateLoginButton);
     crewPinInput.addEventListener('input', updateLoginButton);
     loginBtn.addEventListener('click', async () => {
-      const crew = crewSelect.value;
+      const crewId = crewSelect.value.trim().toUpperCase();
       const pin = crewPinInput.value.trim();
-      if (!crew || pin.length < 4) return;
+      if (!/^[A-Z0-9_-]{3,20}$/.test(crewId) || !/^\d{6}$/.test(pin)) return;
 
       try {
         showLoading('Memeriksa PIN…');
         const response = await fetch(CONFIG.API_BASE + '/login', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ crew, pin })
+          body: JSON.stringify({ crew_id:crewId, pin })
         });
         const text = await response.text();
         let data = {};
@@ -738,6 +734,7 @@
 
         state.currentCrew = data.crew;
         sessionStorage.setItem('current_crew', data.crew);
+        sessionStorage.setItem('current_crew_id', data.crew_id || crewId);
         sessionStorage.setItem('crew_token', data.token);
         localStorage.setItem('current_crew', data.crew);
         crewPinInput.value = '';
@@ -757,6 +754,7 @@
     // --- LOGOUT ---
     document.getElementById('logoutBtn').addEventListener('click', () => {
       localStorage.removeItem('current_crew');
+      sessionStorage.removeItem('current_crew_id');
       sessionStorage.removeItem('current_crew');
       sessionStorage.removeItem('crew_token');
       localStorage.removeItem('crew_token');
@@ -781,8 +779,6 @@
     document.getElementById('openSelfieCamera').addEventListener('click', openSelfieCamera);
     document.getElementById('captureSelfieBtn').addEventListener('click', captureSelfie);
     document.getElementById('closeSelfieCameraBtn').addEventListener('click', closeSelfieCamera);
-    document.getElementById('uploadSelfieBtn').addEventListener('click', () => document.getElementById('selfieFileInput').click());
-    document.getElementById('selfieFileInput').addEventListener('change', handleSelfieUpload);
     document.getElementById('workPhotoInput').addEventListener('change', handleWorkPhotoUpload);
 
     document.getElementById('unitInput').addEventListener('change', () => {
@@ -895,11 +891,11 @@
 
   async function openSelfieCamera() {
     if (!navigator.mediaDevices?.getUserMedia) {
-      showToast('Kamera tidak tersedia. Buka halaman lewat HTTPS atau gunakan "Pilih Selfie dari HP".', 'error');
+      showToast('Kamera tidak tersedia. Buka halaman lewat HTTPS dan izinkan akses kamera.', 'error');
       return;
     }
     if (!window.isSecureContext && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
-      showToast('Kamera HP memerlukan HTTPS. Gunakan alamat HTTPS atau pilih selfie dari HP.', 'error');
+      showToast('Kamera selfie memerlukan HTTPS. Buka halaman melalui alamat HTTPS.', 'error');
       return;
     }
     try {
@@ -933,7 +929,7 @@
         NotReadableError: 'Kamera sedang dipakai aplikasi lain.',
         SecurityError: 'Kamera hanya bisa dipakai melalui HTTPS.'
       };
-      showToast(messages[error.name] || 'Kamera gagal dibuka. Coba gunakan "Pilih Selfie dari HP".', 'error');
+      showToast(messages[error.name] || 'Kamera gagal dibuka. Periksa izin kamera lalu coba lagi.', 'error');
     }
   }
 
@@ -974,32 +970,6 @@
     preview.innerHTML = `<img src="${state.photoData}" class="w-full h-full object-cover" alt="selfie bukti di lokasi" />`;
     preview.classList.remove('border-dashed', 'border-gray-300', 'bg-gray-100');
     preview.classList.add('border-solid', 'border-brand-500');
-  }
-
-  async function handleSelfieUpload(event) {
-    const file = event.target.files?.[0];
-    if (!file) return;
-    showLoading('Memproses selfie…');
-    try {
-      await new Promise(resolve => compressImage(file, compressed => {
-        const image = new Image();
-        image.onload = () => {
-          const canvas = document.createElement('canvas');
-          const width = Math.min(image.naturalWidth, CONFIG.PHOTO_MAX_WIDTH);
-          canvas.width = width;
-          canvas.height = Math.round(image.naturalHeight * width / image.naturalWidth);
-          canvas.getContext('2d').drawImage(image, 0, 0, canvas.width, canvas.height);
-          setSelfiePhoto(canvas);
-          resolve();
-        };
-        image.src = compressed;
-      }));
-      validateForm();
-      showToast('Selfie berhasil dipilih.', 'success');
-    } finally {
-      hideLoading();
-      event.target.value = '';
-    }
   }
 
   async function handleWorkPhotoUpload(e) {
