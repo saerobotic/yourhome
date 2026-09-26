@@ -83,7 +83,7 @@
 <main id="adminLoginScreen" class="min-h-screen flex items-center justify-center p-4 bg-slate-100">
   <section class="w-full max-w-md bg-white border border-slate-200 rounded-xl shadow-sm p-6 sm:p-8">
     <div class="mb-6">
-      <img id="dashboardLoginLogo" alt="YOUR HOME" class="hidden block mx-auto w-48 max-h-16 object-contain mb-5">
+      <img id="dashboardLoginLogo" alt="YOUR HOME" class="hidden mx-auto w-48 max-h-16 object-contain mb-5">
       <p class="text-xs font-bold uppercase tracking-wider text-brand-600">YOUR HOME · Dashboard</p>
       <h1 class="text-2xl font-extrabold text-slate-900 mt-2">Login Admin</h1>
       <p class="text-sm text-slate-500 mt-1">Pilih akun dan masukkan password untuk membuka dashboard.</p>
@@ -3899,13 +3899,20 @@ document.addEventListener('DOMContentLoaded', () => {
   fetch('https://your-home-checkin-api.saerobotic.workers.dev/settings', { cache: 'no-store' })
     .then(response => response.json())
     .then(payload => {
-      const dashboardLogo = payload.data?.dashboard_logo || payload.data?.header_logo || payload.data?.footer_logo;
-      if(payload.ok && dashboardLogo){
-        ['dashboardHeaderLogo', 'dashboardLoginLogo'].forEach(id => {
-          const logo = document.getElementById(id);
+      if(payload.ok){
+        const dashboardLogo = payload.data?.dashboard_logo || payload.data?.header_logo || payload.data?.footer_logo;
+        const loginLogo = payload.data?.header_logo;
+        if(dashboardLogo){
+          const logo = document.getElementById('dashboardHeaderLogo');
           logo.src = dashboardLogo;
           logo.classList.remove('hidden');
-        });
+        }
+        if(loginLogo){
+          const logo = document.getElementById('dashboardLoginLogo');
+          logo.src = loginLogo;
+          logo.classList.remove('hidden');
+          logo.classList.add('block');
+        }
       }
     })
     .catch(() => {});

@@ -414,6 +414,10 @@
   };
   const PENDING_KEY = 'pending_checkins_v1';
 
+  function formatLocalDateKey(date = new Date()) {
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+  }
+
   /* ============================================================
      STATE APLIKASI
      ============================================================ */
@@ -422,7 +426,7 @@
     gpsData: null,       // { lat, lng, accuracy }
     photoData: null,     // base64 string
     workPhotos: [],       // base64 foto hasil kerja
-    today: new Date().toISOString().slice(0, 10) // YYYY-MM-DD
+    today: formatLocalDateKey() // YYYY-MM-DD
   };
 
   /* ============================================================
@@ -1063,8 +1067,8 @@
       work_photos: state.workPhotos,
       work_photos_base64: state.workPhotos,
       workPhotosBase64: state.workPhotos,
-      work_date: state.today || createdAt.slice(0, 10),
-      workDate: state.today || createdAt.slice(0, 10),
+      work_date: state.today || formatLocalDateKey(),
+      workDate: state.today || formatLocalDateKey(),
       created_at: createdAt,
       createdAt
     };

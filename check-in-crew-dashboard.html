@@ -378,8 +378,13 @@
       }
       return [];
     }
+    function formatLocalDateKey(date = new Date()) {
+      return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+    }
     function mapApiRecord(row) {
       const createdAt = row.created_at || '';
+      const createdDate = createdAt ? new Date(createdAt) : null;
+      const fallbackDate = createdDate && !Number.isNaN(createdDate.getTime()) ? formatLocalDateKey(createdDate) : '';
       const hasGps = !(Number(row.lat) === 0 && Number(row.lng) === 0);
       const workPhotos = parseWorkPhotos(row.work_photo_urls);
       const isManual = !hasGps && !row.selfie_url && workPhotos.length === 0;
@@ -396,7 +401,7 @@
         source: isManual ? 'admin' : 'crew',
         created_at: createdAt,
         timestamp: createdAt,
-        date: String(row.work_date || createdAt.slice(0, 10)).slice(0, 10),
+        date: String(row.work_date || fallbackDate).slice(0, 10),
         time: createdAt ? formatTimeWib(createdAt) : '-'
       };
     }
@@ -449,7 +454,7 @@
       // Bulan default = bulan berjalan kalau filter Bulan kosong.
       const fromFilter = el('monthFilter').value;
       if (fromFilter) return fromFilter;
-      return new Date().toISOString().slice(0,7);
+      return formatLocalDateKey().slice(0,7);
     }
     function fillSelect(select, values, label) {
       select.innerHTML = `<option value="">${label}</option>` + values.map(value => `<option value="${escapeHtml(value)}">${escapeHtml(value)}</option>`).join('');
@@ -632,7 +637,7 @@
       const totalDays = daysInMonth(month);
       const crewFilter = el('crewFilter').value;
       const today = new Date().getDate();
-      const activeYearMonth = new Date().toISOString().slice(0,7);
+      const activeYearMonth = formatLocalDateKey().slice(0,7);
       const isCurrentMonth = month === activeYearMonth;
       // Kumpulkan tanggal unik check-in per crew untuk bulan terpilih.
       // Sengaja tidak ikut filter unit/job/date supaya potongan & gaji bulanan akurat.
@@ -663,7 +668,7 @@
     function openSlip(crew, month) {
       const totalDays = daysInMonth(month);
       const today = new Date().getDate();
-      const activeYearMonth = new Date().toISOString().slice(0,7);
+      const activeYearMonth = formatLocalDateKey().slice(0,7);
       const isCurrentMonth = month === activeYearMonth;
       const workDates = new Set();
       state.records.forEach(r => {
