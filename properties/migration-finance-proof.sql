@@ -1,0 +1,1 @@
+ALTER TABLE finance_entries ADD COLUMN proof_url TEXT NOT NULL DEFAULT '';

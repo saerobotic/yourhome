@@ -164,17 +164,10 @@
       <!-- Form Login -->
       <div class="space-y-4">
         <div>
-          <label for="crewSelect" class="block text-sm font-semibold text-gray-700 mb-1.5">Pilih Nama Crew</label>
-          <select id="crewSelect"
-                  class="w-full px-4 py-3.5 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition text-base">
-            <option value="">— Pilih crew —</option>
-            <!-- 6 nama crew default, gampang diganti di JS -->
-            <option value="Aji Agung">Aji Agung</option>
-            <option value="Rezza Afrian Sukarsah">Rezza Afrian Sukarsah</option>
-            <option value="Qeyla Viorentina">Qeyla Viorentina</option>
-            <option value="Yono Maryono Narsisno">Yono Maryono Narsisno</option>
-            <option value="Udin Komarudin">Udin Komarudin</option>
-          </select>
+             <label for="crewSelect" class="block text-sm font-semibold text-gray-700 mb-1.5">Nama Crew</label>
+             <input id="crewSelect" type="text" maxlength="120" autocomplete="username" placeholder="Masukkan nama sesuai data crew"
+               class="w-full px-4 py-3.5 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition text-base" />
+             <p id="crewListStatus" class="text-xs text-gray-500 mt-1.5" role="status" aria-live="polite">Masukkan nama crew yang terdaftar.</p>
         </div>
 
         <div>
@@ -440,11 +433,13 @@
      DATA: Cloudflare Worker API
      ============================================================ */
   async function api(path, options = {}) {
+    const crewToken = sessionStorage.getItem('crew_token');
     const res = await fetch(CONFIG.API_BASE + path, {
       ...options,
       headers: {
         'Content-Type': 'application/json',
-        ...(options.headers || {})
+        ...(options.headers || {}),
+        ...(crewToken ? { Authorization: `Bearer ${crewToken}` } : {})
       }
     });
     const text = await res.text();
@@ -638,7 +633,6 @@
     setInterval(renderTodayDateTime, 1000);
     updatePendingBadge();
     updateNetworkStatus();
-
     // Auto-login hanya jika nama crew dan token sesi tersedia.
     const savedCrew = sessionStorage.getItem('current_crew');
     const savedToken = sessionStorage.getItem('crew_token');
@@ -717,7 +711,7 @@
     const updateLoginButton = () => {
       loginBtn.disabled = !crewSelect.value || crewPinInput.value.trim().length < 4;
     };
-    crewSelect.addEventListener('change', updateLoginButton);
+    crewSelect.addEventListener('input', updateLoginButton);
     crewPinInput.addEventListener('input', updateLoginButton);
     loginBtn.addEventListener('click', async () => {
       const crew = crewSelect.value;
@@ -1117,7 +1111,10 @@
       });
       const res = await fetch(url, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${sessionStorage.getItem('crew_token') || ''}`
+        },
         body: JSON.stringify(payload)
       });
       const text = await res.text();
@@ -1166,6 +1163,10 @@
     const pending = loadPending();
     updatePendingBadge();
     if (!pending.length) return;
+    if (!state.currentCrew || !sessionStorage.getItem('crew_token')) {
+      showToast('Login sebagai crew untuk mengirim check-in tertunda.', 'warning');
+      return;
+    }
     if (!navigator.onLine) {
       showToast('Masih offline. Data tertunda belum dikirim.', 'warning');
       return;
@@ -1176,11 +1177,18 @@
     let sent = 0;
     try {
       for (const item of pending) {
+        if (item.payload?.crew !== state.currentCrew) {
+          remaining.push(item);
+          continue;
+        }
         try {
           console.log('Mengirim check-in tertunda:', item.id);
           const response = await fetch(CONFIG.API_BASE + '/checkin', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${sessionStorage.getItem('crew_token') || ''}`
+            },
             body: JSON.stringify(item.payload)
           });
           const text = await response.text();

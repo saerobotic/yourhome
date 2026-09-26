@@ -349,7 +349,6 @@
     let refreshInProgress = false;
     let detailRecord = null;
     let manualEntryMode = false;
-    const KNOWN_CREWS = ['Aji Agung', 'Rezza Afrian Sukarsah', 'Qeyla Viorentina', 'Yono Maryono Narsisno', 'Udin Komarudin'];
     const el = id => document.getElementById(id);
 
     function escapeHtml(value) {
@@ -814,7 +813,6 @@
       return payload;
     }
     async function loadCrewOptionsForPin() {
-      const fallbackCrews = ['Aji Agung', 'Rezza Afrian Sukarsah', 'Qeyla Viorentina', 'Yono Maryono Narsisno', 'Udin Komarudin'];
       const select = el('pinCrewSelect');
       try {
         const response = await workerRequest(`${API_BASE}/crews?_=${Date.now()}`);
@@ -823,7 +821,7 @@
         select.innerHTML = '<option value="">Pilih crew</option>' + crews.map(name => `<option value="${escapeHtml(name)}">${escapeHtml(name)}</option>`).join('');
       } catch (error) {
         console.error('Gagal memuat daftar crew untuk PIN:', error);
-        select.innerHTML = '<option value="">Pilih crew</option>' + fallbackCrews.map(name => `<option value="${escapeHtml(name)}">${escapeHtml(name)}</option>`).join('');
+        select.innerHTML = '<option value="">Daftar crew tidak tersedia</option>';
       }
     }
     async function saveCrewPin() {
@@ -918,8 +916,7 @@
       el('editModal').classList.add('open');
     }
     function fillEditSelect(id, key, selectedValue) {
-      const knownValues = key === 'crew' ? KNOWN_CREWS : [];
-      const values = [...new Set([...knownValues, ...state.records.map(record => record[key]).filter(Boolean)])];
+      const values = [...new Set(state.records.map(record => record[key]).filter(Boolean))];
       if (selectedValue && !values.includes(selectedValue)) values.push(selectedValue);
       values.sort((a, b) => a.localeCompare(b, 'id'));
       const placeholder = key === 'crew' ? 'Pilih crew' : `Pilih ${key}`;
@@ -1029,6 +1026,14 @@
         console.error('readRecords failed', e);
         if (e.message === 'Login admin diperlukan') throw e;
         state.records = [];
+      }
+      try {
+        await workerRequest(`${API_BASE}/admin/checkins/payroll-sync`, {
+          method: 'POST',
+          body: JSON.stringify({})
+        });
+      } catch (error) {
+        console.warn('Gagal menyinkronkan honor crew ke finance:', error);
       }
       console.log('records loaded', state.records.length, state.records);
       document.getElementById('footerUpdatedAt').textContent = formatLocalDateTimeWib();
