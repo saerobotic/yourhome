@@ -65,16 +65,23 @@
   #dashboardApp[hidden]{display:none;}
   .finance-row[hidden]{display:none;}
   @media print{
+    @page{size:A4 landscape;margin:12mm;}
     body{background:#fff!important;}
     body *{visibility:hidden!important;}
-    #view-laporan,#view-laporan *{visibility:visible!important;}
-    #view-laporan{display:block!important;position:absolute;inset:0;width:100%;padding:0!important;}
-    #view-bagi-hasil,#view-bagi-hasil *{visibility:visible!important;}
-    #view-bagi-hasil{display:block!important;position:absolute;inset:0;width:100%;padding:0!important;}
+    body[data-print-view="owner-report"] #view-laporan,body[data-print-view="owner-report"] #view-laporan *,
+    body[data-print-view="owner-share"] #view-bagi-hasil,body[data-print-view="owner-share"] #view-bagi-hasil *{visibility:visible!important;}
+    body[data-print-view="owner-report"] #view-laporan,body[data-print-view="owner-share"] #view-bagi-hasil{display:block!important;position:absolute;inset:0;width:100%;padding:0!important;}
     #reportToolbar{display:none!important;}
+    #shareCalcControls,#shareCalcRules,#shareCalcActions,#shareCalcSavedInfo{display:none!important;}
     #reportContent .bg-white{border-color:#ddd!important;box-shadow:none!important;break-inside:avoid;}
     #reportContent table{font-size:9pt!important;}
     #reportContent tr{break-inside:avoid;}
+    #shareCalcResult .bg-white{border-color:#ddd!important;box-shadow:none!important;break-inside:auto;}
+    #shareCalcResult .overflow-x-auto{overflow:visible!important;}
+    #shareCalcResult table{font-size:7pt!important;min-width:0!important;width:100%!important;}
+    #shareCalcResult tr{break-inside:avoid;}
+    #shareCalcResult thead{display:table-header-group;}
+    #shareCalcResult h3,#shareCalcResult h4{break-after:avoid;}
   }
 </style>
 </head>
@@ -509,12 +516,24 @@
                   <th class="text-left font-semibold px-3 py-3 hidden lg:table-cell">Check-in → out</th>
                   <th class="text-left font-semibold px-3 py-3">Platform</th>
                   <th class="text-left font-semibold px-3 py-3">Status</th>
-                    <th class="text-right font-semibold px-5 py-3">Nilai</th>
-                    <th class="px-3 py-3"></th>
+                  <th class="text-right font-semibold px-5 py-3">Nilai</th>
+                  <th class="text-left font-semibold px-3 py-3 whitespace-nowrap">Waktu Input</th>
+                  <th class="px-3 py-3"></th>
                 </tr>
               </thead>
               <tbody id="bookingTableBody" class="divide-y divide-slate-100"></tbody>
             </table>
+          </div>
+          <div id="bookingPagination" class="flex items-center justify-between gap-3 border-t border-slate-100 px-4 py-3 sm:px-5">
+            <p id="bookingPageInfo" class="text-xs text-slate-500" aria-live="polite"></p>
+            <div class="flex items-center gap-2">
+              <button type="button" id="bookingPrevButton" onclick="changeBookingPage(-1)" class="inline-flex items-center gap-1 border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed">
+                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg>Sebelumnya
+              </button>
+              <button type="button" id="bookingNextButton" onclick="changeBookingPage(1)" class="inline-flex items-center gap-1 border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed">
+                Berikutnya<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg>
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -556,7 +575,7 @@
           </div>
         </div>
 
-        <div class="bg-white rounded-2xl border border-slate-100 p-4 mb-5 flex flex-wrap items-center gap-3">
+        <div id="reportToolbar" class="bg-white rounded-2xl border border-slate-100 p-4 mb-5 flex flex-wrap items-center gap-3">
           <div class="flex gap-2 flex-wrap" id="catFilter">
             <button class="tab-btn active" data-cat="all" onclick="filterExpenseCat(this,'all')">Semua</button>
             <span id="expenseCategoryFilterOptions" class="contents"></span>
@@ -638,6 +657,7 @@
           </div>
           <label class="block"><span class="block text-xs text-slate-500 font-semibold">Tanggal awal</span><input id="reportStartDate" type="date" value="2026-09-01" onchange="renderReport()" class="text-sm border border-slate-200 rounded-lg px-2 py-2 mt-0.5"></label>
           <label class="block"><span class="block text-xs text-slate-500 font-semibold">Tanggal akhir</span><input id="reportEndDate" type="date" value="2026-09-30" onchange="renderReport()" class="text-sm border border-slate-200 rounded-lg px-2 py-2 mt-0.5"></label>
+          <label class="block w-full sm:w-48"><span class="block text-xs text-slate-500 font-semibold">Nomor WhatsApp owner</span><input id="reportWhatsappPhone" type="tel" inputmode="tel" autocomplete="tel" placeholder="08xxxxxxxxxx" class="w-full text-sm border border-slate-200 rounded-lg px-2 py-2 mt-0.5"></label>
           <div class="flex gap-2 self-end">
             <button onclick="exportReportExcel()" title="Unduh CSV yang dapat dibuka di Excel" class="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold px-4 py-2 rounded-lg">
               <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
@@ -649,7 +669,7 @@
             </button>
             <button onclick="shareReportWhatsApp()" class="flex items-center gap-2 bg-slate-900 hover:bg-slate-800 text-white text-sm font-semibold px-4 py-2 rounded-lg">
               <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51l-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.999-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>
-              Kirim WA
+              Kirim WhatsApp
             </button>
           </div>
         </div>
@@ -661,7 +681,7 @@
       <!-- OWNER SHARE CALCULATOR                      -->
       <!-- =========================================== -->
       <div id="view-bagi-hasil" class="view">
-        <section class="bg-white border border-slate-200 rounded-xl p-4 sm:p-5 mb-5">
+        <section id="shareCalcControls" class="bg-white border border-slate-200 rounded-xl p-4 sm:p-5 mb-5">
           <div class="grid grid-cols-1 sm:grid-cols-[1fr_220px] gap-3 items-end">
             <label class="block">
               <span class="block text-xs text-slate-500 font-semibold mb-1">Owner</span>
@@ -669,12 +689,12 @@
             </label>
             <label class="block">
               <span class="block text-xs text-slate-500 font-semibold mb-1">Bulan laporan</span>
-              <input id="shareCalcMonth" type="month" class="w-full text-sm border border-slate-200 rounded-lg px-3 py-2.5 bg-white">
+              <input id="shareCalcMonth" type="month" onchange="renderShareCalculatorInputs()" class="w-full text-sm border border-slate-200 rounded-lg px-3 py-2.5 bg-white">
             </label>
           </div>
         </section>
 
-        <section class="bg-white border border-slate-200 rounded-xl overflow-hidden mb-5">
+        <section id="shareCalcRules" class="bg-white border border-slate-200 rounded-xl overflow-hidden mb-5">
           <div class="p-4 sm:p-5 border-b border-slate-100">
             <h2 class="font-bold text-slate-900">Aturan per properti</h2>
             <p class="text-xs text-slate-500 mt-1">Persentase awal mengikuti pengaturan properti. Pengurang tambahan dan persentase di sini hanya berlaku untuk kalkulasi ini.</p>
@@ -691,6 +711,21 @@
         </section>
 
         <div id="shareCalcResult"></div>
+        <p id="shareCalcSavedInfo" class="hidden mt-3 text-sm text-slate-600" role="status" aria-live="polite"></p>
+        <section id="shareCalcActions" class="hidden mt-4 bg-white border border-slate-200 rounded-xl p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <h2 class="text-sm font-bold text-slate-900">Finalisasi Bagi Hasil</h2>
+            <p class="text-xs text-slate-500 mt-1">Laporan lengkap tersimpan di D1. Final untuk owner dan bulan yang sama dapat diperbarui.</p>
+            <p id="shareCalcSaveStatus" class="text-xs mt-2" role="status" aria-live="polite"></p>
+          </div>
+          <div class="flex flex-wrap items-end gap-2">
+            <button id="shareCalcSaveButton" type="button" onclick="saveOwnerShareFinal()" class="inline-flex items-center gap-2 bg-emerald-700 hover:bg-emerald-800 text-white text-sm font-semibold px-3 py-2 rounded-lg"><svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M5 3h12l4 4v14H3V3h2z"/><path d="M7 3v6h10V3M7 21v-8h10v8"/></svg>Simpan Final</button>
+            <button type="button" onclick="downloadOwnerSharePdf()" class="inline-flex items-center gap-2 border border-slate-200 hover:bg-slate-50 text-slate-700 text-sm font-semibold px-3 py-2 rounded-lg"><svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 3v12m0 0 4-4m-4 4-4-4"/><path d="M5 17v4h14v-4"/></svg>Unduh PDF</button>
+            <button type="button" onclick="downloadOwnerShareCsv()" class="inline-flex items-center gap-2 border border-emerald-200 hover:bg-emerald-50 text-emerald-800 text-sm font-semibold px-3 py-2 rounded-lg"><svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414A1 1 0 0119 9v10a2 2 0 01-2 2z"/></svg>Unduh Excel</button>
+            <label class="block w-full sm:w-48"><span class="block text-xs text-slate-500 font-semibold mb-1">Nomor WhatsApp owner</span><input id="shareCalcWhatsappPhone" type="tel" inputmode="tel" autocomplete="tel" placeholder="08xxxxxxxxxx" class="w-full text-sm border border-slate-200 rounded-lg px-3 py-2"></label>
+            <button type="button" onclick="shareOwnerShareWhatsApp()" class="inline-flex items-center gap-2 bg-slate-900 hover:bg-slate-800 text-white text-sm font-semibold px-3 py-2 rounded-lg"><svg width="15" height="15" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51"/></svg>Kirim WhatsApp</button>
+          </div>
+        </section>
       </div>
 
       <!-- =========================================== -->
@@ -870,21 +905,15 @@
         <label class="block"><span class="block text-xs text-slate-500 font-semibold">Harga per Extra Bed (Rp)</span><input id="newBookingExtraBedPrice" type="number" min="0" step="1" value="0" class="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 mt-0.5"></label>
       </div>
       <p id="newBookingExtraBedTotal" class="text-xs text-slate-500">Total Extra Bed: Rp 0. Dicatat terpisah dari nilai booking.</p>
-      <div class="grid grid-cols-2 gap-3">
-        <div>
-          <label class="text-xs text-slate-500 font-semibold">Platform Fee (%)</label>
-          <input id="newBookingFee" type="number" value="0" min="0" max="50" class="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 mt-0.5">
-        </div>
-        <div>
-          <label class="text-xs text-slate-500 font-semibold">Status</label>
-          <select id="newBookingStatus" class="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 bg-white mt-0.5">
-            <option>Inquiry</option>
-            <option selected>Confirmed</option>
-            <option>Checked-in</option>
-            <option>Checked-out</option>
-            <option value="Cancelled" hidden disabled>Cancelled</option>
-          </select>
-        </div>
+      <div>
+        <label class="text-xs text-slate-500 font-semibold">Status</label>
+        <select id="newBookingStatus" class="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 bg-white mt-0.5">
+          <option>Inquiry</option>
+          <option selected>Confirmed</option>
+          <option>Checked-in</option>
+          <option>Checked-out</option>
+          <option value="Cancelled" hidden disabled>Cancelled</option>
+        </select>
       </div>
       <div id="bookingEditApprovalField" class="hidden">
         <label class="block"><span class="block text-xs text-slate-500 font-semibold">PIN Master 4 digit untuk edit booking Cancelled</span><input id="bookingEditApprovalPin" type="password" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" autocomplete="off" class="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 mt-0.5" placeholder="PIN persetujuan Master"></label>
@@ -1157,6 +1186,20 @@
   </div>
 </div>
 
+<div id="modal-delete-owner-share-final" class="modal-overlay fixed inset-0 bg-slate-900/50 z-50 hidden items-center justify-center p-4">
+  <div class="modal-panel bg-white rounded-xl max-w-sm w-full p-5">
+    <div class="flex items-center justify-between mb-4"><h3 class="font-bold text-lg text-slate-900">Batalkan Laporan Akhir</h3><button type="button" onclick="closeModal('modal-delete-owner-share-final')" aria-label="Tutup" class="p-1 hover:bg-slate-100 rounded-lg"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg></button></div>
+    <p id="deleteOwnerShareDescription" class="text-sm text-slate-600">Laporan Akhir yang tersimpan akan dihapus. Transaksi keuangan tidak berubah.</p>
+    <form id="deleteOwnerShareFinalForm" class="mt-4 space-y-3">
+      <input id="deleteOwnerShareOwnerId" type="hidden">
+      <input id="deleteOwnerShareMonth" type="hidden">
+      <label class="block"><span class="block text-xs font-semibold text-slate-600 mb-1">PIN Master (4 digit)</span><input id="deleteOwnerSharePin" type="password" inputmode="numeric" pattern="[0-9]{4}" minlength="4" maxlength="4" required autocomplete="off" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm" placeholder="PIN persetujuan Master"></label>
+      <p id="deleteOwnerShareStatus" class="text-sm" role="status" aria-live="polite"></p>
+      <div class="flex gap-2"><button type="button" onclick="closeModal('modal-delete-owner-share-final')" class="flex-1 border border-slate-200 rounded-lg px-4 py-2 text-sm font-semibold">Batal</button><button id="deleteOwnerShareButton" type="submit" class="flex-1 bg-rose-600 hover:bg-rose-700 text-white rounded-lg px-4 py-2 text-sm font-semibold">Hapus Laporan Akhir</button></div>
+    </form>
+  </div>
+</div>
+
 <div id="modal-edit-finance" class="modal-overlay fixed inset-0 bg-slate-900/50 z-50 hidden items-center justify-center p-4">
   <div class="modal-panel bg-white rounded-xl max-w-lg w-full max-h-[90vh] overflow-y-auto p-5">
     <div class="flex items-center justify-between mb-4"><h3 class="font-bold text-lg text-slate-900">Edit Pengeluaran</h3><button type="button" onclick="closeModal('modal-edit-finance')" aria-label="Tutup" class="p-1 hover:bg-slate-100 rounded-lg"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg></button></div>
@@ -1261,6 +1304,7 @@ const BOOKINGS = [];
 const EXPENSES = [];
 const OWNER_CREW_EXPENSES = [];
 const INCOMES = [];
+const BOOKINGS_PER_PAGE = 10;
 
 /* Users for management */
 const USERS = [
@@ -1273,8 +1317,13 @@ const USERS = [
 let currentView = 'dashboard';
 let currentPropFilter = 'all';
 let currentBookingStatus = 'all';
+let currentBookingPage = 1;
 let currentPeriod = 'September 2026';
 let lastReportSummary = null;
+let reportOwnerShareFinal = null;
+let reportOwnerShareFinalRequest = 0;
+let lastOwnerShareCalculation = null;
+let loadedOwnerShareCalculation = null;
 let currentExpCat = 'all';
 let currentFinanceTab = 'expense';
 let calDate = new Date(2026, 8, 1); // Sept 2026
@@ -1705,6 +1754,11 @@ const fmtDateFull = (d) => {
   const date = new Date(d);
   return date.toLocaleDateString('id-ID', { day:'numeric', month:'long', year:'numeric' });
 };
+function fmtBookingCreatedAt(value){
+  const date = new Date(value);
+  if(Number.isNaN(date.getTime())) return '-';
+  return `${date.toLocaleString('id-ID', { timeZone:'Asia/Jakarta', day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit', hourCycle:'h23' })} WIB`;
+}
 const escapeHtml = value => String(value ?? '').replace(/[&<>"']/g, character => ({
   '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;'
 }[character]));
@@ -1880,9 +1934,7 @@ function isDateInCustomReportRange(date, range){
   return date >= range.start && date < range.endExclusive;
 }
 function computeRevenue(booking){
-  const amount = getBookingNetAmount(booking);
-  const fee = amount * booking.platformFeePct / 100;
-  return amount - fee;
+  return getBookingNetAmount(booking);
 }
 function getBookingNetAmount(booking){
   const amount = Number(booking.amount) || 0;
@@ -2389,9 +2441,11 @@ function filterBookingStatus(btn, status){
   document.querySelectorAll('#view-booking .tab-btn').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
   currentBookingStatus = status;
+  currentBookingPage = 1;
   renderBookingView();
 }
 function renderBookingView(){
+  currentBookingPage = 1;
   renderCalendar();
   renderBookingsTable();
 }
@@ -2404,9 +2458,19 @@ function renderBookingsTable(){
   if(categoryFilter !== 'all') filtered = filtered.filter(booking => PROPERTIES.some(property => property.id === booking.propId && property.type === categoryFilter));
   if(platFilter !== 'all') filtered = filtered.filter(b=>b.platform===platFilter);
   document.getElementById('bookingCount').textContent = filtered.length;
+  const pageCount = Math.max(1, Math.ceil(filtered.length / BOOKINGS_PER_PAGE));
+  currentBookingPage = Math.min(Math.max(currentBookingPage, 1), pageCount);
+  const startIndex = (currentBookingPage - 1) * BOOKINGS_PER_PAGE;
+  const visibleBookings = filtered.slice(startIndex, startIndex + BOOKINGS_PER_PAGE);
+  document.getElementById('bookingPageInfo').textContent = filtered.length
+    ? `Menampilkan ${startIndex + 1}–${Math.min(startIndex + BOOKINGS_PER_PAGE, filtered.length)} dari ${filtered.length} booking · Halaman ${currentBookingPage}/${pageCount}`
+    : 'Tidak ada booking pada filter ini';
+  document.getElementById('bookingPagination').classList.toggle('hidden', filtered.length <= BOOKINGS_PER_PAGE);
+  document.getElementById('bookingPrevButton').disabled = currentBookingPage <= 1;
+  document.getElementById('bookingNextButton').disabled = currentBookingPage >= pageCount;
   document.getElementById('bookingTableBody').innerHTML = filtered.length===0 ?
-    `<tr><td colspan="8" class="text-center py-10 text-slate-400">Tidak ada booking ditemukan</td></tr>` :
-    filtered.map(b => `
+    `<tr><td colspan="9" class="text-center py-10 text-slate-400">Tidak ada booking ditemukan</td></tr>` :
+    visibleBookings.map(b => `
       <tr>
         <td class="px-5 py-3"><span class="text-xs font-mono text-slate-500">${b.id}</span></td>
         <td class="px-3 py-3">
@@ -2418,8 +2482,13 @@ function renderBookingsTable(){
         <td class="px-3 py-3"><span class="badge" style="background:${PLATFORM_COLORS[b.platform]}15;color:${PLATFORM_COLORS[b.platform]}"><span class="platform-dot" style="background:${PLATFORM_COLORS[b.platform]}"></span>${b.platform}</span></td>
         <td class="px-3 py-3"><span class="badge ${isBookingCancelled(b) ? STATUS_STYLES.Cancelled : STATUS_STYLES[b.status] || ''}">${escapeHtml(b.status)}</span>${isBookingCancelled(b)?`<div class="mt-1 max-w-48 text-[10px] text-rose-600">${escapeHtml(b.cancellationReason)} · Refund ${fmtRp(b.refundAmount || 0)}</div>`:''}</td>
         <td class="px-5 py-3 text-right font-bold text-slate-900">${fmtRp(getBookingNetAmount(b))}${isBookingCancelled(b)?`<div class="text-[10px] font-normal text-slate-400">Nilai awal ${fmtRp(b.amount)}</div>`:''}</td>
+        <td class="px-3 py-3 whitespace-nowrap text-xs text-slate-600">${fmtBookingCreatedAt(b.createdAt || b.created_at)}</td>
         <td class="px-3 py-3 text-right whitespace-nowrap">${currentDashboardAccount?.role !== 'IT' ? `<button type="button" onclick="openBookingModal('${b.id}')" title="${isBookingCancelled(b) ? 'Edit memerlukan PIN Master' : 'Edit booking'}" class="text-xs font-semibold text-brand-600 hover:text-brand-800">Edit</button>${isBookingCancelled(b) ? '' : `<button type="button" onclick="openBookingCancelModal('${b.id}')" class="ml-3 text-xs font-semibold text-rose-600 hover:text-rose-800">Cancel</button>`}` : '—'}</td>
       </tr>`).join('');
+}
+function changeBookingPage(direction){
+  currentBookingPage += direction;
+  renderBookingsTable();
 }
 
 async function loadFinanceData(){
@@ -3081,7 +3150,7 @@ function renderOwners(){
           return `<div class="flex items-center gap-2 p-2 bg-slate-50 rounded-lg"><div class="w-7 h-7 rounded bg-gradient-to-br ${property.gradient} flex items-center justify-center text-white text-[8px] font-bold">${escapeHtml(property.code.split('-')[0])}</div><div class="flex-1 min-w-0"><div class="text-xs font-semibold text-slate-800 truncate">${escapeHtml(property.name)}</div><div class="text-[10px] text-slate-400">${escapeHtml(property.area)}</div></div><span class="text-xs font-bold text-brand-600">${share}%</span></div>`;
         }).join('')}</div>
         <div class="pt-3 border-t border-slate-100 space-y-1.5 text-xs">
-          <div class="flex justify-between"><span class="text-slate-500">Revenue properti setelah fee platform</span><span class="font-semibold text-emerald-600">${fmtRpShort(totalRevenue)}</span></div>
+          <div class="flex justify-between"><span class="text-slate-500">Pemasukan booking + pemasukan tambahan</span><span class="font-semibold text-emerald-600">${fmtRpShort(totalRevenue)}</span></div>
           <div class="flex justify-between"><span class="text-slate-500">Biaya operasional dan honor crew</span><span class="font-semibold text-rose-600">${fmtRpShort(totalExpenses)}</span></div>
           <div class="flex justify-between pt-2 border-t border-slate-100"><span class="text-slate-700 font-bold">Status bagi hasil</span><span class="font-bold text-amber-600">Belum dihitung</span></div>
         </div>
@@ -3102,6 +3171,8 @@ function renderReport(){
   const range = getCustomReportRange();
   if(!range){
     lastReportSummary = null;
+    reportOwnerShareFinal = null;
+    reportOwnerShareFinalRequest++;
     document.getElementById('reportContent').innerHTML = '<div class="bg-white rounded-xl border border-rose-200 p-5 text-sm text-rose-700">Tanggal laporan tidak valid. Pastikan tanggal akhir sama atau setelah tanggal awal.</div>';
     return;
   }
@@ -3122,19 +3193,17 @@ function renderReport(){
       ...OWNER_CREW_EXPENSES.filter(expense => financeEntryMatchesProperty(expense, p) && isDateInCustomReportRange(expense.date, range)),
     ];
     const grossRev = periodBookings.reduce((sum, booking) => sum + getBookingNetAmount(booking), 0);
-    const platformFee = periodBookings.reduce((sum, booking) => sum + getBookingNetAmount(booking) * booking.platformFeePct / 100, 0);
-    const netRev = grossRev - platformFee;
     const otherIncome = INCOMES.filter(entry => entry.propId === p.id && !['income-opening-balance', 'income-booking'].includes(entry.categoryId) && isDateInCustomReportRange(entry.date, range))
       .reduce((sum, entry) => sum + entry.amount, 0);
     const expTotal = expenses.reduce((s,e)=>s+e.amount,0);
-    return { p, share:share*100, bookings:bookings.length, grossRev, platformFee, netRev, otherIncome, expTotal };
+    return { p, share:share*100, bookings:bookings.length, grossRev, otherIncome, expTotal };
   });
 
   const totals = propStats.reduce((acc,s)=>{
-    acc.grossRev += s.grossRev; acc.platformFee += s.platformFee; acc.netRev += s.netRev;
+    acc.grossRev += s.grossRev;
     acc.expTotal += s.expTotal; acc.otherIncome += s.otherIncome; acc.bookings += s.bookings;
     return acc;
-  }, { grossRev:0, platformFee:0, netRev:0, otherIncome:0, expTotal:0, bookings:0 });
+  }, { grossRev:0, otherIncome:0, expTotal:0, bookings:0 });
   lastReportSummary = { owner, period, propertyCount:props.length, totals };
 
   document.getElementById('reportContent').innerHTML = `
@@ -3151,8 +3220,8 @@ function renderReport(){
         </div>
         <div class="text-right">
           <div class="text-xs text-slate-500 uppercase tracking-wider">Status Bagi Hasil</div>
-          <div class="text-2xl font-extrabold text-amber-600">Belum dihitung</div>
-          <div class="text-xs text-slate-400 mt-1">Persentase owner dan agen tersimpan per properti</div>
+          <div id="reportShareStatusValue" class="text-2xl font-extrabold text-slate-500">Memeriksa final</div>
+          <div id="reportShareStatusNote" class="text-xs text-slate-400 mt-1">Persentase owner dan agen tersimpan per properti</div>
         </div>
       </div>
     </div>
@@ -3160,22 +3229,24 @@ function renderReport(){
     <!-- Summary cards -->
     <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-5">
       <div class="bg-white rounded-2xl p-4 border border-slate-100">
-        <div class="text-xs text-slate-500">Booking + Pemasukan Tambahan</div>
+        <div class="text-xs text-slate-500">Total Pemasukan</div>
         <div class="text-xl font-bold text-slate-900 mt-1">${fmtRpShort(totals.grossRev + totals.otherIncome)}</div>
       </div>
       <div class="bg-white rounded-2xl p-4 border border-slate-100">
-        <div class="text-xs text-slate-500">Platform Fee</div>
-        <div class="text-xl font-bold text-rose-600 mt-1">- ${fmtRpShort(totals.platformFee)}</div>
+        <div class="text-xs text-slate-500">Total Pengeluaran</div>
+        <div class="text-xl font-bold text-rose-600 mt-1">- ${fmtRpShort(totals.expTotal)}</div>
       </div>
       <div class="bg-white rounded-2xl p-4 border border-slate-100">
-        <div class="text-xs text-slate-500">Pengeluaran</div>
-        <div class="text-xl font-bold text-rose-600 mt-1">${fmtRpShort(totals.expTotal)}</div>
+        <div class="text-xs text-slate-500">Keuntungan Sebelum Bagi Hasil</div>
+        <div class="text-xl font-bold ${totals.grossRev + totals.otherIncome - totals.expTotal < 0 ? 'text-rose-600' : 'text-emerald-700'} mt-1">${fmtRpShort(totals.grossRev + totals.otherIncome - totals.expTotal)}</div>
       </div>
       <div class="bg-white rounded-2xl p-4 border border-slate-100">
         <div class="text-xs text-slate-500">Pembagian Owner & Agen</div>
-        <div class="text-xl font-bold text-amber-600 mt-1">Belum dihitung</div>
+        <div id="reportOwnerShareTotal" class="text-xl font-bold text-slate-500 mt-1">—</div>
       </div>
     </div>
+
+    <div id="reportOwnerShareFinal" class="mb-5"></div>
 
     <!-- Detail per property -->
     <div class="bg-white rounded-2xl border border-slate-100 overflow-hidden mb-5">
@@ -3188,8 +3259,8 @@ function renderReport(){
               <th class="text-center font-semibold px-3 py-3 hidden sm:table-cell">Booking</th>
               <th class="text-right font-semibold px-3 py-3">Revenue Booking</th>
               <th class="text-right font-semibold px-3 py-3">Pemasukan Tambahan</th>
-              <th class="text-right font-semibold px-3 py-3 hidden md:table-cell">Platform Fee</th>
               <th class="text-right font-semibold px-3 py-3">Biaya Operasional</th>
+              <th class="text-right font-semibold px-3 py-3">Keuntungan Sebelum Bagi Hasil</th>
               <th class="text-center font-semibold px-3 py-3">Owner %</th>
               <th class="text-center font-semibold px-5 py-3">Agen %</th>
             </tr>
@@ -3209,8 +3280,8 @@ function renderReport(){
                 <td class="px-3 py-3 text-center text-slate-700 hidden sm:table-cell">${s.bookings}</td>
                 <td class="px-3 py-3 text-right text-slate-700">${fmtRpShort(s.grossRev)}</td>
                 <td class="px-3 py-3 text-right text-emerald-700">${fmtRpShort(s.otherIncome)}</td>
-                <td class="px-3 py-3 text-right text-rose-600 hidden md:table-cell">- ${fmtRpShort(s.platformFee)}</td>
                 <td class="px-3 py-3 text-right text-rose-600">- ${fmtRpShort(s.expTotal)}</td>
+                <td class="px-3 py-3 text-right font-semibold ${s.grossRev + s.otherIncome - s.expTotal < 0 ? 'text-rose-600' : 'text-emerald-700'}">${fmtRpShort(s.grossRev + s.otherIncome - s.expTotal)}</td>
                 <td class="px-3 py-3 text-center font-semibold text-brand-600">${s.share}%</td>
                 <td class="px-5 py-3 text-center text-slate-600">${(s.p.agents || []).map(agent => `${escapeHtml(agent.name)} ${agent.share}%`).join(', ') || '—'}</td>
               </tr>`).join('')}
@@ -3219,10 +3290,10 @@ function renderReport(){
               <td class="px-3 py-3 text-center text-slate-900 hidden sm:table-cell">${totals.bookings}</td>
               <td class="px-3 py-3 text-right text-slate-900">${fmtRpShort(totals.grossRev)}</td>
               <td class="px-3 py-3 text-right text-emerald-700">${fmtRpShort(totals.otherIncome)}</td>
-              <td class="px-3 py-3 text-right text-rose-600 hidden md:table-cell">- ${fmtRpShort(totals.platformFee)}</td>
               <td class="px-3 py-3 text-right text-rose-600">- ${fmtRpShort(totals.expTotal)}</td>
+              <td class="px-3 py-3 text-right font-semibold ${totals.grossRev + totals.otherIncome - totals.expTotal < 0 ? 'text-rose-600' : 'text-emerald-700'}">${fmtRpShort(totals.grossRev + totals.otherIncome - totals.expTotal)}</td>
               <td class="px-3 py-3 text-center text-slate-400">—</td>
-              <td class="px-5 py-3 text-center text-amber-600">Belum dihitung</td>
+              <td class="px-5 py-3 text-center text-slate-400">—</td>
             </tr>
           </tbody>
         </table>
@@ -3355,6 +3426,180 @@ function renderReport(){
       </div>
     </div>
   `;
+  loadReportOwnerShareFinal(ownerId, range);
+}
+
+function getFullReportMonth(range){
+  if(!range) return null;
+  const month = range.start.slice(0, 7);
+  const [year, monthNumber] = month.split('-').map(Number);
+  const lastDay = new Date(Date.UTC(year, monthNumber, 0)).toISOString().slice(0, 10);
+  return range.start === `${month}-01` && range.end === lastDay ? month : null;
+}
+
+function renderReportOwnerShareFinal(snapshot){
+  const calculation = snapshot.calculation;
+  const totals = calculation.totals;
+  const isDraft = Boolean(snapshot.isDraft);
+  const updated = snapshot.updated_at ? fmtBookingCreatedAt(snapshot.updated_at) : '';
+  const detailsRows = (calculation.rows || []).map(row => ({
+    ...row,
+    propertyName:row.propertyName || row.property_name || '',
+    propertyCode:row.propertyCode || row.property_code || '',
+  }));
+  return `<section class="bg-white border ${isDraft ? 'border-amber-300' : 'border-emerald-200'} rounded-xl overflow-hidden">
+    <div class="p-4 sm:p-5 border-b border-slate-100 flex flex-wrap items-start justify-between gap-3">
+      <div><div class="flex flex-wrap items-center gap-2"><h2 class="text-lg font-bold text-slate-900">Laporan Akhir Bagi Hasil</h2><span class="badge ${isDraft ? 'bg-amber-50 text-amber-700' : 'bg-emerald-50 text-emerald-700'}">${isDraft ? 'REVISI BELUM DISIMPAN' : 'LAPORAN AKHIR'}</span></div><p class="text-sm text-slate-500 mt-1">${escapeHtml(calculation.ownerName)} · ${escapeHtml(calculation.month)} · ${totals.bookingCount} booking${updated ? ` · diperbarui ${escapeHtml(updated)}` : ''}</p></div>
+      <div class="text-right"><div class="text-xs font-semibold uppercase text-slate-500">Total hak owner</div><div class="text-2xl font-extrabold text-emerald-700">${fmtRp(totals.ownerShare)}</div></div>
+    </div>
+    <div class="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-7 gap-3 p-4 sm:p-5 border-b border-slate-100">
+      <div><div class="text-xs text-slate-500">Pemasukan booking</div><div class="font-bold">${fmtRp(totals.bookingRevenue)}</div></div>
+      <div><div class="text-xs text-slate-500">Pemasukan tambahan</div><div class="font-bold text-emerald-700">${fmtRp(totals.otherIncome)}</div></div>
+      <div><div class="text-xs text-slate-500">Total pemasukan</div><div class="font-bold text-emerald-700">${fmtRp(totals.bookingRevenue + totals.otherIncome)}</div></div>
+      <div><div class="text-xs text-slate-500">Platform fee</div><div class="font-bold text-rose-700">- ${fmtRp(totals.platformFee)}</div></div>
+      <div><div class="text-xs text-slate-500">Pengeluaran</div><div class="font-bold text-rose-700">- ${fmtRp(totals.operatingExpenses)}</div></div>
+      <div><div class="text-xs text-slate-500">Pengurang tambahan</div><div class="font-bold text-rose-700">- ${fmtRp(totals.additionalDeduction)}</div></div>
+      <div><div class="text-xs text-slate-500">Dasar bersih</div><div class="font-bold">${fmtRp(totals.netBase)}</div></div>
+    </div>
+    ${totals.deficit ? `<p class="px-4 sm:px-5 py-3 text-xs text-amber-700 border-b border-slate-100">Dasar negatif ${fmtRp(totals.deficit)} tidak dihitung sebagai nilai transfer owner.</p>` : ''}
+    ${renderShareAggregateDetails(detailsRows)}
+    <div class="border-t border-slate-100 p-4 sm:p-5 flex flex-wrap items-center justify-between gap-3"><p id="reportOwnerShareActionStatus" class="text-xs text-slate-500">${isDraft ? 'Revisi terbaru siap disimpan. Menyimpan akan mengganti final owner dan bulan yang sama.' : 'Simpan ulang akan mengganti Laporan Akhir untuk owner dan bulan yang sama.'}</p><div class="flex flex-wrap gap-2"><button id="reportOwnerShareSaveButton" type="button" onclick="saveReportOwnerShareFinal()" class="inline-flex items-center gap-2 bg-emerald-700 hover:bg-emerald-800 text-white text-sm font-semibold px-3 py-2 rounded-lg">${isDraft ? 'Simpan Final' : 'Perbarui Final'}</button>${!isDraft && snapshot.id ? `<button type="button" onclick="openReportFinalDeleteModal('${escapeHtml(calculation.ownerId)}','${escapeHtml(calculation.month)}')" class="inline-flex items-center gap-2 border border-rose-200 text-rose-700 hover:bg-rose-50 text-sm font-semibold px-3 py-2 rounded-lg">Batalkan / Hapus Final</button>` : ''}</div></div>
+  </section>`;
+}
+
+async function loadReportOwnerShareFinal(ownerId, range){
+  const panel = document.getElementById('reportOwnerShareFinal');
+  const requestId = ++reportOwnerShareFinalRequest;
+  const month = getFullReportMonth(range);
+  reportOwnerShareFinal = null;
+  const status = document.getElementById('reportShareStatusValue');
+  const note = document.getElementById('reportShareStatusNote');
+  const ownerTotal = document.getElementById('reportOwnerShareTotal');
+  if(!month){
+    panel.innerHTML = '<div class="bg-white border border-slate-200 rounded-xl p-4 text-sm text-slate-500">Laporan Akhir tersedia untuk periode satu bulan penuh. Pilih tanggal awal dan akhir dalam bulan yang sama.</div>';
+    if(status) status.textContent = 'Rentang khusus';
+    if(note) note.textContent = 'Laporan Akhir hanya mengikuti periode bulanan.';
+    if(ownerTotal) ownerTotal.textContent = '—';
+    return;
+  }
+  panel.innerHTML = '<div class="bg-white border border-slate-200 rounded-xl p-4 text-sm text-slate-500">Memuat Laporan Akhir...</div>';
+  if(status) status.textContent = 'Memeriksa final';
+  try {
+    const result = await dashboardApi(`/dashboard/owner-share-calculations?owner_id=${encodeURIComponent(ownerId)}&month=${encodeURIComponent(month)}`);
+    if(requestId !== reportOwnerShareFinalRequest) return;
+    const saved = result.data;
+    const hasCurrentDraft = lastOwnerShareCalculation?.ownerId === ownerId && lastOwnerShareCalculation.month === month &&
+      (!saved || JSON.stringify(lastOwnerShareCalculation) !== JSON.stringify(saved.calculation));
+    if(saved){
+      reportOwnerShareFinal = { ...saved, isDraft:false };
+    }
+    if(hasCurrentDraft){
+      reportOwnerShareFinal = { ...saved, owner_id:ownerId, period_month:month, calculation:lastOwnerShareCalculation, isDraft:true };
+    }
+    if(!reportOwnerShareFinal){
+      panel.innerHTML = '<div class="bg-white border border-slate-200 rounded-xl p-4 text-sm text-slate-500">Belum ada Laporan Akhir untuk owner dan bulan ini. Generate lalu simpan dari Kalkulator Bagi Hasil.</div>';
+      if(status) status.textContent = 'Belum ada final';
+      if(note) note.textContent = 'Laporan akhir belum disimpan untuk periode ini.';
+      if(ownerTotal) ownerTotal.textContent = '—';
+      return;
+    }
+    panel.innerHTML = renderReportOwnerShareFinal(reportOwnerShareFinal);
+    if(status){
+      status.textContent = reportOwnerShareFinal.isDraft ? 'Revisi belum disimpan' : 'Laporan Akhir';
+      status.className = `text-2xl font-extrabold ${reportOwnerShareFinal.isDraft ? 'text-amber-600' : 'text-emerald-700'}`;
+    }
+    if(note) note.textContent = reportOwnerShareFinal.isDraft ? 'Simpan untuk mengganti final sebelumnya.' : `Final tersimpan untuk ${month}.`;
+    if(ownerTotal){
+      ownerTotal.textContent = fmtRp(reportOwnerShareFinal.calculation.totals.ownerShare);
+      ownerTotal.className = 'text-xl font-bold text-emerald-700 mt-1';
+    }
+  } catch(error) {
+    if(requestId !== reportOwnerShareFinalRequest) return;
+    panel.innerHTML = `<div class="bg-white border border-amber-200 rounded-xl p-4 text-sm text-amber-700">Laporan Akhir belum dapat dimuat: ${escapeHtml(error.message || 'periksa koneksi Worker')}.</div>`;
+    if(status) status.textContent = 'Tidak dapat dimuat';
+    if(note) note.textContent = 'Periksa koneksi dan versi Worker.';
+  }
+}
+
+async function saveReportOwnerShareFinal(){
+  const snapshot = reportOwnerShareFinal;
+  if(!snapshot?.calculation){
+    showToast('Belum ada kalkulasi untuk disimpan sebagai final.');
+    return;
+  }
+  const button = document.getElementById('reportOwnerShareSaveButton');
+  const status = document.getElementById('reportOwnerShareActionStatus');
+  button.disabled = true;
+  status.textContent = 'Menyimpan Laporan Akhir...';
+  try {
+    const result = await dashboardApi('/dashboard/owner-share-calculations', {
+      method:'POST', body:JSON.stringify(snapshot.calculation),
+    });
+    reportOwnerShareFinal = { ...snapshot, ...result.data, calculation:snapshot.calculation, isDraft:false };
+    document.getElementById('reportOwnerShareFinal').innerHTML = renderReportOwnerShareFinal(reportOwnerShareFinal);
+    showToast('Laporan Akhir tersimpan dan menggantikan revisi sebelumnya untuk bulan ini.');
+    const refreshedStatus = document.getElementById('reportOwnerShareActionStatus');
+    if(refreshedStatus) refreshedStatus.textContent = 'Laporan Akhir tersimpan. Simpan revisi terbaru untuk mengganti final bulan yang sama.';
+    const reportStatus = document.getElementById('reportShareStatusValue');
+    if(reportStatus) reportStatus.textContent = 'Laporan Akhir';
+    const ownerTotal = document.getElementById('reportOwnerShareTotal');
+    if(ownerTotal) ownerTotal.textContent = fmtRp(reportOwnerShareFinal.calculation.totals.ownerShare);
+  } catch(error) {
+    status.textContent = error.message || 'Laporan Akhir gagal disimpan.';
+  } finally {
+    const currentButton = document.getElementById('reportOwnerShareSaveButton');
+    if(currentButton) currentButton.disabled = false;
+  }
+}
+
+function openReportFinalDeleteModal(ownerId, month){
+  if(currentDashboardAccount?.role === 'IT'){
+    showToast('Role IT tidak dapat menghapus Laporan Akhir.');
+    return;
+  }
+  if(!reportOwnerShareFinal || reportOwnerShareFinal.isDraft || reportOwnerShareFinal.owner_id !== ownerId || reportOwnerShareFinal.period_month !== month){
+    showToast('Laporan Akhir tersimpan tidak ditemukan. Muat ulang Laporan Owner.');
+    return;
+  }
+  document.getElementById('deleteOwnerShareOwnerId').value = ownerId;
+  document.getElementById('deleteOwnerShareMonth').value = month;
+  document.getElementById('deleteOwnerSharePin').value = '';
+  document.getElementById('deleteOwnerShareStatus').textContent = '';
+  document.getElementById('deleteOwnerShareDescription').textContent = `Hapus Laporan Akhir ${reportOwnerShareFinal.owner_name || reportOwnerShareFinal.calculation.ownerName} untuk ${month}? Data booking dan transaksi keuangan tidak akan berubah.`;
+  openModal('modal-delete-owner-share-final');
+  document.getElementById('deleteOwnerSharePin').focus();
+}
+
+async function deleteReportOwnerShareFinal(event){
+  event.preventDefault();
+  const ownerId = document.getElementById('deleteOwnerShareOwnerId').value;
+  const month = document.getElementById('deleteOwnerShareMonth').value;
+  const pinInput = document.getElementById('deleteOwnerSharePin');
+  const status = document.getElementById('deleteOwnerShareStatus');
+  const button = document.getElementById('deleteOwnerShareButton');
+  if(!/^\d{4}$/.test(pinInput.value)){
+    status.className = 'text-sm text-rose-600';
+    status.textContent = 'Masukkan PIN Master tepat 4 digit.';
+    return;
+  }
+  button.disabled = true;
+  status.className = 'text-sm text-slate-500';
+  status.textContent = 'Memverifikasi PIN Master dan menghapus final...';
+  try {
+    await dashboardApi(`/dashboard/owner-share-calculations?owner_id=${encodeURIComponent(ownerId)}&month=${encodeURIComponent(month)}`, {
+      method:'DELETE', body:JSON.stringify({ pin:pinInput.value }),
+    });
+    closeModal('modal-delete-owner-share-final');
+    reportOwnerShareFinal = null;
+    lastOwnerShareCalculation = null;
+    renderReport();
+    showToast('Laporan Akhir dibatalkan dan dihapus. Transaksi keuangan tetap tersimpan.');
+  } catch(error) {
+    status.className = 'text-sm text-rose-600';
+    status.textContent = error.message || 'Laporan Akhir gagal dihapus.';
+  } finally {
+    button.disabled = false;
+  }
 }
 
 function populateShareCalculatorOwners(){
@@ -3384,16 +3629,24 @@ function renderShareCalculatorInputs(){
   const result = document.getElementById('shareCalcResult');
   result.innerHTML = '';
   delete result.dataset.generated;
+  lastOwnerShareCalculation = null;
+  loadedOwnerShareCalculation = null;
+  document.getElementById('shareCalcActions').classList.add('hidden');
+  document.getElementById('shareCalcSavedInfo').classList.add('hidden');
+  document.getElementById('shareCalcSaveStatus').textContent = '';
+  document.getElementById('shareCalcSaveButton').textContent = 'Simpan Final';
   document.getElementById('shareCalcStatus').textContent = '';
   if(!properties.length && !unlinkedProperties.length){
     container.innerHTML = '<p class="p-5 text-sm text-slate-500">Owner ini belum terhubung ke properti.</p>';
+    loadSavedOwnerShareCalculation(ownerId, document.getElementById('shareCalcMonth').value);
     return;
   }
   const propertyInputs = properties.map(property => {
     const ownerShare = property.owners.find(item => item.id === ownerId)?.share ?? 0;
     return `
-      <div class="grid grid-cols-1 sm:grid-cols-[minmax(0,1fr)_180px_150px_140px] gap-3 items-center p-4 sm:px-5">
+      <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-[minmax(0,1fr)_140px_150px_130px_130px] gap-3 items-center p-4 sm:px-5">
         <div class="min-w-0"><div class="text-sm font-semibold text-slate-900">${escapeHtml(property.name)}</div><div class="text-xs text-slate-500">${escapeHtml(property.code)} · ${escapeHtml(property.area)}</div></div>
+        <label class="block"><span class="block text-xs text-slate-500 mb-1">Platform Fee (%)</span><input id="shareCalcFee-${escapeHtml(property.id)}" type="number" min="0" max="50" step="0.01" value="${escapeHtml(previousValues.get(`shareCalcFee-${property.id}`) ?? '0')}" class="w-full text-sm border border-slate-200 rounded-lg px-3 py-2"></label>
         <label class="block"><span class="block text-xs text-slate-500 mb-1">Nama pengurang</span><input id="shareCalcDeductionLabel-${escapeHtml(property.id)}" type="text" maxlength="60" placeholder="Contoh: dana renovasi" class="w-full text-sm border border-slate-200 rounded-lg px-3 py-2"></label>
         <label class="block"><span class="block text-xs text-slate-500 mb-1">Pengurang (Rp)</span><input id="shareCalcDeduction-${escapeHtml(property.id)}" type="number" min="0" step="1" value="0" class="w-full text-sm border border-slate-200 rounded-lg px-3 py-2"></label>
         <label class="block"><span class="block text-xs text-slate-500 mb-1">Bagian owner (%)</span><input id="shareCalcPercent-${escapeHtml(property.id)}" type="number" min="0" max="100" step="0.01" value="${Number(ownerShare)}" class="w-full text-sm border border-slate-200 rounded-lg px-3 py-2"></label>
@@ -3411,6 +3664,42 @@ function renderShareCalculatorInputs(){
   container.querySelectorAll('input').forEach(input => {
     if(previousValues.has(input.id)) input.value = previousValues.get(input.id);
   });
+  loadSavedOwnerShareCalculation(ownerId, document.getElementById('shareCalcMonth').value);
+}
+
+async function loadSavedOwnerShareCalculation(ownerId, month){
+  const savedInfo = document.getElementById('shareCalcSavedInfo');
+  if(!ownerId || !/^\d{4}-(0[1-9]|1[0-2])$/.test(month || '')) return;
+  try {
+    const result = await dashboardApi(`/dashboard/owner-share-calculations?owner_id=${encodeURIComponent(ownerId)}&month=${encodeURIComponent(month)}`);
+    if(document.getElementById('shareCalcOwner').value !== ownerId || document.getElementById('shareCalcMonth').value !== month) return;
+    const saved = result.data;
+    if(!saved){
+      savedInfo.classList.add('hidden');
+      return;
+    }
+    loadedOwnerShareCalculation = saved;
+    (saved.calculation?.rows || []).forEach(row => {
+      const fee = document.getElementById(`shareCalcFee-${row.propertyId}`);
+      const percent = document.getElementById(`shareCalcPercent-${row.propertyId}`);
+      const deduction = document.getElementById(`shareCalcDeduction-${row.propertyId}`);
+      const label = document.getElementById(`shareCalcDeductionLabel-${row.propertyId}`);
+      if(fee) fee.value = row.platformFeePercent;
+      if(percent) percent.value = row.ownerPercent;
+      if(deduction) deduction.value = row.additionalDeduction;
+      if(label) label.value = row.additionalDeductionLabel || '';
+    });
+    const updated = saved.updated_at ? fmtBookingCreatedAt(saved.updated_at) : '';
+    savedInfo.textContent = `Final tersimpan${updated ? ` · diperbarui ${updated}` : ''}. Input bisa diedit; Generate ulang lalu simpan untuk memperbarui final.`;
+    savedInfo.className = 'mt-3 text-sm text-emerald-700';
+    if(!document.getElementById('shareCalcActions').classList.contains('hidden')) {
+      document.getElementById('shareCalcSaveButton').textContent = 'Perbarui Final';
+    }
+  } catch(error) {
+    if(document.getElementById('shareCalcOwner').value !== ownerId || document.getElementById('shareCalcMonth').value !== month) return;
+    savedInfo.textContent = 'Final tersimpan belum dapat dimuat. Pastikan migration bagi hasil sudah dijalankan dan Worker sudah diperbarui.';
+    savedInfo.className = 'mt-3 text-sm text-amber-700';
+  }
 }
 
 function attachUnlinkedPropertyToOwner(propertyId, ownerId){
@@ -3440,6 +3729,55 @@ function attachUnlinkedPropertyToOwner(propertyId, ownerId){
   showToast(`${property.name} dihubungkan ke ${owner.name} dengan bagian 100%.`);
 }
 
+function renderShareDetailTable(title, records, type){
+  const isBooking = type === 'booking';
+  const total = records.reduce((sum, item) => sum + Number(isBooking ? item.netAmount : item.amount || 0), 0);
+  const dateLabel = value => escapeHtml(value || '—');
+  let tableHead;
+  let tableRows;
+  let tableTotal;
+  if(isBooking){
+    const refundTotal = records.reduce((sum, item) => sum + Number(item.refundAmount || 0), 0);
+    const grossTotal = records.reduce((sum, item) => sum + Number(item.amount || 0), 0);
+    tableHead = '<tr><th class="text-left px-3 py-2">Properti</th><th class="text-left px-3 py-2">Booking / Tamu</th><th class="text-left px-3 py-2">Check-in / Check-out</th><th class="text-left px-3 py-2">Platform / Status</th><th class="text-right px-3 py-2">Malam</th><th class="text-right px-3 py-2">Nilai Booking</th><th class="text-right px-3 py-2">Refund</th><th class="text-right px-3 py-2">Bersih</th></tr>';
+    tableRows = records.map(item => `<tr><td class="px-3 py-2">${escapeHtml(item.propertyName || '—')}<span class="block text-xs text-slate-500">${escapeHtml(item.propertyCode || '')}</span></td><td class="px-3 py-2"><span class="font-mono">${escapeHtml(item.id || '—')}</span><span class="block">${escapeHtml(item.guest || '—')}</span></td><td class="px-3 py-2 whitespace-nowrap">${dateLabel(item.checkin)} &rarr; ${dateLabel(item.checkout)}</td><td class="px-3 py-2">${escapeHtml(item.platform || '—')}<span class="block text-xs text-slate-500">${escapeHtml(item.status || '—')}</span></td><td class="px-3 py-2 text-right">${Number(item.nights) || 0}</td><td class="px-3 py-2 text-right">${fmtRp(item.amount)}</td><td class="px-3 py-2 text-right text-rose-700">${fmtRp(item.refundAmount)}</td><td class="px-3 py-2 text-right font-semibold">${fmtRp(item.netAmount)}</td></tr>`).join('');
+    tableTotal = `<tr class="bg-slate-50 font-bold"><td colspan="5" class="px-3 py-2 text-right">Total booking bulan ini</td><td class="px-3 py-2 text-right">${fmtRp(grossTotal)}</td><td class="px-3 py-2 text-right text-rose-700">${fmtRp(refundTotal)}</td><td class="px-3 py-2 text-right text-emerald-700">${fmtRp(total)}</td></tr>`;
+  } else if(type === 'expense'){
+    tableHead = '<tr><th class="text-left px-3 py-2">Properti</th><th class="text-left px-3 py-2">Tanggal</th><th class="text-left px-3 py-2">Jenis</th><th class="text-left px-3 py-2">Kategori</th><th class="text-left px-3 py-2">Keterangan / Pekerjaan</th><th class="text-left px-3 py-2">Penerima / Crew</th><th class="text-right px-3 py-2">Nominal</th></tr>';
+    tableRows = records.map(item => `<tr><td class="px-3 py-2">${escapeHtml(item.propertyName || '—')}<span class="block text-xs text-slate-500">${escapeHtml(item.propertyCode || '')}</span></td><td class="px-3 py-2 whitespace-nowrap">${dateLabel(item.date)}</td><td class="px-3 py-2">${escapeHtml(item.source || 'Operasional')}</td><td class="px-3 py-2">${escapeHtml(item.category || '—')}</td><td class="px-3 py-2">${escapeHtml(item.description || '—')}</td><td class="px-3 py-2">${escapeHtml(item.payee || '—')}</td><td class="px-3 py-2 text-right font-semibold text-rose-700">${fmtRp(item.amount)}</td></tr>`).join('');
+    tableTotal = `<tr class="bg-slate-50 font-bold"><td colspan="6" class="px-3 py-2 text-right">Total pengeluaran bulan ini</td><td class="px-3 py-2 text-right text-rose-700">- ${fmtRp(total)}</td></tr>`;
+  } else {
+    tableHead = '<tr><th class="text-left px-3 py-2">Properti</th><th class="text-left px-3 py-2">Tanggal</th><th class="text-left px-3 py-2">Kategori</th><th class="text-left px-3 py-2">Keterangan</th><th class="text-left px-3 py-2">Penerima</th><th class="text-right px-3 py-2">Nominal</th></tr>';
+    tableRows = records.map(item => `<tr><td class="px-3 py-2">${escapeHtml(item.propertyName || '—')}<span class="block text-xs text-slate-500">${escapeHtml(item.propertyCode || '')}</span></td><td class="px-3 py-2 whitespace-nowrap">${dateLabel(item.date)}</td><td class="px-3 py-2">${escapeHtml(item.category || '—')}</td><td class="px-3 py-2">${escapeHtml(item.description || '—')}</td><td class="px-3 py-2">${escapeHtml(item.payee || '—')}</td><td class="px-3 py-2 text-right font-semibold text-emerald-700">${fmtRp(item.amount)}</td></tr>`).join('');
+    tableTotal = `<tr class="bg-slate-50 font-bold"><td colspan="5" class="px-3 py-2 text-right">Total pemasukan tambahan bulan ini</td><td class="px-3 py-2 text-right text-emerald-700">${fmtRp(total)}</td></tr>`;
+  }
+  const emptyColumnCount = isBooking ? 8 : type === 'expense' ? 7 : 6;
+  const emptyLabel = isBooking ? 'booking' : type === 'expense' ? 'pengeluaran' : 'pemasukan tambahan';
+  return `<section class="share-detail-block mb-5"><div class="flex justify-between items-baseline gap-3 mb-2"><h4 class="text-sm font-bold text-slate-800">${title} <span class="font-normal text-slate-500">(${records.length} transaksi)</span></h4></div><div class="overflow-x-auto"><table class="w-full min-w-[800px] text-xs"><thead class="bg-slate-50 text-slate-500">${tableHead}</thead><tbody class="divide-y divide-slate-100">${tableRows || `<tr><td colspan="${emptyColumnCount}" class="px-3 py-4 text-center text-slate-400">Tidak ada ${emptyLabel} pada bulan ini.</td></tr>`}${tableTotal}</tbody></table></div></section>`;
+}
+
+function renderShareAggregateDetails(propertyRows){
+  const bookings = [];
+  const incomes = [];
+  const expenses = [];
+  propertyRows.forEach(row => {
+    (row.bookingDetails || []).forEach(item => bookings.push({ ...item, propertyName:row.propertyName, propertyCode:row.propertyCode }));
+    (row.incomeDetails || []).forEach(item => incomes.push({ ...item, propertyName:row.propertyName, propertyCode:row.propertyCode }));
+    (row.expenseDetails || []).forEach(item => expenses.push({ ...item, propertyName:row.propertyName, propertyCode:row.propertyCode, source:'Operasional' }));
+    (row.crewExpenseDetails || []).forEach(item => expenses.push({ ...item, propertyName:row.propertyName, propertyCode:row.propertyCode, description:item.job || item.description, source:'Crew' }));
+  });
+  const dateSort = (left, right) => String(right).localeCompare(String(left));
+  bookings.sort((left, right) => dateSort(left.checkin, right.checkin) || left.propertyName.localeCompare(right.propertyName, 'id'));
+  incomes.sort((left, right) => dateSort(left.date, right.date) || left.propertyName.localeCompare(right.propertyName, 'id'));
+  expenses.sort((left, right) => dateSort(left.date, right.date) || left.propertyName.localeCompare(right.propertyName, 'id'));
+  return `<div class="border-t border-slate-200 p-4 sm:p-5"><div class="mb-4"><h3 class="font-bold text-slate-900">Rincian Bulanan</h3><p class="text-xs text-slate-500 mt-1">Semua properti owner digabung. Properti sumber tercantum pada setiap transaksi.</p></div>
+    ${renderShareDetailTable('Booking', bookings, 'booking')}
+    ${renderShareDetailTable('Pemasukan Tambahan', incomes, 'income')}
+    ${renderShareDetailTable('Pengeluaran', expenses, 'expense')}
+    <p class="border-t border-slate-200 pt-3 text-xs text-slate-500">Hak owner dihitung sesuai persentase tiap properti, lalu dijumlahkan menjadi total bulanan.</p>
+  </div>`;
+}
+
 function generateOwnerShareCalculation(){
   const ownerId = document.getElementById('shareCalcOwner').value;
   const month = document.getElementById('shareCalcMonth').value;
@@ -3461,26 +3799,51 @@ function generateOwnerShareCalculation(){
   const range = { start, endExclusive:nextMonth };
   const rows = [];
   for(const property of properties){
+    const platformFeeInput = document.getElementById(`shareCalcFee-${property.id}`);
     const percentInput = document.getElementById(`shareCalcPercent-${property.id}`);
     const deductionInput = document.getElementById(`shareCalcDeduction-${property.id}`);
     const deductionLabelInput = document.getElementById(`shareCalcDeductionLabel-${property.id}`);
+    const platformFeePercent = Number(platformFeeInput?.value);
     const ownerPercent = Number(percentInput?.value);
     const additionalDeduction = Number(deductionInput?.value);
-    if(!Number.isFinite(ownerPercent) || ownerPercent < 0 || ownerPercent > 100 || !Number.isFinite(additionalDeduction) || additionalDeduction < 0){
+    if(!Number.isFinite(platformFeePercent) || platformFeePercent < 0 || platformFeePercent > 50 || !Number.isFinite(ownerPercent) || ownerPercent < 0 || ownerPercent > 100 || !Number.isFinite(additionalDeduction) || additionalDeduction < 0){
       status.className = 'px-4 sm:px-5 pb-4 text-sm text-rose-600';
       status.textContent = `Periksa persentase dan pengurang tambahan untuk ${property.name}.`;
       return;
     }
     const bookings = BOOKINGS.filter(item => item.propId === property.id && isDateInCustomReportRange(item.checkin, range));
     const bookingRevenue = bookings.reduce((sum, item) => sum + getBookingNetAmount(item), 0);
-    const platformFee = bookings.reduce((sum, item) => sum + getBookingNetAmount(item) * Number(item.platformFeePct || 0) / 100, 0);
-    const otherIncome = INCOMES.filter(item => item.propId === property.id && !['income-opening-balance', 'income-booking'].includes(item.categoryId) && isDateInCustomReportRange(item.date, range))
-      .reduce((sum, item) => sum + Number(item.amount || 0), 0);
-    const expenses = [...EXPENSES, ...OWNER_CREW_EXPENSES].filter(item => financeEntryMatchesProperty(item, property) && isDateInCustomReportRange(item.date, range));
-    const operatingExpenses = expenses.reduce((sum, item) => sum + Number(item.amount || 0), 0);
+    const platformFee = bookingRevenue * platformFeePercent / 100;
+    const incomeEntries = INCOMES.filter(item => item.propId === property.id && !['income-opening-balance', 'income-booking'].includes(item.categoryId) && isDateInCustomReportRange(item.date, range));
+    const otherIncome = incomeEntries.reduce((sum, item) => sum + Number(item.amount || 0), 0);
+    const expenses = EXPENSES.filter(item => financeEntryMatchesProperty(item, property) && isDateInCustomReportRange(item.date, range));
+    const crewExpenses = OWNER_CREW_EXPENSES.filter(item => financeEntryMatchesProperty(item, property) && isDateInCustomReportRange(item.date, range));
+    const operatingExpenses = [...expenses, ...crewExpenses].reduce((sum, item) => sum + Number(item.amount || 0), 0);
     const netBase = bookingRevenue + otherIncome - platformFee - operatingExpenses - additionalDeduction;
     const additionalDeductionLabel = deductionLabelInput?.value.trim() || 'Pengurang tambahan';
-    rows.push({ property, bookingCount:bookings.filter(item => !isBookingCancelled(item)).length, bookingRevenue, otherIncome, platformFee, operatingExpenses, additionalDeduction, additionalDeductionLabel, netBase, ownerPercent, ownerShare:Math.max(0, netBase) * ownerPercent / 100 });
+    const bookingDetails = bookings.map(booking => {
+      const amount = Number(booking.amount) || 0;
+      const refundAmount = isBookingCancelled(booking) ? Math.min(Number(booking.refundAmount) || 0, amount) : 0;
+      return {
+        id:String(booking.id || ''), guest:String(booking.guest || ''), platform:String(booking.platform || ''),
+        checkin:String(booking.checkin || ''), checkout:String(booking.checkout || ''), nights:Number(booking.nights) || 0,
+        status:String(booking.status || ''), amount, refundAmount, netAmount:getBookingNetAmount(booking),
+      };
+    });
+    const incomeDetails = incomeEntries.map(item => ({
+      id:String(item.id || ''), date:String(item.date || ''), category:String(item.cat || ''),
+      description:String(item.desc || ''), payee:String(item.payee || ''), amount:Number(item.amount) || 0,
+    }));
+    const expenseDetails = expenses.map(item => ({
+      id:String(item.id || ''), date:String(item.date || ''), category:String(item.cat || ''),
+      description:String(item.desc || ''), payee:String(item.payee || ''), amount:Number(item.amount) || 0,
+    }));
+    const crewExpenseDetails = crewExpenses.map(item => ({
+      id:String(item.id || ''), date:String(item.date || ''), category:String(item.cat || ''),
+      description:String(item.desc || ''), payee:String(item.payee || ''),
+      job:String(getOwnerPayrollJobLabel(item) || ''), amount:Number(item.amount) || 0,
+    }));
+    rows.push({ property, bookingCount:bookings.filter(item => !isBookingCancelled(item)).length, bookingRevenue, otherIncome, platformFeePercent, platformFee, operatingExpenses, additionalDeduction, additionalDeductionLabel, netBase, ownerPercent, ownerShare:Math.max(0, netBase) * ownerPercent / 100, bookingDetails, incomeDetails, expenseDetails, crewExpenseDetails });
   }
   const totals = rows.reduce((result, row) => {
     result.bookingRevenue += row.bookingRevenue;
@@ -3495,6 +3858,32 @@ function generateOwnerShareCalculation(){
     return result;
   }, { bookingRevenue:0, otherIncome:0, platformFee:0, operatingExpenses:0, additionalDeduction:0, netBase:0, ownerShare:0, deficit:0, bookingCount:0 });
   const monthLabel = new Date(`${start}T00:00:00`).toLocaleDateString('id-ID', { month:'long', year:'numeric' });
+  lastOwnerShareCalculation = {
+    ownerId,
+    ownerName:owner.name,
+    month,
+    rows:rows.map(row => ({
+      propertyId:row.property.id,
+      propertyName:row.property.name,
+      propertyCode:row.property.code,
+      bookingCount:row.bookingCount,
+      bookingDetails:row.bookingDetails,
+      bookingRevenue:row.bookingRevenue,
+      incomeDetails:row.incomeDetails,
+      otherIncome:row.otherIncome,
+      expenseDetails:row.expenseDetails,
+      crewExpenseDetails:row.crewExpenseDetails,
+      platformFeePercent:row.platformFeePercent,
+      platformFee:row.platformFee,
+      operatingExpenses:row.operatingExpenses,
+      additionalDeduction:row.additionalDeduction,
+      additionalDeductionLabel:row.additionalDeductionLabel,
+      netBase:row.netBase,
+      ownerPercent:row.ownerPercent,
+      ownerShare:row.ownerShare,
+    })),
+    totals,
+  };
   status.className = 'px-4 sm:px-5 pb-4 text-sm text-emerald-700';
   status.textContent = `Kalkulasi ${owner.name} untuk ${monthLabel} berhasil dibuat.`;
   document.getElementById('shareCalcResult').dataset.generated = 'true';
@@ -3504,23 +3893,210 @@ function generateOwnerShareCalculation(){
         <div><h2 class="text-lg font-bold text-slate-900">Hasil Bagi Hasil</h2><p class="text-sm text-slate-500">${escapeHtml(owner.name)} · ${monthLabel} · ${totals.bookingCount} booking</p></div>
         <div class="text-right"><div class="text-xs font-semibold uppercase text-slate-500">Total hak owner</div><div class="text-2xl font-extrabold text-emerald-700">${fmtRp(totals.ownerShare)}</div></div>
       </div>
-      <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 p-4 sm:p-5 border-b border-slate-100">
-        <div><div class="text-xs text-slate-500">Booking + pemasukan lain</div><div class="font-bold text-slate-900">${fmtRp(totals.bookingRevenue + totals.otherIncome)}</div></div>
-        <div><div class="text-xs text-slate-500">Fee + biaya tercatat</div><div class="font-bold text-rose-700">- ${fmtRp(totals.platformFee + totals.operatingExpenses)}</div></div>
+      <div class="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-7 gap-3 p-4 sm:p-5 border-b border-slate-100">
+        <div><div class="text-xs text-slate-500">Pemasukan booking</div><div class="font-bold text-slate-900">${fmtRp(totals.bookingRevenue)}</div></div>
+        <div><div class="text-xs text-slate-500">Pemasukan tambahan</div><div class="font-bold text-emerald-700">${fmtRp(totals.otherIncome)}</div></div>
+        <div><div class="text-xs text-slate-500">Total pemasukan</div><div class="font-bold text-emerald-700">${fmtRp(totals.bookingRevenue + totals.otherIncome)}</div></div>
+        <div><div class="text-xs text-slate-500">Platform Fee</div><div class="font-bold text-rose-700">- ${fmtRp(totals.platformFee)}</div></div>
+        <div><div class="text-xs text-slate-500">Pengeluaran tercatat</div><div class="font-bold text-rose-700">- ${fmtRp(totals.operatingExpenses)}</div></div>
         <div><div class="text-xs text-slate-500">Pengurang tambahan</div><div class="font-bold text-rose-700">- ${fmtRp(totals.additionalDeduction)}</div></div>
         <div><div class="text-xs text-slate-500">Dasar bersih total</div><div class="font-bold ${totals.netBase < 0 ? 'text-rose-700' : 'text-slate-900'}">${fmtRp(totals.netBase)}</div></div>
       </div>
-      <div class="overflow-x-auto">
-        <table class="w-full text-sm min-w-[950px]">
-          <thead class="bg-slate-50 text-xs text-slate-500"><tr><th class="text-left px-4 py-3">Properti</th><th class="text-right px-3 py-3">Jumlah booking</th><th class="text-right px-3 py-3">Pemasukan booking</th><th class="text-right px-3 py-3">Pemasukan lain</th><th class="text-right px-3 py-3">Fee platform</th><th class="text-right px-3 py-3">Biaya tercatat</th><th class="text-right px-3 py-3">Pengurang khusus</th><th class="text-right px-3 py-3">Dasar bersih</th><th class="text-right px-4 py-3">Owner %</th><th class="text-right px-4 py-3">Hak owner</th></tr></thead>
-          <tbody class="divide-y divide-slate-100">${rows.map(row => `
-            <tr><td class="px-4 py-3 font-semibold text-slate-800">${escapeHtml(row.property.name)}</td><td class="px-3 py-3 text-right">${row.bookingCount}</td><td class="px-3 py-3 text-right">${fmtRp(row.bookingRevenue)}</td><td class="px-3 py-3 text-right">${fmtRp(row.otherIncome)}</td><td class="px-3 py-3 text-right text-rose-700">- ${fmtRp(row.platformFee)}</td><td class="px-3 py-3 text-right text-rose-700">- ${fmtRp(row.operatingExpenses)}</td><td class="px-3 py-3 text-right text-rose-700"><span class="block max-w-36 truncate ml-auto" title="${escapeHtml(row.additionalDeductionLabel)}">${escapeHtml(row.additionalDeductionLabel)}</span>- ${fmtRp(row.additionalDeduction)}</td><td class="px-3 py-3 text-right font-semibold ${row.netBase < 0 ? 'text-rose-700' : ''}">${fmtRp(row.netBase)}</td><td class="px-4 py-3 text-right">${row.ownerPercent}%</td><td class="px-4 py-3 text-right font-bold text-emerald-700">${fmtRp(row.ownerShare)}</td></tr>`).join('')}
-            <tr class="bg-slate-50 font-bold"><td class="px-4 py-3">TOTAL</td><td class="px-3 py-3 text-right">${totals.bookingCount}</td><td class="px-3 py-3 text-right">${fmtRp(totals.bookingRevenue)}</td><td class="px-3 py-3 text-right">${fmtRp(totals.otherIncome)}</td><td class="px-3 py-3 text-right text-rose-700">- ${fmtRp(totals.platformFee)}</td><td class="px-3 py-3 text-right text-rose-700">- ${fmtRp(totals.operatingExpenses)}</td><td class="px-3 py-3 text-right text-rose-700">- ${fmtRp(totals.additionalDeduction)}</td><td class="px-3 py-3 text-right">${fmtRp(totals.netBase)}</td><td class="px-4 py-3 text-right">—</td><td class="px-4 py-3 text-right text-emerald-700">${fmtRp(totals.ownerShare)}</td></tr>
-          </tbody>
-        </table>
-      </div>
       ${totals.deficit ? `<p class="px-4 sm:px-5 py-3 text-xs text-amber-700 border-t border-slate-100">Dasar negatif ${fmtRp(totals.deficit)} ditampilkan sebagai defisit dan tidak dihitung sebagai nilai transfer owner.</p>` : ''}
+      ${renderShareAggregateDetails(rows.map(row => ({ ...row, propertyName:row.property.name, propertyCode:row.property.code })))}
     </section>`;
+  document.getElementById('shareCalcActions').classList.remove('hidden');
+  document.getElementById('shareCalcSaveButton').textContent = loadedOwnerShareCalculation ? 'Perbarui Final' : 'Simpan Final';
+  document.getElementById('shareCalcSaveStatus').textContent = '';
+  document.querySelector('#shareCalcActions button:last-child').disabled = !isCurrentOwnerShareFinalSaved();
+}
+
+function isCurrentOwnerShareFinalSaved(){
+  return Boolean(lastOwnerShareCalculation && loadedOwnerShareCalculation?.calculation &&
+    loadedOwnerShareCalculation.owner_id === lastOwnerShareCalculation.ownerId &&
+    loadedOwnerShareCalculation.period_month === lastOwnerShareCalculation.month &&
+    JSON.stringify(loadedOwnerShareCalculation.calculation) === JSON.stringify(lastOwnerShareCalculation));
+}
+
+function handleShareCalculationInputChange(){
+  if(!lastOwnerShareCalculation) return;
+  lastOwnerShareCalculation = null;
+  const result = document.getElementById('shareCalcResult');
+  result.innerHTML = '';
+  delete result.dataset.generated;
+  document.getElementById('shareCalcActions').classList.add('hidden');
+  document.getElementById('shareCalcStatus').className = 'px-4 sm:px-5 pb-4 text-sm text-slate-500';
+  document.getElementById('shareCalcStatus').textContent = 'Input berubah. Generate ulang sebelum menyimpan atau mengirim final.';
+}
+
+async function saveOwnerShareFinal(){
+  if(!lastOwnerShareCalculation){
+    showToast('Generate hasil terbaru terlebih dahulu.');
+    return;
+  }
+  const button = document.getElementById('shareCalcSaveButton');
+  const status = document.getElementById('shareCalcSaveStatus');
+  button.disabled = true;
+  status.className = 'text-xs mt-2 text-slate-500';
+  status.textContent = 'Menyimpan final ke D1...';
+  try {
+    const result = await dashboardApi('/dashboard/owner-share-calculations', {
+      method:'POST', body:JSON.stringify(lastOwnerShareCalculation)
+    });
+    loadedOwnerShareCalculation = { ...result.data, calculation:lastOwnerShareCalculation };
+    button.textContent = 'Perbarui Final';
+    document.querySelector('#shareCalcActions button:last-child').disabled = false;
+    status.className = 'text-xs mt-2 text-emerald-700';
+    status.textContent = 'Final tersimpan dan dapat diperbarui kapan saja.';
+    const savedInfo = document.getElementById('shareCalcSavedInfo');
+    savedInfo.className = 'mt-3 text-sm text-emerald-700';
+    savedInfo.textContent = `Final ${lastOwnerShareCalculation.ownerName} · ${lastOwnerShareCalculation.month} tersimpan di D1.`;
+    showToast('Bagi hasil final berhasil disimpan.');
+  } catch(error) {
+    status.className = 'text-xs mt-2 text-rose-600';
+    status.textContent = error.message || 'Final gagal disimpan. Pastikan migration dan Worker sudah diperbarui.';
+  } finally {
+    button.disabled = false;
+  }
+}
+
+function printDashboardView(view, title){
+  const previousTitle = document.title;
+  document.title = title;
+  document.body.dataset.printView = view;
+  window.addEventListener('afterprint', () => {
+    delete document.body.dataset.printView;
+    document.title = previousTitle;
+  }, { once:true });
+  window.print();
+}
+
+function downloadOwnerSharePdf(){
+  if(!lastOwnerShareCalculation){
+    showToast('Generate hasil terbaru terlebih dahulu.');
+    return;
+  }
+  const fileName = `bagi-hasil-${lastOwnerShareCalculation.ownerName}-${lastOwnerShareCalculation.month}`.replace(/[^a-z0-9_-]+/gi, '-');
+  printDashboardView('owner-share', fileName);
+}
+
+function downloadOwnerShareCsv(){
+  const calculation = lastOwnerShareCalculation;
+  if(!calculation){
+    showToast('Generate hasil terbaru terlebih dahulu.');
+    return;
+  }
+  const totals = calculation.totals;
+  const bookings = calculation.rows.flatMap(property => (property.bookingDetails || []).map(item => ({ ...item, propertyName:property.propertyName, propertyCode:property.propertyCode })));
+  const incomes = calculation.rows.flatMap(property => (property.incomeDetails || []).map(item => ({ ...item, propertyName:property.propertyName, propertyCode:property.propertyCode })));
+  const expenses = calculation.rows.flatMap(property => [
+    ...(property.expenseDetails || []).map(item => ({ ...item, propertyName:property.propertyName, propertyCode:property.propertyCode, source:'Operasional' })),
+    ...(property.crewExpenseDetails || []).map(item => ({ ...item, description:item.job || item.description, propertyName:property.propertyName, propertyCode:property.propertyCode, source:'Crew' })),
+  ]);
+  const rows = [
+    ['LAPORAN BAGI HASIL YOUR HOME'],
+    ['Owner', calculation.ownerName],
+    ['Periode', calculation.month],
+    ['Total Booking', totals.bookingCount],
+    ['Total Pemasukan Booking', totals.bookingRevenue],
+    ['Total Pemasukan Tambahan', totals.otherIncome],
+    ['Total Pemasukan', totals.bookingRevenue + totals.otherIncome],
+    ['Total Platform Fee', totals.platformFee],
+    ['Total Pengeluaran', totals.operatingExpenses],
+    ['Total Pengurang Tambahan', totals.additionalDeduction],
+    ['Dasar Bersih', totals.netBase],
+    ['Total Hak Owner', totals.ownerShare],
+    [],
+    ['BOOKING'],
+    ['Properti', 'Kode Properti', 'Kode Booking', 'Tamu', 'Check-in', 'Check-out', 'Platform', 'Status', 'Malam', 'Nilai Booking', 'Refund', 'Pemasukan Bersih'],
+  ];
+  bookings.forEach(item => rows.push([item.propertyName, item.propertyCode, item.id, item.guest, item.checkin, item.checkout, item.platform, item.status, item.nights, item.amount, item.refundAmount, item.netAmount]));
+  rows.push(['TOTAL BOOKING', '', '', '', '', '', '', '', '', bookings.reduce((sum, item) => sum + Number(item.amount || 0), 0), bookings.reduce((sum, item) => sum + Number(item.refundAmount || 0), 0), totals.bookingRevenue]);
+  rows.push([], ['PEMASUKAN TAMBAHAN'], ['Properti', 'Kode Properti', 'Tanggal', 'Kategori', 'Keterangan', 'Penerima', 'Nominal']);
+  incomes.forEach(item => rows.push([item.propertyName, item.propertyCode, item.date, item.category, item.description, item.payee, item.amount]));
+  rows.push(['TOTAL PEMASUKAN TAMBAHAN', '', '', '', '', '', totals.otherIncome]);
+  rows.push([], ['PENGELUARAN'], ['Properti', 'Kode Properti', 'Tanggal', 'Jenis', 'Kategori', 'Keterangan / Pekerjaan', 'Penerima / Crew', 'Nominal']);
+  expenses.forEach(item => rows.push([item.propertyName, item.propertyCode, item.date, item.source, item.category, item.description, item.payee, item.amount]));
+  rows.push(['TOTAL PENGELUARAN', '', '', '', '', '', '', totals.operatingExpenses]);
+  const csv = '\uFEFF' + rows.map(row => row.map(value => {
+    const cell = String(value ?? '');
+    return /[";\r\n]/.test(cell) ? `"${cell.replace(/"/g, '""')}"` : cell;
+  }).join(';')).join('\r\n');
+  const blobUrl = URL.createObjectURL(new Blob([csv], { type:'text/csv;charset=utf-8' }));
+  const link = document.createElement('a');
+  const ownerSlug = calculation.ownerName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+  link.href = blobUrl;
+  link.download = `bagi-hasil-${ownerSlug}-${calculation.month}.csv`;
+  link.click();
+  setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
+  showToast('Laporan lengkap kompatibel Excel berhasil diunduh.');
+}
+
+function normalizeWhatsAppPhone(value){
+  let phone = String(value || '').replace(/\D/g, '');
+  if(phone.startsWith('00')) phone = phone.slice(2);
+  else if(phone.startsWith('0')) phone = `62${phone.slice(1)}`;
+  else if(phone.startsWith('8')) phone = `62${phone}`;
+  return /^\d{8,15}$/.test(phone) ? phone : '';
+}
+
+function buildOwnerShareWhatsAppMessage(calculation){
+  const totals = calculation.totals;
+  const bookings = calculation.rows.flatMap(row => (row.bookingDetails || []).map(item => ({ ...item, propertyName:row.propertyName })));
+  const incomes = calculation.rows.flatMap(row => (row.incomeDetails || []).map(item => ({ ...item, propertyName:row.propertyName })));
+  const expenses = calculation.rows.flatMap(row => [
+    ...(row.expenseDetails || []).map(item => ({ ...item, propertyName:row.propertyName, source:'Operasional' })),
+    ...(row.crewExpenseDetails || []).map(item => ({ ...item, propertyName:row.propertyName, description:item.job || item.description, source:'Crew' })),
+  ]);
+  return [
+    `Laporan Bagi Hasil YOUR HOME - ${calculation.ownerName}`,
+    `Periode: ${calculation.month}`,
+    `Booking: ${totals.bookingCount} | Pemasukan booking: ${fmtRp(totals.bookingRevenue)}`,
+    `Pemasukan tambahan: ${fmtRp(totals.otherIncome)}`,
+    `Total pemasukan: ${fmtRp(totals.bookingRevenue + totals.otherIncome)}`,
+    `Platform fee: ${fmtRp(totals.platformFee)}`,
+    `Pengeluaran: ${fmtRp(totals.operatingExpenses)}`,
+    `Pengurang tambahan: ${fmtRp(totals.additionalDeduction)}`,
+    `Keuntungan sebelum bagi hasil: ${fmtRp(totals.netBase)}`,
+    `Total hak owner: ${fmtRp(totals.ownerShare)}`,
+    '',
+    'BOOKING',
+    ...(bookings.map(item => `- ${item.propertyName} | ${item.id} | ${item.guest} | ${item.checkin} s.d. ${item.checkout} | ${item.platform} | ${fmtRp(item.amount)} - refund ${fmtRp(item.refundAmount)} = ${fmtRp(item.netAmount)}`)),
+    ...(bookings.length ? [] : ['- Tidak ada booking pada bulan ini']),
+    '',
+    'PEMASUKAN TAMBAHAN',
+    ...(incomes.map(item => `- ${item.propertyName} | ${item.date} | ${item.category} | ${item.description} | ${item.payee || '-'} | ${fmtRp(item.amount)}`)),
+    ...(incomes.length ? [] : ['- Tidak ada pemasukan tambahan pada bulan ini']),
+    '',
+    'PENGELUARAN',
+    ...(expenses.map(item => `- ${item.propertyName} | ${item.date} | ${item.source} | ${item.category} | ${item.description} | ${item.payee || '-'} | ${fmtRp(item.amount)}`)),
+    ...(expenses.length ? [] : ['- Tidak ada pengeluaran pada bulan ini']),
+    'Laporan final tersimpan di sistem YOUR HOME.'
+  ].join('\n');
+}
+
+function shareOwnerShareWhatsApp(){
+  if(!isCurrentOwnerShareFinalSaved()){
+    showToast('Simpan atau perbarui final sebelum mengirim ke owner.');
+    return;
+  }
+  const calculation = lastOwnerShareCalculation;
+  const phoneInput = document.getElementById('shareCalcWhatsappPhone');
+  const phone = normalizeWhatsAppPhone(phoneInput?.value);
+  if(!/^\d{8,15}$/.test(phone)){
+    showToast('Masukkan nomor WhatsApp yang valid, misalnya 08xxxxxxxxxx.');
+    phoneInput?.focus();
+    return;
+  }
+  const message = buildOwnerShareWhatsAppMessage(calculation);
+  const url = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+  if(url.length > 60000){
+    showToast('Laporan terlalu panjang untuk tautan WhatsApp. Unduh PDF/CSV lalu lampirkan secara manual.');
+    return;
+  }
+  const popup = window.open(url, '_blank');
+  if(popup) popup.opener = null;
+  else showToast('WhatsApp diblokir browser. Izinkan pop-up untuk mengirim laporan.');
 }
 
 function refreshGeneratedShareCalculation(){
@@ -3539,8 +4115,8 @@ function exportReportExcel(){
     ['Jumlah Properti', lastReportSummary.propertyCount],
     ['Jumlah Booking', lastReportSummary.totals.bookings],
     ['Booking + Pemasukan Tambahan', lastReportSummary.totals.grossRev + lastReportSummary.totals.otherIncome],
-    ['Platform Fee', lastReportSummary.totals.platformFee],
     ['Pengeluaran', lastReportSummary.totals.expTotal],
+    ['Keuntungan Sebelum Bagi Hasil', lastReportSummary.totals.grossRev + lastReportSummary.totals.otherIncome - lastReportSummary.totals.expTotal],
     [''],
   ];
   const reportTables = document.querySelectorAll('#reportContent table');
@@ -3569,7 +4145,8 @@ function exportReportPdf(){
     showToast('Pilih rentang tanggal laporan yang valid terlebih dahulu.');
     return;
   }
-  window.print();
+  const ownerSlug = lastReportSummary.owner.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+  printDashboardView('owner-report', `laporan-${ownerSlug}-${lastReportSummary.period.replace(/[^0-9a-z]+/gi, '-')}`);
 }
 
 function shareReportWhatsApp(){
@@ -3577,20 +4154,37 @@ function shareReportWhatsApp(){
     showToast('Pilih rentang tanggal laporan yang valid terlebih dahulu.');
     return;
   }
+  const phoneInput = document.getElementById('reportWhatsappPhone');
+  const phone = normalizeWhatsAppPhone(phoneInput?.value);
+  if(!phone){
+    showToast('Masukkan nomor WhatsApp owner yang valid, misalnya 08xxxxxxxxxx.');
+    phoneInput?.focus();
+    return;
+  }
   const { owner, period, propertyCount, totals } = lastReportSummary;
   const totalIncome = totals.grossRev + totals.otherIncome;
-  const netBeforeSharing = totalIncome - totals.platformFee - totals.expTotal;
-  const message = [
+  const netBeforeSharing = totalIncome - totals.expTotal;
+  const shareMonth = getFullReportMonth(getCustomReportRange());
+  const finalCalculation = reportOwnerShareFinal?.calculation;
+  const hasMatchingFinal = finalCalculation?.ownerId === owner.id && finalCalculation.month === shareMonth;
+  if(hasMatchingFinal && reportOwnerShareFinal.isDraft){
+    showToast('Simpan revisi terbaru sebagai Laporan Akhir sebelum mengirim WhatsApp.');
+    return;
+  }
+  const message = hasMatchingFinal ? buildOwnerShareWhatsAppMessage(finalCalculation) : [
     `Laporan YOUR HOME - ${owner.name}`,
     `Periode: ${period}`,
     `Properti: ${propertyCount} | Booking: ${totals.bookings}`,
     `Booking + pemasukan tambahan: ${fmtRp(totalIncome)}`,
-    `Platform fee: ${fmtRp(totals.platformFee)}`,
     `Pengeluaran: ${fmtRp(totals.expTotal)}`,
-    `Sisa sebelum pembagian: ${fmtRp(netBeforeSharing)}`,
-    'Nominal pembagian owner belum dihitung.'
+    `Keuntungan sebelum bagi hasil: ${fmtRp(netBeforeSharing)}`,
+    'Laporan Akhir belum disimpan untuk periode ini.'
   ].join('\n');
-  const url = `https://wa.me/?text=${encodeURIComponent(message)}`;
+  const url = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+  if(url.length > 60000){
+    showToast('Laporan terlalu panjang untuk tautan WhatsApp. Unduh PDF/Excel lalu lampirkan secara manual.');
+    return;
+  }
   const popup = window.open(url, '_blank');
   if(popup) popup.opener = null;
   else showToast('WhatsApp diblokir browser. Izinkan pop-up untuk membuka pilihan kontak.');
@@ -3650,7 +4244,6 @@ function openBookingModal(bookingId=''){
   document.getElementById('bookingFormStatus').textContent = '';
   document.getElementById('newBookingCheckin').value = booking?.checkin || new Date().toISOString().slice(0, 10);
   document.getElementById('newBookingCheckout').value = booking?.checkout || new Date(Date.now() + 86400000).toISOString().slice(0, 10);
-  document.getElementById('newBookingFee').value = booking?.platformFeePct ?? 0;
   document.getElementById('newBookingExtraBedQuantity').value = booking?.extraBedQuantity ?? 0;
   document.getElementById('newBookingExtraBedPrice').value = booking?.extraBedPrice ?? 0;
   if(booking){
@@ -3694,7 +4287,7 @@ async function submitBooking(){
   const amount = Number(document.getElementById('newBookingAmount').value);
   const extraBedQuantity = Number(document.getElementById('newBookingExtraBedQuantity').value) || 0;
   const extraBedPrice = Number(document.getElementById('newBookingExtraBedPrice').value) || 0;
-  const platformFeePct = Number(document.getElementById('newBookingFee').value) || 0;
+  const platformFeePct = 0;
   const status = document.getElementById('newBookingStatus').value;
   const note = document.getElementById('newBookingNote').value.trim();
   const statusElement = document.getElementById('bookingFormStatus');
@@ -3730,6 +4323,7 @@ async function submitBooking(){
     const savedBooking = {
       ...(editedBooking || {}),
       id:editId || saveResult.data?.id,
+      createdAt:saveResult.data?.created_at || editedBooking?.createdAt || new Date().toISOString(),
       propId, propName:prop.name, propCode:prop.code, guest, platform,
       status:payload.status, checkin, checkout,
       nights:Math.round((Date.parse(`${checkout}T00:00:00Z`) - Date.parse(`${checkin}T00:00:00Z`)) / 86400000),
@@ -3743,6 +4337,7 @@ async function submitBooking(){
     persistDashboardData();
     refreshGeneratedShareCalculation();
     if(!editId){
+      currentBookingPage = 1;
       currentBookingStatus = 'all';
       document.querySelectorAll('#view-booking .tab-btn').forEach((tab,index)=>tab.classList.toggle('active', index === 0));
       const propertyFilter = document.getElementById('filterPropBooking');
@@ -3889,7 +4484,9 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('newBookingExtraBedQuantity').addEventListener('input', updateBookingExtraBedTotal);
   document.getElementById('newBookingExtraBedPrice').addEventListener('input', updateBookingExtraBedTotal);
   document.getElementById('deleteFinanceForm').addEventListener('submit', submitFinanceDelete);
+  document.getElementById('deleteOwnerShareFinalForm').addEventListener('submit', deleteReportOwnerShareFinal);
   document.getElementById('deletePropertyForm').addEventListener('submit', submitPropertyDelete);
+  document.getElementById('shareCalcPropertyInputs').addEventListener('input', handleShareCalculationInputChange);
   document.getElementById('editFinanceForm').addEventListener('submit', submitExpenseEdit);
   document.getElementById('editExpProof').addEventListener('change', handleEditExpenseProofSelection);
   document.getElementById('cancelBookingForm').addEventListener('submit', submitBookingCancellation);

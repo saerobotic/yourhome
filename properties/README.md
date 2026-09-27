@@ -34,9 +34,11 @@ Jalankan `migration-dashboard-extra-bed.sql` satu kali setelah migration booking
 
 Jalankan `migration-dashboard-refund-net-income.sql` setelah migration finance, booking, dan Extra Bed. Migration ini menghitung ulang pemasukan booking batal dari nilai booking dan refund sumber, mengganti keterangannya agar tidak berulang, mengurangi Extra Bed jika refund melebihi nilai booking, dan menghapus entri pengeluaran refund duplikat. Migration ini aman dijalankan ulang untuk memperbaiki hasil sebelumnya.
 
+Jalankan `migration-dashboard-owner-share.sql` satu kali pada D1 untuk menyimpan snapshot final bagi hasil per owner dan bulan. Menyimpan ulang owner/bulan yang sama memperbarui laporan sehingga final tetap dapat diedit. Endpoint dashboard menyediakan data ini untuk dipakai portal Owner saat portal tersebut tersedia.
+
 Jalankan `migration-auth-login-rate-limits.sql` satu kali sebelum deploy Worker yang menerapkan pembatas percobaan login. Tabel ini menyimpan HMAC alamat IP, bukan alamat IP mentah, dan counter direset setelah autentikasi sukses.
 
-Deploy versi terbaru `worker-checkin-api.js` setelah sebelas migration dashboard: finance, kategori Fee untuk Crew, akun IT, PIN delete, booking, Extra Bed, bukti finance, refund net income, login rate limits, karyawan/crew, dan ID Crew. Publikasikan juga versi terbaru `check-in-crew.html` dan `check-in-crew-dashboard.html` bersamaan dengan Worker. Halaman Check In meminta ID Crew; daftar nama dan ID hanya tersedia setelah admin login. Pada Cloudflare Worker `your-home-checkin-api`, atur secrets berikut di **Settings → Variables and Secrets**:
+Deploy versi terbaru `worker-checkin-api.js` setelah dua belas migration dashboard: finance, kategori Fee untuk Crew, akun IT, PIN delete, booking, Extra Bed, bukti finance, refund net income, login rate limits, karyawan/crew, ID Crew, dan bagi hasil owner. Publikasikan juga versi terbaru `dasbord.html`, `check-in-crew.html`, dan `check-in-crew-dashboard.html` bersamaan dengan Worker. Halaman Check In meminta ID Crew; daftar nama dan ID hanya tersedia setelah admin login. Pada Cloudflare Worker `your-home-checkin-api`, atur secrets berikut di **Settings → Variables and Secrets**:
 
 - `ADMIN_DASHBOARD_SECRET`: secret signing session yang sudah dipakai Worker. Jangan ganti bersamaan dengan password akun.
 - `MASTER_INITIAL_PASSWORD`: password awal Master, minimal 12 karakter.

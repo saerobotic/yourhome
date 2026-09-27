@@ -1225,6 +1225,138 @@ export default {
         return json({ ok: true });
       }
 
+      if (path === '/dashboard/owner-share-calculations') {
+        const adminSecret = String(env.ADMIN_DASHBOARD_SECRET || '').trim();
+        const tokenData = await getAdminTokenPayload(request, adminSecret);
+        if (!['master', 'admin'].includes(tokenData?.account_id) || !['Master', 'Admin'].includes(tokenData?.role)) {
+          return bad('Hanya Master atau Admin yang dapat mengelola laporan bagi hasil.', 403);
+        }
+
+        if (request.method === 'GET') {
+          const ownerId = String(url.searchParams.get('owner_id') || '').trim();
+          const month = String(url.searchParams.get('month') || '').trim();
+          if (!/^[A-Za-z0-9_-]{1,80}$/.test(ownerId) || !/^\d{4}-(0[1-9]|1[0-2])$/.test(month)) {
+            return bad('Owner dan bulan laporan wajib valid.');
+          }
+          const saved = await env.DB.prepare(`
+            SELECT id, owner_id, owner_name, period_month, calculation_json, status, created_by, created_at, updated_at
+            FROM dashboard_owner_share_calculations
+            WHERE owner_id = ? AND period_month = ?
+          `).bind(ownerId, month).first();
+          if (!saved) return json({ ok:true, data:null });
+          let calculation;
+          try { calculation = JSON.parse(saved.calculation_json); }
+          catch { return bad('Data final bagi hasil rusak dan tidak dapat dibaca.', 500); }
+          return json({ ok:true, data:{
+            id:saved.id, owner_id:saved.owner_id, owner_name:saved.owner_name,
+            period_month:saved.period_month, status:saved.status,
+            created_by:saved.created_by, created_at:saved.created_at,
+            updated_at:saved.updated_at, calculation,
+          } });
+        }
+
+        if (request.method === 'DELETE') {
+          const ownerId = String(url.searchParams.get('owner_id') || '').trim();
+          const month = String(url.searchParams.get('month') || '').trim();
+          const body = await request.json();
+          const pin = String(body.pin || '').trim();
+          if (!/^[A-Za-z0-9_-]{1,80}$/.test(ownerId) || !/^\d{4}-(0[1-9]|1[0-2])$/.test(month)) {
+            return bad('Owner dan bulan laporan wajib valid.');
+          }
+          if (!/^\d{4}$/.test(pin)) return bad('PIN Master harus tepat 4 digit.');
+          const master = await env.DB.prepare(`
+            SELECT delete_pin_salt, delete_pin_hash FROM dashboard_users
+            WHERE account_id = 'master' AND active = 1
+          `).first();
+          if (!master) return bad('Akun Master tidak ditemukan.', 404);
+          if (!master.delete_pin_hash) return bad('PIN Master belum diinisialisasi. Login sebagai Master terlebih dahulu.', 409);
+          const attemptedHash = await hashDashboardPassword(pin, master.delete_pin_salt);
+          if (!constantTimeEqual(attemptedHash, master.delete_pin_hash)) return bad('PIN Master salah.', 403);
+          const deleted = await env.DB.prepare(`
+            DELETE FROM dashboard_owner_share_calculations
+            WHERE owner_id = ? AND period_month = ?
+          `).bind(ownerId, month).run();
+          if (!deleted.meta?.changes) return bad('Laporan Akhir tidak ditemukan atau sudah dihapus.', 404);
+          return json({ ok:true, data:{ owner_id:ownerId, period_month:month, deleted:true } });
+        }
+
+        if (request.method === 'POST') {
+          const body = await request.json();
+          const ownerId = String(body.ownerId || '').trim();
+          const ownerName = String(body.ownerName || '').trim();
+          const month = String(body.month || '').trim();
+          const rows = Array.isArray(body.rows) ? body.rows : [];
+          const totals = body.totals && typeof body.totals === 'object' && !Array.isArray(body.totals) ? body.totals : null;
+          if (!/^[A-Za-z0-9_-]{1,80}$/.test(ownerId) || ownerName.length < 2 || ownerName.length > 80 || !/^\d{4}-(0[1-9]|1[0-2])$/.test(month) || !rows.length || rows.length > 100 || !totals) {
+            return bad('Owner, bulan, properti, dan total laporan wajib valid.');
+          }
+          const validAmount = value => Number.isFinite(Number(value)) && Math.abs(Number(value)) <= 1_000_000_000_000;
+          const rowIsValid = row => row &&
+            /^[A-Za-z0-9_-]{1,80}$/.test(String(row.propertyId || '')) &&
+            String(row.propertyName || '').length <= 160 &&
+            String(row.propertyCode || '').length <= 30 &&
+            Number.isSafeInteger(Number(row.bookingCount)) && Number(row.bookingCount) >= 0 &&
+            [row.bookingRevenue, row.otherIncome, row.platformFee, row.operatingExpenses, row.additionalDeduction, row.netBase, row.ownerShare].every(validAmount) &&
+            Number.isFinite(Number(row.platformFeePercent)) && Number(row.platformFeePercent) >= 0 && Number(row.platformFeePercent) <= 50 &&
+            Number.isFinite(Number(row.ownerPercent)) && Number(row.ownerPercent) >= 0 && Number(row.ownerPercent) <= 100 &&
+            String(row.additionalDeductionLabel || '').length <= 60;
+          const validText = (value, maximum) => typeof value === 'string' && value.length <= maximum;
+          const validDate = value => typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value);
+          const validDetailList = (list, validator) => list === undefined ||
+            (Array.isArray(list) && list.length <= 5000 && list.every(validator));
+          const bookingDetailIsValid = item => item &&
+            validText(item.id, 80) && validText(item.guest, 120) && validText(item.platform, 40) &&
+            validDate(item.checkin) && validDate(item.checkout) && validText(item.status, 40) &&
+            Number.isSafeInteger(Number(item.nights)) && Number(item.nights) >= 0 &&
+            [item.amount, item.refundAmount, item.netAmount].every(validAmount);
+          const financeDetailIsValid = item => item && validText(item.id, 160) && validDate(item.date) &&
+            validText(item.category, 60) && validText(item.description, 240) &&
+            validText(item.payee, 120) && validAmount(item.amount);
+          const crewDetailIsValid = item => financeDetailIsValid(item) && validText(item.job, 240);
+          const detailListsAreValid = row =>
+            validDetailList(row.bookingDetails, bookingDetailIsValid) &&
+            validDetailList(row.incomeDetails, financeDetailIsValid) &&
+            validDetailList(row.expenseDetails, financeDetailIsValid) &&
+            validDetailList(row.crewExpenseDetails, crewDetailIsValid);
+          const detailsAreReconciled = row => {
+            const keys = ['bookingDetails', 'incomeDetails', 'expenseDetails', 'crewExpenseDetails'];
+            if (!keys.some(key => Array.isArray(row[key]))) return true;
+            if (!keys.every(key => Array.isArray(row[key]))) return false;
+            const sum = (items, key) => items.reduce((total, item) => total + Number(item[key] || 0), 0);
+            return sum(row.bookingDetails, 'netAmount') === Number(row.bookingRevenue) &&
+              sum(row.incomeDetails, 'amount') === Number(row.otherIncome) &&
+              sum(row.expenseDetails, 'amount') + sum(row.crewExpenseDetails, 'amount') === Number(row.operatingExpenses);
+          };
+          const totalFields = ['bookingRevenue', 'otherIncome', 'platformFee', 'operatingExpenses', 'additionalDeduction', 'netBase', 'ownerShare', 'deficit'];
+          if (!rows.every(rowIsValid) || !rows.every(detailListsAreValid) || !rows.every(detailsAreReconciled) || !totalFields.every(field => validAmount(totals[field])) || !Number.isSafeInteger(Number(totals.bookingCount)) || Number(totals.bookingCount) < 0) {
+            return bad('Rincian nominal atau persentase laporan tidak valid.');
+          }
+          const calculationJson = JSON.stringify({ ownerId, ownerName, month, rows, totals });
+          if (new TextEncoder().encode(calculationJson).byteLength > 262144) return bad('Rincian laporan terlalu besar.');
+
+          const now = new Date().toISOString();
+          const id = `OS${crypto.randomUUID().replace(/-/g, '').slice(0, 20)}`;
+          await env.DB.prepare(`
+            INSERT INTO dashboard_owner_share_calculations (
+              id, owner_id, owner_name, period_month, calculation_json, status,
+              created_by, created_at, updated_at
+            ) VALUES (?, ?, ?, ?, ?, 'final', ?, ?, ?)
+            ON CONFLICT(owner_id, period_month) DO UPDATE SET
+              owner_name = excluded.owner_name,
+              calculation_json = excluded.calculation_json,
+              status = 'final',
+              created_by = excluded.created_by,
+              updated_at = excluded.updated_at
+          `).bind(id, ownerId, ownerName, month, calculationJson, tokenData.account_id, now, now).run();
+          const saved = await env.DB.prepare(`
+            SELECT id, owner_id, owner_name, period_month, status, created_at, updated_at
+            FROM dashboard_owner_share_calculations
+            WHERE owner_id = ? AND period_month = ?
+          `).bind(ownerId, month).first();
+          return json({ ok:true, data:saved }, 201);
+        }
+      }
+
       if (request.method === 'POST' && path === '/dashboard/delete-pin') {
         const adminSecret = String(env.ADMIN_DASHBOARD_SECRET || '').trim();
         const tokenData = await getAdminTokenPayload(request, adminSecret);
@@ -1296,6 +1428,7 @@ export default {
           extraBedQuantity:Number(row.extra_bed_quantity || 0), extraBedPrice:Number(row.extra_bed_price || 0),
           cleaningFee:Number(row.cleaning_fee), platformFeePct:Number(row.platform_fee_pct),
           note:row.note, cancellationReason:row.cancellation_reason, refundAmount:Number(row.refund_amount),
+          createdAt:row.created_at,
         })) });
       }
 
@@ -1363,7 +1496,7 @@ export default {
             extraBedQuantity * extraBedPrice, `Extra Bed (${extraBedQuantity} x Rp ${extraBedPrice}) - Booking ${id}`, guest,
             tokenData.account_id || '', now, status, extraBedQuantity * extraBedPrice),
         ]);
-        return json({ ok:true, data:{ id } }, 201);
+        return json({ ok:true, data:{ id, created_at:now } }, 201);
       }
 
       const dashboardBookingMatch = path.match(/^\/dashboard\/bookings\/([^/]+)$/);
