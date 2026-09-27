@@ -8,7 +8,7 @@
 
 const CORS = {
   'Access-Control-Allow-Origin': 'https://yourhome.id',
-  'Access-Control-Allow-Methods': 'GET, POST, PATCH, DELETE, OPTIONS',
+  'Access-Control-Allow-Methods': 'GET, POST, PUT, PATCH, DELETE, OPTIONS',
   'Access-Control-Allow-Headers': 'Content-Type, Authorization',
   'Vary': 'Origin',
 };
@@ -18,7 +18,7 @@ function getCorsHeaders(request) {
   const isLocalOrigin = /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin);
   return {
     ...CORS,
-    'Access-Control-Allow-Origin': origin === 'https://yourhome.id' || isLocalOrigin
+    'Access-Control-Allow-Origin': ['https://yourhome.id', 'https://admin.yourhome.id', 'https://owner.yourhome.id'].includes(origin) || isLocalOrigin
       ? origin
       : 'https://yourhome.id',
   };
@@ -104,6 +104,119 @@ function safeParseJsonArray(value) {
   } catch {
     return [];
   }
+}
+
+function mapPropertyRecord(row, includeAdminFields = false) {
+  const urls = safeParseJsonArray(row.image_urls);
+  const property = {
+    room_options: safeParseJsonArray(row.room_options),
+    external_bookings: safeParseJsonArray(row.external_bookings)
+      .filter(booking => booking && typeof booking === 'object')
+      .map(booking => ({
+        start_date: String(booking.start_date || ''),
+        end_date: String(booking.end_date || ''),
+        room_name: String(booking.room_name || ''),
+      })),
+    image_urls: row.image_url
+      ? [row.image_url, ...urls.filter(imageUrl => imageUrl !== row.image_url)]
+      : urls,
+    id: row.id,
+    name: row.name,
+    category: row.category,
+    location: row.location,
+    price: Number(row.price || 0),
+    weekday_price: row.weekday_price == null ? null : Number(row.weekday_price),
+    weekend_price: row.weekend_price == null ? null : Number(row.weekend_price),
+    beds: Number(row.beds || 0),
+    baths: Number(row.baths || 0),
+    guests: Number(row.guests || 0),
+    image_url: row.image_url,
+    map_query: row.map_query,
+    map_link: row.map_link,
+    map_embed: row.map_embed,
+    description: row.description,
+    sort_order: Number(row.sort_order || 0),
+  };
+  if (includeAdminFields) {
+    property.dashboard_id = row.dashboard_id || '';
+    property.property_code = row.property_code || '';
+    property.publication_status = row.publication_status || (Number(row.active) ? 'active' : 'archived');
+    property.active = Number(row.active) === 1;
+  }
+  return property;
+}
+
+async function buildDashboardCatalogStatements(env, properties, now) {
+  const result = await env.DB.prepare(`
+    SELECT id, dashboard_id, name, active, publication_status FROM properties
+  `).all();
+  const rows = result.results || [];
+  const byDashboardId = new Map(rows.filter(row => row.dashboard_id).map(row => [row.dashboard_id, row]));
+  const statements = [];
+  const usedRows = new Set();
+  const normalizeName = value => String(value || '').trim().toLocaleLowerCase('id');
+
+  for (const property of properties) {
+    const dashboardId = String(property.id).trim();
+    const name = String(property.name).trim();
+    const category = String(property.type || property.category || 'villa').trim();
+    const code = String(property.code || dashboardId).trim().toUpperCase();
+    if (!['apartment', 'villa', 'guesthouse', 'kos'].includes(category)) {
+      throw new Error(`Jenis properti ${name} tidak valid.`);
+    }
+
+    const exactNameMatches = rows.filter(row => normalizeName(row.name) === normalizeName(name));
+    const row = byDashboardId.get(dashboardId) || (exactNameMatches.length === 1 ? exactNameMatches[0] : null);
+    if (row) {
+      if (usedRows.has(row.id) || (row.dashboard_id && row.dashboard_id !== dashboardId)) {
+        throw new Error(`Properti ${name} memiliki tautan Dashboard yang bertabrakan.`);
+      }
+      usedRows.add(row.id);
+      const archived = property.active === false || property.active === 0;
+      const requestedStatus = ['active', 'draft'].includes(property.publication_status)
+        ? property.publication_status
+        : '';
+      const publicationStatus = archived
+        ? 'archived'
+        : requestedStatus || (row.publication_status === 'archived' ? 'draft' : row.publication_status || 'draft');
+      statements.push(env.DB.prepare(`
+        UPDATE properties
+        SET dashboard_id = ?, property_code = ?, name = ?, category = ?, active = ?, publication_status = ?, updated_at = ?
+        WHERE id = ?
+      `).bind(dashboardId, code, name, category, publicationStatus === 'archived' ? 0 : 1, publicationStatus, now, row.id));
+      continue;
+    }
+    if (exactNameMatches.length > 1) {
+      throw new Error(`Nama ${name} cocok dengan beberapa properti katalog; tautkan ID-nya terlebih dahulu.`);
+    }
+
+    const id = `dashboard-${slug(dashboardId)}`;
+    const existingId = rows.find(item => item.id === id);
+    if (existingId && existingId.dashboard_id !== dashboardId) {
+      throw new Error(`ID katalog untuk ${name} sudah digunakan.`);
+    }
+    const archived = property.active === false || property.active === 0;
+    const publicationStatus = archived
+      ? 'archived'
+      : property.publication_status === 'active' ? 'active' : 'draft';
+    const basePrice = Math.max(0, Math.round(Number(property.price) || 0));
+    const beds = Math.max(0, Math.round(Number(property.beds) || 0));
+    const baths = Math.max(0, Math.round(Number(property.baths) || 0));
+    const guests = Math.max(0, Math.round(Number(property.guests) || 0));
+    statements.push(env.DB.prepare(`
+      INSERT INTO properties (
+        id, dashboard_id, property_code, name, category, location, price,
+        weekday_price, weekend_price, beds, baths, guests, image_url, image_urls,
+        map_query, map_link, map_embed, description, room_options, external_bookings,
+        sort_order, active, publication_status, updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, '', '[]', '', '', '', '', '[]', '[]', 0, ?, ?, ?)
+    `).bind(
+      id, dashboardId, code, name, category, String(property.area || ''), basePrice,
+      category === 'kos' ? null : basePrice, category === 'kos' ? null : basePrice,
+      beds, baths, guests, archived ? 0 : 1, publicationStatus, now
+    ));
+  }
+  return statements;
 }
 
 function isMissingContactStatusColumn(error) {
@@ -436,6 +549,34 @@ async function getCrewTokenPayload(request, secret) {
   }
 }
 
+async function createOwnerToken(secret, ownerId) {
+  const payload = base64UrlEncode(JSON.stringify({
+    scope: 'owner',
+    owner_id: ownerId,
+    exp: Math.floor(Date.now() / 1000) + 24 * 60 * 60,
+  }));
+  return `${payload}.${await hmacSha256Hex(secret, payload)}`;
+}
+
+async function getOwnerTokenPayload(request, secret) {
+  if (!secret) return null;
+  const authorization = request.headers.get('Authorization') || '';
+  const token = authorization.match(/^Bearer\s+(.+)$/i)?.[1];
+  if (!token) return null;
+  const [payload, signature] = token.split('.');
+  if (!payload || !signature) return null;
+  try {
+    const expectedSignature = await hmacSha256Hex(secret, payload);
+    if (!constantTimeEqual(signature, expectedSignature)) return null;
+    const data = JSON.parse(base64UrlDecode(payload));
+    return data.scope === 'owner' && /^[A-Za-z0-9_-]{1,80}$/.test(data.owner_id || '') && Number(data.exp) > Math.floor(Date.now() / 1000)
+      ? data
+      : null;
+  } catch {
+    return null;
+  }
+}
+
 async function isAdminRequest(request, secret) {
   const tokenData = await getAdminTokenPayload(request, secret);
   return Boolean(tokenData && tokenData.role !== 'IT');
@@ -540,6 +681,48 @@ export default {
         });
       }
 
+      if (request.method === 'GET' && path === '/crew/checkins') {
+        const adminSecret = String(env.ADMIN_DASHBOARD_SECRET || '').trim();
+        const crewSession = await getCrewTokenPayload(request, adminSecret);
+        if (!crewSession) return bad('Sesi Crew diperlukan untuk membuka dokumentasi.', 401);
+        const month = String(url.searchParams.get('month') || '').trim();
+        const property = String(url.searchParams.get('property') || '').trim();
+        const limit = Math.min(Math.max(Number(url.searchParams.get('limit')) || 20, 1), 50);
+        const offset = Number(url.searchParams.get('offset') || 0);
+        if (month && !/^\d{4}-(0[1-9]|1[0-2])$/.test(month)) return bad('Filter bulan dokumentasi tidak valid.');
+        if (property.length > 180) return bad('Filter properti terlalu panjang.');
+        if (!Number.isSafeInteger(offset) || offset < 0 || offset > 1000000) return bad('Halaman dokumentasi tidak valid.');
+        let sql = `
+          SELECT * FROM checkins
+          WHERE crew = ?
+        `;
+        const params = [crewSession.crew];
+        if (month) {
+          const [year, monthNumber] = month.split('-').map(Number);
+          const nextMonth = new Date(Date.UTC(year, monthNumber, 1)).toISOString().slice(0, 10);
+          sql += ' AND work_date >= ? AND work_date < ?';
+          params.push(`${month}-01`, nextMonth);
+        }
+        if (property) {
+          sql += ' AND unit = ?';
+          params.push(property);
+        }
+        sql += ' ORDER BY work_date DESC, created_at DESC, id DESC LIMIT ? OFFSET ?';
+        params.push(limit + 1, offset);
+        const result = await env.DB.prepare(sql).bind(...params).all();
+        const rows = result.results || [];
+        const hasMore = rows.length > limit;
+        const data = rows.slice(0, limit).map(row => ({
+          ...row,
+          work_photo_urls:safeParseJsonArray(row.work_photo_urls),
+        }));
+        return json({
+          ok:true,
+          data,
+          pagination:{ limit, offset, next_offset:hasMore ? offset + data.length : null, has_more:hasMore },
+        });
+      }
+
       if (request.method === 'POST' && path === '/admin/checkins/payroll-sync') {
         const adminSecret = String(env.ADMIN_DASHBOARD_SECRET || '').trim();
         if (!(await isAdminRequest(request, adminSecret))) return bad('Login admin diperlukan', 401);
@@ -561,52 +744,117 @@ export default {
         });
       }
 
+      if (request.method === 'POST' && path === '/admin/properties/sync-dashboard') {
+        const adminSecret = String(env.ADMIN_DASHBOARD_SECRET || '').trim();
+        if (!(await isAdminRequest(request, adminSecret))) return bad('Login admin diperlukan', 401);
+        let saved;
+        try {
+          saved = await env.DB.prepare(`
+            SELECT data_json FROM dashboard_management_data WHERE id = 'main'
+          `).first();
+        } catch (error) {
+          if (/no such table: dashboard_management_data/i.test(String(error?.message || error))) {
+            return bad('Data Dashboard belum tersedia. Jalankan migration-dashboard-management-data.sql di D1.', 503);
+          }
+          throw error;
+        }
+        if (!saved) return json({ ok:true, data:{ synced:0 } });
+        let managementData;
+        try { managementData = JSON.parse(saved.data_json); }
+        catch { return bad('Data properti Dashboard rusak dan tidak dapat disinkronkan.', 500); }
+        const properties = Array.isArray(managementData.properties) ? managementData.properties : [];
+        const statements = await buildDashboardCatalogStatements(env, properties, new Date().toISOString());
+        if (statements.length) await env.DB.batch(statements);
+        return json({ ok:true, data:{ synced:properties.length } });
+      }
+
+      if (request.method === 'GET' && path === '/admin/properties') {
+        const adminSecret = String(env.ADMIN_DASHBOARD_SECRET || '').trim();
+        if (!(await isAdminRequest(request, adminSecret))) return bad('Login admin diperlukan', 401);
+        const result = await env.DB.prepare(`
+          SELECT id, dashboard_id, property_code, publication_status, active, name, category,
+                 location, price, weekday_price, weekend_price, beds, baths, guests,
+                 image_url, image_urls, map_query, map_link, map_embed, description,
+                 room_options, external_bookings, sort_order
+          FROM properties
+          ORDER BY active DESC, sort_order ASC, name ASC
+        `).all();
+        return json({ ok:true, data:(result.results || []).map(row => mapPropertyRecord(row, true)) });
+      }
+
       // Ambil properti aktif untuk website publik
       if (request.method === 'GET' && path === '/properties') {
-        const result = await env.DB
-          .prepare(`
+        const [result, bookingResult] = await Promise.all([
+          env.DB.prepare(`
             SELECT id, name, category, location, price, weekday_price, weekend_price,
                    beds, baths, guests, image_url, image_urls, map_query, map_link,
-                   map_embed, description, room_options, external_bookings, sort_order
+                   map_embed, description, room_options, external_bookings, sort_order,
+                   publication_status, dashboard_id
             FROM properties
-            WHERE active = 1 AND id <> 'villa-forest-heal'
+            WHERE active = 1 AND publication_status = 'active'
             ORDER BY sort_order ASC, name ASC
-          `)
-          .all();
-
-        return json({
-          ok: true,
-          data: (result.results || []).map(row => ({
-            room_options: safeParseJsonArray(row.room_options),
-            external_bookings: safeParseJsonArray(row.external_bookings).filter(booking => booking && typeof booking === 'object').map(booking => ({
-              start_date: String(booking.start_date || ''),
-              end_date: String(booking.end_date || ''),
-              room_name: String(booking.room_name || ''),
-            })),
-            image_urls: (() => {
-              const urls = safeParseJsonArray(row.image_urls);
-              return row.image_url
-                ? [row.image_url, ...urls.filter(imageUrl => imageUrl !== row.image_url)]
-                : urls;
-            })(),
-            id: row.id,
-            name: row.name,
-            category: row.category,
-            location: row.location,
-            price: Number(row.price || 0),
-            weekday_price: row.weekday_price == null ? null : Number(row.weekday_price),
-            weekend_price: row.weekend_price == null ? null : Number(row.weekend_price),
-            beds: Number(row.beds || 0),
-            baths: Number(row.baths || 0),
-            guests: Number(row.guests || 0),
-            image_url: row.image_url,
-            map_query: row.map_query,
-            map_link: row.map_link,
-            map_embed: row.map_embed,
-            description: row.description,
-            sort_order: Number(row.sort_order || 0),
-          })),
+          `).all(),
+          env.DB.prepare(`
+            SELECT property_id, property_name, checkin, checkout
+            FROM dashboard_bookings
+            WHERE LOWER(TRIM(status)) NOT IN ('cancelled', 'canceled')
+          `).all(),
+        ]);
+        const bookings = bookingResult.results || [];
+        const data = (result.results || []).map(row => {
+          const mapped = mapPropertyRecord(row);
+          const linkedIds = new Set([String(row.id || ''), String(row.dashboard_id || '')]);
+          const dashboardBookings = bookings
+            .filter(booking => linkedIds.has(String(booking.property_id || '')))
+            .map(booking => ({
+              start_date:String(booking.checkin || ''),
+              end_date:String(booking.checkout || ''),
+              room_name:'',
+            }))
+            .filter(booking => /^\d{4}-\d{2}-\d{2}$/.test(booking.start_date) && /^\d{4}-\d{2}-\d{2}$/.test(booking.end_date));
+          return { ...mapped, external_bookings:[...mapped.external_bookings, ...dashboardBookings] };
         });
+        return json({ ok:true, data });
+      }
+
+      if (request.method === 'GET' && path === '/checkin/properties') {
+        const adminSecret = String(env.ADMIN_DASHBOARD_SECRET || '').trim();
+        const crewSession = await getCrewTokenPayload(request, adminSecret);
+        if (!crewSession) return bad('Login crew diperlukan untuk memuat daftar properti.', 401);
+        let saved;
+        try {
+          saved = await env.DB.prepare(`
+            SELECT data_json FROM dashboard_management_data WHERE id = 'main'
+          `).first();
+        } catch (error) {
+          if (/no such table: dashboard_management_data/i.test(String(error?.message || error))) {
+            return bad('Daftar properti bersama belum disiapkan. Jalankan migration-dashboard-management-data.sql di D1.', 503);
+          }
+          throw error;
+        }
+        if (!saved) return bad('Daftar properti belum disinkronkan dari Dashboard.', 503);
+        let managementData;
+        try { managementData = JSON.parse(saved.data_json); }
+        catch { return bad('Daftar properti di D1 rusak dan tidak dapat dibaca.', 500); }
+        const publishedResult = await env.DB.prepare(`
+          SELECT dashboard_id, name FROM properties
+          WHERE active = 1 AND publication_status = 'active'
+        `).all();
+        const publishedIds = new Set((publishedResult.results || []).map(property => property.dashboard_id).filter(Boolean));
+        const publishedNames = new Set((publishedResult.results || []).map(property => String(property.name || '').trim().toLocaleLowerCase('id')));
+        const seenNames = new Set();
+        const properties = (Array.isArray(managementData.properties) ? managementData.properties : [])
+          .filter(property => property && property.active !== false && property.active !== 0 && typeof property.name === 'string' && property.name.trim())
+          .filter(property => publishedIds.has(String(property.id || '')) || publishedNames.has(property.name.trim().toLocaleLowerCase('id')))
+          .filter(property => {
+            const key = property.name.trim().toLocaleLowerCase('id');
+            if (seenNames.has(key)) return false;
+            seenNames.add(key);
+            return true;
+          })
+          .sort((left, right) => left.name.localeCompare(right.name, 'id'))
+          .map(property => ({ id:String(property.id || ''), name:property.name.trim(), type:String(property.type || property.category || '') }));
+        return json({ ok:true, data:properties });
       }
 
       // Ambil logo dan kontak website untuk halaman publik
@@ -1225,6 +1473,236 @@ export default {
         return json({ ok: true });
       }
 
+      if (path === '/dashboard/management-data') {
+        const adminSecret = String(env.ADMIN_DASHBOARD_SECRET || '').trim();
+        const tokenData = await getAdminTokenPayload(request, adminSecret);
+        if (!['master', 'admin', 'it'].includes(tokenData?.account_id)) {
+          return bad('Login dashboard diperlukan.', 401);
+        }
+
+        if (request.method === 'GET') {
+          const saved = await env.DB.prepare(`
+            SELECT data_json, updated_by, updated_at
+            FROM dashboard_management_data WHERE id = 'main'
+          `).first();
+          if (!saved) return json({ ok:true, data:null });
+          let data;
+          try { data = JSON.parse(saved.data_json); }
+          catch { return bad('Data Owner/properti di D1 rusak dan tidak dapat dibaca.', 500); }
+          const catalogResult = await env.DB.prepare(`
+            SELECT id, dashboard_id, property_code, publication_status, active, name, category,
+                   location, price, beds, baths, guests
+            FROM properties
+          `).all();
+          const catalog = catalogResult.results || [];
+          const managedProperties = Array.isArray(data.properties) ? data.properties : [];
+          const normalizeName = value => String(value || '').trim().toLocaleLowerCase('id');
+          const usedCatalogIds = new Set();
+          const properties = managedProperties.map(managed => {
+            const matches = catalog.filter(row => normalizeName(row.name) === normalizeName(managed.name));
+            const row = catalog.find(item => item.dashboard_id === managed.id) || (matches.length === 1 ? matches[0] : null);
+            if (!row) return { ...managed, publication_status:managed.publication_status || 'draft' };
+            usedCatalogIds.add(row.id);
+            const archived = managed.active === false || Number(row.active) === 0 || row.publication_status === 'archived';
+            return {
+              ...managed,
+              name:row.name,
+              code:row.property_code || managed.code,
+              type:row.category,
+              area:row.location,
+              beds:Number(row.beds || 0),
+              baths:Number(row.baths || 0),
+              guests:Number(row.guests || 0),
+              price:Number(row.price || 0),
+              active:!archived,
+              publication_status:archived ? 'archived' : (row.publication_status || 'draft'),
+            };
+          });
+          for (const row of catalog) {
+            if (usedCatalogIds.has(row.id)) continue;
+            const id = row.dashboard_id || `D-${slug(row.id)}`;
+            const archived = Number(row.active) === 0 || row.publication_status === 'archived';
+            properties.push({
+              id,
+              name:row.name,
+              code:row.property_code || slug(row.id).replace(/_/g, '-').slice(0, 20).toUpperCase(),
+              type:row.category,
+              area:row.location,
+              beds:Number(row.beds || 0),
+              baths:Number(row.baths || 0),
+              guests:Number(row.guests || 0),
+              price:Number(row.price || 0),
+              owners:[],
+              agents:[],
+              active:!archived,
+              publication_status:archived ? 'archived' : (row.publication_status || 'active'),
+            });
+          }
+          return json({ ok:true, data:{ ...data, properties, updated_by:saved.updated_by, updated_at:saved.updated_at } });
+        }
+
+        if (request.method === 'PUT') {
+          if (!['master', 'admin'].includes(tokenData.account_id) || !['Master', 'Admin'].includes(tokenData.role)) {
+            return bad('Hanya Master atau Admin yang dapat menyimpan Owner dan properti.', 403);
+          }
+          const body = await request.json();
+          const owners = Array.isArray(body.owners) ? body.owners : null;
+          const properties = Array.isArray(body.properties) ? body.properties : null;
+          const validId = value => typeof value === 'string' && /^[A-Za-z0-9_-]{1,80}$/.test(value);
+          const validOwner = owner => owner && typeof owner === 'object' && !Array.isArray(owner) &&
+            validId(owner.id) && typeof owner.name === 'string' && owner.name.trim().length >= 2 && owner.name.length <= 160 &&
+            String(owner.phone || '').length <= 40 && String(owner.email || '').length <= 200 &&
+            String(owner.initial || '').length <= 12 && String(owner.color || '').length <= 120;
+          const validShareList = list => Array.isArray(list) && list.length <= 100 && list.every(item => item &&
+            validId(item.id) && Number.isFinite(Number(item.share)) && Number(item.share) >= 0 && Number(item.share) <= 100);
+          const validAgents = list => Array.isArray(list) && list.length <= 100 && list.every(item => item &&
+            typeof item.name === 'string' && item.name.length <= 160 && Number.isFinite(Number(item.share)) && Number(item.share) >= 0 && Number(item.share) <= 100);
+          const validProperty = property => property && typeof property === 'object' && !Array.isArray(property) &&
+            validId(property.id) && typeof property.name === 'string' && property.name.trim().length >= 2 && property.name.length <= 180 &&
+            ['apartment', 'villa', 'guesthouse', 'kos'].includes(String(property.type || property.category || 'villa')) &&
+            String(property.code || '').length <= 60 && validShareList(property.owners) && validAgents(property.agents || []);
+          if (!owners || !properties || !owners.length || owners.length > 300 || !properties.length || properties.length > 500 ||
+              !owners.every(validOwner) || new Set(owners.map(owner => owner.id)).size !== owners.length ||
+              !properties.every(validProperty) || new Set(properties.map(property => property.id)).size !== properties.length) {
+            return bad('Daftar Owner atau properti tidak valid.');
+          }
+          const data = { owners, properties };
+          const dataJson = JSON.stringify(data);
+          if (new TextEncoder().encode(dataJson).byteLength > 524288) return bad('Data Owner/properti melebihi batas 512 KB.');
+          const now = new Date().toISOString();
+          if (body.initialize_only === true) {
+            await env.DB.prepare(`
+              INSERT OR IGNORE INTO dashboard_management_data (id, data_json, updated_by, updated_at)
+              VALUES ('main', ?, ?, ?)
+            `).bind(dataJson, tokenData.account_id, now).run();
+            const savedManagement = await env.DB.prepare(`
+              SELECT data_json FROM dashboard_management_data WHERE id = 'main'
+            `).first();
+            let savedData;
+            try { savedData = JSON.parse(savedManagement.data_json); }
+            catch { return bad('Data Owner/properti di D1 rusak dan katalog tidak dapat disinkronkan.', 500); }
+            const catalogStatements = await buildDashboardCatalogStatements(env, savedData.properties || [], now);
+            if (catalogStatements.length) await env.DB.batch(catalogStatements);
+          } else {
+            const previous = await env.DB.prepare(`
+              SELECT data_json FROM dashboard_management_data WHERE id = 'main'
+            `).first();
+            const renameStatements = [];
+            if (previous) {
+              let previousData;
+              try { previousData = JSON.parse(previous.data_json); }
+              catch { return bad('Data Owner/properti sebelumnya rusak; perubahan nama properti dibatalkan.', 500); }
+              const oldProperties = Array.isArray(previousData.properties) ? previousData.properties : [];
+              const oldPropertiesById = new Map(oldProperties.filter(property => property?.id).map(property => [property.id, property]));
+              const archiveStateChanged = properties.some(property => {
+                const oldProperty = oldPropertiesById.get(property.id);
+                return oldProperty && (oldProperty.active !== false) !== (property.active !== false);
+              });
+              if (archiveStateChanged) return bad('Status arsip hanya dapat diubah melalui aksi Arsip/Pulihkan di Dashboard.', 409);
+              const oldNameCounts = new Map();
+              oldProperties.forEach(property => {
+                const key = String(property?.name || '').trim().toLocaleLowerCase('id');
+                if (key) oldNameCounts.set(key, (oldNameCounts.get(key) || 0) + 1);
+              });
+              const renames = properties.flatMap(property => {
+                const previousProperty = oldPropertiesById.get(property.id);
+                const oldName = String(previousProperty?.name || '').trim();
+                const newName = property.name.trim();
+                if (!oldName || oldName === newName || oldName.toLocaleLowerCase('id') === newName.toLocaleLowerCase('id')) return [];
+                if (oldNameCounts.get(oldName.toLocaleLowerCase('id')) !== 1) return [];
+                return [{ oldName, newName }];
+              });
+              const temporaryNames = renames.map(() => `__YOURHOME_RENAME_${crypto.randomUUID()}__`);
+              renames.forEach((rename, index) => {
+                renameStatements.push(env.DB.prepare(`
+                  UPDATE checkins SET unit = ? WHERE unit = ? COLLATE NOCASE
+                `).bind(temporaryNames[index], rename.oldName));
+              });
+              renames.forEach((rename, index) => {
+                renameStatements.push(env.DB.prepare(`
+                  UPDATE checkins SET unit = ? WHERE unit = ?
+                `).bind(rename.newName, temporaryNames[index]));
+              });
+            }
+            const catalogStatements = await buildDashboardCatalogStatements(env, properties, now);
+            renameStatements.push(...catalogStatements);
+            renameStatements.push(env.DB.prepare(`
+              INSERT INTO dashboard_management_data (id, data_json, updated_by, updated_at)
+              VALUES ('main', ?, ?, ?)
+              ON CONFLICT(id) DO UPDATE SET
+                data_json = excluded.data_json,
+                updated_by = excluded.updated_by,
+                updated_at = excluded.updated_at
+            `).bind(dataJson, tokenData.account_id, now));
+            await env.DB.batch(renameStatements);
+          }
+          const saved = await env.DB.prepare(`
+            SELECT data_json, updated_by, updated_at
+            FROM dashboard_management_data WHERE id = 'main'
+          `).first();
+          return json({ ok:true, data:{ ...JSON.parse(saved.data_json), updated_by:saved.updated_by, updated_at:saved.updated_at } });
+        }
+      }
+
+      const dashboardPropertyAction = path.match(/^\/dashboard\/properties\/([^/]+)\/(archive|restore)$/);
+      if (request.method === 'POST' && dashboardPropertyAction) {
+        const adminSecret = String(env.ADMIN_DASHBOARD_SECRET || '').trim();
+        const tokenData = await getAdminTokenPayload(request, adminSecret);
+        if (!['master', 'admin'].includes(tokenData?.account_id) || !['Master', 'Admin'].includes(tokenData?.role)) {
+          return bad('Hanya Master atau Admin yang dapat mengelola status properti.', 403);
+        }
+        const dashboardId = decodeURIComponent(dashboardPropertyAction[1]);
+        const action = dashboardPropertyAction[2];
+        const property = await env.DB.prepare(`
+          SELECT id, dashboard_id, name, category, location, price, weekday_price, weekend_price,
+                 guests, image_url, room_options, active, publication_status
+          FROM properties WHERE dashboard_id = ?
+        `).bind(dashboardId).first();
+        if (!property) return bad('Properti belum tersinkron ke katalog D1.', 404);
+
+        if (action === 'archive') {
+          const body = await request.json();
+          const pin = String(body.pin || '').trim();
+          if (!/^\d{4}$/.test(pin)) return bad('Masukkan PIN Master tepat 4 digit.', 400);
+          const master = await env.DB.prepare(`
+            SELECT delete_pin_salt, delete_pin_hash FROM dashboard_users
+            WHERE account_id = 'master' AND active = 1
+          `).first();
+          if (!master?.delete_pin_hash) return bad('PIN Master belum diinisialisasi.', 409);
+          const attemptedHash = await hashDashboardPassword(pin, master.delete_pin_salt);
+          if (!constantTimeEqual(attemptedHash, master.delete_pin_hash)) return bad('PIN Master salah.', 403);
+          if (property.publication_status === 'archived') return bad('Properti sudah diarsipkan.', 409);
+        }
+
+        if (action === 'restore' && property.publication_status !== 'archived') {
+          return bad('Hanya properti yang diarsipkan yang dapat dipulihkan.', 409);
+        }
+
+        const nextStatus = action === 'archive' ? 'archived' : 'draft';
+        const nextActive = action === 'archive' ? 0 : 1;
+        const saved = await env.DB.prepare(`
+          SELECT data_json FROM dashboard_management_data WHERE id = 'main'
+        `).first();
+        if (!saved) return bad('Data Dashboard belum tersedia.', 503);
+        let managementData;
+        try { managementData = JSON.parse(saved.data_json); }
+        catch { return bad('Data Dashboard rusak dan status properti tidak dapat diubah.', 500); }
+        const managedProperty = (managementData.properties || []).find(item => item.id === dashboardId);
+        if (!managedProperty) return bad('Relasi properti Dashboard tidak ditemukan.', 409);
+        managedProperty.active = nextActive === 1;
+        managedProperty.publication_status = nextStatus;
+        const now = new Date().toISOString();
+        await env.DB.batch([
+          env.DB.prepare(`
+            UPDATE properties SET active = ?, publication_status = ?, updated_at = ? WHERE id = ?
+          `).bind(nextActive, nextStatus, now, property.id),
+          env.DB.prepare(`
+            UPDATE dashboard_management_data SET data_json = ?, updated_by = ?, updated_at = ? WHERE id = 'main'
+          `).bind(JSON.stringify(managementData), tokenData.account_id, now),
+        ]);
+        return json({ ok:true, data:{ id:property.id, dashboard_id:dashboardId, publication_status:nextStatus } });
+      }
+
       if (path === '/dashboard/owner-share-calculations') {
         const adminSecret = String(env.ADMIN_DASHBOARD_SECRET || '').trim();
         const tokenData = await getAdminTokenPayload(request, adminSecret);
@@ -1799,88 +2277,9 @@ export default {
         });
       }
 
-      // Simpan atau perbarui properti dari dashboard admin
+      // Retire the broad upsert; Dashboard management-data now owns creation.
       if (request.method === 'POST' && path === '/admin/properties') {
-        const adminSecret = String(env.ADMIN_DASHBOARD_SECRET || '').trim();
-        if (!(await isAdminRequest(request, adminSecret))) {
-          return bad('Login admin diperlukan', 401);
-        }
-
-        const body = await request.json();
-        const id = String(body.id || '').trim();
-        const name = String(body.name || '').trim();
-        const category = String(body.category || '').trim();
-        const location = String(body.location || '').trim();
-        const price = Number(body.price);
-        const weekdayPrice = body.weekday_price == null || body.weekday_price === '' ? null : Number(body.weekday_price);
-        const weekendPrice = body.weekend_price == null || body.weekend_price === '' ? null : Number(body.weekend_price);
-        const beds = Number(body.beds || 0);
-        const baths = Number(body.baths || 0);
-        const guests = Number(body.guests || 0);
-        const preserveImages = body.preserve_images === true;
-        let imageUrl = String(body.image_url || '').trim();
-        const mapQuery = String(body.map_query || '').trim();
-        const mapLink = String(body.map_embed || body.map_link || '').trim();
-        const description = String(body.description || '');
-        const roomOptions = Array.isArray(body.room_options) ? body.room_options : [];
-        const externalBookings = Array.isArray(body.external_bookings)
-          ? body.external_bookings.filter(item => item && item.start_date && item.end_date && item.platform)
-          : [];
-        let imageUrls = Array.isArray(body.image_urls)
-          ? body.image_urls.filter(value => typeof value === 'string' && value.trim())
-          : (imageUrl ? [imageUrl] : []);
-        const sortOrder = Number(body.sort_order || 0);
-        const active = body.active === false ? 0 : 1;
-
-        if (!id || !name || !['apartment', 'villa', 'guesthouse', 'kos'].includes(category) || !location || !Number.isFinite(price) || price < 0) {
-          return bad('id, name, category, location, dan price wajib valid');
-        }
-
-        if (preserveImages) {
-          const current = await env.DB
-            .prepare('SELECT image_url, image_urls FROM properties WHERE id = ?')
-            .bind(id)
-            .first();
-          if (current) {
-            imageUrl = String(current.image_url || '');
-            imageUrls = safeParseJsonArray(current.image_urls);
-          }
-        }
-
-        const now = new Date().toISOString();
-        await env.DB.prepare(`
-          INSERT INTO properties (
-            id, name, category, location, price, weekday_price, weekend_price,
-            beds, baths, guests, image_url, map_query, map_link, description,
-            room_options, external_bookings, image_urls, sort_order, active, updated_at
-          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-          ON CONFLICT(id) DO UPDATE SET
-            name = excluded.name,
-            category = excluded.category,
-            location = excluded.location,
-            price = excluded.price,
-            weekday_price = excluded.weekday_price,
-            weekend_price = excluded.weekend_price,
-            beds = excluded.beds,
-            baths = excluded.baths,
-            guests = excluded.guests,
-            image_url = excluded.image_url,
-            map_query = excluded.map_query,
-            map_link = excluded.map_link,
-            description = excluded.description,
-            room_options = excluded.room_options,
-            external_bookings = excluded.external_bookings,
-            image_urls = excluded.image_urls,
-            sort_order = excluded.sort_order,
-            active = excluded.active,
-            updated_at = excluded.updated_at
-        `).bind(
-          id, name, category, location, price, weekdayPrice, weekendPrice,
-          beds, baths, guests, imageUrl, mapQuery, mapLink, description,
-          JSON.stringify(roomOptions), JSON.stringify(externalBookings), JSON.stringify(imageUrls), sortOrder, active, now
-        ).run();
-
-        return json({ ok: true, data: { id, name } });
+        return bad('Properti baru hanya dapat dibuat melalui Dashboard.', 405);
       }
 
       // Simpan logo website ke R2 dan setting kontak ke D1
@@ -1937,13 +2336,94 @@ export default {
       }
 
       const propertyAdminMatch = path.match(/^\/admin\/properties\/([^/]+)$/);
-      if (request.method === 'DELETE' && propertyAdminMatch) {
+      if (request.method === 'PATCH' && propertyAdminMatch) {
         const adminSecret = String(env.ADMIN_DASHBOARD_SECRET || '').trim();
-        if (!(await isAdminRequest(request, adminSecret))) return bad('Login admin diperlukan', 401);
+        const adminIdentity = await getAdminTokenPayload(request, adminSecret);
+        if (!adminIdentity) return bad('Login admin diperlukan', 401);
+        if (adminIdentity.account_id) return bad('Detail katalog hanya dapat diedit dari Admin Properti.', 403);
         const id = decodeURIComponent(propertyAdminMatch[1]);
-        const result = await env.DB.prepare('DELETE FROM properties WHERE id = ?').bind(id).run();
-        if (!result.meta?.changes) return bad('Properti tidak ditemukan', 404);
-        return json({ ok: true, data: { id } });
+        const current = await env.DB.prepare('SELECT id, dashboard_id, category, active, publication_status, image_url FROM properties WHERE id = ?').bind(id).first();
+        if (!current) return bad('Properti tidak ditemukan', 404);
+        const body = await request.json();
+        const location = String(body.location || '').trim();
+        const mapQuery = String(body.map_query || '').trim();
+        const mapLink = String(body.map_link || '').trim();
+        const mapEmbed = String(body.map_embed || '').trim();
+        const description = String(body.description || '');
+        const sortOrder = Number(body.sort_order ?? 0);
+        const beds = Number(body.beds ?? 0);
+        const baths = Number(body.baths ?? 0);
+        const guests = Number(body.guests ?? 0);
+        const roomOptions = Array.isArray(body.room_options) ? body.room_options : [];
+        const weekdayPrice = body.weekday_price == null || body.weekday_price === '' ? null : Number(body.weekday_price);
+        const weekendPrice = body.weekend_price == null || body.weekend_price === '' ? null : Number(body.weekend_price);
+        const publish = body.publish === true;
+        const kosPrices = roomOptions.map(room => Number(room?.price)).filter(price => Number.isSafeInteger(price) && price > 0);
+        const price = current.category === 'kos'
+          ? (kosPrices.length ? Math.min(...kosPrices) : 0)
+          : Number(weekdayPrice || 0);
+        const validRoomOptions = roomOptions.length <= 100 && roomOptions.every(room => room &&
+          String(room.name || '').trim().length <= 100 && String(room.details || '').length <= 500 &&
+          Number.isSafeInteger(Number(room.price)) && Number(room.price) >= 0);
+        const validOptionalPrice = value => value == null || (Number.isSafeInteger(value) && value >= 0);
+        if (location.length > 180 || mapQuery.length > 180 || mapLink.length > 1000 || mapEmbed.length > 1000 || description.length > 5000 ||
+            !Number.isSafeInteger(sortOrder) || sortOrder < 0 || sortOrder > 10000 ||
+            !Number.isSafeInteger(beds) || beds < 0 || beds > 100 || !Number.isSafeInteger(baths) || baths < 0 || baths > 100 ||
+            !Number.isSafeInteger(guests) || guests < 0 || guests > 500 || !validRoomOptions ||
+            (current.category !== 'kos' && (!validOptionalPrice(weekdayPrice) || !validOptionalPrice(weekendPrice)))) {
+          return bad('Lokasi, harga, kapasitas, peta, atau detail properti tidak valid.');
+        }
+        if (publish) {
+          const missing = [];
+          if (location.length < 3) missing.push('lokasi');
+          if (!current.image_url) missing.push('foto utama');
+          if (guests < 1) missing.push('kapasitas tamu');
+          if (current.category === 'kos') {
+            if (!roomOptions.some(room => String(room.name || '').trim() && Number(room.price) > 0)) missing.push('tipe kamar dan harga');
+          } else if (Number(weekdayPrice || 0) <= 0 || Number(weekendPrice || 0) <= 0) {
+            missing.push('harga hari biasa dan Jumat/Sabtu');
+          }
+          if (missing.length) return bad(`Lengkapi ${missing.join(', ')} sebelum menampilkan properti.`, 409, { missing });
+        }
+        const publicationStatus = publish
+          ? 'active'
+          : current.publication_status === 'archived' ? 'archived' : 'draft';
+        const active = publicationStatus === 'archived' ? 0 : 1;
+        const now = new Date().toISOString();
+        const statements = [env.DB.prepare(`
+          UPDATE properties SET location = ?, price = ?, weekday_price = ?, weekend_price = ?,
+            beds = ?, baths = ?, guests = ?, map_query = ?, map_link = ?, map_embed = ?,
+            description = ?, room_options = ?, sort_order = ?, active = ?, publication_status = ?, updated_at = ?
+          WHERE id = ?
+        `).bind(
+          location, price, current.category === 'kos' ? null : weekdayPrice,
+          current.category === 'kos' ? null : weekendPrice, beds, baths, guests,
+          mapQuery, mapLink, mapEmbed, description, JSON.stringify(roomOptions), sortOrder, active, publicationStatus, now, id
+        )];
+        if (publish && current.dashboard_id) {
+          const savedManagement = await env.DB.prepare(`
+            SELECT data_json FROM dashboard_management_data WHERE id = 'main'
+          `).first();
+          if (savedManagement) {
+            let managementData;
+            try { managementData = JSON.parse(savedManagement.data_json); }
+            catch { return bad('Data Dashboard rusak; status publikasi tidak dapat disinkronkan.', 500); }
+            const managedProperty = (managementData.properties || []).find(property => property.id === current.dashboard_id);
+            if (managedProperty) {
+              managedProperty.active = true;
+              managedProperty.publication_status = 'active';
+              statements.push(env.DB.prepare(`
+                UPDATE dashboard_management_data SET data_json = ?, updated_by = 'admin-website', updated_at = ?
+                WHERE id = 'main'
+              `).bind(JSON.stringify(managementData), now));
+            }
+          }
+        }
+        await env.DB.batch(statements);
+        return json({ ok:true, data:{ id, publication_status:publicationStatus, updated_at:now } });
+      }
+      if (request.method === 'DELETE' && propertyAdminMatch) {
+        return bad('Properti tidak dapat dihapus dari Admin Properti. Arsipkan melalui Dashboard.', 405);
       }
 
       // Terima laporan bug atau pesan dari admin properti
@@ -2046,9 +2526,9 @@ export default {
       // Upload foto galeri properti ke R2 dan simpan URL-nya di D1
       if (request.method === 'POST' && path === '/admin/properties/images') {
         const adminSecret = String(env.ADMIN_DASHBOARD_SECRET || '').trim();
-        if (!(await isAdminRequest(request, adminSecret))) {
-          return bad('Login admin diperlukan', 401);
-        }
+        const adminIdentity = await getAdminTokenPayload(request, adminSecret);
+        if (!adminIdentity) return bad('Login admin diperlukan', 401);
+        if (adminIdentity.account_id) return bad('Foto katalog hanya dapat diubah dari Admin Properti.', 403);
 
         const body = await request.json();
         const id = String(body.id || '').trim();
@@ -2058,6 +2538,7 @@ export default {
         const existingUrls = Array.isArray(body.existing_urls)
           ? body.existing_urls.filter(value => typeof value === 'string' && value.trim())
           : [];
+        const replaceGallery = body.replace_gallery === true;
 
         if (!id || images.length > 20) {
           return bad('id wajib dan maksimal 20 foto galeri per upload');
@@ -2103,14 +2584,14 @@ export default {
             .run();
         }
         const imageUrls = [...existingUrls, ...uploadedUrls];
-        if (images.length) {
+        if (images.length || replaceGallery) {
           await env.DB
             .prepare('UPDATE properties SET image_urls = ?, updated_at = ? WHERE id = ?')
             .bind(JSON.stringify(imageUrls), now, id)
             .run();
         }
 
-        return json({ ok: true, id, image_url: mainImage ? mainUrl : existingMainUrl, image_urls: images.length ? imageUrls : undefined });
+        return json({ ok: true, id, image_url: mainImage ? mainUrl : existingMainUrl, image_urls: images.length || replaceGallery ? imageUrls : undefined });
       }
 
       // POST /login { crew_id, pin }
@@ -2199,6 +2680,162 @@ export default {
         }
 
         return json({ ok: true, name });
+      }
+
+      if (request.method === 'POST' && path === '/owner/login') {
+        const rate = await reserveLoginAttempt(env, request, 'owner-login');
+        if (rate.unavailable) return bad('Tabel pembatas login belum tersedia. Jalankan migration-auth-login-rate-limits.sql di D1.', 503);
+        if (rate.limited) return bad('Terlalu banyak percobaan login. Coba lagi dalam 15 menit.', 429);
+        const body = await request.json();
+        const ownerId = String(body.owner_id || '').trim();
+        const password = String(body.password || '');
+        const adminSecret = String(env.ADMIN_DASHBOARD_SECRET || '').trim();
+        if (!adminSecret || !/^[A-Za-z0-9_-]{1,80}$/.test(ownerId) || !password || password.length > 256) {
+          return bad('ID Owner atau password tidak valid.', 401);
+        }
+        let account;
+        try {
+          account = await env.DB.prepare(`
+            SELECT owner_id, password_salt, password_hash, active
+            FROM owner_portal_accounts WHERE owner_id = ?
+          `).bind(ownerId).first();
+        } catch (error) {
+          if (/no such table: owner_portal_accounts/i.test(String(error?.message || error))) {
+            return bad('Akses Owner Portal belum disiapkan. Jalankan migration-owner-portal-accounts.sql di D1.', 503);
+          }
+          throw error;
+        }
+        if (!account?.active) return bad('ID Owner atau password salah.', 401);
+        const attemptedHash = await hashDashboardPassword(password, account.password_salt);
+        if (!constantTimeEqual(attemptedHash, account.password_hash)) return bad('ID Owner atau password salah.', 401);
+        let ownerName = '';
+        try {
+          const management = await env.DB.prepare(`
+            SELECT data_json FROM dashboard_management_data WHERE id = 'main'
+          `).first();
+          const managementData = management ? JSON.parse(management.data_json) : null;
+          ownerName = String((managementData?.owners || []).find(owner => owner?.id === ownerId)?.name || '').trim();
+        } catch {}
+        await clearLoginAttempts(env, request, 'owner-login');
+        return json({ ok:true, token:await createOwnerToken(adminSecret, ownerId), expires_in:24 * 60 * 60, data:{ owner_id:ownerId, owner_name:ownerName } });
+      }
+
+      if (request.method === 'GET' && path === '/owner/reports') {
+        const tokenData = await getOwnerTokenPayload(request, String(env.ADMIN_DASHBOARD_SECRET || '').trim());
+        if (!tokenData) return bad('Login Owner diperlukan.', 401);
+        const account = await env.DB.prepare('SELECT owner_id FROM owner_portal_accounts WHERE owner_id = ? AND active = 1').bind(tokenData.owner_id).first();
+        if (!account) return bad('Akses Owner tidak aktif.', 401);
+        const result = await env.DB.prepare(`
+          SELECT id, owner_name, period_month, status, created_at, updated_at
+          FROM dashboard_owner_share_calculations
+          WHERE owner_id = ? AND status = 'final'
+          ORDER BY period_month DESC
+        `).bind(tokenData.owner_id).all();
+        return json({ ok:true, data:result.results || [] });
+      }
+
+      const ownerReportMatch = path.match(/^\/owner\/reports\/(\d{4}-(?:0[1-9]|1[0-2]))$/);
+      if (request.method === 'GET' && ownerReportMatch) {
+        const tokenData = await getOwnerTokenPayload(request, String(env.ADMIN_DASHBOARD_SECRET || '').trim());
+        if (!tokenData) return bad('Login Owner diperlukan.', 401);
+        const account = await env.DB.prepare('SELECT owner_id FROM owner_portal_accounts WHERE owner_id = ? AND active = 1').bind(tokenData.owner_id).first();
+        if (!account) return bad('Akses Owner tidak aktif.', 401);
+        const saved = await env.DB.prepare(`
+          SELECT id, owner_name, period_month, calculation_json, created_at, updated_at
+          FROM dashboard_owner_share_calculations
+          WHERE owner_id = ? AND period_month = ? AND status = 'final'
+        `).bind(tokenData.owner_id, ownerReportMatch[1]).first();
+        if (!saved) return bad('Laporan tidak ditemukan.', 404);
+        let calculation;
+        try { calculation = JSON.parse(saved.calculation_json); }
+        catch { return bad('Data laporan tidak dapat dibaca.', 500); }
+        return json({ ok:true, data:{ id:saved.id, owner_name:saved.owner_name, period_month:saved.period_month, created_at:saved.created_at, updated_at:saved.updated_at, calculation } });
+      }
+
+      if (request.method === 'POST' && path === '/admin/owner-portal/password') {
+        const tokenData = await getAdminTokenPayload(request, String(env.ADMIN_DASHBOARD_SECRET || '').trim());
+        if (!['master', 'admin'].includes(tokenData?.account_id) || !['Master', 'Admin'].includes(tokenData?.role)) {
+          return bad('Hanya Master atau Admin yang dapat mengatur akses Owner Portal.', 403);
+        }
+        const body = await request.json();
+        const currentOwnerId = String(body.current_owner_id || body.owner_id || '').trim();
+        const ownerId = String(body.owner_id || '').trim();
+        const password = String(body.password || '');
+        if (!/^[A-Za-z0-9_-]{1,80}$/.test(currentOwnerId) || !/^[A-Za-z0-9_-]{1,80}$/.test(ownerId) || password.length < 12 || password.length > 256) {
+          return bad('ID Owner dan password 12-256 karakter wajib valid.');
+        }
+        const management = await env.DB.prepare(`SELECT data_json FROM dashboard_management_data WHERE id = 'main'`).first();
+        if (!management) return bad('Data Owner belum tersedia di Dashboard.', 503);
+        let managementData;
+        try { managementData = JSON.parse(management.data_json); }
+        catch { return bad('Data Owner Dashboard tidak dapat dibaca.', 500); }
+        const currentOwner = (managementData.owners || []).find(owner => owner?.id === currentOwnerId);
+        if (!currentOwner) return bad('Owner tidak ditemukan di Dashboard.', 404);
+        if (ownerId !== currentOwnerId && (managementData.owners || []).some(owner => owner?.id === ownerId)) {
+          return bad('ID Owner baru sudah digunakan.', 409);
+        }
+        if (ownerId !== currentOwnerId) {
+          let existingAccount;
+          let existingReport;
+          try {
+            [existingAccount, existingReport] = await Promise.all([
+              env.DB.prepare('SELECT owner_id FROM owner_portal_accounts WHERE owner_id = ?').bind(ownerId).first(),
+              env.DB.prepare('SELECT id FROM dashboard_owner_share_calculations WHERE owner_id = ?').bind(ownerId).first(),
+            ]);
+          } catch (error) {
+            if (/no such table: owner_portal_accounts/i.test(String(error?.message || error))) {
+              return bad('Akses Owner Portal belum disiapkan. Jalankan migration-owner-portal-accounts.sql di D1.', 503);
+            }
+            throw error;
+          }
+          if (existingAccount || existingReport) return bad('ID Owner baru sudah digunakan.', 409);
+          managementData.owners = managementData.owners.map(owner => owner.id === currentOwnerId ? { ...owner, id:ownerId } : owner);
+          managementData.properties = (managementData.properties || []).map(property => ({
+            ...property,
+            owners:(property.owners || []).map(owner => owner.id === currentOwnerId ? { ...owner, id:ownerId } : owner),
+          }));
+        }
+        const salt = bytesToHex(crypto.getRandomValues(new Uint8Array(16)));
+        const hash = await hashDashboardPassword(password, salt);
+        const now = new Date().toISOString();
+        try {
+          const [reportResult, targetReportResult] = await Promise.all([
+            env.DB.prepare(`
+              SELECT id, owner_id, period_month, calculation_json
+              FROM dashboard_owner_share_calculations
+              WHERE owner_id = ? OR (owner_name = ? AND owner_id <> ?)
+            `).bind(currentOwnerId, currentOwner.name, ownerId).all(),
+            env.DB.prepare(`
+              SELECT period_month FROM dashboard_owner_share_calculations WHERE owner_id = ?
+            `).bind(ownerId).all(),
+          ]);
+          const existingMonths = new Set((targetReportResult.results || []).map(report => report.period_month));
+          const reportStatements = (reportResult.results || [])
+            .filter(report => report.owner_id !== ownerId && !existingMonths.has(report.period_month))
+            .map(report => {
+            let calculation = {};
+            try { calculation = JSON.parse(report.calculation_json); } catch {}
+            calculation.ownerId = ownerId;
+            return env.DB.prepare('UPDATE dashboard_owner_share_calculations SET owner_id = ?, calculation_json = ?, updated_at = ? WHERE id = ?')
+              .bind(ownerId, JSON.stringify(calculation), now, report.id);
+            });
+          const statements = [env.DB.prepare(`
+            INSERT INTO owner_portal_accounts (owner_id, password_salt, password_hash, active, created_at, updated_at)
+            VALUES (?, ?, ?, 1, ?, ?)
+            ON CONFLICT(owner_id) DO UPDATE SET password_salt = excluded.password_salt, password_hash = excluded.password_hash, active = 1, updated_at = excluded.updated_at
+          `).bind(ownerId, salt, hash, now, now),
+          env.DB.prepare('UPDATE dashboard_management_data SET data_json = ?, updated_by = ?, updated_at = ? WHERE id = \'main\'')
+            .bind(JSON.stringify(managementData), tokenData.account_id, now),
+          ...reportStatements];
+          if (ownerId !== currentOwnerId) statements.push(env.DB.prepare('DELETE FROM owner_portal_accounts WHERE owner_id = ?').bind(currentOwnerId));
+          await env.DB.batch(statements);
+        } catch (error) {
+          if (/no such table: owner_portal_accounts/i.test(String(error?.message || error))) {
+            return bad('Akses Owner Portal belum disiapkan. Jalankan migration-owner-portal-accounts.sql di D1.', 503);
+          }
+          throw error;
+        }
+        return json({ ok:true, data:{ owner_id:ownerId } });
       }
 
       return bad('Endpoint tidak ditemukan', 404);

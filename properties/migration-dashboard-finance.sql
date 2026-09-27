@@ -14,7 +14,7 @@ INSERT OR IGNORE INTO dashboard_accounts (
   account_id, display_name, role, created_at, updated_at
 ) VALUES
   ('master', 'Andri Fernando', 'Master', datetime('now'), datetime('now')),
-  ('admin', 'Noni', 'Admin', datetime('now'), datetime('now'));
+  ('admin', 'Admin', 'Admin', datetime('now'), datetime('now'));
 
 CREATE TABLE IF NOT EXISTS finance_categories (
   id TEXT PRIMARY KEY,

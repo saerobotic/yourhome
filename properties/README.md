@@ -7,8 +7,8 @@ Kategori properti dipisahkan menjadi empat folder:
 - `guest-house/`
 - `kosan/`
 
-Website publik membaca data aktif dari Cloudflare D1 melalui `GET /properties`.
-Folder kategori dipakai untuk pengelompokan seed/aset lokal; perubahan admin disimpan ke D1 melalui `POST /admin/properties`.
+Website publik membaca properti berstatus aktif dari Cloudflare D1 melalui `GET /properties`.
+Folder kategori dipakai untuk pengelompokan seed/aset lokal. Dashboard membuat properti berstatus Draft; Admin Properti hanya memperbarui detail listing melalui endpoint PATCH terbatas dan tidak dapat membuat atau menghapus properti.
 
 Jalankan `schema.sql` sekali pada database D1 `your-home-checkin` sebelum memakai halaman admin properti.
 
@@ -36,18 +36,24 @@ Jalankan `migration-dashboard-refund-net-income.sql` setelah migration finance, 
 
 Jalankan `migration-dashboard-owner-share.sql` satu kali pada D1 untuk menyimpan snapshot final bagi hasil per owner dan bulan. Menyimpan ulang owner/bulan yang sama memperbarui laporan sehingga final tetap dapat diedit. Endpoint dashboard menyediakan data ini untuk dipakai portal Owner saat portal tersebut tersedia.
 
+Jalankan `migration-dashboard-management-data.sql` satu kali pada D1 sebelum deploy Worker/dashboard yang menyinkronkan daftar Owner dan pengaitan properti lintas browser. Setelah deploy, login pertama dari browser dan alamat lama yang memiliki perubahan Owner/properti lokal akan mengimpornya ke D1 dengan operasi insert-only; impor tidak menimpa data D1 yang sudah ada. Snapshot lokal yang hanya berisi data bawaan aplikasi tidak otomatis diimpor. Jika D1 kosong, buka browser dan alamat lama yang memuat data khusus terlebih dahulu; pada browser tanpa salinan khusus, jangan pilih inisialisasi manual kecuali datanya memang sumber yang benar. Sesudah D1 berisi data, semua browser membaca data kanonis dari D1 dan perubahan Master/Admin disinkronkan kembali. Jika nama properti diubah pada ID yang sama, Worker juga mengganti nama lama pada histori `checkins.unit` yang cocok agar histori crew mengikuti nama baru; jika nama lama dipakai oleh beberapa properti, pembaruan histori ambigu dilewati agar tidak mengubah catatan yang salah. Untuk memperbaiki check-in lama yang sudah tersimpan sebelum Worker rename ini dideploy, jalankan migrasi koreksi yang sesuai satu kali; misalnya `migration-rename-checkin-forest-heal.sql` memperbaiki ejaan Villa Forest Hill menjadi Villa Forest Heal. Dropdown Check In Crew memuat properti aktif melalui `GET /checkin/properties` dengan sesi crew; properti yang diarsipkan di Dashboard tidak muncul setelah daftar dimuat ulang. Tab Dokumentasi Saya memakai `GET /crew/checkins`, membaca riwayat hanya dari crew yang terikat pada token, dan memakai paginasi/filter bulan/properti; endpoint ini hanya-baca dan tidak menambah tabel atau menduplikasi check-in. Booking dan transaksi keuangan tetap menggunakan tabel D1 masing-masing.
+
+Jalankan `migration-unified-property-catalog.sql` satu kali setelah `migration-dashboard-management-data.sql`. Migrasi menambahkan ID penghubung Dashboard, kode properti, dan status `draft`/`active`/`archived` ke tabel `properties`, memetakan nama unik yang cocok, dan mempertahankan properti arsip. Dashboard menjadi sumber pembuatan properti serta aksi arsip/pulihkan. Admin Properti mengedit detail listing dan menjadi satu-satunya tempat menyimpan Draft atau Publish; properti arsip dapat dipublikasikan kembali dari Admin Properti setelah detail wajib lengkap. Saat daftar Admin Properti dimuat, Worker merekonsiliasi properti Dashboard yang belum memiliki baris katalog agar Draft lama tetap muncul untuk dilengkapi. Draft tidak tampil pada website atau pilihan check-in Crew. Jangan jalankan ulang migrasi ini setelah berhasil.
+
+Booking dari website maupun platform lain dicatat melalui **Dashboard → Booking**, dengan platform dan tanggal check-in/check-out yang sesuai. `GET /properties` menggabungkan booking yang belum dibatalkan ke rentang tanggal tidak tersedia; check-out bersifat eksklusif sehingga tanggal check-out otomatis tersedia lagi. Blokir manual lama pada `properties.external_bookings` tetap dihormati.
+
 Jalankan `migration-auth-login-rate-limits.sql` satu kali sebelum deploy Worker yang menerapkan pembatas percobaan login. Tabel ini menyimpan HMAC alamat IP, bukan alamat IP mentah, dan counter direset setelah autentikasi sukses.
 
-Deploy versi terbaru `worker-checkin-api.js` setelah dua belas migration dashboard: finance, kategori Fee untuk Crew, akun IT, PIN delete, booking, Extra Bed, bukti finance, refund net income, login rate limits, karyawan/crew, ID Crew, dan bagi hasil owner. Publikasikan juga versi terbaru `dasbord.html`, `check-in-crew.html`, dan `check-in-crew-dashboard.html` bersamaan dengan Worker. Halaman Check In meminta ID Crew; daftar nama dan ID hanya tersedia setelah admin login. Pada Cloudflare Worker `your-home-checkin-api`, atur secrets berikut di **Settings → Variables and Secrets**:
+Deploy versi terbaru `worker-checkin-api.js` setelah dua belas migration dashboard: finance, kategori Fee untuk Crew, akun IT, PIN delete, booking, Extra Bed, bukti finance, refund net income, login rate limits, karyawan/crew, ID Crew, dan bagi hasil owner. Publikasikan juga versi terbaru `dasbord.html`, `admin-properti.html`, `index.html`, `check-in-crew.html`, dan `check-in-crew-dashboard.html` bersamaan dengan Worker. Halaman Check In meminta ID Crew; daftar nama dan ID hanya tersedia setelah admin login. Pada Cloudflare Worker `your-home-checkin-api`, atur secrets berikut di **Settings → Variables and Secrets**:
 
 - `ADMIN_DASHBOARD_SECRET`: secret signing session yang sudah dipakai Worker. Jangan ganti bersamaan dengan password akun.
 - `MASTER_INITIAL_PASSWORD`: password awal Master, minimal 12 karakter.
 - `ADMIN_INITIAL_PASSWORD`: password awal Admin, minimal 12 karakter.
 - `IT_INITIAL_PASSWORD`: password awal akun IT, minimal 12 karakter.
 
-Login Master adalah Andri Fernando, Admin adalah Noni, dan akun IT awal bernama IT Support. Saat login Master pertama setelah deploy, Worker menginisialisasi PIN hapus `1234` sebagai hash bersalt. Master perlu menggantinya segera dari **Profil Akun → PIN Persetujuan Delete**. Penghapusan transaksi oleh Admin membutuhkan PIN Master tersebut; IT tidak dapat menghapus transaksi. IT juga tidak dapat mengakses endpoint admin properti/sistem. Perubahan password normal dilakukan dari **Profil Akun → Ganti Password**.
+Akun Dashboard adalah Master (Andri Fernando), Admin, dan IT (IT Support). Saat login Master pertama setelah deploy, Worker menginisialisasi PIN hapus `1234` sebagai hash bersalt. Master perlu menggantinya segera dari **Profil Akun → PIN Persetujuan Delete**. Penghapusan transaksi oleh Admin membutuhkan PIN Master tersebut; IT tidak dapat menghapus transaksi. IT juga tidak dapat mengakses endpoint admin properti/sistem. Perubahan password normal dilakukan dari **Profil Akun → Ganti Password**.
 
-Jika password perlu di-reset lewat Cloudflare, ubah secret akun yang sesuai, lalu jalankan satu perintah berikut di D1 Console. Ganti `master` menjadi `admin` bila yang di-reset akun Noni:
+Jika password perlu di-reset lewat Cloudflare, ubah secret akun yang sesuai, lalu jalankan satu perintah berikut di D1 Console. Ganti `master` menjadi `admin` bila yang di-reset akun Admin:
 
 ```sql
 UPDATE dashboard_users
@@ -68,3 +74,7 @@ Booking dapat mencatat jumlah dan harga per Extra Bed. Subtotal Extra Bed dibuat
 Foto bukti pengeluaran dikonversi ke JPEG di browser dan dibatasi di bawah 100 KB, lalu disimpan di R2 dengan URL pada kolom `finance_entries.proof_url`. Pengeluaran manual dapat diedit dengan PIN Master 4 digit; perubahan bukti bersifat opsional dan mempertahankan foto yang ada bila tidak diganti.
 
 Booking baru disimpan ke D1 dan otomatis membuat pemasukan berkategori Booking pada tanggal booking dicatat. Login Master/Admin pertama kali pada versi ini menyinkronkan booking lama dari browser ke D1; ID yang sama mencegah pemasukan dobel saat sinkronisasi ulang. Edit booking memperbarui pemasukan terkait tanpa mengubah tanggal transaksi. Cancel meminta alasan, nominal refund, dan PIN Master 4 digit; refund mengurangi pemasukan Booking, lalu Extra Bed bila refund melebihi nilai booking. Keterangan pemasukan menyimpan alasan dan nominal refund; refund tidak dicatat lagi sebagai pengeluaran agar tidak terhitung dua kali. Booking berstatus Cancelled dapat diedit dengan persetujuan PIN Master, status batal dan refund tetap dipertahankan.
+
+## Owner Portal
+
+Jalankan `migration-owner-portal-accounts.sql` satu kali pada D1 sebelum deploy Worker terbaru. Portal Owner hanya menampilkan laporan bagi hasil yang sudah final pada `dashboard_owner_share_calculations`; perhitungan tidak diulang di browser owner. Master atau Admin membuka **Dashboard → Owner → Akses Portal** untuk membuat atau mereset password owner. Bagikan ID Owner dan password minimal 12 karakter melalui kanal aman. Owner masuk dari `owner-portal.html` dan hanya dapat membaca laporan final miliknya. Login Owner dibatasi 10 percobaan per IP dalam 15 menit dan sesi berlaku 24 jam.

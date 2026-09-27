@@ -92,7 +92,7 @@
     <div class="mb-6">
       <img id="dashboardLoginLogo" alt="YOUR HOME" class="hidden mx-auto w-48 max-h-16 object-contain mb-5">
       <p class="text-xs font-bold uppercase tracking-wider text-brand-600">YOUR HOME · Dashboard</p>
-      <h1 class="text-2xl font-extrabold text-slate-900 mt-2">Login Admin</h1>
+      <h1 class="text-2xl font-extrabold text-slate-900 mt-2">Dasbord Management</h1>
       <p class="text-sm text-slate-500 mt-1">Pilih akun dan masukkan password untuk membuka dashboard.</p>
     </div>
     <form id="dashboardLoginForm" class="space-y-4">
@@ -100,7 +100,7 @@
         <span class="block text-sm font-semibold text-slate-700 mb-1.5">Akun</span>
         <select id="dashboardLoginAccount" required class="w-full border border-slate-200 rounded-lg px-3 py-2.5 text-sm bg-white">
           <option value="master">Master · Andri Fernando</option>
-          <option value="admin">Admin · Noni</option>
+          <option value="admin">Admin</option>
           <option value="it">IT · IT Support</option>
         </select>
       </label>
@@ -425,13 +425,14 @@
             <button class="tab-btn" onclick="filterProp(this,'villa')">Villa (<span id="propCountVilla">23</span>)</button>
             <button class="tab-btn" onclick="filterProp(this,'guesthouse')">Guest House (<span id="propCountGuesthouse">2</span>)</button>
             <button class="tab-btn" onclick="filterProp(this,'kos')">Kosan (<span id="propCountKos">1</span>)</button>
+            <button class="tab-btn" onclick="filterProp(this,'archived')">Arsip (<span id="propCountArchived">0</span>)</button>
           </div>
-          <button onclick="openPropertyModal()" class="flex items-center gap-2 bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold px-4 py-2 rounded-lg">
+          <button id="addPropertyButton" onclick="openPropertyModal()" class="flex items-center gap-2 bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold px-4 py-2 rounded-lg">
             <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 4v16m8-8H4"/></svg>
             Tambah Properti
           </button>
         </div>
-        <div id="propertiGrid" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4"></div>
+        <div id="propertiGrid" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4"></div>
       </div>
 
       <!-- =========================================== -->
@@ -633,6 +634,11 @@
           <div><h2 class="text-base font-bold text-slate-900">Daftar Owner</h2><p class="text-xs text-slate-500">Kelola kontak owner dan pemilik properti.</p></div>
           <button type="button" onclick="openOwnerModal()" class="flex items-center gap-2 bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold px-4 py-2 rounded-lg"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 4v16m8-8H4"/></svg>Tambah Owner</button>
         </div>
+        <section id="managementDataSyncNotice" class="hidden bg-amber-50 border border-amber-200 rounded-xl p-4 mb-5">
+          <h3 class="text-sm font-bold text-amber-900">Data Owner/properti belum tersinkron ke D1</h3>
+          <p id="managementDataSyncMessage" class="text-sm text-amber-800 mt-1">Jika data tersimpan di browser lama, buka dashboard dari browser dan alamat tersebut dahulu agar bisa diimpor.</p>
+          <button id="managementDataInitializeButton" type="button" onclick="initializeDashboardManagementData()" class="hidden mt-3 text-sm font-semibold px-3 py-2 rounded-lg bg-amber-700 hover:bg-amber-800 text-white">Jadikan data browser ini sumber utama</button>
+        </section>
         <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4" id="ownerGrid"></div>
       </div>
 
@@ -1028,11 +1034,26 @@
   <div class="modal-panel bg-white rounded-xl max-w-md w-full p-5">
     <div class="flex items-center justify-between mb-4"><div><h3 class="font-bold text-lg text-slate-900">Tambah Owner</h3><p class="text-xs text-slate-500">Owner baru bisa dipilih pada pengaturan properti.</p></div><button type="button" onclick="closeModal('modal-owner')" aria-label="Tutup" class="p-1 hover:bg-slate-100 rounded-lg"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg></button></div>
     <form id="ownerForm" class="space-y-3">
+      <label class="block"><span class="block text-xs font-semibold text-slate-600 mb-1">ID Owner</span><input id="newOwnerId" type="text" required minlength="1" maxlength="80" pattern="[A-Za-z0-9_-]+" autocomplete="off" placeholder="Contoh: 01 atau ANDRI01" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm"><span class="block mt-1 text-[11px] text-slate-500">Dipakai untuk login portal. Gunakan huruf, angka, minus, atau underscore.</span></label>
       <label class="block"><span class="block text-xs font-semibold text-slate-600 mb-1">Nama Owner</span><input id="newOwnerName" type="text" required minlength="2" maxlength="80" autocomplete="name" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm"></label>
       <label class="block"><span class="block text-xs font-semibold text-slate-600 mb-1">Nomor WhatsApp (opsional)</span><input id="newOwnerPhone" type="tel" maxlength="30" autocomplete="tel" placeholder="Contoh: +62 812-3456-7890" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm"></label>
       <label class="block"><span class="block text-xs font-semibold text-slate-600 mb-1">Email (opsional)</span><input id="newOwnerEmail" type="email" maxlength="160" autocomplete="email" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm"></label>
       <p id="ownerFormStatus" class="text-sm" role="status" aria-live="polite"></p>
       <div class="flex gap-2 pt-2"><button type="button" onclick="closeModal('modal-owner')" class="flex-1 border border-slate-200 rounded-lg px-4 py-2 text-sm font-semibold">Batal</button><button type="submit" class="flex-1 bg-brand-600 hover:bg-brand-700 text-white rounded-lg px-4 py-2 text-sm font-semibold">Simpan Owner</button></div>
+    </form>
+  </div>
+</div>
+
+<div id="modal-owner-portal" class="modal-overlay fixed inset-0 bg-slate-900/50 z-50 hidden items-center justify-center p-4">
+  <div class="modal-panel bg-white rounded-xl max-w-sm w-full p-5">
+    <div class="flex items-center justify-between mb-4"><div><h3 class="font-bold text-lg text-slate-900">Akses Owner Portal</h3><p id="ownerPortalAccountLabel" class="text-xs text-slate-500 mt-1"></p></div><button type="button" onclick="closeModal('modal-owner-portal')" aria-label="Tutup" class="p-1 hover:bg-slate-100 rounded-lg"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg></button></div>
+    <form id="ownerPortalPasswordForm" onsubmit="saveOwnerPortalPassword(event)" class="space-y-3">
+      <input id="ownerPortalCurrentOwnerId" type="hidden" />
+      <label class="block"><span class="block text-xs font-semibold text-slate-600 mb-1">ID Owner untuk login</span><input id="ownerPortalOwnerId" type="text" required minlength="1" maxlength="80" pattern="[A-Za-z0-9_-]+" autocomplete="off" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm"><span class="block mt-1 text-[11px] text-slate-500">Boleh diubah, misalnya menjadi 01 atau ANDRI01.</span></label>
+      <label class="block"><span class="block text-xs font-semibold text-slate-600 mb-1">Password portal baru</span><span class="relative block"><input id="ownerPortalPassword" type="password" required minlength="12" maxlength="256" autocomplete="new-password" class="w-full border border-slate-200 rounded-lg px-3 py-2 pr-10 text-sm"><button id="ownerPortalPasswordToggleButton" type="button" onclick="toggleOwnerPortalPasswordVisibility()" aria-label="Tampilkan password" title="Tampilkan password" class="absolute inset-y-0 right-0 px-3 text-slate-400 hover:text-slate-700"><svg id="ownerPortalPasswordEye" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12Z"/><circle cx="12" cy="12" r="2.5"/></svg></button></span></label>
+      <p class="text-xs text-slate-500">Bagikan ID Owner dan password ini secara aman kepada owner.</p>
+      <p id="ownerPortalPasswordStatus" class="text-sm" role="status" aria-live="polite"></p>
+      <button id="ownerPortalPasswordButton" type="submit" class="w-full bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold px-4 py-2.5 rounded-lg">Simpan Akses</button>
     </form>
   </div>
 </div>
@@ -1043,7 +1064,7 @@
     <div class="p-5 border-b border-slate-100 flex items-center justify-between sticky top-0 bg-white">
       <div>
         <h3 id="propertyModalTitle" class="font-bold text-lg text-slate-900">Tambah Properti</h3>
-        <p class="text-xs text-slate-500">Persentase disimpan sebagai pengaturan, belum dihitung menjadi nominal bagi hasil.</p>
+        <p class="text-xs text-slate-500">Dashboard mengatur nama, kode, jenis, owner, dan agen. Detail website dilengkapi di Admin Properti.</p>
       </div>
       <button onclick="closeModal('modal-property')" class="p-1 hover:bg-slate-100 rounded-lg" aria-label="Tutup"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg></button>
     </div>
@@ -1066,20 +1087,6 @@
             <option value="guesthouse">Guest House</option>
             <option value="kos">Kosan</option>
           </select>
-        </div>
-      </div>
-      <div>
-        <label for="newPropertyArea" class="text-xs text-slate-500 font-semibold">Alamat / Area</label>
-        <input id="newPropertyArea" type="text" required maxlength="160" placeholder="Kota / area properti" class="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 mt-0.5">
-      </div>
-      <div class="grid grid-cols-2 gap-3">
-        <div>
-          <label for="newPropertyBeds" class="text-xs text-slate-500 font-semibold">Jumlah Kamar</label>
-          <input id="newPropertyBeds" type="number" min="0" max="100" value="1" class="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 mt-0.5">
-        </div>
-        <div>
-          <label for="newPropertyPrice" class="text-xs text-slate-500 font-semibold">Harga per Malam (Rp)</label>
-          <input id="newPropertyPrice" type="number" min="0" value="0" class="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 mt-0.5">
         </div>
       </div>
       <div class="grid grid-cols-2 gap-3">
@@ -1113,14 +1120,14 @@
 
 <div id="modal-delete-property" class="modal-overlay fixed inset-0 bg-slate-900/50 z-50 hidden items-center justify-center p-4">
   <div class="modal-panel bg-white rounded-xl max-w-sm w-full p-5">
-    <div class="flex items-center justify-between mb-3"><h3 class="font-bold text-lg text-slate-900">Hapus Properti</h3><button type="button" onclick="closeModal('modal-delete-property')" aria-label="Tutup" class="p-1 hover:bg-slate-100 rounded-lg"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg></button></div>
+    <div class="flex items-center justify-between mb-3"><h3 class="font-bold text-lg text-slate-900">Arsipkan Properti</h3><button type="button" onclick="closeModal('modal-delete-property')" aria-label="Tutup" class="p-1 hover:bg-slate-100 rounded-lg"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg></button></div>
     <p id="deletePropertyDescription" class="text-sm text-slate-600"></p>
     <p class="text-xs text-slate-500 mt-2">Properti diarsipkan dari daftar dan booking baru. Histori booking dan keuangan tetap tersimpan.</p>
     <form id="deletePropertyForm" class="mt-4 space-y-3">
       <input id="deletePropertyId" type="hidden">
       <label class="block"><span class="block text-xs font-semibold text-slate-600 mb-1">PIN Master (4 digit)</span><input id="deletePropertyPin" type="password" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" required autocomplete="off" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm" placeholder="PIN persetujuan Master"></label>
       <p id="deletePropertyStatus" class="text-sm" role="status" aria-live="polite"></p>
-      <div class="flex gap-2"><button type="button" onclick="closeModal('modal-delete-property')" class="flex-1 border border-slate-200 rounded-lg px-4 py-2 text-sm font-semibold">Batal</button><button id="deletePropertyButton" type="submit" class="flex-1 bg-rose-600 hover:bg-rose-700 text-white rounded-lg px-4 py-2 text-sm font-semibold">Hapus Properti</button></div>
+      <div class="flex gap-2"><button type="button" onclick="closeModal('modal-delete-property')" class="flex-1 border border-slate-200 rounded-lg px-4 py-2 text-sm font-semibold">Batal</button><button id="deletePropertyButton" type="submit" class="flex-1 bg-rose-600 hover:bg-rose-700 text-white rounded-lg px-4 py-2 text-sm font-semibold">Arsipkan</button></div>
     </form>
   </div>
 </div>
@@ -1299,6 +1306,7 @@ const ownerIdsByProperty = {
 PROPERTIES.forEach(property => {
   property.owners = [{ id:ownerIdsByProperty[property.id] || 'O6', share:100 }];
 });
+const DASHBOARD_DEFAULT_MANAGEMENT_SIGNATURE = JSON.stringify({ owners:OWNERS, properties:PROPERTIES });
 
 const BOOKINGS = [];
 const EXPENSES = [];
@@ -1309,7 +1317,7 @@ const BOOKINGS_PER_PAGE = 10;
 /* Users for management */
 const USERS = [
   { account_id:'master', name:'Andri Fernando', email:'-', role:'Master', access:'Dashboard operasional', status:'active', initial:'AF', color:'from-amber-400 to-orange-500' },
-  { account_id:'admin', name:'Noni', email:'-', role:'Admin', access:'Dashboard operasional', status:'active', initial:'N', color:'from-emerald-400 to-teal-500' },
+  { account_id:'admin', name:'Admin', email:'-', role:'Admin', access:'Dashboard operasional', status:'active', initial:'A', color:'from-emerald-400 to-teal-500' },
   { account_id:'it', name:'IT Support', email:'-', role:'IT', access:'Finance dan operasional', status:'active', initial:'IT', color:'from-blue-400 to-cyan-500' }
 ];
 
@@ -1338,7 +1346,11 @@ let currentDashboardAccount = null;
 let sessionExpiryTimer = null;
 const DASHBOARD_STORAGE_KEY = 'yourhome_management_data_v1';
 const DASHBOARD_SESSION_KEY = 'yourhome_dashboard_session';
+const DASHBOARD_MANAGEMENT_IMPORT_CHECKED_KEY = 'yourhome_management_d1_import_checked_v1';
 const API_BASE = 'https://your-home-checkin-api.saerobotic.workers.dev';
+let dashboardManagementDataReady = false;
+let dashboardManagementSyncTimer = null;
+let dashboardManagementSyncQueue = Promise.resolve();
 
 function readDashboardSession(){
   try {
@@ -1379,6 +1391,7 @@ function showDashboardApp(account){
   updateAccountDisplay(account);
   document.getElementById('userManagementPanel').hidden = account.role === 'IT';
   document.getElementById('crewManagementPanel').hidden = account.role === 'IT';
+  document.getElementById('addPropertyButton').classList.toggle('hidden', account.role === 'IT');
   document.getElementById('settingsNavItem').classList.toggle('hidden', account.role === 'IT');
   document.getElementById('adminLoginScreen').classList.add('hidden');
   document.getElementById('dashboardApp').hidden = false;
@@ -1427,7 +1440,7 @@ async function loginDashboard(event){
     if(!response.ok || !result.ok || !result.token) throw new Error(result.error || 'Login gagal.');
     applyDashboardSession(result.token, result.expires_in);
     document.getElementById('dashboardLoginForm').reset();
-    loadDashboardData();
+    await loadDashboardManagementData();
     updatePropertyCounts();
     document.getElementById('bookingNavCount').textContent = BOOKINGS.length;
     populatePropSelects();
@@ -1467,7 +1480,7 @@ async function initializeDashboardAuth(){
   applyDashboardSession(session.token, Math.floor((session.expiresAt - Date.now()) / 1000));
   try {
     const result = await dashboardApi('/dashboard/profile', { token:session.token, keepSession:true });
-    loadDashboardData();
+    await loadDashboardManagementData();
     updatePropertyCounts();
     document.getElementById('bookingNavCount').textContent = BOOKINGS.length;
     populatePropSelects();
@@ -1693,6 +1706,136 @@ function loadDashboardData(){
   }
 }
 
+function readLocalDashboardManagementData(){
+  try {
+    const saved = JSON.parse(localStorage.getItem(DASHBOARD_STORAGE_KEY) || 'null');
+    if(!saved || !Array.isArray(saved.owners) || !saved.owners.length || !Array.isArray(saved.properties) || !saved.properties.length) return null;
+    return { owners:saved.owners, properties:saved.properties };
+  } catch {
+    return null;
+  }
+}
+
+function isDefaultDashboardManagementData(data){
+  return JSON.stringify({ owners:data.owners, properties:data.properties }) === DASHBOARD_DEFAULT_MANAGEMENT_SIGNATURE;
+}
+
+function applyDashboardManagementData(data){
+  OWNERS.splice(0, OWNERS.length, ...(data.owners || []).filter(owner => owner && owner.id && owner.name));
+  PROPERTIES.splice(0, PROPERTIES.length, ...(data.properties || []).map(property => ({
+    ...property,
+    owners:Array.isArray(property.owners) ? property.owners : [],
+    agents:Array.isArray(property.agents) ? property.agents : [],
+  })));
+}
+
+function setDashboardManagementSyncNotice(message, showInitialize=false){
+  const notice = document.getElementById('managementDataSyncNotice');
+  const button = document.getElementById('managementDataInitializeButton');
+  if(!notice || !button) return;
+  notice.classList.toggle('hidden', !message);
+  document.getElementById('managementDataSyncMessage').textContent = message || '';
+  button.classList.toggle('hidden', !showInitialize);
+}
+
+async function loadDashboardManagementData(){
+  const localData = readLocalDashboardManagementData();
+  loadDashboardData();
+  dashboardManagementDataReady = false;
+  try {
+    const result = await dashboardApi('/dashboard/management-data');
+    if(result.data){
+      applyDashboardManagementData(result.data);
+      dashboardManagementDataReady = true;
+      persistDashboardData({ skipCloudSync:true });
+      localStorage.setItem(DASHBOARD_MANAGEMENT_IMPORT_CHECKED_KEY, '1');
+      setDashboardManagementSyncNotice('');
+      return true;
+    }
+    const hasCustomLocalData = localData && !isDefaultDashboardManagementData(localData);
+    if(hasCustomLocalData && localStorage.getItem(DASHBOARD_MANAGEMENT_IMPORT_CHECKED_KEY) !== '1'){
+      const imported = await dashboardApi('/dashboard/management-data', {
+        method:'PUT', body:JSON.stringify({ ...localData, initialize_only:true }),
+      });
+      applyDashboardManagementData(imported.data);
+      dashboardManagementDataReady = true;
+      persistDashboardData({ skipCloudSync:true });
+      localStorage.setItem(DASHBOARD_MANAGEMENT_IMPORT_CHECKED_KEY, '1');
+      setDashboardManagementSyncNotice('Data Owner dan properti dari browser ini berhasil diimpor ke D1. Browser lain sekarang memakai data yang sama.');
+      showToast('Data Owner/properti berhasil disinkronkan ke Cloudflare D1.');
+      return true;
+    }
+    localStorage.setItem(DASHBOARD_MANAGEMENT_IMPORT_CHECKED_KEY, '1');
+    setDashboardManagementSyncNotice('D1 belum memiliki data Owner/properti. Jika data khusus masih tersimpan di browser/alamat lama, buka dashboard dari sana terlebih dahulu. Jangan inisialisasi data bawaan ini sebelum memastikan tidak ada salinan yang lebih lengkap.', true);
+    showToast('Data Owner/properti belum ditemukan di D1 atau browser ini. Buka browser lama sebagai sumber migrasi.');
+    return false;
+  } catch(error) {
+    setDashboardManagementSyncNotice(`Sinkronisasi Owner/properti belum aktif: ${error.message || 'Worker atau tabel D1 belum diperbarui'}. Data lokal browser ini tidak dihapus.`);
+    showToast('Data Owner/properti belum tersinkron. Periksa migrasi D1 dan deploy Worker terbaru.');
+    return false;
+  }
+}
+
+async function initializeDashboardManagementData(){
+  if(currentDashboardAccount?.role === 'IT'){
+    showToast('Role IT tidak dapat menginisialisasi data Owner/properti.');
+    return;
+  }
+  const button = document.getElementById('managementDataInitializeButton');
+  button.disabled = true;
+  button.textContent = 'Menyimpan ke D1...';
+  try {
+    const result = await dashboardApi('/dashboard/management-data', {
+      method:'PUT', body:JSON.stringify({ owners:OWNERS, properties:PROPERTIES, initialize_only:true }),
+    });
+    applyDashboardManagementData(result.data);
+    dashboardManagementDataReady = true;
+    persistDashboardData({ skipCloudSync:true });
+    localStorage.setItem(DASHBOARD_MANAGEMENT_IMPORT_CHECKED_KEY, '1');
+    updatePropertyCounts();
+    populatePropSelects();
+    populatePropertyOwnerSelect();
+    populateOwnerSelect();
+    populateShareCalculatorOwners();
+    renderOwners();
+    if(currentView === 'laporan') renderReport();
+    if(currentView === 'bagi-hasil') renderShareCalculatorInputs();
+    setDashboardManagementSyncNotice('');
+    showToast('Data Owner/properti berhasil diinisialisasi di D1.');
+  } catch(error) {
+    document.getElementById('managementDataSyncMessage').textContent = error.message || 'Data gagal disimpan ke D1.';
+  } finally {
+    button.disabled = false;
+    button.textContent = 'Jadikan data browser ini sumber utama';
+  }
+}
+
+function scheduleDashboardManagementSync(){
+  if(!dashboardManagementDataReady) return;
+  clearTimeout(dashboardManagementSyncTimer);
+  dashboardManagementSyncTimer = setTimeout(() => {
+    const data = JSON.stringify({ owners:OWNERS, properties:PROPERTIES });
+    dashboardManagementSyncQueue = dashboardManagementSyncQueue
+      .then(() => dashboardApi('/dashboard/management-data', { method:'PUT', body:data }))
+      .catch(error => {
+        setDashboardManagementSyncNotice(`Perubahan Owner/properti belum tersinkron ke D1: ${error.message || 'periksa koneksi Worker'}.`);
+      });
+  }, 500);
+}
+
+async function saveDashboardManagementDataNow(){
+  if(!dashboardManagementDataReady) throw new Error('Data properti belum tersinkron ke server. Muat ulang Dashboard terlebih dahulu.');
+  clearTimeout(dashboardManagementSyncTimer);
+  await dashboardManagementSyncQueue;
+  await dashboardApi('/dashboard/management-data', {
+    method:'PUT', body:JSON.stringify({ owners:OWNERS, properties:PROPERTIES }),
+  });
+  const refreshed = await dashboardApi('/dashboard/management-data');
+  if(!refreshed.data) throw new Error('Data katalog belum dapat dibaca kembali dari server.');
+  applyDashboardManagementData(refreshed.data);
+  persistDashboardData({ skipCloudSync:true });
+}
+
 async function loadBookingData(account){
   const legacyBookings = [...BOOKINGS];
   const canMigrate = account.account_id === 'master' || account.account_id === 'admin';
@@ -1723,7 +1866,7 @@ async function loadBookingData(account){
   persistDashboardData();
 }
 
-function persistDashboardData(){
+function persistDashboardData(options={}){
   try {
     localStorage.setItem(DASHBOARD_STORAGE_KEY, JSON.stringify({
       properties: PROPERTIES,
@@ -1731,6 +1874,7 @@ function persistDashboardData(){
       bookings: BOOKINGS,
       expenses: EXPENSES
     }));
+    if(!options.skipCloudSync) scheduleDashboardManagementSync();
     return true;
   } catch(error) {
     console.warn('Data dashboard lokal tidak dapat disimpan.', error);
@@ -2103,21 +2247,34 @@ function renderProperties(){
   const grid = document.getElementById('propertiGrid');
   updatePropertyCounts();
   const activeProperties = PROPERTIES.filter(property => property.active !== false);
-  const filtered = currentPropFilter==='all' ? activeProperties : activeProperties.filter(p=>p.type===currentPropFilter);
+  const filtered = currentPropFilter === 'archived'
+    ? PROPERTIES.filter(property => property.active === false)
+    : currentPropFilter === 'all' ? activeProperties : activeProperties.filter(property => property.type === currentPropFilter);
   grid.innerHTML = filtered.map(p => {
     const allBookings = BOOKINGS.filter(b => b.propId === p.id && isDateInReportPeriod(b.checkin));
     const bk = allBookings.filter(b => !isBookingCancelled(b));
     const rev = allBookings.reduce((sum, booking) => sum + getBookingNetAmount(booking), 0) + INCOMES.filter(entry => entry.propId === p.id && !['income-opening-balance', 'income-booking'].includes(entry.categoryId) && isDateInReportPeriod(entry.date)).reduce((sum, entry) => sum + entry.amount, 0);
     const exp = getPropExpenses(p.id).reduce((s,e)=>s+e.amount,0);
     const occ = Math.min(95, Math.round(bk.length/30*140));
+    const propertyGradient = p.gradient || ({ apartment:'from-blue-500 to-cyan-600', villa:'from-emerald-500 to-teal-700', guesthouse:'from-amber-500 to-orange-600', kos:'from-rose-500 to-pink-600' }[p.type] || 'from-slate-500 to-slate-700');
     const ownerChips = p.owners.map(o => {
       const ow = OWNERS.find(x=>x.id===o.id);
       return `<div class="flex items-center gap-1.5 px-2 py-1 bg-white/15 backdrop-blur rounded-md text-[10px] font-medium"><div class="w-4 h-4 rounded-full bg-gradient-to-br ${ow.color} flex items-center justify-center text-[8px] font-bold text-white">${ow.initial}</div>${ow.name.split(' ')[0]}<span class="opacity-70">${o.share}%</span></div>`;
     }).join('');
     const agentChips = (p.agents || []).map(agent => `<div class="px-2 py-1 bg-white/15 backdrop-blur rounded-md text-[10px] font-medium">Agen ${escapeHtml(agent.name)} · ${agent.share}%</div>`).join('');
+    const archived = p.active === false;
+    const statusBadge = archived
+      ? '<span class="text-[10px] font-semibold text-slate-600 bg-slate-100 px-2 py-1 rounded-md">Arsip</span>'
+      : p.publication_status === 'draft'
+        ? '<span class="text-[10px] font-semibold text-amber-800 bg-amber-100 px-2 py-1 rounded-md">Draft · perlu dilengkapi</span>'
+        : '<span class="text-[10px] font-semibold text-emerald-800 bg-emerald-100 px-2 py-1 rounded-md">Tampil di website</span>';
+    const canManageProperties = ['master', 'admin'].includes(currentDashboardAccount?.account_id);
+    const statusActions = [];
+    if(archived && canManageProperties) statusActions.push(`<button type="button" onclick="restoreDashboardProperty('${escapeHtml(p.id)}')" class="text-xs font-semibold text-emerald-700 hover:text-emerald-900">Pulihkan</button>`);
+    if(!archived && canManageProperties) statusActions.push(`<button type="button" onclick="openPropertyDeleteModal('${escapeHtml(p.id)}')" aria-label="Arsipkan ${escapeHtml(p.name)}" title="Arsipkan (PIN Master)" class="p-1.5 rounded-md text-slate-400 hover:text-rose-700 hover:bg-rose-50"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2m-9 0 1 14h8l1-14M10 11v5m4-5v5"/></svg></button>`);
     return `
       <div class="prop-card bg-white rounded-2xl overflow-hidden border border-slate-100">
-        <div class="h-32 bg-gradient-to-br ${p.gradient} relative flex items-center justify-center">
+        <div class="h-32 bg-gradient-to-br ${propertyGradient} relative flex items-center justify-center">
           <div class="absolute inset-0 bg-black/10"></div>
           <div class="relative text-white text-center">
             <div class="text-3xl font-extrabold tracking-tight">${escapeHtml(p.code)}</div>
@@ -2128,12 +2285,13 @@ function renderProperties(){
         <div class="p-4">
           <div class="flex items-start justify-between gap-2 mb-2">
             <div class="min-w-0">
+              <div class="mb-1">${statusBadge}</div>
               <h3 class="font-bold text-slate-900 truncate">${escapeHtml(p.name)}</h3>
               <p class="text-xs text-slate-500 truncate">${escapeHtml(p.area)}</p>
             </div>
-            <div class="flex items-center gap-1">
-              <button type="button" onclick="openPropertyModal('${p.id}')" aria-label="Edit ${escapeHtml(p.name)}" class="inline-flex items-center gap-1.5 px-2 py-1 text-xs font-semibold text-slate-600 hover:text-brand-700 hover:bg-brand-50 rounded-md"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 013 3L8 18l-4 1 1-4Z"/></svg>Edit</button>
-              ${currentDashboardAccount?.role !== 'IT' ? `<button type="button" onclick="openPropertyDeleteModal('${p.id}')" aria-label="Hapus ${escapeHtml(p.name)}" title="Hapus properti (PIN Master)" class="p-1.5 rounded-md text-slate-400 hover:text-rose-700 hover:bg-rose-50"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2m-9 0 1 14h8l1-14M10 11v5m4-5v5"/></svg></button>` : ''}
+            <div class="flex items-center gap-1 flex-wrap justify-end">
+              <button type="button" onclick="openPropertyModal('${escapeHtml(p.id)}')" aria-label="Edit ${escapeHtml(p.name)}" class="inline-flex items-center gap-1.5 px-2 py-1 text-xs font-semibold text-slate-600 hover:text-brand-700 hover:bg-brand-50 rounded-md"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 013 3L8 18l-4 1 1-4Z"/></svg>Edit</button>
+              ${statusActions.join('')}
             </div>
           </div>
           <div class="flex flex-wrap gap-1 mb-3">${ownerChips}${agentChips}</div>
@@ -2165,6 +2323,41 @@ function updatePropertyCounts(){
     const count = document.getElementById(id);
     if(count) count.textContent = type === 'all' ? activeProperties.length : activeProperties.filter(property => property.type === type).length;
   });
+  const archivedCount = document.getElementById('propCountArchived');
+  if(archivedCount) archivedCount.textContent = PROPERTIES.filter(property => property.active === false).length;
+}
+
+async function refreshDashboardPropertyData(){
+  const result = await dashboardApi('/dashboard/management-data');
+  if(!result.data) throw new Error('Data properti tidak ditemukan di server.');
+  applyDashboardManagementData(result.data);
+  persistDashboardData({ skipCloudSync:true });
+  updatePropertyCounts();
+  populatePropSelects();
+  renderProperties();
+  if(currentView === 'dashboard') renderDashboard();
+  if(currentView === 'booking'){
+    renderCalendar();
+    renderBookingsTable();
+  }
+  if(currentView === 'pengeluaran'){
+    renderExpenseTable();
+    renderExpenseSummary();
+  }
+  if(currentView === 'owner') renderOwners();
+  if(currentView === 'laporan') renderReport();
+  if(currentView === 'bagi-hasil') renderShareCalculatorInputs();
+}
+
+async function restoreDashboardProperty(propertyId){
+  if(!['master', 'admin'].includes(currentDashboardAccount?.account_id)) return;
+  try {
+    await dashboardApi(`/dashboard/properties/${encodeURIComponent(propertyId)}/restore`, { method:'POST', body:'{}' });
+    await refreshDashboardPropertyData();
+    showToast('Properti dipulihkan sebagai Draft. Lengkapi dan tampilkan melalui Admin Properti.');
+  } catch(error) {
+    showToast(error.message || 'Properti gagal dipulihkan.');
+  }
 }
 
 function populatePropertyOwnerSelect(){
@@ -2190,9 +2383,6 @@ function openPropertyModal(propertyId=''){
     document.getElementById('newPropertyName').value = property.name;
     document.getElementById('newPropertyCode').value = property.code;
     document.getElementById('newPropertyType').value = property.type;
-    document.getElementById('newPropertyArea').value = property.area;
-    document.getElementById('newPropertyBeds').value = property.beds || 0;
-    document.getElementById('newPropertyPrice').value = property.price || 0;
     document.getElementById('newPropertyOwner').value = property.owners?.[0]?.id || OWNERS[0].id;
     document.getElementById('newPropertyOwnerShare').value = property.owners?.[0]?.share ?? 100;
     document.getElementById('newPropertyAgentName').value = property.agents?.[0]?.name || '';
@@ -2201,14 +2391,25 @@ function openPropertyModal(propertyId=''){
   openModal('modal-property');
 }
 
-function submitProperty(){
+async function submitProperty(){
   const status = document.getElementById('propertyFormStatus');
+  const submitButton = document.getElementById('propertySubmitButton');
   const editId = document.getElementById('propertyEditId').value;
+  if(currentDashboardAccount?.role === 'IT'){
+    status.className = 'text-sm text-rose-600';
+    status.textContent = 'Role IT tidak dapat menambah atau mengubah data properti.';
+    return;
+  }
+  if(!dashboardManagementDataReady){
+    status.className = 'text-sm text-rose-600';
+    status.textContent = 'Data Dashboard belum tersinkron ke server.';
+    return;
+  }
   const ownerShare = Number(document.getElementById('newPropertyOwnerShare').value);
   const agentShare = Number(document.getElementById('newPropertyAgentShare').value);
   const agentName = document.getElementById('newPropertyAgentName').value.trim();
   const code = document.getElementById('newPropertyCode').value.trim().toUpperCase();
-  const duplicateCode = PROPERTIES.some(property => property.code.toUpperCase() === code && property.id !== editId);
+  const duplicateCode = PROPERTIES.some(property => String(property.code || '').toUpperCase() === code && property.id !== editId);
 
   if(ownerShare + agentShare > 100){
     status.className = 'text-sm text-rose-600';
@@ -2239,37 +2440,51 @@ function submitProperty(){
     name: document.getElementById('newPropertyName').value.trim(),
     code,
     type,
-    area: document.getElementById('newPropertyArea').value.trim(),
-    beds: Number(document.getElementById('newPropertyBeds').value) || 0,
-    baths: existing?.baths || 1,
-    guests: existing?.guests || 1,
-    price: Number(document.getElementById('newPropertyPrice').value) || 0,
+    area: existing?.area || '',
+    beds: existing?.beds || 0,
+    baths: existing?.baths || 0,
+    guests: existing?.guests || 0,
+    price: existing?.price || 0,
     gradient: existing?.gradient || gradients[type],
     owners: [{ id: document.getElementById('newPropertyOwner').value, share: ownerShare }],
-    agents: agentShare > 0 ? [{ name: agentName, share: agentShare }] : []
+    agents: agentShare > 0 ? [{ name: agentName, share: agentShare }] : [],
+    active: existing ? existing.active !== false : true,
+    publication_status: existing?.publication_status || 'draft'
   };
 
+  const previousProperties = PROPERTIES.map(item => ({ ...item, owners:[...(item.owners || [])], agents:[...(item.agents || [])] }));
   if(existing){
     PROPERTIES[PROPERTIES.indexOf(existing)] = property;
   } else {
     PROPERTIES.push(property);
   }
-  const savedLocally = persistDashboardData();
-  updatePropertyCounts();
-  populatePropSelects();
-  renderProperties();
-  if(currentView === 'dashboard') renderDashboard();
-  if(currentView === 'owner') renderOwners();
-  if(currentView === 'laporan') renderReport();
-  if(currentView === 'bagi-hasil'){
-    const recalculate = document.getElementById('shareCalcResult').dataset.generated === 'true';
-    renderShareCalculatorInputs();
-    if(recalculate) generateOwnerShareCalculation();
+  submitButton.disabled = true;
+  status.className = 'text-sm text-slate-500';
+  status.textContent = 'Menyimpan ke katalog bersama...';
+  try {
+    if(!persistDashboardData({ skipCloudSync:true })) throw new Error('Data properti gagal disimpan di browser.');
+    await saveDashboardManagementDataNow();
+    updatePropertyCounts();
+    populatePropSelects();
+    renderProperties();
+    if(currentView === 'dashboard') renderDashboard();
+    if(currentView === 'owner') renderOwners();
+    if(currentView === 'laporan') renderReport();
+    if(currentView === 'bagi-hasil'){
+      const recalculate = document.getElementById('shareCalcResult').dataset.generated === 'true';
+      renderShareCalculatorInputs();
+      if(recalculate) generateOwnerShareCalculation();
+    }
+    closeModal('modal-property');
+    showToast(existing ? 'Data Dashboard tersimpan. Detail website tetap dikelola di Admin Properti.' : 'Properti dibuat sebagai Draft dan tersedia di Admin Properti untuk dilengkapi.');
+  } catch(error) {
+    PROPERTIES.splice(0, PROPERTIES.length, ...previousProperties);
+    persistDashboardData({ skipCloudSync:true });
+    status.className = 'text-sm text-rose-600';
+    status.textContent = error.message || 'Properti gagal disimpan ke server.';
+  } finally {
+    submitButton.disabled = false;
   }
-  closeModal('modal-property');
-  showToast(savedLocally
-    ? (existing ? 'Pengaturan properti berhasil disimpan di browser.' : 'Properti berhasil disimpan di browser.')
-    : 'Penyimpanan browser gagal; data belum tersimpan setelah halaman ditutup.');
 }
 
 function openPropertyDeleteModal(propertyId){
@@ -2306,36 +2521,12 @@ async function submitPropertyDelete(event){
   }
   button.disabled = true;
   status.className = 'text-sm text-slate-500';
-  status.textContent = 'Memverifikasi PIN Master...';
+  status.textContent = 'Mengarsipkan properti...';
   try {
-    await dashboardApi('/dashboard/verify-delete-pin', {
+    await dashboardApi(`/dashboard/properties/${encodeURIComponent(propertyId)}/archive`, {
       method:'POST', body:JSON.stringify({ pin:pinInput.value })
     });
-    const previousActive = property.active;
-    const previousArchivedAt = property.archivedAt;
-    property.active = false;
-    property.archivedAt = new Date().toISOString();
-    if(!persistDashboardData()){
-      if(previousActive === undefined) delete property.active;
-      else property.active = previousActive;
-      if(previousArchivedAt === undefined) delete property.archivedAt;
-      else property.archivedAt = previousArchivedAt;
-      throw new Error('Properti gagal disimpan ke browser.');
-    }
-    populatePropSelects();
-    renderProperties();
-    if(currentView === 'dashboard') renderDashboard();
-    if(currentView === 'booking'){
-      renderCalendar();
-      renderBookingsTable();
-    }
-    if(currentView === 'pengeluaran'){
-      renderExpenseTable();
-      renderExpenseSummary();
-    }
-    if(currentView === 'owner') renderOwners();
-    if(currentView === 'laporan') renderReport();
-    if(currentView === 'bagi-hasil') renderShareCalculatorInputs();
+    await refreshDashboardPropertyData();
     closeModal('modal-delete-property');
     showToast(`${property.name} diarsipkan. Histori booking dan keuangan tetap tersimpan.`);
   } catch(error) {
@@ -3082,13 +3273,19 @@ function openOwnerModal(){
 }
 function submitOwner(event){
   event.preventDefault();
+  const ownerId = document.getElementById('newOwnerId').value.trim();
   const name = document.getElementById('newOwnerName').value.trim().replace(/\s+/g, ' ');
   const phone = document.getElementById('newOwnerPhone').value.trim();
   const email = document.getElementById('newOwnerEmail').value.trim();
   const status = document.getElementById('ownerFormStatus');
-  if(name.length < 2 || name.length > 80 || email.length > 160 || phone.length > 30){
+  if(!/^[A-Za-z0-9_-]{1,80}$/.test(ownerId) || name.length < 2 || name.length > 80 || email.length > 160 || phone.length > 30){
     status.className = 'text-sm text-rose-600';
-    status.textContent = 'Nama, nomor WhatsApp, atau email tidak valid.';
+    status.textContent = 'ID Owner, nama, nomor WhatsApp, atau email tidak valid.';
+    return;
+  }
+  if(OWNERS.some(owner => owner.id.toLocaleLowerCase('id') === ownerId.toLocaleLowerCase('id'))){
+    status.className = 'text-sm text-rose-600';
+    status.textContent = 'ID Owner tersebut sudah digunakan.';
     return;
   }
   if(OWNERS.some(owner => owner.name.toLocaleLowerCase('id') === name.toLocaleLowerCase('id'))){
@@ -3096,15 +3293,14 @@ function submitOwner(event){
     status.textContent = 'Owner dengan nama tersebut sudah ada.';
     return;
   }
-  const nextNumber = OWNERS.reduce((maximum, owner) => Math.max(maximum, Number(String(owner.id).replace(/^O/, '')) || 0), 0) + 1;
   const colors = ['from-cyan-400 to-blue-600','from-lime-400 to-green-600','from-rose-400 to-pink-600','from-amber-400 to-orange-600','from-teal-400 to-emerald-600'];
   const owner = {
-    id:`O${nextNumber}`,
+    id:ownerId,
     name,
     initial:name.split(/\s+/).slice(0, 2).map(part => part[0]).join('').toUpperCase(),
     phone:phone || '-',
     email:email || '-',
-    color:colors[(nextNumber - 1) % colors.length]
+    color:colors[OWNERS.length % colors.length]
   };
   OWNERS.push(owner);
   if(!persistDashboardData()){
@@ -3125,6 +3321,53 @@ function submitOwner(event){
   closeModal('modal-owner');
   showToast(`${name} berhasil ditambahkan. Pilih owner ini saat mengatur properti.`);
 }
+function openOwnerPortalPasswordModal(ownerId, ownerName){
+  document.getElementById('ownerPortalAccountLabel').textContent = ownerName;
+  document.getElementById('ownerPortalPasswordForm').reset();
+  document.getElementById('ownerPortalCurrentOwnerId').value = ownerId;
+  document.getElementById('ownerPortalOwnerId').value = ownerId;
+  document.getElementById('ownerPortalPasswordStatus').textContent = '';
+  openModal('modal-owner-portal');
+}
+function toggleOwnerPortalPasswordVisibility(){
+  const input = document.getElementById('ownerPortalPassword');
+  const button = document.getElementById('ownerPortalPasswordToggleButton');
+  const visible = input.type === 'password';
+  input.type = visible ? 'text' : 'password';
+  button.setAttribute('aria-label', visible ? 'Sembunyikan password' : 'Tampilkan password');
+  button.title = visible ? 'Sembunyikan password' : 'Tampilkan password';
+}
+async function saveOwnerPortalPassword(event){
+  event.preventDefault();
+  const button = document.getElementById('ownerPortalPasswordButton');
+  const status = document.getElementById('ownerPortalPasswordStatus');
+  button.disabled = true;
+  status.className = 'text-sm text-slate-500';
+  status.textContent = 'Menyimpan akses portal...';
+  try {
+    const currentOwnerId = document.getElementById('ownerPortalCurrentOwnerId').value;
+    const ownerId = document.getElementById('ownerPortalOwnerId').value.trim();
+    await dashboardApi('/admin/owner-portal/password', { method:'POST', body:JSON.stringify({ current_owner_id:document.getElementById('ownerPortalCurrentOwnerId').value, owner_id:ownerId, password:document.getElementById('ownerPortalPassword').value }) });
+    if(ownerId !== currentOwnerId){
+      const owner = OWNERS.find(item => item.id === currentOwnerId);
+      if(owner) owner.id = ownerId;
+      PROPERTIES.forEach(property => property.owners.forEach(ownerShare => {
+        if(ownerShare.id === currentOwnerId) ownerShare.id = ownerId;
+      }));
+      populatePropertyOwnerSelect();
+      populateOwnerSelect();
+      populateShareCalculatorOwners();
+      renderOwners();
+    }
+    closeModal('modal-owner-portal');
+    showToast('Akses Owner Portal berhasil disimpan.');
+  } catch(error) {
+    status.className = 'text-sm text-rose-600';
+    status.textContent = error.message || 'Akses portal gagal disimpan.';
+  } finally {
+    button.disabled = false;
+  }
+}
 function renderOwners(){
   document.getElementById('ownerGrid').innerHTML = OWNERS.map(owner => {
     const properties = getOwnerProps(owner.id);
@@ -3142,8 +3385,8 @@ function renderOwners(){
       <div class="bg-white rounded-2xl p-5 border border-slate-100">
         <div class="flex items-center gap-3 mb-4">
           <div class="w-12 h-12 rounded-full bg-gradient-to-br ${owner.color} flex items-center justify-center text-white font-bold">${escapeHtml(owner.initial)}</div>
-          <div class="flex-1 min-w-0"><h3 class="font-bold text-slate-900 truncate">${escapeHtml(owner.name)}</h3><p class="text-xs text-slate-500 truncate">${escapeHtml(owner.email)}</p></div>
-          <button onclick="switchView('laporan');setTimeout(()=>{document.getElementById('reportOwner').value='${escapeHtml(owner.id)}';renderReport();},100)" class="text-xs font-semibold text-brand-600 hover:text-brand-700">Laporan →</button>
+          <div class="flex-1 min-w-0"><h3 class="font-bold text-slate-900 truncate">${escapeHtml(owner.name)}</h3><p class="text-xs text-slate-500 truncate">ID Owner: ${escapeHtml(owner.id)}</p></div>
+          <div class="flex items-center gap-2"><button type="button" onclick="openOwnerPortalPasswordModal('${escapeHtml(owner.id)}','${escapeHtml(owner.name)}')" class="shrink-0 rounded-lg border border-brand-200 bg-brand-50 px-2.5 py-1.5 text-xs font-bold text-brand-700 hover:bg-brand-100">Buat Login Portal</button><button type="button" onclick="switchView('laporan');setTimeout(()=>{document.getElementById('reportOwner').value='${escapeHtml(owner.id)}';renderReport();},100)" class="shrink-0 text-xs font-semibold text-brand-600 hover:text-brand-700">Laporan →</button></div>
         </div>
         <div class="space-y-2 mb-4">${properties.map(property => {
           const share = property.owners.find(item => item.id === owner.id)?.share || 0;
