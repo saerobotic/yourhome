@@ -2951,30 +2951,65 @@ export default {
       }
 
       if (request.method === 'GET' && path === '/owner/reports') {
-        const tokenData = await getOwnerTokenPayload(request, String(env.ADMIN_DASHBOARD_SECRET || '').trim());
-        if (!tokenData) return bad('Login Owner diperlukan.', 401);
-        const account = await env.DB.prepare('SELECT owner_id FROM owner_portal_accounts WHERE owner_id = ? AND active = 1').bind(tokenData.owner_id).first();
-        if (!account) return bad('Akses Owner tidak aktif.', 401);
-        const result = await env.DB.prepare(`
-          SELECT id, owner_name, period_month, status, created_at, updated_at
-          FROM dashboard_owner_share_calculations
-          WHERE owner_id = ? AND status = 'final'
-          ORDER BY period_month DESC
-        `).bind(tokenData.owner_id).all();
-        return json({ ok:true, data:result.results || [] });
+        const adminSecret = String(env.ADMIN_DASHBOARD_SECRET || '').trim();
+        const ownerSession = await getOwnerTokenPayload(request, adminSecret);
+        if (ownerSession) {
+          const account = await env.DB.prepare('SELECT owner_id FROM owner_portal_accounts WHERE owner_id = ? AND active = 1').bind(ownerSession.owner_id).first();
+          if (!account) return bad('Akses Owner tidak aktif.', 401);
+          const result = await env.DB.prepare(`
+            SELECT id, owner_id, owner_name, period_month, status, created_at, updated_at
+            FROM dashboard_owner_share_calculations
+            WHERE owner_id = ? AND status = 'final'
+            ORDER BY period_month DESC
+          `).bind(ownerSession.owner_id).all();
+          return json({ ok:true, data:result.results || [] });
+        }
+        // Portal Owner memakai satu password bersama: token staf boleh membaca daftar
+        // pemilik agar halaman dapat menampilkan pilihan owner.
+        const staffToken = await getAdminTokenPayload(request, adminSecret);
+        if (staffToken && (hasManagementRole(staffToken) || !staffToken.account_id)) {
+          const requestedOwner = String(url.searchParams.get('owner_id') || '').trim();
+          if (requestedOwner) {
+            if (!/^[A-Za-z0-9_-]{1,80}$/.test(requestedOwner)) return bad('Owner tidak valid.', 400);
+            const owned = await env.DB.prepare(`
+              SELECT id, owner_id, owner_name, period_month, status, created_at, updated_at
+              FROM dashboard_owner_share_calculations
+              WHERE owner_id = ? AND status = 'final'
+              ORDER BY period_month DESC
+            `).bind(requestedOwner).all();
+            return json({ ok:true, data:owned.results || [] });
+          }
+          const result = await env.DB.prepare(`
+            SELECT owner_id, MAX(owner_name) AS owner_name, COUNT(*) AS report_count, MAX(period_month) AS latest_month
+            FROM dashboard_owner_share_calculations
+            WHERE status = 'final'
+            GROUP BY owner_id
+            ORDER BY owner_name COLLATE NOCASE
+          `).all();
+          return json({ ok:true, data:result.results || [] });
+        }
+        return bad('Login Owner diperlukan.', 401);
       }
 
       const ownerReportMatch = path.match(/^\/owner\/reports\/(\d{4}-(?:0[1-9]|1[0-2]))$/);
       if (request.method === 'GET' && ownerReportMatch) {
-        const tokenData = await getOwnerTokenPayload(request, String(env.ADMIN_DASHBOARD_SECRET || '').trim());
-        if (!tokenData) return bad('Login Owner diperlukan.', 401);
-        const account = await env.DB.prepare('SELECT owner_id FROM owner_portal_accounts WHERE owner_id = ? AND active = 1').bind(tokenData.owner_id).first();
-        if (!account) return bad('Akses Owner tidak aktif.', 401);
+        const adminSecret = String(env.ADMIN_DASHBOARD_SECRET || '').trim();
+        const ownerSession = await getOwnerTokenPayload(request, adminSecret);
+        let targetOwnerId = ownerSession?.owner_id || '';
+        if (ownerSession) {
+          const account = await env.DB.prepare('SELECT owner_id FROM owner_portal_accounts WHERE owner_id = ? AND active = 1').bind(targetOwnerId).first();
+          if (!account) return bad('Akses Owner tidak aktif.', 401);
+        } else {
+          const staffToken = await getAdminTokenPayload(request, adminSecret);
+          if (!staffToken || !(hasManagementRole(staffToken) || !staffToken.account_id)) return bad('Login Owner diperlukan.', 401);
+          targetOwnerId = String(url.searchParams.get('owner_id') || '').trim();
+          if (!/^[A-Za-z0-9_-]{1,80}$/.test(targetOwnerId)) return bad('Pilih pemilik terlebih dahulu.', 400);
+        }
         const saved = await env.DB.prepare(`
           SELECT id, owner_name, period_month, calculation_json, created_at, updated_at
           FROM dashboard_owner_share_calculations
           WHERE owner_id = ? AND period_month = ? AND status = 'final'
-        `).bind(tokenData.owner_id, ownerReportMatch[1]).first();
+        `).bind(targetOwnerId, ownerReportMatch[1]).first();
         if (!saved) return bad('Laporan tidak ditemukan.', 404);
         let calculation;
         try { calculation = JSON.parse(saved.calculation_json); }

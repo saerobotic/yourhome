@@ -161,18 +161,36 @@
     @media(max-width:520px){.site-footer{align-items:flex-start;flex-direction:column;gap:6px}.crew-management-form{grid-template-columns:1fr 1fr}.crew-management-form .field:first-of-type{grid-column:1/-1}}
     @media(max-width:850px){.brand-mark{width:150px;height:150px}h1{font-size:1.45rem}.summary{grid-template-columns:repeat(2,1fr)}.filters{grid-template-columns:repeat(2,1fr)}.filter-actions{align-items:stretch}.filter-actions .button{width:100%}.detail-meta{grid-template-columns:1fr 1fr}.photo-grid{grid-template-columns:repeat(3,1fr)}}
     @media(max-width:520px){.page{padding:20px 12px 40px}.topbar{align-items:flex-start;flex-direction:column}.brand{align-items:center;gap:10px}.brand-mark{width:96px;height:96px}h1{font-size:1.2rem}.subtitle{font-size:.78rem}.top-actions{justify-content:flex-start}.summary{gap:8px}.stat{padding:13px}.stat-value{font-size:1.45rem}.filters{grid-template-columns:1fr}.records-head{padding:15px}.detail-meta{grid-template-columns:1fr}.edit-form{grid-template-columns:1fr}.edit-form .edit-actions{grid-column:auto}.photo-grid{grid-template-columns:repeat(2,1fr)}.recap-grid{grid-template-columns:1fr}.pin-form{grid-template-columns:1fr}.pin-form .button{width:100%}}
+    /* Pintu login — nuansa cokelat YOUR HOME */
+    .admin-gate{background:var(--cream)}
+    .admin-gate-card{width:min(440px,100%);background:var(--paper);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);padding:28px;text-align:left}
+    .admin-gate-logo{width:min(200px,100%);height:64px;margin:0 auto 18px}
+    .admin-gate-eyebrow{margin:0;color:var(--terracotta);font-size:.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase}
+    .admin-gate-card h1{margin:8px 0 4px;font:800 1.5rem Arial,sans-serif;color:var(--coffee)}
+    .admin-gate-sub{margin:0 0 20px;color:var(--muted);font-size:.85rem}
+    .admin-gate-form{display:grid;gap:14px}
+    .admin-gate-form .meta-label{display:block;margin-bottom:6px;color:var(--coffee-soft);font-size:.78rem;font-weight:600;text-transform:none;letter-spacing:0}
+    .admin-gate-form input,.admin-gate-form select{width:100%;border:1px solid var(--line);border-radius:8px;padding:10px 12px;font-size:.875rem;color:var(--coffee);background:#fff}
+    .admin-gate-form input:focus,.admin-gate-form select:focus{border-color:var(--terracotta);box-shadow:0 0 0 3px rgba(160,82,45,.15)}
+    .admin-gate-submit{width:100%;border:1px solid var(--terracotta);background:var(--terracotta);color:#fff;border-radius:8px;padding:11px;font-weight:700;font-size:.875rem;cursor:pointer}
+    .admin-gate-submit:hover{background:var(--coffee-soft);border-color:var(--coffee-soft)}
+    .admin-gate-submit:disabled{opacity:.6;cursor:wait}
+    .admin-gate-note{margin:0;text-align:center;color:var(--muted);font-size:.72rem}
   </style>
 </head>
 <body>
   <section id="adminLoginScreen" class="admin-gate">
     <div class="admin-gate-card">
       <img id="dashboardLoginLogo" class="admin-gate-logo" src="https://ik.imagekit.io/o1hnx31yy/yh%20(2).png?tr=f-jpg" alt="YOUR HOME" />
-      <h1>Data Check In Crew</h1>
-      <p class="subtitle">Masukkan password admin untuk membuka dashboard.</p>
+      <p class="admin-gate-eyebrow">YOUR HOME · CHECK IN CREW</p>
+      <h1>Check In Crew Dashboard</h1>
+      <p class="admin-gate-sub">Pilih akun dan masukkan password untuk membuka dashboard.</p>
       <form id="adminLoginForm" class="admin-gate-form">
-        <label class="field" for="adminPasswordInput"><span class="meta-label">Password Admin</span><span class="password-input-wrap"><input id="adminPasswordInput" type="password" autocomplete="current-password" required /><button id="toggleAdminPassword" class="password-toggle" type="button" aria-label="Tampilkan password" title="Tampilkan password">&#128065;</button></span></label>
-        <button class="button primary" type="submit">Masuk Dashboard</button>
+        <label for="adminAccountSelect"><span class="meta-label">ID Akun</span><select id="adminAccountSelect" autocomplete="username" required><option value="">Pilih akun</option></select></label>
+        <label for="adminPasswordInput"><span class="meta-label">Password</span><span class="password-input-wrap"><input id="adminPasswordInput" type="password" autocomplete="current-password" required /><button id="toggleAdminPassword" class="password-toggle" type="button" aria-label="Tampilkan password" title="Tampilkan password">&#128065;</button></span></label>
+        <button class="admin-gate-submit" type="submit">Masuk</button>
         <p id="adminLoginMessage" class="admin-gate-message" role="alert" aria-live="polite"></p>
+        <p class="admin-gate-note">Sesi berlaku 1 hari atau sampai logout.</p>
       </form>
     </div>
   </section>
@@ -1447,17 +1465,44 @@
       sessionStorage.removeItem('dashboard_admin_login_date');
       window.location.reload();
     }
+    function loginAccountLabel(account) {
+      const id = String(account.account_id || '');
+      if (id === 'master') return 'Master';
+      if (id === 'it') return 'IT Support';
+      if (id === 'admin') return 'Admin';
+      const adminMatch = id.match(/^admin-(\d+)$/);
+      return adminMatch ? `Admin ${adminMatch[1]}` : id;
+    }
+    async function loadLoginAccountOptions() {
+      const select = el('adminAccountSelect');
+      try {
+        const response = await fetch(`${API_BASE}/dashboard/login-accounts`, { cache: 'no-store' });
+        const result = await response.json().catch(() => ({}));
+        const accounts = Array.isArray(result.data) ? result.data : [];
+        if (!accounts.length) return;
+        const previous = select.value;
+        select.replaceChildren(
+          new Option('Pilih akun', ''),
+          ...accounts.map(account => new Option(loginAccountLabel(account), account.account_id)),
+        );
+        if (accounts.some(account => account.account_id === previous)) select.value = previous;
+      } catch (error) {
+        console.warn('Daftar akun login tidak dapat dimuat.', error);
+      }
+    }
     async function loginAdmin(event) {
       event.preventDefault();
+      const accountInput = el('adminAccountSelect');
       const passwordInput = el('adminPasswordInput');
       const message = el('adminLoginMessage');
       const submitButton = event.currentTarget.querySelector('button[type="submit"]');
       submitButton.disabled = true;
       message.textContent = '';
       try {
-        const response = await workerRequest(`${API_BASE}/admin/login`, {
+        // Sama seperti Dashboard: masuk memakai akun staf (Master/Admin).
+        const response = await workerRequest(`${API_BASE}/dashboard/login`, {
           method: 'POST',
-          body: JSON.stringify({ password: passwordInput.value })
+          body: JSON.stringify({ account_id: accountInput.value, password: passwordInput.value })
         });
         state.adminToken = response.token;
         sessionStorage.setItem('dashboard_admin_token', state.adminToken);
@@ -1470,7 +1515,7 @@
         state.adminToken = '';
         sessionStorage.removeItem('dashboard_admin_token');
         sessionStorage.removeItem('dashboard_admin_login_date');
-        message.textContent = error.message || 'Login admin gagal.';
+        message.textContent = error.message || 'Login gagal.';
         passwordInput.value = '';
         passwordInput.focus();
       } finally {
@@ -1479,6 +1524,7 @@
     }
     async function init() {
       loadDashboardLogos();
+      loadLoginAccountOptions();
       document.getElementById('toggleAdminPassword').addEventListener('click', () => {
         const input = document.getElementById('adminPasswordInput');
         const visible = input.type === 'text';
