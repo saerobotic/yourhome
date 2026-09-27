@@ -671,7 +671,7 @@
       <!-- =========================================== -->
       <div id="view-bagi-hasil" class="view">
         <section id="shareCalcControls" class="bg-white border border-slate-200 rounded-xl p-4 sm:p-5 mb-5">
-          <div class="grid grid-cols-1 sm:grid-cols-[1fr_220px] gap-3 items-end">
+          <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-[minmax(0,1fr)_200px_200px_200px] gap-3 items-end">
             <label class="block">
               <span class="block text-xs text-slate-500 font-semibold mb-1">Owner</span>
               <select id="shareCalcOwner" onchange="renderShareCalculatorInputs()" class="w-full text-sm border border-slate-200 rounded-lg px-3 py-2.5 bg-white"></select>
@@ -680,7 +680,24 @@
               <span class="block text-xs text-slate-500 font-semibold mb-1">Bulan laporan</span>
               <input id="shareCalcMonth" type="month" onchange="renderShareCalculatorInputs()" class="w-full text-sm border border-slate-200 rounded-lg px-3 py-2.5 bg-white">
             </label>
+            <label class="block">
+              <span class="block text-xs text-slate-500 font-semibold mb-1">Potongan pajak</span>
+              <select id="shareCalcTaxMode" class="w-full text-sm border border-slate-200 rounded-lg px-3 py-2.5 bg-white">
+                <option value="">Tanpa pajak</option>
+                <option value="percent">Persen (%)</option>
+                <option value="amount">Nominal (Rp)</option>
+              </select>
+            </label>
+            <label id="shareCalcTaxPercentField" class="block hidden">
+              <span class="block text-xs text-slate-500 font-semibold mb-1">Pajak (%)</span>
+              <input id="shareCalcTaxPercent" type="number" min="0" max="100" step="0.01" placeholder="0" class="w-full text-sm border border-slate-200 rounded-lg px-3 py-2.5">
+            </label>
+            <label id="shareCalcTaxAmountField" class="block hidden">
+              <span class="block text-xs text-slate-500 font-semibold mb-1">Pajak (Rp)</span>
+              <input id="shareCalcTaxAmount" type="text" inputmode="numeric" pattern="[0-9.]*" data-currency-input placeholder="0" class="w-full text-sm border border-slate-200 rounded-lg px-3 py-2.5">
+            </label>
           </div>
+          <p id="shareCalcTaxHint" class="hidden mt-3 text-xs text-slate-500">Pajak mengurangi dasar sebelum bagi hasil. Mode persen dihitung dari pemasukan booking + pemasukan tambahan tiap properti; mode nominal dibagi proporsional menurut pemasukan tiap properti.</p>
         </section>
 
         <section id="shareCalcRules" class="bg-white border border-slate-200 rounded-xl overflow-hidden mb-5">
@@ -1165,6 +1182,21 @@
       <label class="block"><span class="block text-xs font-semibold text-slate-600 mb-1">PIN Master (4 digit)</span><span class="relative block"><input id="deleteAccountPin" type="password" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" required autocomplete="off" class="w-full border border-slate-200 rounded-lg px-3 py-2 pr-12 text-sm" placeholder="PIN persetujuan Master"><button type="button" data-toggle-password="deleteAccountPin" aria-label="Tampilkan PIN" class="absolute inset-y-0 right-0 px-3 text-slate-500 hover:text-slate-800"><svg data-eye-icon width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg></button></span></label>
       <p id="deleteAccountStatus" class="text-sm" role="status" aria-live="polite"></p>
       <div class="flex gap-2"><button type="button" onclick="closeModal('modal-delete-account')" class="flex-1 border border-slate-200 rounded-lg px-4 py-2 text-sm font-semibold">Batal</button><button id="deleteAccountButton" type="submit" class="flex-1 bg-rose-600 hover:bg-rose-700 text-white rounded-lg px-4 py-2 text-sm font-semibold">Hapus Akun</button></div>
+    </form>
+  </div>
+</div>
+
+<div id="modal-reset-password" class="modal-overlay fixed inset-0 bg-slate-900/50 z-50 hidden items-center justify-center p-4">
+  <div class="modal-panel bg-white rounded-xl max-w-md w-full p-5">
+    <div class="flex items-center justify-between mb-4"><div><h3 class="font-bold text-lg text-slate-900">Reset Password</h3><p id="resetPasswordAccount" class="text-xs text-slate-500 mt-1"></p></div><button type="button" onclick="closeModal('modal-reset-password')" aria-label="Tutup" class="p-1 hover:bg-slate-100 rounded-lg"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg></button></div>
+    <form id="resetPasswordForm" class="space-y-3">
+      <input id="resetPasswordAccountId" type="hidden">
+      <label class="block"><span class="block text-xs font-semibold text-slate-600 mb-1">Password baru (minimal 12 karakter)</span><span class="relative block"><input id="resetPasswordNew" type="password" required minlength="12" maxlength="256" autocomplete="new-password" class="w-full border border-slate-200 rounded-lg px-3 py-2 pr-12 text-sm"><button type="button" data-toggle-password="resetPasswordNew" aria-label="Tampilkan password" class="absolute inset-y-0 right-0 px-3 text-slate-500 hover:text-slate-800"><svg data-eye-icon width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg></button></span></label>
+      <label class="block"><span class="block text-xs font-semibold text-slate-600 mb-1">Ulangi password baru</span><span class="relative block"><input id="resetPasswordConfirm" type="password" required minlength="12" maxlength="256" autocomplete="new-password" class="w-full border border-slate-200 rounded-lg px-3 py-2 pr-12 text-sm"><button type="button" data-toggle-password="resetPasswordConfirm" aria-label="Tampilkan password" class="absolute inset-y-0 right-0 px-3 text-slate-500 hover:text-slate-800"><svg data-eye-icon width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg></button></span></label>
+      <label class="block"><span class="block text-xs font-semibold text-slate-600 mb-1">PIN Master (4 digit)</span><span class="relative block"><input id="resetPasswordPin" type="password" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" required autocomplete="off" class="w-full border border-slate-200 rounded-lg px-3 py-2 pr-12 text-sm" placeholder="PIN persetujuan Master"><button type="button" data-toggle-password="resetPasswordPin" aria-label="Tampilkan PIN" class="absolute inset-y-0 right-0 px-3 text-slate-500 hover:text-slate-800"><svg data-eye-icon width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg></button></span></label>
+      <p class="text-xs text-slate-500">Sampaikan password baru ini kepada pemilik akun melalui kanal aman. Sesi yang sedang berjalan tetap aktif sampai kedaluwarsa.</p>
+      <p id="resetPasswordStatus" class="text-sm" role="status" aria-live="polite"></p>
+      <div class="flex gap-2"><button type="button" onclick="closeModal('modal-reset-password')" class="flex-1 border border-slate-200 rounded-lg px-4 py-2 text-sm font-semibold">Batal</button><button id="resetPasswordButton" type="submit" class="flex-1 bg-brand-600 hover:bg-brand-700 text-white rounded-lg px-4 py-2 text-sm font-semibold">Simpan Password</button></div>
     </form>
   </div>
 </div>
@@ -3810,18 +3842,20 @@ function renderReportOwnerShareFinal(snapshot){
     propertyName:row.propertyName || row.property_name || '',
     propertyCode:row.propertyCode || row.property_code || '',
   }));
+  const taxLabel = calculation.tax?.mode === 'percent' && Number(totals.tax) ? ` (${Number(calculation.tax.percent)}%)` : Number(totals.tax) ? ' (Nominal)' : '';
   return `<section class="bg-white border ${isDraft ? 'border-amber-300' : 'border-emerald-200'} rounded-xl overflow-hidden">
     <div class="p-4 sm:p-5 border-b border-slate-100 flex flex-wrap items-start justify-between gap-3">
       <div><div class="flex flex-wrap items-center gap-2"><h2 class="text-lg font-bold text-slate-900">Laporan Akhir Bagi Hasil</h2><span class="badge ${isDraft ? 'bg-amber-50 text-amber-700' : 'bg-emerald-50 text-emerald-700'}">${isDraft ? 'REVISI BELUM DISIMPAN' : 'LAPORAN AKHIR'}</span></div><p class="text-sm text-slate-500 mt-1">${escapeHtml(calculation.ownerName)} · ${escapeHtml(calculation.month)} · ${totals.bookingCount} booking${updated ? ` · diperbarui ${escapeHtml(updated)}` : ''}</p></div>
       <div class="text-right"><div class="text-xs font-semibold uppercase text-slate-500">Total hak owner</div><div class="text-2xl font-extrabold text-emerald-700">${fmtRp(totals.ownerShare)}</div></div>
     </div>
-    <div class="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-7 gap-3 p-4 sm:p-5 border-b border-slate-100">
+    <div class="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-3 p-4 sm:p-5 border-b border-slate-100">
       <div><div class="text-xs text-slate-500">Pemasukan booking</div><div class="font-bold">${fmtRp(totals.bookingRevenue)}</div></div>
       <div><div class="text-xs text-slate-500">Pemasukan tambahan</div><div class="font-bold text-emerald-700">${fmtRp(totals.otherIncome)}</div></div>
       <div><div class="text-xs text-slate-500">Total pemasukan</div><div class="font-bold text-emerald-700">${fmtRp(totals.bookingRevenue + totals.otherIncome)}</div></div>
       <div><div class="text-xs text-slate-500">Platform fee</div><div class="font-bold text-rose-700">- ${fmtRp(totals.platformFee)}</div></div>
       <div><div class="text-xs text-slate-500">Pengeluaran</div><div class="font-bold text-rose-700">- ${fmtRp(totals.operatingExpenses)}</div></div>
       <div><div class="text-xs text-slate-500">Pengurang tambahan</div><div class="font-bold text-rose-700">- ${fmtRp(totals.additionalDeduction)}</div></div>
+      <div><div class="text-xs text-slate-500">Potongan pajak${taxLabel}</div><div class="font-bold text-rose-700">- ${fmtRp(totals.tax || 0)}</div></div>
       <div><div class="text-xs text-slate-500">Dasar bersih</div><div class="font-bold">${fmtRp(totals.netBase)}</div></div>
     </div>
     ${totals.deficit ? `<p class="px-4 sm:px-5 py-3 text-xs text-amber-700 border-b border-slate-100">Dasar negatif ${fmtRp(totals.deficit)} tidak dihitung sebagai nilai transfer owner.</p>` : ''}
@@ -4053,6 +4087,12 @@ async function loadSavedOwnerShareCalculation(ownerId, month){
       if(deduction) setCurrencyInputValue(deduction, row.additionalDeduction);
       if(label) label.value = row.additionalDeductionLabel || '';
     });
+    const savedTax = saved.calculation?.tax;
+    const savedTaxMode = savedTax?.mode === 'percent' || savedTax?.mode === 'amount' ? savedTax.mode : '';
+    document.getElementById('shareCalcTaxMode').value = savedTaxMode;
+    document.getElementById('shareCalcTaxPercent').value = savedTaxMode === 'percent' && savedTax.percent !== null && savedTax.percent !== undefined ? savedTax.percent : '';
+    setCurrencyInputValue(document.getElementById('shareCalcTaxAmount'), savedTaxMode === 'amount' ? Number(savedTax.amountInput || 0) : 0);
+    renderShareCalcTaxInput();
     const updated = saved.updated_at ? fmtBookingCreatedAt(saved.updated_at) : '';
     savedInfo.textContent = `Final tersimpan${updated ? ` · diperbarui ${updated}` : ''}. Input bisa diedit; Generate ulang lalu simpan untuk memperbarui final.`;
     savedInfo.className = 'mt-3 text-sm text-emerald-700';
@@ -4142,6 +4182,30 @@ function renderShareAggregateDetails(propertyRows){
   </div>`;
 }
 
+function readShareCalcTaxSetting(){
+  const mode = document.getElementById('shareCalcTaxMode').value;
+  if(mode !== 'percent' && mode !== 'amount') return { mode:'', percent:null, amountInput:0, error:'' };
+  if(mode === 'percent'){
+    const raw = document.getElementById('shareCalcTaxPercent').value.trim();
+    if(!raw) return { error:'Isi persentase pajak atau pilih Tanpa pajak.' };
+    const percent = Number(raw);
+    if(!Number.isFinite(percent) || percent < 0 || percent > 100) return { error:'Persentase pajak harus antara 0 dan 100.' };
+    return { mode, percent, amountInput:0, error:'' };
+  }
+  const raw = document.getElementById('shareCalcTaxAmount').value.trim();
+  if(!raw) return { error:'Isi nominal pajak atau pilih Tanpa pajak.' };
+  const amountInput = parseCurrencyInput(raw);
+  if(!Number.isFinite(amountInput) || amountInput < 0) return { error:'Nominal pajak tidak valid.' };
+  return { mode, percent:null, amountInput, error:'' };
+}
+
+function renderShareCalcTaxInput(){
+  const mode = document.getElementById('shareCalcTaxMode').value;
+  document.getElementById('shareCalcTaxPercentField').classList.toggle('hidden', mode !== 'percent');
+  document.getElementById('shareCalcTaxAmountField').classList.toggle('hidden', mode !== 'amount');
+  document.getElementById('shareCalcTaxHint').classList.toggle('hidden', mode !== 'percent' && mode !== 'amount');
+}
+
 function generateOwnerShareCalculation(){
   const ownerId = document.getElementById('shareCalcOwner').value;
   const month = document.getElementById('shareCalcMonth').value;
@@ -4156,6 +4220,12 @@ function generateOwnerShareCalculation(){
   if(!properties.length){
     status.className = 'px-4 sm:px-5 pb-4 text-sm text-rose-600';
     status.textContent = 'Owner ini belum memiliki properti untuk dihitung.';
+    return;
+  }
+  const taxSetting = readShareCalcTaxSetting();
+  if(taxSetting.error){
+    status.className = 'px-4 sm:px-5 pb-4 text-sm text-rose-600';
+    status.textContent = taxSetting.error;
     return;
   }
   const start = `${month}-01`;
@@ -4209,23 +4279,47 @@ function generateOwnerShareCalculation(){
     }));
     rows.push({ property, bookingCount:bookings.filter(item => !isBookingCancelled(item)).length, bookingRevenue, otherIncome, platformFeePercent, platformFee, operatingExpenses, additionalDeduction, additionalDeductionLabel, netBase, ownerPercent, ownerShare:Math.max(0, netBase) * ownerPercent / 100, bookingDetails, incomeDetails, expenseDetails, crewExpenseDetails });
   }
+  // Pajak dipotong dari pemasukan sebelum dasar bersih dihitung bagi hasil.
+  const grossTotal = rows.reduce((sum, row) => sum + row.bookingRevenue + row.otherIncome, 0);
+  let remainingTax = taxSetting.mode === 'amount' ? taxSetting.amountInput : 0;
+  rows.forEach((row, index) => {
+    const gross = row.bookingRevenue + row.otherIncome;
+    let tax = 0;
+    if(taxSetting.mode === 'percent'){
+      tax = gross * taxSetting.percent / 100;
+    } else if(taxSetting.mode === 'amount'){
+      if(index === rows.length - 1){
+        tax = remainingTax;
+      } else {
+        tax = grossTotal > 0 ? taxSetting.amountInput * (gross / grossTotal) : taxSetting.amountInput / rows.length;
+        remainingTax -= tax;
+      }
+    }
+    row.taxPercent = taxSetting.mode === 'percent' ? taxSetting.percent : null;
+    row.tax = tax;
+    row.netBase = gross - row.platformFee - row.operatingExpenses - row.additionalDeduction - tax;
+    row.ownerShare = Math.max(0, row.netBase) * row.ownerPercent / 100;
+  });
   const totals = rows.reduce((result, row) => {
     result.bookingRevenue += row.bookingRevenue;
     result.otherIncome += row.otherIncome;
     result.platformFee += row.platformFee;
     result.operatingExpenses += row.operatingExpenses;
     result.additionalDeduction += row.additionalDeduction;
+    result.tax += row.tax;
     result.netBase += row.netBase;
     result.ownerShare += row.ownerShare;
     result.deficit += Math.max(0, -row.netBase);
     result.bookingCount += row.bookingCount;
     return result;
-  }, { bookingRevenue:0, otherIncome:0, platformFee:0, operatingExpenses:0, additionalDeduction:0, netBase:0, ownerShare:0, deficit:0, bookingCount:0 });
+  }, { bookingRevenue:0, otherIncome:0, platformFee:0, operatingExpenses:0, additionalDeduction:0, tax:0, netBase:0, ownerShare:0, deficit:0, bookingCount:0 });
+  const taxGridLabel = taxSetting.mode === 'percent' ? ` (${taxSetting.percent}%)` : taxSetting.mode === 'amount' ? ' (Nominal)' : '';
   const monthLabel = new Date(`${start}T00:00:00`).toLocaleDateString('id-ID', { month:'long', year:'numeric' });
   lastOwnerShareCalculation = {
     ownerId,
     ownerName:owner.name,
     month,
+    tax:{ mode:taxSetting.mode, percent:taxSetting.percent, amountInput:taxSetting.amountInput, amount:totals.tax },
     rows:rows.map(row => ({
       propertyId:row.property.id,
       propertyName:row.property.name,
@@ -4242,6 +4336,8 @@ function generateOwnerShareCalculation(){
       operatingExpenses:row.operatingExpenses,
       additionalDeduction:row.additionalDeduction,
       additionalDeductionLabel:row.additionalDeductionLabel,
+      taxPercent:row.taxPercent,
+      tax:row.tax,
       netBase:row.netBase,
       ownerPercent:row.ownerPercent,
       ownerShare:row.ownerShare,
@@ -4257,13 +4353,14 @@ function generateOwnerShareCalculation(){
         <div><h2 class="text-lg font-bold text-slate-900">Hasil Bagi Hasil</h2><p class="text-sm text-slate-500">${escapeHtml(owner.name)} · ${monthLabel} · ${totals.bookingCount} booking</p></div>
         <div class="text-right"><div class="text-xs font-semibold uppercase text-slate-500">Total hak owner</div><div class="text-2xl font-extrabold text-emerald-700">${fmtRp(totals.ownerShare)}</div></div>
       </div>
-      <div class="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-7 gap-3 p-4 sm:p-5 border-b border-slate-100">
+      <div class="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-3 p-4 sm:p-5 border-b border-slate-100">
         <div><div class="text-xs text-slate-500">Pemasukan booking</div><div class="font-bold text-slate-900">${fmtRp(totals.bookingRevenue)}</div></div>
         <div><div class="text-xs text-slate-500">Pemasukan tambahan</div><div class="font-bold text-emerald-700">${fmtRp(totals.otherIncome)}</div></div>
         <div><div class="text-xs text-slate-500">Total pemasukan</div><div class="font-bold text-emerald-700">${fmtRp(totals.bookingRevenue + totals.otherIncome)}</div></div>
         <div><div class="text-xs text-slate-500">Platform Fee</div><div class="font-bold text-rose-700">- ${fmtRp(totals.platformFee)}</div></div>
         <div><div class="text-xs text-slate-500">Pengeluaran tercatat</div><div class="font-bold text-rose-700">- ${fmtRp(totals.operatingExpenses)}</div></div>
         <div><div class="text-xs text-slate-500">Pengurang tambahan</div><div class="font-bold text-rose-700">- ${fmtRp(totals.additionalDeduction)}</div></div>
+        <div><div class="text-xs text-slate-500">Potongan pajak${taxGridLabel}</div><div class="font-bold text-rose-700">- ${fmtRp(totals.tax || 0)}</div></div>
         <div><div class="text-xs text-slate-500">Dasar bersih total</div><div class="font-bold ${totals.netBase < 0 ? 'text-rose-700' : 'text-slate-900'}">${fmtRp(totals.netBase)}</div></div>
       </div>
       ${totals.deficit ? `<p class="px-4 sm:px-5 py-3 text-xs text-amber-700 border-t border-slate-100">Dasar negatif ${fmtRp(totals.deficit)} ditampilkan sebagai defisit dan tidak dihitung sebagai nilai transfer owner.</p>` : ''}
@@ -4436,7 +4533,7 @@ function downloadOwnerSharePdf(){
   const margin = 36;
   const right = doc.internal.pageSize.getWidth() - margin;
   const startY = pdfDocumentHeader(doc, 'Laporan Bagi Hasil Owner', `${calculation.ownerName} · ${monthLabel} · Laporan Final`);
-  const fixedWidths = [170, 55, 100, 95, 95, 100];
+  const fixedWidths = [150, 48, 90, 85, 85, 85, 85];
   const columns = [
     { label:'PROPERTI', width:fixedWidths[0] },
     { label:'BOOKING', width:fixedWidths[1], align:'right' },
@@ -4444,6 +4541,7 @@ function downloadOwnerSharePdf(){
     { label:'PEMASUKAN LAIN', width:fixedWidths[3], align:'right' },
     { label:'PLATFORM FEE', width:fixedWidths[4], align:'right' },
     { label:'PENGELUARAN', width:fixedWidths[5], align:'right' },
+    { label:'PAJAK', width:fixedWidths[6], align:'right' },
     { label:'BAGI HASIL OWNER', width:right - margin - fixedWidths.reduce((sum, value) => sum + value, 0), align:'right' },
   ];
   const rows = calculation.rows.map(row => ({
@@ -4454,6 +4552,7 @@ function downloadOwnerSharePdf(){
       fmtRp(row.otherIncome || 0),
       fmtRp(row.platformFee || 0),
       fmtRp(row.operatingExpenses || 0),
+      fmtRp(row.tax || 0),
       fmtRp(row.ownerShare || 0),
     ],
   }));
@@ -4467,6 +4566,7 @@ function downloadOwnerSharePdf(){
       fmtRp(totals.otherIncome || 0),
       fmtRp(totals.platformFee || 0),
       fmtRp(totals.operatingExpenses || 0),
+      fmtRp(totals.tax || 0),
       fmtRp(totals.ownerShare || 0),
     ],
   });
@@ -4474,7 +4574,7 @@ function downloadOwnerSharePdf(){
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(9);
   doc.setTextColor(110);
-  doc.text(`Nilai bersih sebelum bagi hasil: ${fmtRp(totals.netBase || 0)}${totals.deficit ? ` · Defisit: ${fmtRp(totals.deficit)}` : ''}`, margin, endY + 22);
+  doc.text(`Potongan pajak: ${fmtRp(totals.tax || 0)} · Nilai bersih sebelum bagi hasil: ${fmtRp(totals.netBase || 0)}${totals.deficit ? ` · Defisit: ${fmtRp(totals.deficit)}` : ''}`, margin, endY + 22);
   doc.setTextColor(0);
   const fileName = `bagi-hasil-${calculation.ownerName}-${calculation.month}`.replace(/[^a-z0-9_-]+/gi, '-') + '.pdf';
   pdfSave(doc, fileName);
@@ -4504,6 +4604,7 @@ function downloadOwnerShareCsv(){
     ['Total Platform Fee', totals.platformFee],
     ['Total Pengeluaran', totals.operatingExpenses],
     ['Total Pengurang Tambahan', totals.additionalDeduction],
+    ['Potongan Pajak', totals.tax || 0],
     ['Dasar Bersih', totals.netBase],
     ['Total Hak Owner', totals.ownerShare],
     [],
@@ -4557,6 +4658,7 @@ function buildOwnerShareWhatsAppMessage(calculation){
     `Platform fee: ${fmtRp(totals.platformFee)}`,
     `Pengeluaran: ${fmtRp(totals.operatingExpenses)}`,
     `Pengurang tambahan: ${fmtRp(totals.additionalDeduction)}`,
+    `Potongan pajak: ${fmtRp(totals.tax || 0)}`,
     `Keuntungan sebelum bagi hasil: ${fmtRp(totals.netBase)}`,
     `Total hak owner: ${fmtRp(totals.ownerShare)}`,
     '',
@@ -4752,6 +4854,20 @@ function mapDashboardAccount(account){
   };
 }
 
+// Akun Master dan IT Support bersifat terlindungi: tidak dapat dinonaktifkan,
+// password IT Support tidak dapat direset, dan tidak disediakan tombol hapus.
+function accountActionCell(u){
+  if(u.account_id === 'master' || u.role === 'IT'){
+    return '<span class="text-xs text-slate-300">—</span>';
+  }
+  const toggleButton = u.status === 'inactive'
+    ? `<button type="button" onclick="setAccountActive('${escapeHtml(u.account_id)}', 1)" class="text-xs font-semibold text-emerald-600 hover:text-emerald-800">Aktifkan</button>`
+    : `<button type="button" onclick="setAccountActive('${escapeHtml(u.account_id)}', 0)" class="text-xs font-semibold text-amber-600 hover:text-amber-800">Nonaktifkan</button>`;
+  const resetButton = `<button type="button" onclick="openPasswordResetModal('${escapeHtml(u.account_id)}')" class="ml-3 text-xs font-semibold text-brand-600 hover:text-brand-800">Reset Password</button>`;
+  const deleteButton = `<button type="button" onclick="openAccountDeleteModal('${escapeHtml(u.account_id)}')" class="ml-3 text-xs font-semibold text-rose-600 hover:text-rose-800">Hapus</button>`;
+  return `${toggleButton}${resetButton}${deleteButton}`;
+}
+
 function renderUsers(){
   const roleStyles = {
     'Master':'bg-amber-50 text-amber-700','Admin':'bg-blue-50 text-blue-700','IT':'bg-cyan-50 text-cyan-700'
@@ -4776,11 +4892,7 @@ function renderUsers(){
       <td class="px-3 py-3"><span class="badge ${roleStyles[u.role] || 'bg-slate-100 text-slate-700'}">${escapeHtml(u.role)}</span></td>
       <td class="px-3 py-3 hidden md:table-cell text-xs text-slate-500">${escapeHtml(u.access)}</td>
       <td class="px-5 py-3 text-center">${statusBadge(u.status)}</td>
-      ${isMaster ? `<td class="px-5 py-3 text-right whitespace-nowrap">${u.account_id === 'master'
-        ? '<span class="text-xs text-slate-300">—</span>'
-        : `${u.status === 'inactive'
-            ? `<button type="button" onclick="setAccountActive('${escapeHtml(u.account_id)}', 1)" class="text-xs font-semibold text-emerald-600 hover:text-emerald-800">Aktifkan</button>`
-            : `<button type="button" onclick="setAccountActive('${escapeHtml(u.account_id)}', 0)" class="text-xs font-semibold text-amber-600 hover:text-amber-800">Nonaktifkan</button>`}<button type="button" onclick="openAccountDeleteModal('${escapeHtml(u.account_id)}')" class="ml-3 text-xs font-semibold text-rose-600 hover:text-rose-800">Hapus</button>`}</td>` : ''}
+      ${isMaster ? `<td class="px-5 py-3 text-right whitespace-nowrap">${accountActionCell(u)}</td>` : ''}
     </tr>`).join('');
 }
 
@@ -4793,6 +4905,10 @@ async function loadDashboardAccounts(){
 async function setAccountActive(accountId, active){
   const user = USERS.find(item => item.account_id === accountId);
   const label = user ? user.name : accountId;
+  if(user && (user.account_id === 'master' || user.role === 'IT')){
+    showToast('Akun Master dan IT Support tidak dapat dinonaktifkan.');
+    return;
+  }
   if(active === 0 && !window.confirm(`Nonaktifkan akun ${label}? Akun tidak dapat login lagi, tetapi data dan riwayatnya tetap tersimpan.`)) return;
   try {
     await dashboardApi(`/dashboard/accounts/${encodeURIComponent(accountId)}`, { method:'PATCH', body:JSON.stringify({ active }) });
@@ -4839,6 +4955,62 @@ async function submitAccountDelete(event){
     pinInput.value = '';
     status.className = 'text-sm text-rose-600';
     status.textContent = error.message || 'Akun gagal dihapus.';
+  } finally {
+    button.disabled = false;
+  }
+}
+
+function openPasswordResetModal(accountId){
+  const user = USERS.find(item => item.account_id === accountId);
+  if(!user) return;
+  if(user.account_id === 'master' || user.role === 'IT'){
+    showToast('Akun Master dan IT Support tidak dapat direset dari halaman ini.');
+    return;
+  }
+  document.getElementById('resetPasswordForm').reset();
+  document.getElementById('resetPasswordAccountId').value = accountId;
+  document.getElementById('resetPasswordAccount').textContent = `Akun ${user.name} (${accountId})`;
+  document.getElementById('resetPasswordStatus').textContent = '';
+  openModal('modal-reset-password');
+  document.getElementById('resetPasswordNew').focus();
+}
+
+async function submitPasswordReset(event){
+  event.preventDefault();
+  const accountId = document.getElementById('resetPasswordAccountId').value;
+  const account = USERS.find(item => item.account_id === accountId);
+  if(!account || account.account_id === 'master' || account.role === 'IT'){
+    closeModal('modal-reset-password');
+    showToast('Akun Master dan IT Support tidak dapat direset dari halaman ini.');
+    return;
+  }
+  const newInput = document.getElementById('resetPasswordNew');
+  const confirmInput = document.getElementById('resetPasswordConfirm');
+  const pinInput = document.getElementById('resetPasswordPin');
+  const status = document.getElementById('resetPasswordStatus');
+  const button = document.getElementById('resetPasswordButton');
+  if(newInput.value !== confirmInput.value){
+    status.className = 'text-sm text-rose-600';
+    status.textContent = 'Password baru dan konfirmasi tidak sama.';
+    return;
+  }
+  if(!/^\d{4}$/.test(pinInput.value.trim())){
+    status.className = 'text-sm text-rose-600';
+    status.textContent = 'Masukkan PIN Master tepat 4 digit.';
+    return;
+  }
+  button.disabled = true;
+  status.className = 'text-sm text-slate-500';
+  status.textContent = 'Menyimpan password baru...';
+  try {
+    await dashboardApi(`/dashboard/accounts/${encodeURIComponent(accountId)}/password`, {
+      method:'POST', body:JSON.stringify({ new_password:newInput.value, pin:pinInput.value.trim() })
+    });
+    closeModal('modal-reset-password');
+    showToast(`Password akun ${accountId} berhasil direset.`);
+  } catch(error) {
+    status.className = 'text-sm text-rose-600';
+    status.textContent = error.message || 'Password gagal direset.';
   } finally {
     button.disabled = false;
   }
@@ -5222,6 +5394,7 @@ document.addEventListener('DOMContentLoaded', () => {
   loadLoginAccountOptions();
   document.getElementById('createAdminForm').addEventListener('submit', submitCreateAdmin);
   document.getElementById('deleteAccountForm').addEventListener('submit', submitAccountDelete);
+  document.getElementById('resetPasswordForm').addEventListener('submit', submitPasswordReset);
   document.getElementById('profileForm').addEventListener('submit', saveDashboardProfile);
   document.getElementById('passwordForm').addEventListener('submit', changeDashboardPassword);
   document.getElementById('deletePinForm').addEventListener('submit', changeDashboardDeletePin);
@@ -5237,6 +5410,10 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('deleteOwnerShareFinalForm').addEventListener('submit', deleteReportOwnerShareFinal);
   document.getElementById('deletePropertyForm').addEventListener('submit', submitPropertyDelete);
   document.getElementById('shareCalcPropertyInputs').addEventListener('input', handleShareCalculationInputChange);
+  document.getElementById('shareCalcTaxMode').addEventListener('change', () => { renderShareCalcTaxInput(); handleShareCalculationInputChange(); });
+  document.getElementById('shareCalcTaxPercent').addEventListener('input', handleShareCalculationInputChange);
+  document.getElementById('shareCalcTaxAmount').addEventListener('input', handleShareCalculationInputChange);
+  renderShareCalcTaxInput();
   document.getElementById('editFinanceForm').addEventListener('submit', submitExpenseEdit);
   document.getElementById('editExpProof').addEventListener('change', handleEditExpenseProofSelection);
   document.getElementById('cancelBookingForm').addEventListener('submit', submitBookingCancellation);

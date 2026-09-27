@@ -1442,6 +1442,42 @@ export default {
         return json({ ok: true, data: result.results || [] });
       }
 
+      const dashboardAccountPasswordMatch = path.match(/^\/dashboard\/accounts\/([^/]+)\/password$/);
+      if (request.method === 'POST' && dashboardAccountPasswordMatch) {
+        const adminSecret = String(env.ADMIN_DASHBOARD_SECRET || '').trim();
+        const tokenData = await getAdminTokenPayload(request, adminSecret);
+        if (tokenData?.account_id !== 'master' || tokenData.role !== 'Master') {
+          return bad('Hanya Master yang dapat mereset password akun staf.', 403);
+        }
+        const accountId = decodeURIComponent(dashboardAccountPasswordMatch[1]);
+        if (accountId === 'master') {
+          return bad('Password akun Master diubah dari Profil Akun.', 403);
+        }
+        const target = await env.DB.prepare('SELECT account_id, display_name, role FROM dashboard_users WHERE account_id = ?')
+          .bind(accountId).first();
+        if (!target) return bad('Akun tidak ditemukan.', 404);
+        if (target.role === 'IT') return bad('Password akun IT Support tidak dapat direset dari Dashboard.', 403);
+        const body = await request.json();
+        const newPassword = String(body.new_password || '');
+        const pin = String(body.pin || '').trim();
+        if (newPassword.length < 12 || newPassword.length > 256) return bad('Password baru wajib 12 sampai 256 karakter.');
+        if (!/^\d{4}$/.test(pin)) return bad('Masukkan PIN Master tepat 4 digit.', 400);
+        const master = await env.DB.prepare(`
+          SELECT delete_pin_salt, delete_pin_hash FROM dashboard_users
+          WHERE account_id = 'master' AND active = 1
+        `).first();
+        if (!master?.delete_pin_hash) return bad('PIN Master belum diinisialisasi. Login sebagai Master terlebih dahulu.', 409);
+        const attemptedHash = await hashDashboardPassword(pin, master.delete_pin_salt);
+        if (!constantTimeEqual(attemptedHash, master.delete_pin_hash)) return bad('PIN Master salah.', 403);
+        const salt = bytesToHex(crypto.getRandomValues(new Uint8Array(16)));
+        const passwordHash = await hashDashboardPassword(newPassword, salt);
+        await env.DB.prepare(`
+          UPDATE dashboard_users SET password_salt = ?, password_hash = ?, updated_at = ?
+          WHERE account_id = ?
+        `).bind(salt, passwordHash, new Date().toISOString(), accountId).run();
+        return json({ ok:true, data:{ account_id:accountId } });
+      }
+
       const dashboardAccountMatch = path.match(/^\/dashboard\/accounts\/([^/]+)$/);
       if (dashboardAccountMatch && ['PATCH', 'DELETE'].includes(request.method)) {
         const adminSecret = String(env.ADMIN_DASHBOARD_SECRET || '').trim();
@@ -1457,6 +1493,7 @@ export default {
           SELECT account_id, display_name, role, active FROM dashboard_users WHERE account_id = ?
         `).bind(accountId).first();
         if (!target) return bad('Akun tidak ditemukan.', 404);
+        if (target.role === 'IT') return bad('Akun IT Support tidak dapat dinonaktifkan atau dihapus.', 403);
 
         if (request.method === 'PATCH') {
           const body = await request.json();
@@ -1994,7 +2031,9 @@ export default {
             [row.bookingRevenue, row.otherIncome, row.platformFee, row.operatingExpenses, row.additionalDeduction, row.netBase, row.ownerShare].every(validAmount) &&
             Number.isFinite(Number(row.platformFeePercent)) && Number(row.platformFeePercent) >= 0 && Number(row.platformFeePercent) <= 50 &&
             Number.isFinite(Number(row.ownerPercent)) && Number(row.ownerPercent) >= 0 && Number(row.ownerPercent) <= 100 &&
-            String(row.additionalDeductionLabel || '').length <= 60;
+            String(row.additionalDeductionLabel || '').length <= 60 &&
+            (row.tax === undefined || row.tax === null || validAmount(row.tax)) &&
+            (row.taxPercent === undefined || row.taxPercent === null || (Number.isFinite(Number(row.taxPercent)) && Number(row.taxPercent) >= 0 && Number(row.taxPercent) <= 100));
           const validText = (value, maximum) => typeof value === 'string' && value.length <= maximum;
           const validDate = value => typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value);
           const validDetailList = (list, validator) => list === undefined ||
@@ -2023,10 +2062,18 @@ export default {
               sum(row.expenseDetails, 'amount') + sum(row.crewExpenseDetails, 'amount') === Number(row.operatingExpenses);
           };
           const totalFields = ['bookingRevenue', 'otherIncome', 'platformFee', 'operatingExpenses', 'additionalDeduction', 'netBase', 'ownerShare', 'deficit'];
-          if (!rows.every(rowIsValid) || !rows.every(detailListsAreValid) || !rows.every(detailsAreReconciled) || !totalFields.every(field => validAmount(totals[field])) || !Number.isSafeInteger(Number(totals.bookingCount)) || Number(totals.bookingCount) < 0) {
+          // Potongan pajak bersifat opsional agar laporan lama tanpa pajak tetap sah.
+          const tax = body.tax && typeof body.tax === 'object' && !Array.isArray(body.tax) ? body.tax : null;
+          const optionalAmount = value => value === undefined || value === null || validAmount(value);
+          const optionalPercent = value => value === undefined || value === null || (Number.isFinite(Number(value)) && Number(value) >= 0 && Number(value) <= 100);
+          const taxIsValid = !tax || (
+            (tax.mode === undefined || tax.mode === null || tax.mode === '' || tax.mode === 'percent' || tax.mode === 'amount') &&
+            optionalPercent(tax.percent) && optionalAmount(tax.amountInput) && optionalAmount(tax.amount) && optionalAmount(totals.tax)
+          );
+          if (!rows.every(rowIsValid) || !rows.every(detailListsAreValid) || !rows.every(detailsAreReconciled) || !taxIsValid || !totalFields.every(field => validAmount(totals[field])) || !Number.isSafeInteger(Number(totals.bookingCount)) || Number(totals.bookingCount) < 0) {
             return bad('Rincian nominal atau persentase laporan tidak valid.');
           }
-          const calculationJson = JSON.stringify({ ownerId, ownerName, month, rows, totals });
+          const calculationJson = JSON.stringify({ ownerId, ownerName, month, tax, rows, totals });
           if (new TextEncoder().encode(calculationJson).byteLength > 262144) return bad('Rincian laporan terlalu besar.');
 
           const now = new Date().toISOString();
