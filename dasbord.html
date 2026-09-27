@@ -4809,7 +4809,15 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('cancelBookingForm').addEventListener('submit', submitBookingCancellation);
   setupPasswordToggles();
   document.getElementById('contactItForm').addEventListener('submit', submitContactMessage);
-  document.getElementById('staffChatForm').addEventListener('submit', sendStaffChat);
+  const staffChatForm = document.getElementById('staffChatForm');
+  const staffChatMessage = document.getElementById('staffChatMessage');
+  staffChatForm.addEventListener('submit', sendStaffChat);
+  staffChatMessage.addEventListener('keydown', event => {
+    if(event.key === 'Enter' && !event.shiftKey){
+      event.preventDefault();
+      staffChatForm.requestSubmit();
+    }
+  });
   document.getElementById('closeContactItDialog').addEventListener('click', () => document.getElementById('contactItDialog').close());
   fetch('https://your-home-checkin-api.saerobotic.workers.dev/settings', { cache: 'no-store' })
     .then(response => response.json())
@@ -4863,11 +4871,13 @@ document.addEventListener('DOMContentLoaded', () => {
       if(currentView === 'booking' && !bookingEditorOpen) renderBookingView();
       if(currentView === 'owner') renderOwners();
       if(currentView === 'laporan') renderReport();
-      if(isStaffChatOpen()) await loadStaffChat();
     } catch(error) {
       console.warn('Refresh data dashboard otomatis gagal.', error);
     }
   }, 30000);
+  setInterval(() => {
+    if(currentDashboardAccount && !document.hidden && isStaffChatOpen()) loadStaffChat();
+  }, 4000);
 });
 
 /* ESC to close modal */
