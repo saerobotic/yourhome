@@ -341,7 +341,7 @@
     }
     // Data absensi: Cloudflare Worker (D1 + R2)
     const DAILY_SALARY = 100000; // Rp 3.000.000/bulan ÷ 30 hari
-    const PAGE_SIZE = 15;
+    const PAGE_SIZE = 10;
     function getLocalDateKey() {
       const date = new Date();
       const year = date.getFullYear();
@@ -831,7 +831,7 @@
       const rows = el('crewManagementRows');
       try {
         const response = await workerRequest(`${API_BASE}/dashboard/crews?_=${Date.now()}`);
-        crewManagementItems = Array.isArray(response.data) ? response.data : [];
+        crewManagementItems = (Array.isArray(response.data) ? response.data : []).filter(crew => Number(crew.active) === 1);
         rows.innerHTML = crewManagementItems.length ? crewManagementItems.map(crew => `
           <tr>
             <td>${escapeHtml(crew.name)}</td>

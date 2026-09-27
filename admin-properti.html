@@ -73,8 +73,8 @@
         <section class="category-form-section" data-category-section="stay">
           <h3>Input Apartemen / Villa / Guest House</h3>
           <div class="category-fields-grid">
-            <label class="field"><span class="meta-label">Harga Hari Biasa</span><input id="propertyWeekdayPrice" type="number" min="0" /></label>
-            <label class="field"><span class="meta-label">Harga Jumat/Sabtu</span><input id="propertyWeekendPrice" type="number" min="0" /></label>
+            <label class="field"><span class="meta-label">Harga Hari Biasa</span><input id="propertyWeekdayPrice" type="text" inputmode="numeric" pattern="[0-9.]*" data-currency-input /></label>
+            <label class="field"><span class="meta-label">Harga Jumat/Sabtu</span><input id="propertyWeekendPrice" type="text" inputmode="numeric" pattern="[0-9.]*" data-currency-input /></label>
             <label class="field"><span class="meta-label">Jumlah Kamar Tidur</span><input id="propertyBeds" type="number" min="0" /></label>
             <label class="field"><span class="meta-label">Jumlah Kamar Mandi</span><input id="propertyBaths" type="number" min="0" /></label>
             <label class="field"><span class="meta-label">Kapasitas Tamu</span><input id="propertyGuests" type="number" min="0" /></label>
@@ -244,23 +244,32 @@
       try { const parsed = JSON.parse(value || '[]'); return Array.isArray(parsed) ? parsed : []; } catch { return []; }
     }
     function renderRoomOptions() {
-      el('roomOptionList').innerHTML = state.roomOptions.length ? state.roomOptions.map((room, index) => `<div class="room-option-row"><input data-room-name="${index}" value="${escapeHtml(room.name || '')}" placeholder="Nama kamar" /><input data-room-price="${index}" type="number" min="0" value="${Number(room.price || 0)}" placeholder="Harga/bulan" /><textarea data-room-details="${index}" placeholder="Detail kamar">${escapeHtml(room.details || '')}</textarea><button class="button danger" data-remove-room="${index}" type="button">Hapus</button></div>`).join('') : '<div class="room-option-empty">Belum ada pilihan kamar.</div>';
+      el('roomOptionList').innerHTML = state.roomOptions.length ? state.roomOptions.map((room, index) => `<div class="room-option-row"><input data-room-name="${index}" value="${escapeHtml(room.name || '')}" placeholder="Nama kamar" /><input data-room-price="${index}" type="text" inputmode="numeric" pattern="[0-9.]*" data-currency-input value="${Number(room.price || 0)}" placeholder="Harga/bulan" /><textarea data-room-details="${index}" placeholder="Detail kamar">${escapeHtml(room.details || '')}</textarea><button class="button danger" data-remove-room="${index}" type="button">Hapus</button></div>`).join('') : '<div class="room-option-empty">Belum ada pilihan kamar.</div>';
+      setupCurrencyInputs(el('roomOptionList'));
       el('roomOptionList').querySelectorAll('[data-remove-room]').forEach(button => button.addEventListener('click', () => { syncRoomOptions(); state.roomOptions.splice(Number(button.dataset.removeRoom), 1); renderRoomOptions(); }));
     }
     function syncRoomOptions() {
       state.roomOptions = state.roomOptions.map((room, index) => ({
         name: el('roomOptionList').querySelector(`[data-room-name="${index}"]`)?.value.trim() || '',
-        price: Number(el('roomOptionList').querySelector(`[data-room-price="${index}"]`)?.value || 0),
+        price: parseCurrencyInput(el('roomOptionList').querySelector(`[data-room-price="${index}"]`)?.value),
         details: el('roomOptionList').querySelector(`[data-room-details="${index}"]`)?.value.trim() || '',
       })).filter(room => room.name && room.price >= 0);
     }
     function updateCategorySections() {
       const category = el('propertyCategory').dataset.category || '';
+      const hasSelectedProperty = Boolean(state.selectedId);
       document.querySelectorAll('[data-category-section]').forEach(section => {
         const visible = section.dataset.categorySection === 'kos' ? category === 'kos' : category !== 'kos';
         section.hidden = !visible;
-        section.querySelectorAll('input, select, textarea, button').forEach(control => { control.disabled = !visible; });
+        section.querySelectorAll('input, select, textarea, button').forEach(control => { control.disabled = !visible || !hasSelectedProperty; });
       });
+    }
+    function updatePropertyEditorAccess() {
+      const hasSelectedProperty = Boolean(state.selectedId);
+      el('propertyForm').querySelectorAll('input:not([readonly]), select, textarea, button').forEach(control => {
+        control.disabled = !hasSelectedProperty;
+      });
+      updateCategorySections();
     }
     function propertyFormValue(property) {
       el('propertyCode').value = property?.property_code || '';
@@ -269,8 +278,8 @@
       el('propertyCategory').dataset.category = category;
       el('propertyCategory').value = ({ apartment:'Apartemen', villa:'Villa', guesthouse:'Guest House', kos:'Kosan' })[category] || category;
       el('propertyLocation').value = property?.location || '';
-      el('propertyWeekdayPrice').value = property?.weekday_price ?? property?.price ?? '';
-      el('propertyWeekendPrice').value = property?.weekend_price ?? property?.price ?? '';
+      setCurrencyInputValue(el('propertyWeekdayPrice'), property?.weekday_price ?? property?.price ?? '');
+      setCurrencyInputValue(el('propertyWeekendPrice'), property?.weekend_price ?? property?.price ?? '');
       el('propertyBeds').value = property?.beds ?? 0;
       el('propertyBaths').value = property?.baths ?? 0;
       el('propertyGuests').value = property?.guests ?? 0;
@@ -304,7 +313,7 @@
       state.selectedId = property?.id || null;
       state.roomOptions = parseRoomOptions(property?.room_options);
       renderRoomOptions();
-      updateCategorySections();
+      updatePropertyEditorAccess();
     }
     function renderMainPreview() {
       const url = state.mainImagePreview || state.mainImageUrl;
@@ -394,6 +403,20 @@
     }
     function escapeHtml(value) { return String(value ?? '').replace(/[&<>'"]/g, character => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', "'":'&#39;', '"':'&quot;' }[character])); }
     function formatPrice(value) { return `Rp ${Number(value || 0).toLocaleString('id-ID')}`; }
+    function parseCurrencyInput(value) {
+      const digits = String(value ?? '').replace(/\D/g, '');
+      return digits ? Number(digits) : 0;
+    }
+    function setCurrencyInputValue(input, value) {
+      const amount = parseCurrencyInput(value);
+      input.value = amount ? amount.toLocaleString('id-ID') : value === '' ? '' : '0';
+    }
+    function setupCurrencyInputs(root = document) {
+      root.querySelectorAll('[data-currency-input]').forEach(input => {
+        setCurrencyInputValue(input, input.value);
+        input.addEventListener('input', () => setCurrencyInputValue(input, input.value));
+      });
+    }
     function updateDomainCountdown() {
       const expiry = new Date(2027, 8, 23, 23, 59, 59).getTime();
       const remaining = Math.max(0, expiry - Date.now());
@@ -487,7 +510,7 @@
         return;
       }
       saveMessage.className = 'status'; saveMessage.textContent = 'Menyimpan...';
-      const numberOrNull = id => el(id).value === '' ? null : Number(el(id).value);
+      const numberOrNull = id => el(id).value === '' ? null : parseCurrencyInput(el(id).value);
       const isKos = el('propertyCategory').dataset.category === 'kos';
       syncRoomOptions();
       const weekdayPriceId = 'propertyWeekdayPrice';
@@ -569,6 +592,8 @@
       button.title = isVisible ? 'Tampilkan password' : 'Sembunyikan password';
     });
     el('propertyForm').addEventListener('submit', saveProperty);
+    setupCurrencyInputs();
+    updatePropertyEditorAccess();
     el('publicationFilter').addEventListener('change', renderList);
     el('categoryFilter').addEventListener('change', renderList);
     el('addRoomOption').addEventListener('click', () => { syncRoomOptions(); state.roomOptions.push({ name: '', price: 0, details: '' }); renderRoomOptions(); });

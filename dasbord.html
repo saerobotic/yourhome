@@ -169,6 +169,7 @@
       <button onclick="toggleStaffChat()" class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left">
         <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg>
         <span>Chat Internal</span>
+        <span id="staffChatUnreadIndicator" class="hidden ml-auto w-2.5 h-2.5 rounded-full bg-rose-400 ring-2 ring-slate-900" aria-label="Ada pesan chat belum dibaca" title="Ada pesan belum dibaca"></span>
       </button>
       <button id="settingsNavItem" onclick="switchView('pengaturan')" class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left">
         <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
@@ -739,7 +740,7 @@
       </div>
 
       <div id="staffChatWidget" class="fixed z-40 right-4 bottom-4 w-[calc(100vw-2rem)] sm:w-[380px] bg-white border border-slate-200 rounded-xl shadow-xl overflow-hidden hidden">
-        <div class="flex items-center justify-between gap-3 px-4 py-3 border-b border-slate-100"><div><h2 class="font-bold text-sm text-slate-900">Chat Internal</h2><p class="text-[11px] text-slate-500 mt-0.5">Master, Admin, dan IT</p></div><div class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-emerald-500" title="Aktif"></span><button type="button" onclick="toggleStaffChat()" class="p-1.5 text-slate-500 hover:bg-slate-100 rounded-lg" aria-label="Minimalkan chat" title="Minimalkan chat"><svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 12h12"/></svg></button></div></div>
+        <div class="flex items-center justify-between gap-3 px-4 py-3 border-b border-slate-100"><div><h2 class="font-bold text-sm text-slate-900">Chat Internal</h2><p class="text-[11px] text-slate-500 mt-0.5">Master, Admin, dan IT</p></div><div class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-emerald-500" title="Aktif"></span><button id="staffChatClearButton" type="button" onclick="clearStaffChat()" class="hidden p-1.5 text-slate-400 hover:bg-rose-50 hover:text-rose-700 rounded-lg" aria-label="Hapus semua pesan chat" title="Hapus semua pesan chat"><svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2m-9 0 1 14h8l1-14M10 11v5m4-5v5"/></svg></button><button type="button" onclick="toggleStaffChat()" class="p-1.5 text-slate-500 hover:bg-slate-100 rounded-lg" aria-label="Minimalkan chat" title="Minimalkan chat"><svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 12h12"/></svg></button></div></div>
         <div id="staffChatMessages" class="h-72 overflow-y-auto bg-slate-50 p-3 space-y-2.5" aria-live="polite"></div>
         <form id="staffChatForm" class="border-t border-slate-100 p-3"><div class="flex items-end gap-2"><label class="sr-only" for="staffChatMessage">Pesan</label><textarea id="staffChatMessage" required maxlength="2000" rows="2" placeholder="Tulis pesan..." class="min-h-[42px] flex-1 resize-none border border-slate-200 rounded-lg px-3 py-2 text-sm focus:border-brand-600"></textarea><button id="staffChatSendButton" type="submit" class="shrink-0 bg-brand-600 hover:bg-brand-700 disabled:opacity-60 text-white p-2.5 rounded-lg" aria-label="Kirim pesan" title="Kirim pesan"><svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4 20-7z"/></svg></button></div><p id="staffChatStatus" class="min-h-4 mt-1.5 text-[11px]" role="status" aria-live="polite"></p></form>
       </div>
@@ -914,11 +915,11 @@
       </div>
       <div>
         <label class="text-xs text-slate-500 font-semibold">Nilai Booking (Rp)</label>
-        <input id="newBookingAmount" type="number" required placeholder="5000000" class="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 mt-0.5">
+        <input id="newBookingAmount" type="text" inputmode="numeric" pattern="[0-9.]*" data-currency-input required placeholder="5.000.000" class="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 mt-0.5">
       </div>
       <div class="grid grid-cols-2 gap-3">
         <label class="block"><span class="block text-xs text-slate-500 font-semibold">Extra Bed (jumlah)</span><input id="newBookingExtraBedQuantity" type="number" min="0" step="1" value="0" class="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 mt-0.5"></label>
-        <label class="block"><span class="block text-xs text-slate-500 font-semibold">Harga per Extra Bed (Rp)</span><input id="newBookingExtraBedPrice" type="number" min="0" step="1" value="0" class="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 mt-0.5"></label>
+        <label class="block"><span class="block text-xs text-slate-500 font-semibold">Harga per Extra Bed (Rp)</span><input id="newBookingExtraBedPrice" type="text" inputmode="numeric" pattern="[0-9.]*" data-currency-input value="0" class="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 mt-0.5"></label>
       </div>
       <p id="newBookingExtraBedTotal" class="text-xs text-slate-500">Total Extra Bed: Rp 0. Dicatat terpisah dari nilai booking.</p>
       <div>
@@ -954,7 +955,7 @@
     <form id="cancelBookingForm" class="mt-4 space-y-3">
       <input id="cancelBookingId" type="hidden">
       <label class="block"><span class="block text-xs font-semibold text-slate-600 mb-1">Keterangan pembatalan</span><textarea id="cancelBookingReason" required minlength="3" maxlength="300" rows="3" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm" placeholder="Contoh: tamu membatalkan karena perubahan jadwal"></textarea></label>
-      <label class="block"><span class="block text-xs font-semibold text-slate-600 mb-1">Uang yang dikembalikan (Rp)</span><input id="cancelBookingRefund" type="number" min="0" step="1" required class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm" placeholder="Masukkan nominal refund"></label>
+      <label class="block"><span class="block text-xs font-semibold text-slate-600 mb-1">Uang yang dikembalikan (Rp)</span><input id="cancelBookingRefund" type="text" inputmode="numeric" pattern="[0-9.]*" data-currency-input required class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm" placeholder="Masukkan nominal refund"></label>
       <label class="block"><span class="block text-xs font-semibold text-slate-600 mb-1">PIN Master (4 digit)</span><input id="cancelBookingPin" type="password" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" required autocomplete="off" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm" placeholder="PIN persetujuan Master"></label>
       <p id="cancelBookingStatus" class="text-sm" role="status" aria-live="polite"></p>
       <div class="flex gap-2"><button type="button" onclick="closeModal('modal-cancel-booking')" class="flex-1 border border-slate-200 rounded-lg px-4 py-2 text-sm font-semibold">Kembali</button><button id="cancelBookingButton" type="submit" class="flex-1 bg-rose-600 hover:bg-rose-700 text-white rounded-lg px-4 py-2 text-sm font-semibold">Cancel dan Catat Refund</button></div>
@@ -999,7 +1000,7 @@
         </div>
         <div>
           <label class="text-xs text-slate-500 font-semibold">Jumlah (Rp)</label>
-          <input id="newExpAmount" type="number" required placeholder="500000" class="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 mt-0.5">
+          <input id="newExpAmount" type="text" inputmode="numeric" pattern="[0-9.]*" data-currency-input required placeholder="500.000" class="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 mt-0.5">
         </div>
       </div>
       <div>
@@ -1029,7 +1030,7 @@
       <div class="grid grid-cols-2 gap-3"><label class="block"><span class="text-xs text-slate-500 font-semibold">Tanggal</span><input id="newIncomeDate" type="date" required class="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 mt-0.5"></label><label class="block"><span class="text-xs text-slate-500 font-semibold">Kategori</span><span class="flex gap-2 mt-0.5"><select id="newIncomeCategory" required class="min-w-0 flex-1 text-sm border border-slate-200 rounded-lg px-3 py-2 bg-white"></select><button type="button" onclick="openCategoryModal('income')" title="Tambah kategori pemasukan" class="px-3 border border-slate-200 rounded-lg text-slate-600 hover:bg-slate-50">+</button></span></label></div>
       <label class="block"><span class="text-xs text-slate-500 font-semibold">Properti (opsional untuk saldo awal)</span><select id="newIncomeProperty" class="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 bg-white mt-0.5"></select></label>
       <label class="block"><span class="text-xs text-slate-500 font-semibold">Keterangan</span><input id="newIncomeDescription" required maxlength="240" placeholder="cth: Extra bed pesanan tamu" class="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 mt-0.5"></label>
-      <div class="grid grid-cols-2 gap-3"><label class="block"><span class="text-xs text-slate-500 font-semibold">Sumber / Penerima</span><input id="newIncomePayee" maxlength="120" placeholder="cth: Tamu kamar 2" class="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 mt-0.5"></label><label class="block"><span class="text-xs text-slate-500 font-semibold">Jumlah (Rp)</span><input id="newIncomeAmount" type="number" min="1" step="1" required class="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 mt-0.5"></label></div>
+      <div class="grid grid-cols-2 gap-3"><label class="block"><span class="text-xs text-slate-500 font-semibold">Sumber / Penerima</span><input id="newIncomePayee" maxlength="120" placeholder="cth: Tamu kamar 2" class="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 mt-0.5"></label><label class="block"><span class="text-xs text-slate-500 font-semibold">Jumlah (Rp)</span><input id="newIncomeAmount" type="text" inputmode="numeric" pattern="[0-9.]*" data-currency-input required class="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 mt-0.5"></label></div>
       <p id="incomeFormStatus" class="text-sm" role="status" aria-live="polite"></p>
       <div class="flex gap-2 pt-2"><button type="button" onclick="closeModal('modal-income')" class="flex-1 text-sm font-semibold px-4 py-2.5 border border-slate-200 rounded-lg hover:bg-slate-50">Batal</button><button id="incomeSubmitButton" type="submit" class="flex-1 text-sm font-semibold px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg">Simpan Pemasukan</button></div>
     </form>
@@ -1182,8 +1183,8 @@
     <form id="crewForm" class="space-y-3">
       <input id="crewEditId" type="hidden">
       <label class="block"><span class="block text-xs font-semibold text-slate-600 mb-1">Nama karyawan</span><input id="crewNameInput" required minlength="2" maxlength="80" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm"></label>
-      <label id="crewPinField" class="block"><span class="block text-xs font-semibold text-slate-600 mb-1">PIN login Check In Crew (6 digit)</span><input id="crewPinInputDashboard" type="password" inputmode="numeric" pattern="[0-9]{6}" minlength="6" maxlength="6" autocomplete="new-password" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm"></label>
-      <p class="text-xs text-slate-500">Mengubah nama tidak mengubah PIN. Menghapus karyawan menonaktifkan login dan mempertahankan riwayat check-in.</p>
+      <label id="crewPinField" class="block"><span class="block text-xs font-semibold text-slate-600 mb-1">PIN login Check In Crew (wajib 6 digit)</span><input id="crewPinInputDashboard" type="password" inputmode="numeric" pattern="[0-9]{6}" minlength="6" maxlength="6" autocomplete="new-password" placeholder="6 digit" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm"></label>
+      <p class="text-xs text-slate-500">Tambah Crew cukup dengan nama dan PIN 6 digit. ID Crew dibuat otomatis dan dapat diganti Admin di Dashboard Check In Crew. Menghapus karyawan menonaktifkan login dan mempertahankan riwayat check-in.</p>
       <p id="crewFormStatus" class="text-sm" role="status" aria-live="polite"></p>
       <div class="flex gap-2"><button type="button" onclick="closeModal('modal-crew')" class="flex-1 border border-slate-200 rounded-lg px-4 py-2 text-sm font-semibold">Batal</button><button id="crewSaveButton" type="submit" class="flex-1 bg-brand-600 hover:bg-brand-700 text-white rounded-lg px-4 py-2 text-sm font-semibold">Simpan</button></div>
     </form>
@@ -1199,6 +1200,19 @@
       <label class="block"><span class="block text-xs font-semibold text-slate-600 mb-1">PIN Master (4 digit)</span><input id="deleteFinancePin" type="password" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" required autocomplete="off" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm"></label>
       <p id="deleteFinanceStatus" class="text-sm" role="status" aria-live="polite"></p>
       <div class="flex gap-2"><button type="button" onclick="closeModal('modal-delete-finance')" class="flex-1 border border-slate-200 rounded-lg px-4 py-2 text-sm font-semibold">Batal</button><button id="deleteFinanceButton" type="submit" class="flex-1 bg-rose-600 hover:bg-rose-700 text-white rounded-lg px-4 py-2 text-sm font-semibold">Hapus</button></div>
+    </form>
+  </div>
+</div>
+
+<div id="modal-delete-crew" class="modal-overlay fixed inset-0 bg-slate-900/50 z-50 hidden items-center justify-center p-4">
+  <div class="modal-panel bg-white rounded-xl max-w-sm w-full p-5">
+    <div class="flex items-center justify-between mb-4"><h3 class="font-bold text-lg text-slate-900">Nonaktifkan Karyawan</h3><button type="button" onclick="closeModal('modal-delete-crew')" aria-label="Tutup" class="p-1 hover:bg-slate-100 rounded-lg"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg></button></div>
+    <p id="deleteCrewDescription" class="text-sm text-slate-600"></p>
+    <form id="deleteCrewForm" class="mt-4 space-y-3">
+      <input id="deleteCrewId" type="hidden">
+      <label class="block"><span class="block text-xs font-semibold text-slate-600 mb-1">PIN Master (4 digit)</span><input id="deleteCrewPin" type="password" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" required autocomplete="off" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm" placeholder="PIN persetujuan Master"></label>
+      <p id="deleteCrewStatus" class="text-sm" role="status" aria-live="polite"></p>
+      <div class="flex gap-2"><button type="button" onclick="closeModal('modal-delete-crew')" class="flex-1 border border-slate-200 rounded-lg px-4 py-2 text-sm font-semibold">Batal</button><button id="deleteCrewButton" type="submit" class="flex-1 bg-rose-600 hover:bg-rose-700 text-white rounded-lg px-4 py-2 text-sm font-semibold">Nonaktifkan</button></div>
     </form>
   </div>
 </div>
@@ -1225,7 +1239,7 @@
       <div class="grid grid-cols-2 gap-3"><label class="block"><span class="block text-xs font-semibold text-slate-600 mb-1">Tanggal</span><input id="editExpDate" type="date" required class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm"></label><label class="block"><span class="block text-xs font-semibold text-slate-600 mb-1">Kategori</span><select id="editExpCategory" required class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm bg-white"></select></label></div>
       <label class="block"><span class="block text-xs font-semibold text-slate-600 mb-1">Properti</span><select id="editExpProperty" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm bg-white"></select></label>
       <label class="block"><span class="block text-xs font-semibold text-slate-600 mb-1">Keterangan</span><input id="editExpDescription" maxlength="240" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm"></label>
-      <div class="grid grid-cols-2 gap-3"><label class="block"><span class="block text-xs font-semibold text-slate-600 mb-1">Penerima / Vendor</span><input id="editExpPayee" maxlength="120" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm"></label><label class="block"><span class="block text-xs font-semibold text-slate-600 mb-1">Jumlah (Rp)</span><input id="editExpAmount" type="number" min="1" step="1" required class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm"></label></div>
+      <div class="grid grid-cols-2 gap-3"><label class="block"><span class="block text-xs font-semibold text-slate-600 mb-1">Penerima / Vendor</span><input id="editExpPayee" maxlength="120" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm"></label><label class="block"><span class="block text-xs font-semibold text-slate-600 mb-1">Jumlah (Rp)</span><input id="editExpAmount" type="text" inputmode="numeric" pattern="[0-9.]*" data-currency-input required class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm"></label></div>
       <label class="block"><span class="block text-xs font-semibold text-slate-600 mb-1">Frekuensi</span><select id="editExpRecurrence" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm bg-white"><option value="once">Tidak rutin / sekali</option><option value="weekly">Rutin mingguan</option><option value="monthly">Rutin bulanan</option><option value="quarterly">Rutin triwulanan</option><option value="yearly">Rutin tahunan</option></select></label>
       <div><label for="editExpProof" class="block text-xs font-semibold text-slate-600 mb-1">Ganti Foto Bukti (opsional, di bawah 100 KB)</label><input id="editExpProof" type="file" accept="image/*" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm"><p id="editExpenseProofStatus" class="text-xs text-slate-500 mt-1" role="status" aria-live="polite">Bukti yang ada tetap dipakai jika tidak memilih gambar baru.</p><img id="editExpenseProofPreview" class="hidden mt-2 max-h-40 max-w-full rounded border border-slate-200 object-contain" alt="Pratinjau bukti pengeluaran"></div>
       <label class="block"><span class="block text-xs font-semibold text-slate-600 mb-1">PIN Master untuk menyimpan perubahan</span><input id="editFinancePin" type="password" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" required autocomplete="off" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm"></label>
@@ -1400,6 +1414,7 @@ function applyDashboardSession(token, expiresIn=86400){
 
 function showDashboardApp(account){
   updateAccountDisplay(account);
+  updateStaffChatClearAccess();
   document.getElementById('userManagementPanel').hidden = account.role === 'IT';
   document.getElementById('crewManagementPanel').hidden = account.role === 'IT';
   document.getElementById('addPropertyButton').classList.toggle('hidden', account.role === 'IT');
@@ -1648,7 +1663,10 @@ async function submitCrewForm(event){
   const status = document.getElementById('crewFormStatus');
   const button = document.getElementById('crewSaveButton');
   const body = { name:document.getElementById('crewNameInput').value.trim() };
-  if(!id) body.pin = document.getElementById('crewPinInputDashboard').value.trim();
+  if(!id) {
+    body.pin = document.getElementById('crewPinInputDashboard').value.trim();
+    body.crew_code = `CR-${crypto.randomUUID().replace(/-/g, '').slice(0, 8).toUpperCase()}`;
+  }
   button.disabled = true;
   status.className = 'text-sm text-slate-500';
   status.textContent = id ? 'Menyimpan nama karyawan...' : 'Menambahkan karyawan...';
@@ -1676,13 +1694,43 @@ async function handleCrewTableAction(event){
     openCrewModal(crew.id);
     return;
   }
-  if(!window.confirm(`Nonaktifkan ${crew.name}? Nama ini tidak dapat login atau dipilih untuk gaji baru. Riwayat check-in dan transaksi lama tetap tersimpan.`)) return;
+  openCrewDeleteModal(crew);
+}
+function openCrewDeleteModal(crew){
+  document.getElementById('deleteCrewForm').reset();
+  document.getElementById('deleteCrewId').value = crew.id;
+  document.getElementById('deleteCrewDescription').textContent = `Nonaktifkan ${crew.name}? Crew tidak dapat login atau dipilih untuk gaji baru. Riwayat check-in dan transaksi lama tetap tersimpan.`;
+  document.getElementById('deleteCrewStatus').textContent = '';
+  openModal('modal-delete-crew');
+  document.getElementById('deleteCrewPin').focus();
+}
+async function submitCrewDelete(event){
+  event.preventDefault();
+  const id = document.getElementById('deleteCrewId').value;
+  const pinInput = document.getElementById('deleteCrewPin');
+  const status = document.getElementById('deleteCrewStatus');
+  const button = document.getElementById('deleteCrewButton');
+  const crew = crewMembers.find(item => item.id === id);
+  if(!crew) return closeModal('modal-delete-crew');
+  if(!/^\d{4}$/.test(pinInput.value)){
+    status.className = 'text-sm text-rose-600';
+    status.textContent = 'Masukkan PIN Master tepat 4 digit.';
+    return;
+  }
+  button.disabled = true;
+  status.className = 'text-sm text-slate-500';
+  status.textContent = 'Memverifikasi PIN Master...';
   try {
-    await dashboardApi(`/dashboard/crews/${encodeURIComponent(crew.id)}`, { method:'DELETE' });
+    await dashboardApi(`/dashboard/crews/${encodeURIComponent(crew.id)}`, { method:'DELETE', body:JSON.stringify({ pin:pinInput.value }) });
     await loadCrewMembers();
+    closeModal('modal-delete-crew');
     showToast(`${crew.name} dinonaktifkan.`);
   } catch(error) {
-    showToast(error.message || 'Karyawan gagal dinonaktifkan.');
+    pinInput.value = '';
+    status.className = 'text-sm text-rose-600';
+    status.textContent = error.message || 'Karyawan gagal dinonaktifkan.';
+  } finally {
+    button.disabled = false;
   }
 }
 
@@ -1895,6 +1943,20 @@ function persistDashboardData(options={}){
 
 /* ============== UTILS ============== */
 const fmtRp = (n) => 'Rp ' + Math.round(n).toLocaleString('id-ID');
+function parseCurrencyInput(value){
+  const digits = String(value ?? '').replace(/\D/g, '');
+  return digits ? Number(digits) : 0;
+}
+function setCurrencyInputValue(input, value){
+  const amount = parseCurrencyInput(value);
+  input.value = amount ? amount.toLocaleString('id-ID') : value === '' ? '' : '0';
+}
+function setupCurrencyInputs(root=document){
+  root.querySelectorAll('[data-currency-input]').forEach(input => {
+    setCurrencyInputValue(input, input.value);
+    input.addEventListener('input', () => setCurrencyInputValue(input, input.value));
+  });
+}
 const fmtRpShort = (n) => {
   if(n >= 1e9) return 'Rp ' + (n/1e9).toFixed(1) + 'M';
   if(n >= 1e6) return 'Rp ' + (n/1e6).toFixed(1) + 'jt';
@@ -2932,7 +2994,7 @@ async function submitFinanceEntry(kind){
     property_id:propertyId || null,
     property_name:property?.name || '',
     entry_date:document.getElementById(isIncome ? 'newIncomeDate' : 'newExpDate').value,
-    amount:Number(document.getElementById(isIncome ? 'newIncomeAmount' : 'newExpAmount').value),
+    amount:parseCurrencyInput(document.getElementById(isIncome ? 'newIncomeAmount' : 'newExpAmount').value),
     description:document.getElementById(isIncome ? 'newIncomeDescription' : 'newExpDesc').value.trim() || category?.name || '',
     payee:isIncome
       ? document.getElementById('newIncomePayee').value.trim()
@@ -3013,7 +3075,7 @@ function openExpenseEditModal(id){
   propertySelect.value = property?.id || '';
   document.getElementById('editExpDescription').value = entry.desc || '';
   document.getElementById('editExpPayee').value = entry.payee || '';
-  document.getElementById('editExpAmount').value = entry.amount;
+  setCurrencyInputValue(document.getElementById('editExpAmount'), entry.amount);
   document.getElementById('editExpRecurrence').value = entry.recurrence || 'once';
   document.getElementById('editFinancePin').value = '';
   document.getElementById('editFinanceStatus').textContent = '';
@@ -3070,7 +3132,7 @@ async function submitExpenseEdit(event){
   const property = PROPERTIES.find(item => item.id === propertyId);
   const description = document.getElementById('editExpDescription').value.trim() || category?.name || '';
   const payee = document.getElementById('editExpPayee').value.trim();
-  const amount = Number(document.getElementById('editExpAmount').value);
+  const amount = parseCurrencyInput(document.getElementById('editExpAmount').value);
   const status = document.getElementById('editFinanceStatus');
   const button = document.getElementById('editFinanceButton');
   if(!category || !Number.isSafeInteger(amount) || amount <= 0){
@@ -3904,7 +3966,7 @@ function renderShareCalculatorInputs(){
         <div class="min-w-0"><div class="text-sm font-semibold text-slate-900">${escapeHtml(property.name)}</div><div class="text-xs text-slate-500">${escapeHtml(property.code)} · ${escapeHtml(property.area)}</div></div>
         <label class="block"><span class="block text-xs text-slate-500 mb-1">Platform Fee (%)</span><input id="shareCalcFee-${escapeHtml(property.id)}" type="number" min="0" max="50" step="0.01" value="${escapeHtml(previousValues.get(`shareCalcFee-${property.id}`) ?? '0')}" class="w-full text-sm border border-slate-200 rounded-lg px-3 py-2"></label>
         <label class="block"><span class="block text-xs text-slate-500 mb-1">Nama pengurang</span><input id="shareCalcDeductionLabel-${escapeHtml(property.id)}" type="text" maxlength="60" placeholder="Contoh: dana renovasi" class="w-full text-sm border border-slate-200 rounded-lg px-3 py-2"></label>
-        <label class="block"><span class="block text-xs text-slate-500 mb-1">Pengurang (Rp)</span><input id="shareCalcDeduction-${escapeHtml(property.id)}" type="number" min="0" step="1" value="0" class="w-full text-sm border border-slate-200 rounded-lg px-3 py-2"></label>
+        <label class="block"><span class="block text-xs text-slate-500 mb-1">Pengurang (Rp)</span><input id="shareCalcDeduction-${escapeHtml(property.id)}" type="text" inputmode="numeric" pattern="[0-9.]*" data-currency-input value="0" class="w-full text-sm border border-slate-200 rounded-lg px-3 py-2"></label>
         <label class="block"><span class="block text-xs text-slate-500 mb-1">Bagian owner (%)</span><input id="shareCalcPercent-${escapeHtml(property.id)}" type="number" min="0" max="100" step="0.01" value="${Number(ownerShare)}" class="w-full text-sm border border-slate-200 rounded-lg px-3 py-2"></label>
       </div>`;
   }).join('');
@@ -3920,6 +3982,7 @@ function renderShareCalculatorInputs(){
   container.querySelectorAll('input').forEach(input => {
     if(previousValues.has(input.id)) input.value = previousValues.get(input.id);
   });
+  setupCurrencyInputs(container);
   loadSavedOwnerShareCalculation(ownerId, document.getElementById('shareCalcMonth').value);
 }
 
@@ -3942,7 +4005,7 @@ async function loadSavedOwnerShareCalculation(ownerId, month){
       const label = document.getElementById(`shareCalcDeductionLabel-${row.propertyId}`);
       if(fee) fee.value = row.platformFeePercent;
       if(percent) percent.value = row.ownerPercent;
-      if(deduction) deduction.value = row.additionalDeduction;
+      if(deduction) setCurrencyInputValue(deduction, row.additionalDeduction);
       if(label) label.value = row.additionalDeductionLabel || '';
     });
     const updated = saved.updated_at ? fmtBookingCreatedAt(saved.updated_at) : '';
@@ -4061,7 +4124,7 @@ function generateOwnerShareCalculation(){
     const deductionLabelInput = document.getElementById(`shareCalcDeductionLabel-${property.id}`);
     const platformFeePercent = Number(platformFeeInput?.value);
     const ownerPercent = Number(percentInput?.value);
-    const additionalDeduction = Number(deductionInput?.value);
+    const additionalDeduction = parseCurrencyInput(deductionInput?.value);
     if(!Number.isFinite(platformFeePercent) || platformFeePercent < 0 || platformFeePercent > 50 || !Number.isFinite(ownerPercent) || ownerPercent < 0 || ownerPercent > 100 || !Number.isFinite(additionalDeduction) || additionalDeduction < 0){
       status.className = 'px-4 sm:px-5 pb-4 text-sm text-rose-600';
       status.textContent = `Periksa persentase dan pengurang tambahan untuk ${property.name}.`;
@@ -4476,7 +4539,7 @@ function renderUsers(){
 /* ============== FORM SUBMITS ============== */
 function updateBookingExtraBedTotal(){
   const quantity = Number(document.getElementById('newBookingExtraBedQuantity').value) || 0;
-  const price = Number(document.getElementById('newBookingExtraBedPrice').value) || 0;
+  const price = parseCurrencyInput(document.getElementById('newBookingExtraBedPrice').value);
   document.getElementById('newBookingExtraBedTotal').textContent = `Total Extra Bed: ${fmtRp(quantity * price)}. Dicatat terpisah dari nilai booking.`;
 }
 
@@ -4501,12 +4564,12 @@ function openBookingModal(bookingId=''){
   document.getElementById('newBookingCheckin').value = booking?.checkin || new Date().toISOString().slice(0, 10);
   document.getElementById('newBookingCheckout').value = booking?.checkout || new Date(Date.now() + 86400000).toISOString().slice(0, 10);
   document.getElementById('newBookingExtraBedQuantity').value = booking?.extraBedQuantity ?? 0;
-  document.getElementById('newBookingExtraBedPrice').value = booking?.extraBedPrice ?? 0;
+  setCurrencyInputValue(document.getElementById('newBookingExtraBedPrice'), booking?.extraBedPrice ?? 0);
   if(booking){
     document.getElementById('newBookingProp').value = booking.propId;
     document.getElementById('newBookingPlatform').value = booking.platform;
     document.getElementById('newBookingGuest').value = booking.guest;
-    document.getElementById('newBookingAmount').value = booking.amount;
+    setCurrencyInputValue(document.getElementById('newBookingAmount'), booking.amount);
     statusSelect.value = booking.status;
     statusSelect.disabled = cancelled;
     document.getElementById('newBookingNote').value = booking.note || '';
@@ -4523,8 +4586,7 @@ function openBookingCancelModal(bookingId){
   const extraBedTotal = Number(booking.extraBedQuantity || 0) * Number(booking.extraBedPrice || 0);
   const totalPaid = Number(booking.amount) + extraBedTotal;
   document.getElementById('cancelBookingSummary').textContent = `${booking.id} · ${booking.guest} · Booking ${fmtRp(booking.amount)} · Extra Bed ${fmtRp(extraBedTotal)}`;
-  document.getElementById('cancelBookingRefund').max = totalPaid;
-  document.getElementById('cancelBookingRefund').placeholder = `Maksimal ${totalPaid}`;
+  document.getElementById('cancelBookingRefund').placeholder = `Maksimal ${totalPaid.toLocaleString('id-ID')}`;
   document.getElementById('cancelBookingStatus').textContent = '';
   openModal('modal-cancel-booking');
 }
@@ -4540,9 +4602,9 @@ async function submitBooking(){
   const guest = document.getElementById('newBookingGuest').value.trim();
   const checkin = document.getElementById('newBookingCheckin').value;
   const checkout = document.getElementById('newBookingCheckout').value;
-  const amount = Number(document.getElementById('newBookingAmount').value);
+  const amount = parseCurrencyInput(document.getElementById('newBookingAmount').value);
   const extraBedQuantity = Number(document.getElementById('newBookingExtraBedQuantity').value) || 0;
-  const extraBedPrice = Number(document.getElementById('newBookingExtraBedPrice').value) || 0;
+  const extraBedPrice = parseCurrencyInput(document.getElementById('newBookingExtraBedPrice').value);
   const platformFeePct = 0;
   const status = document.getElementById('newBookingStatus').value;
   const note = document.getElementById('newBookingNote').value.trim();
@@ -4639,7 +4701,7 @@ async function submitBookingCancellation(event){
   event.preventDefault();
   const id = document.getElementById('cancelBookingId').value;
   const reason = document.getElementById('cancelBookingReason').value.trim();
-  const refundAmount = Number(document.getElementById('cancelBookingRefund').value);
+  const refundAmount = parseCurrencyInput(document.getElementById('cancelBookingRefund').value);
   const pin = document.getElementById('cancelBookingPin').value;
   const status = document.getElementById('cancelBookingStatus');
   const button = document.getElementById('cancelBookingButton');
@@ -4694,6 +4756,31 @@ async function toggleStaffChat(){
 function isStaffChatOpen(){
   return !document.getElementById('staffChatWidget').classList.contains('hidden');
 }
+function updateStaffChatClearAccess(){
+  const allowed = ['master', 'it'].includes(currentDashboardAccount?.account_id);
+  document.getElementById('staffChatClearButton').classList.toggle('hidden', !allowed);
+}
+function staffChatReadKey(){
+  return `yourhome_staff_chat_read_${currentDashboardAccount?.account_id || 'guest'}`;
+}
+function updateStaffChatUnreadIndicator(){
+  const indicator = document.getElementById('staffChatUnreadIndicator');
+  const latestMessage = staffChatMessages.at(-1);
+  if(!latestMessage){
+    indicator.classList.add('hidden');
+    return;
+  }
+  if(isStaffChatOpen()){
+    localStorage.setItem(staffChatReadKey(), latestMessage.id);
+    indicator.classList.add('hidden');
+    return;
+  }
+  const lastReadId = localStorage.getItem(staffChatReadKey());
+  const lastReadIndex = staffChatMessages.findIndex(message => message.id === lastReadId);
+  const unreadMessages = lastReadIndex < 0 ? staffChatMessages : staffChatMessages.slice(lastReadIndex + 1);
+  const hasUnread = unreadMessages.some(message => message.sender_account_id !== currentDashboardAccount?.account_id);
+  indicator.classList.toggle('hidden', !hasUnread);
+}
 function staffChatTime(value){
   const date = new Date(value);
   return Number.isNaN(date.getTime()) ? '' : date.toLocaleString('id-ID', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' });
@@ -4706,7 +4793,17 @@ function renderStaffChat(scrollToBottom=false){
   }
   container.innerHTML = staffChatMessages.map(item => {
     const ownMessage = item.sender_account_id === currentDashboardAccount?.account_id;
-    return `<article class="flex ${ownMessage ? 'justify-end' : 'justify-start'}"><div class="max-w-[85%] sm:max-w-[70%] ${ownMessage ? 'bg-brand-600 text-white' : 'bg-white border border-slate-200 text-slate-800'} rounded-xl px-3.5 py-3 shadow-sm"><div class="flex items-center gap-2 text-[11px] ${ownMessage ? 'text-indigo-100' : 'text-slate-500'}"><strong>${escapeHtml(item.sender_name)}</strong><span>${escapeHtml(item.sender_role)}</span><span>${escapeHtml(staffChatTime(item.created_at))}</span></div><p class="mt-1.5 text-sm whitespace-pre-wrap break-words">${escapeHtml(item.message)}</p></div></article>`;
+    const role = String(item.sender_role || '').toLowerCase();
+    const roleClasses = role === 'master'
+      ? 'bg-violet-50 border border-violet-200 text-violet-950'
+      : role === 'admin'
+        ? 'bg-sky-50 border border-sky-200 text-sky-950'
+        : role === 'it'
+          ? 'bg-amber-50 border border-amber-200 text-amber-950'
+          : 'bg-white border border-slate-200 text-slate-800';
+    const bubbleClasses = ownMessage ? 'bg-brand-600 text-white' : roleClasses;
+    const metaClasses = ownMessage ? 'text-indigo-100' : role === 'master' ? 'text-violet-700' : role === 'admin' ? 'text-sky-700' : role === 'it' ? 'text-amber-700' : 'text-slate-500';
+    return `<article class="flex ${ownMessage ? 'justify-end' : 'justify-start'}"><div class="max-w-[85%] sm:max-w-[70%] ${bubbleClasses} rounded-xl px-3.5 py-3 shadow-sm"><div class="flex items-center gap-2 text-[11px] ${metaClasses}"><strong>${escapeHtml(item.sender_name)}</strong><span>${escapeHtml(item.sender_role)}</span><span>${escapeHtml(staffChatTime(item.created_at))}</span></div><p class="mt-1.5 text-sm whitespace-pre-wrap break-words">${escapeHtml(item.message)}</p></div></article>`;
   }).join('');
   if(scrollToBottom) container.scrollTop = container.scrollHeight;
 }
@@ -4716,6 +4813,7 @@ async function loadStaffChat(scrollToBottom=false){
     const result = await dashboardApi('/dashboard/staff-chat');
     staffChatMessages = Array.isArray(result.data) ? result.data : [];
     renderStaffChat(scrollToBottom);
+    updateStaffChatUnreadIndicator();
     status.textContent = '';
   } catch(error) {
     status.className = 'min-h-5 mt-2 text-xs text-rose-600';
@@ -4739,6 +4837,29 @@ async function sendStaffChat(event){
   } catch(error) {
     status.className = 'min-h-5 mt-2 text-xs text-rose-600';
     status.textContent = error.message || 'Pesan gagal dikirim.';
+  } finally {
+    button.disabled = false;
+  }
+}
+async function clearStaffChat(){
+  if(!['master', 'it'].includes(currentDashboardAccount?.account_id)) return;
+  if(!window.confirm('Hapus seluruh riwayat Chat Internal? Pesan yang dihapus tidak dapat dikembalikan.')) return;
+  const button = document.getElementById('staffChatClearButton');
+  const status = document.getElementById('staffChatStatus');
+  button.disabled = true;
+  status.className = 'min-h-4 mt-1.5 text-[11px] text-slate-500';
+  status.textContent = 'Menghapus riwayat chat...';
+  try {
+    const result = await dashboardApi('/dashboard/staff-chat', { method:'DELETE' });
+    staffChatMessages = [];
+    localStorage.removeItem(staffChatReadKey());
+    renderStaffChat();
+    updateStaffChatUnreadIndicator();
+    status.className = 'min-h-4 mt-1.5 text-[11px] text-emerald-700';
+    status.textContent = `${Number(result.data?.deleted || 0)} pesan dihapus.`;
+  } catch(error) {
+    status.className = 'min-h-4 mt-1.5 text-[11px] text-rose-600';
+    status.textContent = error.message || 'Riwayat chat gagal dihapus.';
   } finally {
     button.disabled = false;
   }
@@ -4801,6 +4922,7 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('newBookingExtraBedQuantity').addEventListener('input', updateBookingExtraBedTotal);
   document.getElementById('newBookingExtraBedPrice').addEventListener('input', updateBookingExtraBedTotal);
   document.getElementById('deleteFinanceForm').addEventListener('submit', submitFinanceDelete);
+  document.getElementById('deleteCrewForm').addEventListener('submit', submitCrewDelete);
   document.getElementById('deleteOwnerShareFinalForm').addEventListener('submit', deleteReportOwnerShareFinal);
   document.getElementById('deletePropertyForm').addEventListener('submit', submitPropertyDelete);
   document.getElementById('shareCalcPropertyInputs').addEventListener('input', handleShareCalculationInputChange);
@@ -4808,6 +4930,7 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('editExpProof').addEventListener('change', handleEditExpenseProofSelection);
   document.getElementById('cancelBookingForm').addEventListener('submit', submitBookingCancellation);
   setupPasswordToggles();
+  setupCurrencyInputs();
   document.getElementById('contactItForm').addEventListener('submit', submitContactMessage);
   const staffChatForm = document.getElementById('staffChatForm');
   const staffChatMessage = document.getElementById('staffChatMessage');
@@ -4876,7 +4999,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }, 30000);
   setInterval(() => {
-    if(currentDashboardAccount && !document.hidden && isStaffChatOpen()) loadStaffChat();
+    if(currentDashboardAccount && !document.hidden) loadStaffChat();
   }, 4000);
 });
 

@@ -412,7 +412,10 @@
         </div>
         <p id="crewDocumentationStatus" class="text-sm text-gray-500 mb-3" role="status" aria-live="polite"></p>
         <div id="crewDocumentationList" class="space-y-3"></div>
-        <button id="loadMoreCrewDocumentationBtn" type="button" class="hidden w-full mt-4 rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm font-semibold text-gray-700 hover:bg-gray-100">Muat dokumentasi berikutnya</button>
+        <div class="mt-4 flex gap-3">
+          <button id="previousCrewDocumentationBtn" type="button" class="flex-1 rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm font-semibold text-gray-700 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50" disabled>Sebelumnya</button>
+          <button id="nextCrewDocumentationBtn" type="button" class="flex-1 rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm font-semibold text-gray-700 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50" disabled>Berikutnya</button>
+        </div>
       </div>
     </section>
   </section>
@@ -477,7 +480,7 @@
   let crewDocumentationHasMore = false;
   let crewDocumentationLoading = false;
   let crewDocumentationRequestId = 0;
-  const CREW_DOCUMENTATION_PAGE_SIZE = 20;
+  const CREW_DOCUMENTATION_PAGE_SIZE = 10;
 
   /* ============================================================
      DATA: Cloudflare Worker API
@@ -572,24 +575,22 @@
     return recordsFromResponse(response);
   }
 
-  async function loadCrewDocumentation({ reset = true } = {}) {
-    if (!state.currentCrew || (crewDocumentationLoading && !reset)) return;
-    const requestId = reset ? ++crewDocumentationRequestId : crewDocumentationRequestId;
+  async function loadCrewDocumentation({ offset = 0 } = {}) {
+    if (!state.currentCrew || crewDocumentationLoading) return;
+    const requestId = ++crewDocumentationRequestId;
     const status = document.getElementById('crewDocumentationStatus');
     const list = document.getElementById('crewDocumentationList');
-    const loadMoreButton = document.getElementById('loadMoreCrewDocumentationBtn');
+    const previousButton = document.getElementById('previousCrewDocumentationBtn');
+    const nextButton = document.getElementById('nextCrewDocumentationBtn');
     const month = document.getElementById('crewDocumentationMonth').value;
     const property = document.getElementById('crewDocumentationProperty').value;
-    if (reset) {
-      crewDocumentationOffset = 0;
-      crewDocumentationHasMore = false;
-      list.replaceChildren();
-    }
+    const pageOffset = Math.max(0, Number(offset) || 0);
     crewDocumentationLoading = true;
     status.textContent = 'Memuat dokumentasi...';
-    loadMoreButton.disabled = true;
+    previousButton.disabled = true;
+    nextButton.disabled = true;
     try {
-      const params = new URLSearchParams({ limit:String(CREW_DOCUMENTATION_PAGE_SIZE), offset:String(crewDocumentationOffset) });
+      const params = new URLSearchParams({ limit:String(CREW_DOCUMENTATION_PAGE_SIZE), offset:String(pageOffset) });
       if (month) params.set('month', month);
       if (property) params.set('property', property);
       const result = await api(`/crew/checkins?${params.toString()}`, { cache:'no-store' });
@@ -597,22 +598,24 @@
       const records = recordsFromResponse(result);
       const fragment = document.createDocumentFragment();
       records.forEach(record => fragment.appendChild(renderCrewDocumentationCard(record)));
-      list.appendChild(fragment);
+      list.replaceChildren(fragment);
       const pagination = result.pagination || {};
-      crewDocumentationOffset = Number(pagination.next_offset ?? (crewDocumentationOffset + records.length));
+      crewDocumentationOffset = pageOffset;
       crewDocumentationHasMore = Boolean(pagination.has_more);
-      loadMoreButton.classList.toggle('hidden', !crewDocumentationHasMore);
-      const count = list.children.length;
-      status.textContent = count ? `${count} dokumentasi dimuat${crewDocumentationHasMore ? '. Muat berikutnya untuk melihat sisanya.' : ' · Semua hasil periode ini ditampilkan.'}` : 'Belum ada dokumentasi untuk filter ini.';
-      document.getElementById('crewDocumentationSummary').textContent = `${count} dokumentasi · hanya terlihat oleh ${state.currentCrew}.`;
+      previousButton.disabled = crewDocumentationOffset === 0;
+      nextButton.disabled = !crewDocumentationHasMore;
+      const count = records.length;
+      const page = Math.floor(crewDocumentationOffset / CREW_DOCUMENTATION_PAGE_SIZE) + 1;
+      status.textContent = count ? `${count} dokumentasi pada halaman ${page}.` : 'Belum ada dokumentasi untuk filter ini.';
+      document.getElementById('crewDocumentationSummary').textContent = `${count} dokumentasi pada halaman ${page} · hanya terlihat oleh ${state.currentCrew}.`;
     } catch (error) {
       if (requestId !== crewDocumentationRequestId) return;
       status.textContent = error.message || 'Dokumentasi gagal dimuat.';
-      if (reset) list.replaceChildren();
     } finally {
       if (requestId === crewDocumentationRequestId) {
         crewDocumentationLoading = false;
-        loadMoreButton.disabled = false;
+        previousButton.disabled = crewDocumentationOffset === 0;
+        nextButton.disabled = !crewDocumentationHasMore;
       }
     }
   }
@@ -644,7 +647,7 @@
     documentationTab.setAttribute('aria-selected', String(showDocumentation));
     checkinTab.className = `flex-1 rounded-xl px-4 py-3 text-sm font-semibold ${showDocumentation ? 'bg-white border border-gray-200 text-gray-700' : 'bg-brand-600 text-white'}`;
     documentationTab.className = `flex-1 rounded-xl px-4 py-3 text-sm font-semibold ${showDocumentation ? 'bg-brand-600 text-white' : 'bg-white border border-gray-200 text-gray-700'}`;
-    if (showDocumentation) loadCrewDocumentation({ reset:true });
+    if (showDocumentation) loadCrewDocumentation();
   }
 
   async function loadCheckinProperties({ silent = false } = {}) {
@@ -963,10 +966,11 @@
     document.getElementById('refreshPropertiesBtn').addEventListener('click', () => loadCheckinProperties());
     document.getElementById('crewCheckinTab').addEventListener('click', () => switchCrewView('checkin'));
     document.getElementById('crewDocumentationTab').addEventListener('click', () => switchCrewView('documentation'));
-    document.getElementById('refreshCrewDocumentationBtn').addEventListener('click', () => loadCrewDocumentation({ reset:true }));
-    document.getElementById('loadMoreCrewDocumentationBtn').addEventListener('click', () => loadCrewDocumentation({ reset:false }));
-    document.getElementById('crewDocumentationMonth').addEventListener('change', () => loadCrewDocumentation({ reset:true }));
-    document.getElementById('crewDocumentationProperty').addEventListener('change', () => loadCrewDocumentation({ reset:true }));
+    document.getElementById('refreshCrewDocumentationBtn').addEventListener('click', () => loadCrewDocumentation());
+    document.getElementById('previousCrewDocumentationBtn').addEventListener('click', () => loadCrewDocumentation({ offset:crewDocumentationOffset - CREW_DOCUMENTATION_PAGE_SIZE }));
+    document.getElementById('nextCrewDocumentationBtn').addEventListener('click', () => loadCrewDocumentation({ offset:crewDocumentationOffset + CREW_DOCUMENTATION_PAGE_SIZE }));
+    document.getElementById('crewDocumentationMonth').addEventListener('change', () => loadCrewDocumentation());
+    document.getElementById('crewDocumentationProperty').addEventListener('change', () => loadCrewDocumentation());
     window.addEventListener('online', flushQueue);
     window.addEventListener('focus', () => {
       if (state.currentCrew) loadCheckinProperties({ silent:true });

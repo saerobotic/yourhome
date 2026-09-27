@@ -1415,6 +1415,26 @@ export default {
           }
         }
 
+        if (request.method === 'DELETE') {
+          if (!['master', 'it'].includes(tokenData.account_id)) {
+            return bad('Hanya Master atau IT yang dapat menghapus riwayat Chat.', 403);
+          }
+          const account = await env.DB.prepare(`
+            SELECT account_id FROM dashboard_users
+            WHERE account_id = ? AND active = 1
+          `).bind(tokenData.account_id).first();
+          if (!account) return bad('Akun Dashboard tidak aktif.', 401);
+          try {
+            const deleted = await env.DB.prepare('DELETE FROM dashboard_staff_chat_messages').run();
+            return json({ ok:true, data:{ deleted:Number(deleted.meta?.changes || 0) } });
+          } catch (error) {
+            if (/no such table: dashboard_staff_chat_messages/i.test(String(error?.message || error))) {
+              return bad('Ruang Chat belum disiapkan. Jalankan migration-dashboard-staff-chat.sql di D1.', 503);
+            }
+            throw error;
+          }
+        }
+
         return bad('Metode Chat tidak didukung.', 405);
       }
 
@@ -1447,25 +1467,27 @@ export default {
           const name = String(body.name || '').trim().replace(/\s+/g, ' ');
           const crewCode = String(body.crew_code || '').trim().toUpperCase();
           const pin = String(body.pin || '').trim();
-          if (name.length < 2 || name.length > 80 || !/^[A-Z0-9_-]{3,20}$/.test(crewCode) || !/^\d{6}$/.test(pin)) {
-            return bad('Nama, ID Crew (3–20 karakter), dan PIN login tepat 6 digit wajib diisi.');
+          if (name.length < 2 || name.length > 80 || (crewCode && !/^[A-Z0-9_-]{3,20}$/.test(crewCode)) || !/^\d{6}$/.test(pin)) {
+            return bad('Nama dan PIN login tepat 6 digit wajib diisi. ID Crew opsional dan akan dibuat otomatis bila dikosongkan.');
           }
           const [existingName, existingCode] = await Promise.all([
-            env.DB.prepare('SELECT id, active FROM crews WHERE name = ? COLLATE NOCASE').bind(name).first(),
-            env.DB.prepare('SELECT id FROM crews WHERE crew_code = ? COLLATE NOCASE').bind(crewCode).first(),
+            env.DB.prepare('SELECT id, crew_code, active FROM crews WHERE name = ? COLLATE NOCASE').bind(name).first(),
+            crewCode ? env.DB.prepare('SELECT id FROM crews WHERE crew_code = ? COLLATE NOCASE').bind(crewCode).first() : Promise.resolve(null),
           ]);
           if (existingCode && existingCode.id !== existingName?.id) return bad('ID Crew tersebut sudah digunakan.', 409);
           if (existingName?.active) return bad('Nama crew tersebut sudah terdaftar.', 409);
           const pinHash = await sha256Hex(pin);
           if (existingName) {
+            const restoredCrewCode = crewCode || existingName.crew_code;
             await env.DB.prepare('UPDATE crews SET crew_code = ?, name = ?, pin_hash = ?, active = 1 WHERE id = ?')
-              .bind(crewCode, name, pinHash, existingName.id).run();
-            return json({ ok:true, data:{ id:existingName.id, crew_code:crewCode, name, active:1 } });
+              .bind(restoredCrewCode, name, pinHash, existingName.id).run();
+            return json({ ok:true, data:{ id:existingName.id, crew_code:restoredCrewCode, name, active:1 } });
           }
           const id = crypto.randomUUID();
+          const generatedCrewCode = crewCode || `CR-${id.replace(/-/g, '').slice(0, 8).toUpperCase()}`;
           await env.DB.prepare('INSERT INTO crews (id, crew_code, name, pin_hash, active) VALUES (?, ?, ?, ?, 1)')
-            .bind(id, crewCode, name, pinHash).run();
-          return json({ ok:true, data:{ id, crew_code:crewCode, name, active:1 } }, 201);
+            .bind(id, generatedCrewCode, name, pinHash).run();
+          return json({ ok:true, data:{ id, crew_code:generatedCrewCode, name, active:1 } }, 201);
         }
       }
 
@@ -1482,6 +1504,17 @@ export default {
         if (!crew) return bad('Karyawan tidak ditemukan.', 404);
 
         if (request.method === 'DELETE') {
+          let body = {};
+          try { body = await request.json(); } catch {}
+          const pin = String(body.pin || '').trim();
+          if (!/^\d{4}$/.test(pin)) return bad('Masukkan PIN Master tepat 4 digit.', 400);
+          const master = await env.DB.prepare(`
+            SELECT delete_pin_salt, delete_pin_hash FROM dashboard_users
+            WHERE account_id = 'master' AND active = 1
+          `).first();
+          if (!master?.delete_pin_hash) return bad('PIN Master belum diinisialisasi. Login sebagai Master terlebih dahulu.', 409);
+          const attemptedHash = await hashDashboardPassword(pin, master.delete_pin_salt);
+          if (!constantTimeEqual(attemptedHash, master.delete_pin_hash)) return bad('PIN Master salah.', 403);
           await env.DB.prepare('UPDATE crews SET active = 0 WHERE id = ?').bind(id).run();
           return json({ ok:true, data:{ id, active:0 } });
         }
