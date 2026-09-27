@@ -243,6 +243,7 @@
         </table>
         <div class="empty" id="monthlyMatrixEmpty"><strong>Belum ada rekap bulanan</strong><span>Data rekap crew akan muncul setelah ada absensi pada bulan yang dipilih.</span></div>
       </div>
+      <div class="pagination" id="monthlyMatrixPagination" aria-label="Navigasi rekap bulanan"></div>
     </section>
 
     <section class="panel records" id="pinManagementPanel">
@@ -354,7 +355,7 @@
       sessionStorage.removeItem('dashboard_admin_token');
       sessionStorage.removeItem('dashboard_admin_login_date');
     }
-    const state = { records: [], filtered: [], salaryMap: {}, honorMap: {}, historyPage: 1, adminToken: sessionStorage.getItem('dashboard_admin_token') || '' };
+    const state = { records: [], filtered: [], salaryMap: {}, honorMap: {}, historyPage: 1, matrixPage: 1, adminToken: sessionStorage.getItem('dashboard_admin_token') || '' };
     let refreshInProgress = false;
     let detailRecord = null;
     let manualEntryMode = false;
@@ -528,6 +529,7 @@
       ).sort((a,b) => new Date(b.timestamp || `${b.date}T00:00:00`) - new Date(a.timestamp || `${a.date}T00:00:00`));
       renderSummary();
       state.historyPage = 1;
+      state.matrixPage = 1;
       renderRows();
       renderSlipGaji();
     }
@@ -605,6 +607,7 @@
       const head = el('monthlyMatrixHead');
       const body = el('monthlyMatrixBody');
       const empty = el('monthlyMatrixEmpty');
+      const pagination = el('monthlyMatrixPagination');
       const monthRecords = state.records.filter(record => record.date && record.date.slice(0,7) === month);
       const crews = [...new Set(monthRecords.map(record => record.crew).filter(Boolean))].sort((a,b) => a.localeCompare(b, 'id'));
       const properties = [...new Set(monthRecords.map(record => record.unit).filter(Boolean))].sort((a,b) => a.localeCompare(b, 'id'));
@@ -613,6 +616,7 @@
       if (!crews.length) {
         head.innerHTML = '';
         body.innerHTML = '';
+        pagination.innerHTML = '';
         empty.style.display = 'block';
         return;
       }
@@ -624,12 +628,23 @@
         values[crew] = Object.fromEntries(recaps[crew].list.map(item => [item.unit, item.honor]));
       });
       head.innerHTML = `<tr><th>Properti / Rekap</th>${crews.map(crew => `<th>${escapeHtml(crew)}</th>`).join('')}</tr>`;
-      const propertyRows = properties.map(property => `<tr><td class="matrix-label">${escapeHtml(property)}</td>${crews.map(crew => `<td class="matrix-number">${values[crew][property] ? formatRupiah(values[crew][property]) : '-'}</td>`).join('')}</tr>`).join('');
+      const totalPages = Math.ceil(properties.length / PAGE_SIZE);
+      state.matrixPage = Math.max(1, Math.min(state.matrixPage, totalPages || 1));
+      const pageStart = (state.matrixPage - 1) * PAGE_SIZE;
+      const pageProperties = properties.slice(pageStart, pageStart + PAGE_SIZE);
+      const propertyRows = pageProperties.map(property => `<tr><td class="matrix-label">${escapeHtml(property)}</td>${crews.map(crew => `<td class="matrix-number">${values[crew][property] ? formatRupiah(values[crew][property]) : '-'}</td>`).join('')}</tr>`).join('');
       const totalRow = `<tr class="matrix-total"><td class="matrix-label">TOTAL HONOR</td>${crews.map(crew => `<td class="matrix-number">${formatRupiah(recaps[crew].totalHonor)}</td>`).join('')}</tr>`;
       const workDaysRow = `<tr><td class="matrix-label">HARI CHECK IN</td>${crews.map(crew => `<td class="matrix-number">${recaps[crew].totalDays}</td>`).join('')}</tr>`;
       const absenceRow = `<tr class="matrix-absence"><td class="matrix-label">ABSEN</td>${crews.map(crew => `<td class="matrix-number">${Math.max(0, daysInMonth(month) - recaps[crew].totalDays)}</td>`).join('')}</tr>`;
       const paidRow = `<tr class="matrix-paid"><td class="matrix-label">GAJI DIBAYAR</td>${crews.map(crew => `<td class="matrix-number">${formatRupiah(recaps[crew].totalDays * DAILY_SALARY)}</td>`).join('')}</tr>`;
       body.innerHTML = propertyRows + totalRow + workDaysRow + absenceRow + paidRow;
+      if (totalPages > 1) {
+        pagination.innerHTML = `<button type="button" data-matrix-page="prev" ${state.matrixPage === 1 ? 'disabled' : ''}>Sebelumnya</button><span>Halaman ${state.matrixPage} dari ${totalPages}</span><button type="button" data-matrix-page="next" ${state.matrixPage === totalPages ? 'disabled' : ''}>Berikutnya</button>`;
+        pagination.querySelector('[data-matrix-page="prev"]').addEventListener('click', () => { state.matrixPage -= 1; renderMonthlyMatrix(month); });
+        pagination.querySelector('[data-matrix-page="next"]').addEventListener('click', () => { state.matrixPage += 1; renderMonthlyMatrix(month); });
+      } else {
+        pagination.innerHTML = '';
+      }
     }
     function renderSlipGaji() {
       const body = el('slipBody');

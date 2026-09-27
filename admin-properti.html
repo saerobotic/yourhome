@@ -243,10 +243,13 @@
       if (Array.isArray(value)) return value;
       try { const parsed = JSON.parse(value || '[]'); return Array.isArray(parsed) ? parsed : []; } catch { return []; }
     }
+    function confirmRemoval(item) {
+      return window.confirm(`Yakin hapus ${item}?`);
+    }
     function renderRoomOptions() {
       el('roomOptionList').innerHTML = state.roomOptions.length ? state.roomOptions.map((room, index) => `<div class="room-option-row"><input data-room-name="${index}" value="${escapeHtml(room.name || '')}" placeholder="Nama kamar" /><input data-room-price="${index}" type="text" inputmode="numeric" pattern="[0-9.]*" data-currency-input value="${Number(room.price || 0)}" placeholder="Harga/bulan" /><textarea data-room-details="${index}" placeholder="Detail kamar">${escapeHtml(room.details || '')}</textarea><button class="button danger" data-remove-room="${index}" type="button">Hapus</button></div>`).join('') : '<div class="room-option-empty">Belum ada pilihan kamar.</div>';
       setupCurrencyInputs(el('roomOptionList'));
-      el('roomOptionList').querySelectorAll('[data-remove-room]').forEach(button => button.addEventListener('click', () => { syncRoomOptions(); state.roomOptions.splice(Number(button.dataset.removeRoom), 1); renderRoomOptions(); }));
+      el('roomOptionList').querySelectorAll('[data-remove-room]').forEach(button => button.addEventListener('click', () => { if (!confirmRemoval('opsi kamar ini')) return; syncRoomOptions(); state.roomOptions.splice(Number(button.dataset.removeRoom), 1); renderRoomOptions(); }));
     }
     function syncRoomOptions() {
       state.roomOptions = state.roomOptions.map((room, index) => ({
@@ -322,6 +325,7 @@
         : '<span class="hint">Belum ada foto utama.</span>';
       const removeButton = el('removeMainImage');
       if (removeButton) removeButton.addEventListener('click', () => {
+        if (!confirmRemoval('foto utama ini')) return;
         state.mainImageUrl = '';
         state.mainImageFile = null;
         if (state.mainImagePreview) URL.revokeObjectURL(state.mainImagePreview);
@@ -369,11 +373,13 @@
         });
       });
       el('propertyGallery').querySelectorAll('[data-remove-gallery]').forEach(button => button.addEventListener('click', () => {
+        if (!confirmRemoval('foto galeri ini')) return;
         state.galleryChanged = true;
         state.galleryUrls.splice(Number(button.dataset.removeGallery), 1);
         renderGallery();
       }));
       el('propertyGallery').querySelectorAll('[data-remove-new-gallery]').forEach(button => button.addEventListener('click', () => {
+        if (!confirmRemoval('foto baru ini')) return;
         state.galleryChanged = true;
         const index = Number(button.dataset.removeNewGallery);
         URL.revokeObjectURL(state.newImagePreviews[index]);

@@ -28,6 +28,8 @@ Setelah itu jalankan `migration-dashboard-it-account.sql` satu kali pada D1. Mig
 
 Lalu jalankan `migration-dashboard-delete-pin.sql` satu kali. Migrasi ini menambah kolom hash PIN penghapusan ke akun dashboard.
 
+Untuk membuat lebih dari satu akun Admin, jalankan `migration-dashboard-multi-admin.sql` satu kali setelah migration akun IT dan PIN delete. Setelah Worker serta Dashboard terbaru dipublikasikan, Master membuka **Dashboard → Pengaturan → Tambah Admin**, menentukan nama awal dan password awal minimal 12 karakter. Worker membuat ID login otomatis (`admin-1`, `admin-2`, dan seterusnya); Admin dapat mengganti nama, email, dan passwordnya sendiri melalui **Profil Akun**.
+
 Setelah migration finance, jalankan `migration-dashboard-bookings.sql` satu kali. Migrasi ini menyiapkan penyimpanan booking dan kategori finance untuk pemasukan booking serta refund pembatalan.
 
 Jalankan `migration-dashboard-extra-bed.sql` satu kali setelah migration booking agar jumlah dan harga Extra Bed tersimpan di D1. Jalankan `migration-finance-proof.sql` satu kali setelah migration finance agar URL foto bukti pengeluaran tersimpan pada transaksi.

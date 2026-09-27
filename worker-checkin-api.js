@@ -507,6 +507,14 @@ function constantTimeEqual(left, right) {
   return difference === 0;
 }
 
+function hasDashboardRole(tokenData) {
+  return ['Master', 'Admin', 'IT'].includes(tokenData?.role);
+}
+
+function hasManagementRole(tokenData) {
+  return ['Master', 'Admin'].includes(tokenData?.role);
+}
+
 async function getAdminTokenPayload(request, secret) {
   if (!secret) return null;
   const authorization = request.headers.get('Authorization') || '';
@@ -1242,7 +1250,7 @@ export default {
         const body = await request.json();
         const accountId = String(body.account_id || '');
         const password = String(body.password || '');
-        if (!['master', 'admin', 'it'].includes(accountId) || !password || password.length > 256) {
+        if (!/^(master|it|admin(?:-\d+)?)$/.test(accountId) || !password || password.length > 256) {
           return bad('Pilih akun dan masukkan password yang valid.');
         }
 
@@ -1269,6 +1277,7 @@ export default {
 
         if (!account.password_hash) {
           const passwordSecret = { master:'MASTER_INITIAL_PASSWORD', admin:'ADMIN_INITIAL_PASSWORD', it:'IT_INITIAL_PASSWORD' }[accountId];
+          if (!passwordSecret) return bad('Password akun belum diinisialisasi.', 409);
           const bootstrapPassword = String(env[passwordSecret] || '');
           if (bootstrapPassword.length < 12) {
             return bad(`Password awal ${account.role} belum diatur sebagai Cloudflare Worker secret (minimal 12 karakter).`, 503);
@@ -1311,7 +1320,7 @@ export default {
       if (path === '/dashboard/profile') {
         const adminSecret = String(env.ADMIN_DASHBOARD_SECRET || '').trim();
         const tokenData = await getAdminTokenPayload(request, adminSecret);
-        if (!tokenData?.account_id || !['master', 'admin', 'it'].includes(tokenData.account_id)) {
+        if (!tokenData?.account_id || !hasDashboardRole(tokenData)) {
           return bad('Sesi dashboard tidak valid. Silakan login kembali.', 401);
         }
 
@@ -1341,11 +1350,39 @@ export default {
         }
       }
 
-      if (request.method === 'GET' && path === '/dashboard/accounts') {
+      if (path === '/dashboard/accounts') {
         const adminSecret = String(env.ADMIN_DASHBOARD_SECRET || '').trim();
         const tokenData = await getAdminTokenPayload(request, adminSecret);
-        if (!tokenData?.account_id) return bad('Login admin diperlukan', 401);
-        if (tokenData.account_id === 'it') {
+        if (!tokenData?.account_id || !hasDashboardRole(tokenData)) return bad('Login admin diperlukan', 401);
+
+        if (request.method === 'POST') {
+          if (tokenData.account_id !== 'master' || tokenData.role !== 'Master') return bad('Hanya Master yang dapat menambah Admin.', 403);
+          const body = await request.json();
+          const displayName = String(body.display_name || '').trim().replace(/\s+/g, ' ');
+          const email = String(body.email || '').trim();
+          const password = String(body.password || '');
+          if (displayName.length < 2 || displayName.length > 80) return bad('Nama Admin wajib 2 sampai 80 karakter.');
+          if (email.length > 160 || (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))) return bad('Format email tidak valid.');
+          if (password.length < 12 || password.length > 256) return bad('Password awal Admin wajib 12 sampai 256 karakter.');
+          const existing = await env.DB.prepare("SELECT account_id FROM dashboard_users WHERE account_id GLOB 'admin-[0-9]*'").all();
+          const usedNumbers = new Set((existing.results || []).map(row => Number(String(row.account_id).slice(6))).filter(Number.isSafeInteger));
+          let number = 1;
+          while (usedNumbers.has(number)) number += 1;
+          const accountId = `admin-${number}`;
+          const salt = bytesToHex(crypto.getRandomValues(new Uint8Array(16)));
+          const passwordHash = await hashDashboardPassword(password, salt);
+          const now = new Date().toISOString();
+          await env.DB.prepare(`
+            INSERT INTO dashboard_users (
+              account_id, display_name, email, role, password_salt, password_hash, active,
+              created_at, updated_at, delete_pin_salt, delete_pin_hash, delete_pin_must_change
+            ) VALUES (?, ?, ?, 'Admin', ?, ?, 1, ?, ?, '', '', 0)
+          `).bind(accountId, displayName, email, salt, passwordHash, now, now).run();
+          return json({ ok:true, data:{ account_id:accountId, display_name:displayName, email, role:'Admin', active:1 } }, 201);
+        }
+
+        if (request.method !== 'GET') return bad('Metode akun tidak didukung.', 405);
+        if (tokenData.role === 'IT') {
           const account = await env.DB.prepare(`
             SELECT account_id, display_name, email, role, active FROM dashboard_users
             WHERE account_id = 'it' AND active = 1
@@ -1362,7 +1399,7 @@ export default {
       if (path === '/dashboard/staff-chat') {
         const adminSecret = String(env.ADMIN_DASHBOARD_SECRET || '').trim();
         const tokenData = await getAdminTokenPayload(request, adminSecret);
-        if (!tokenData?.account_id || !['master', 'admin', 'it'].includes(tokenData.account_id)) {
+        if (!tokenData?.account_id || !hasDashboardRole(tokenData)) {
           return bad('Login Dashboard diperlukan.', 401);
         }
 
@@ -1441,7 +1478,7 @@ export default {
       if (path === '/dashboard/crews') {
         const adminSecret = String(env.ADMIN_DASHBOARD_SECRET || '').trim();
         const tokenData = await getAdminTokenPayload(request, adminSecret);
-        const dashboardAccount = ['master', 'admin', 'it'].includes(tokenData?.account_id);
+        const dashboardAccount = hasDashboardRole(tokenData);
         const legacyAdmin = Boolean(tokenData && !tokenData.account_id && !tokenData.role);
         if (!dashboardAccount && !legacyAdmin) {
           return bad('Login dashboard diperlukan', 401);
@@ -1458,7 +1495,7 @@ export default {
           return json({ ok:true, data:result.results || [] });
         }
 
-        if (tokenData.account_id === 'it' || (dashboardAccount && (!['master', 'admin'].includes(tokenData.account_id) || !['Master', 'Admin'].includes(tokenData.role)))) {
+        if (dashboardAccount && !hasManagementRole(tokenData)) {
           return bad('Hanya Master atau Admin yang dapat mengelola karyawan.', 403);
         }
 
@@ -1496,7 +1533,7 @@ export default {
         const adminSecret = String(env.ADMIN_DASHBOARD_SECRET || '').trim();
         const tokenData = await getAdminTokenPayload(request, adminSecret);
         const legacyAdmin = Boolean(tokenData && !tokenData.account_id && !tokenData.role);
-        if (!legacyAdmin && (!['master', 'admin'].includes(tokenData?.account_id) || !['Master', 'Admin'].includes(tokenData?.role))) {
+        if (!legacyAdmin && !hasManagementRole(tokenData)) {
           return bad('Hanya Master atau Admin yang dapat mengelola karyawan.', 403);
         }
         const id = decodeURIComponent(dashboardCrewMatch[1]);
@@ -1543,7 +1580,7 @@ export default {
       if (request.method === 'POST' && path === '/dashboard/password') {
         const adminSecret = String(env.ADMIN_DASHBOARD_SECRET || '').trim();
         const tokenData = await getAdminTokenPayload(request, adminSecret);
-        if (!tokenData?.account_id || !['master', 'admin', 'it'].includes(tokenData.account_id)) {
+        if (!tokenData?.account_id || !hasDashboardRole(tokenData)) {
           return bad('Sesi dashboard tidak valid. Silakan login kembali.', 401);
         }
         const body = await request.json();
@@ -1568,7 +1605,7 @@ export default {
       if (path === '/dashboard/management-data') {
         const adminSecret = String(env.ADMIN_DASHBOARD_SECRET || '').trim();
         const tokenData = await getAdminTokenPayload(request, adminSecret);
-        if (!['master', 'admin', 'it'].includes(tokenData?.account_id)) {
+        if (!hasDashboardRole(tokenData)) {
           return bad('Login dashboard diperlukan.', 401);
         }
 
@@ -1634,7 +1671,7 @@ export default {
         }
 
         if (request.method === 'PUT') {
-          if (!['master', 'admin'].includes(tokenData.account_id) || !['Master', 'Admin'].includes(tokenData.role)) {
+          if (!hasManagementRole(tokenData)) {
             return bad('Hanya Master atau Admin yang dapat menyimpan Owner dan properti.', 403);
           }
           const body = await request.json();
@@ -1740,7 +1777,7 @@ export default {
       if (request.method === 'POST' && dashboardPropertyAction) {
         const adminSecret = String(env.ADMIN_DASHBOARD_SECRET || '').trim();
         const tokenData = await getAdminTokenPayload(request, adminSecret);
-        if (!['master', 'admin'].includes(tokenData?.account_id) || !['Master', 'Admin'].includes(tokenData?.role)) {
+        if (!hasManagementRole(tokenData)) {
           return bad('Hanya Master atau Admin yang dapat mengelola status properti.', 403);
         }
         const dashboardId = decodeURIComponent(dashboardPropertyAction[1]);
@@ -1798,7 +1835,7 @@ export default {
       if (path === '/dashboard/owner-share-calculations') {
         const adminSecret = String(env.ADMIN_DASHBOARD_SECRET || '').trim();
         const tokenData = await getAdminTokenPayload(request, adminSecret);
-        if (!['master', 'admin'].includes(tokenData?.account_id) || !['Master', 'Admin'].includes(tokenData?.role)) {
+        if (!hasManagementRole(tokenData)) {
           return bad('Hanya Master atau Admin yang dapat mengelola laporan bagi hasil.', 403);
         }
 
@@ -1969,7 +2006,7 @@ export default {
       if (request.method === 'POST' && path === '/dashboard/verify-delete-pin') {
         const adminSecret = String(env.ADMIN_DASHBOARD_SECRET || '').trim();
         const tokenData = await getAdminTokenPayload(request, adminSecret);
-        if (!['master', 'admin'].includes(tokenData?.account_id) || !['Master', 'Admin'].includes(tokenData?.role)) {
+        if (!hasManagementRole(tokenData)) {
           return bad('Hanya Master atau Admin yang dapat meminta persetujuan PIN Master.', 403);
         }
         const body = await request.json();
@@ -1989,7 +2026,7 @@ export default {
       if (request.method === 'GET' && path === '/dashboard/bookings') {
         const adminSecret = String(env.ADMIN_DASHBOARD_SECRET || '').trim();
         const tokenData = await getAdminTokenPayload(request, adminSecret);
-        if (!tokenData?.account_id || !['master', 'admin', 'it'].includes(tokenData.account_id)) return bad('Login dashboard diperlukan', 401);
+        if (!tokenData?.account_id || !hasDashboardRole(tokenData)) return bad('Login dashboard diperlukan', 401);
         const result = await env.DB.prepare('SELECT * FROM dashboard_bookings ORDER BY checkin DESC, created_at DESC').all();
         return json({ ok:true, data:(result.results || []).map(row => ({
           id:row.id, propId:row.property_id, propName:row.property_name, propCode:row.property_code,
@@ -2005,7 +2042,7 @@ export default {
       if (request.method === 'POST' && path === '/dashboard/bookings') {
         const adminSecret = String(env.ADMIN_DASHBOARD_SECRET || '').trim();
         const tokenData = await getAdminTokenPayload(request, adminSecret);
-        if (!['master', 'admin'].includes(tokenData?.account_id) || !['Master', 'Admin'].includes(tokenData?.role)) return bad('Hanya Master atau Admin yang dapat mengelola booking.', 403);
+        if (!hasManagementRole(tokenData)) return bad('Hanya Master atau Admin yang dapat mengelola booking.', 403);
         const body = await request.json();
         const id = String(body.id || `BK${crypto.randomUUID().replace(/-/g, '').slice(0, 12)}`).trim();
         const propertyId = String(body.propId || '').trim();
@@ -2073,7 +2110,7 @@ export default {
       if (request.method === 'PATCH' && dashboardBookingMatch) {
         const adminSecret = String(env.ADMIN_DASHBOARD_SECRET || '').trim();
         const tokenData = await getAdminTokenPayload(request, adminSecret);
-        if (!['master', 'admin'].includes(tokenData?.account_id) || !['Master', 'Admin'].includes(tokenData?.role)) return bad('Hanya Master atau Admin yang dapat mengelola booking.', 403);
+        if (!hasManagementRole(tokenData)) return bad('Hanya Master atau Admin yang dapat mengelola booking.', 403);
         const id = decodeURIComponent(dashboardBookingMatch[1]);
         const booking = await env.DB.prepare('SELECT * FROM dashboard_bookings WHERE id = ?').bind(id).first();
         if (!booking) return bad('Booking tidak ditemukan.', 404);
@@ -2846,7 +2883,7 @@ export default {
 
       if (request.method === 'POST' && path === '/admin/owner-portal/password') {
         const tokenData = await getAdminTokenPayload(request, String(env.ADMIN_DASHBOARD_SECRET || '').trim());
-        if (!['master', 'admin'].includes(tokenData?.account_id) || !['Master', 'Admin'].includes(tokenData?.role)) {
+        if (!hasManagementRole(tokenData)) {
           return bad('Hanya Master atau Admin yang dapat mengatur akses Owner Portal.', 403);
         }
         const body = await request.json();
