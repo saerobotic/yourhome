@@ -46,12 +46,19 @@ Booking dari website maupun platform lain dicatat melalui **Dashboard → Bookin
 
 Jalankan `migration-auth-login-rate-limits.sql` satu kali sebelum deploy Worker yang menerapkan pembatas percobaan login. Tabel ini menyimpan HMAC alamat IP, bukan alamat IP mentah, dan counter direset setelah autentikasi sukses.
 
-Deploy versi terbaru `worker-checkin-api.js` setelah dua belas migration dashboard: finance, kategori Fee untuk Crew, akun IT, PIN delete, booking, Extra Bed, bukti finance, refund net income, login rate limits, karyawan/crew, ID Crew, dan bagi hasil owner. Publikasikan juga versi terbaru `dasbord.html`, `admin-properti.html`, `index.html`, `check-in-crew.html`, dan `check-in-crew-dashboard.html` bersamaan dengan Worker. Halaman Check In meminta ID Crew; daftar nama dan ID hanya tersedia setelah admin login. Pada Cloudflare Worker `your-home-checkin-api`, atur secrets berikut di **Settings → Variables and Secrets**:
+Deploy versi terbaru `worker-checkin-api.js` setelah seluruh migration dashboard di atas dijalankan: finance, kategori Fee untuk Crew, akun IT, PIN delete, multi-Admin, booking, Extra Bed, bukti finance, refund net income, login rate limits, karyawan/crew, ID Crew, bagi hasil owner, data manajemen Owner/properti, katalog properti terpadu, akun Portal Owner, dan Chat internal staf. Publikasikan juga versi terbaru `dasbord.html`, `admin-properti.html`, `index.html`, `check-in-crew.html`, `check-in-crew-dashboard.html`, dan `owner-portal.html` bersamaan dengan Worker. Halaman Check In meminta ID Crew; daftar nama dan ID hanya tersedia setelah admin login.
+
+Pastikan tabel `checkins` sudah ada sebelum deploy. Database baru yang dibuat dari `schema.sql` sudah memuat tabel ini beserta indeksnya. Untuk database lama yang belum memilikinya, jalankan `migration-checkins.sql` satu kali; karena memakai `CREATE TABLE IF NOT EXISTS`, migration ini aman dijalankan pada database yang sudah memiliki tabel tersebut dan tidak menghapus data.
+
+Jangan menjalankan `migration-image-gallery.sql`, `migration-map-embed.sql`, `migration-external-bookings.sql`, `migration-contact-status.sql`, atau `migration-dashboard-finance-proof.sql` pada database baru: kolom yang ditambahkan file-file tersebut sudah dibuat oleh `schema.sql` atau `migration-finance-proof.sql`, sehingga akan gagal dengan `duplicate column name`. File-file itu hanya untuk database lama yang belum memiliki kolomnya. Jalankan cukup satu di antara `migration-finance-proof.sql` dan `migration-dashboard-finance-proof.sql`.
+
+Pada Cloudflare Worker `your-home-checkin-api`, atur secrets berikut di **Settings → Variables and Secrets**:
 
 - `ADMIN_DASHBOARD_SECRET`: secret signing session yang sudah dipakai Worker. Jangan ganti bersamaan dengan password akun.
 - `MASTER_INITIAL_PASSWORD`: password awal Master, minimal 12 karakter.
 - `ADMIN_INITIAL_PASSWORD`: password awal Admin, minimal 12 karakter.
 - `IT_INITIAL_PASSWORD`: password awal akun IT, minimal 12 karakter.
+- `ALLOW_DEV_IMPERSONATION` (opsional, default nonaktif): isi `1` hanya pada lingkungan uji untuk mengaktifkan login crew memakai nilai `DEV_IMPERSONATION_SECRET`. Biarkan kosong atau hapus pada produksi agar tidak ada jalur login crew tanpa PIN asli.
 
 Akun Dashboard adalah Master (Andri Fernando), Admin, dan IT (IT Support). Saat login Master pertama setelah deploy, Worker menginisialisasi PIN hapus `1234` sebagai hash bersalt. Master perlu menggantinya segera dari **Profil Akun → PIN Persetujuan Delete**. Penghapusan transaksi oleh Admin membutuhkan PIN Master tersebut; IT tidak dapat menghapus transaksi. IT juga tidak dapat mengakses endpoint admin properti/sistem. Perubahan password normal dilakukan dari **Profil Akun → Ganti Password**.
 

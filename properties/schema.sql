@@ -37,3 +37,23 @@ CREATE TABLE IF NOT EXISTS contact_messages (
   status TEXT NOT NULL DEFAULT 'unread',
   created_at TEXT NOT NULL
 );
+
+CREATE TABLE IF NOT EXISTS checkins (
+  id TEXT PRIMARY KEY,
+  crew TEXT NOT NULL,
+  unit TEXT NOT NULL,
+  job_type TEXT NOT NULL,
+  lat REAL,
+  lng REAL,
+  accuracy REAL,
+  selfie_url TEXT NOT NULL DEFAULT '',
+  work_photo_urls TEXT NOT NULL DEFAULT '[]',
+  created_at TEXT NOT NULL,
+  work_date TEXT NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_checkins_work_date
+  ON checkins(work_date);
+
+CREATE INDEX IF NOT EXISTS idx_checkins_crew_work_date
+  ON checkins(crew, work_date);

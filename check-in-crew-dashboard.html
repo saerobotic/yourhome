@@ -918,9 +918,18 @@
         return;
       }
       if (!window.confirm(`Nonaktifkan ${crew.name}? Crew tidak dapat login, tetapi riwayat check-in tetap tersimpan.`)) return;
+      const pin = window.prompt('Masukkan PIN Master (4 digit) untuk menyetujui penonaktifan crew:');
+      if (pin === null) return;
       const message = el('crewManagementMessage');
+      if (!/^\d{4}$/.test(pin.trim())) {
+        message.className = 'pin-message error';
+        message.textContent = 'PIN Master harus tepat 4 digit.';
+        return;
+      }
+      message.className = 'pin-message';
+      message.textContent = 'Memverifikasi PIN Master...';
       try {
-        await workerRequest(`${API_BASE}/dashboard/crews/${encodeURIComponent(crew.id)}`, { method:'DELETE' });
+        await workerRequest(`${API_BASE}/dashboard/crews/${encodeURIComponent(crew.id)}`, { method:'DELETE', body: JSON.stringify({ pin: pin.trim() }) });
         message.className = 'pin-message success';
         message.textContent = `${crew.name} dinonaktifkan.`;
         await loadCrewManagement();
@@ -954,7 +963,7 @@
         await refreshDashboardData();
       } catch (error) {
         console.error('Gagal menghapus check-in per ID:', error);
-        alert('Data belum dihapus. Worker belum menyediakan endpoint DELETE /checkins/{id}. Tidak ada data lain yang dihapus.');
+        alert(`Data belum dihapus. ${error.message || 'Periksa koneksi lalu coba lagi.'}`);
       }
     }
     let editingRecord = null;
@@ -1054,7 +1063,7 @@
         await refreshDashboardData();
       } catch (error) {
         console.error('Gagal mengedit check-in:', error);
-        alert('Gagal mengedit data. Pastikan Worker mendukung PATCH /checkins/{id}.');
+        alert(`Gagal mengedit data. ${error.message || 'Periksa koneksi lalu coba lagi.'}`);
       }
     }
     async function deleteAllRecords() {

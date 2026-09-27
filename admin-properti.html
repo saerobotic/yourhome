@@ -32,7 +32,7 @@
       <h1>Admin Website</h1>
       <p class="subtitle">Kelola data properti YOUR HOME.</p>
       <form id="loginForm" class="login-form">
-        <label class="field"><span class="meta-label">ID Staf</span><select id="adminStaffId" autocomplete="username" required><option value="master">Master</option><option value="admin">Admin</option><option value="it">IT</option></select></label>
+        <label class="field"><span class="meta-label">ID Staf</span><input id="adminStaffId" list="adminStaffOptions" value="master" autocomplete="username" placeholder="Contoh: admin-1" required /><datalist id="adminStaffOptions"><option value="master">Master</option><option value="admin">Admin</option><option value="it">IT</option></datalist></label>
         <label class="field"><span class="meta-label">Password</span><span class="password-wrap"><input id="adminPassword" type="password" autocomplete="current-password" required /><button id="toggleAdminPassword" class="password-toggle" type="button" aria-label="Tampilkan password" title="Tampilkan password">&#128065;</button></span></label>
         <button class="button primary" type="submit">Masuk</button>
         <p id="loginMessage" class="status error"></p>

@@ -71,7 +71,7 @@
     body[data-print-view="owner-report"] #view-laporan,body[data-print-view="owner-report"] #view-laporan *,
     body[data-print-view="owner-share"] #view-bagi-hasil,body[data-print-view="owner-share"] #view-bagi-hasil *{visibility:visible!important;}
     body[data-print-view="owner-report"] #view-laporan,body[data-print-view="owner-share"] #view-bagi-hasil{display:block!important;position:absolute;inset:0;width:100%;padding:0!important;}
-    #reportToolbar{display:none!important;}
+    .report-toolbar{display:none!important;}
     #shareCalcControls,#shareCalcRules,#shareCalcActions,#shareCalcSavedInfo{display:none!important;}
     #reportContent .bg-white{border-color:#ddd!important;box-shadow:none!important;break-inside:avoid;}
     #reportContent table{font-size:9pt!important;}
@@ -442,7 +442,7 @@
       <!-- =========================================== -->
       <div id="view-booking" class="view">
         <!-- Filter bar -->
-        <div id="reportToolbar" class="bg-white rounded-2xl border border-slate-100 p-4 mb-5 flex flex-wrap items-center gap-3">
+        <div id="bookingFilterToolbar" class="report-toolbar bg-white rounded-2xl border border-slate-100 p-4 mb-5 flex flex-wrap items-center gap-3">
           <div class="flex gap-2 flex-wrap">
             <button class="tab-btn active" onclick="filterBookingStatus(this,'all')">Semua</button>
             <button class="tab-btn" onclick="filterBookingStatus(this,'Inquiry')">Inquiry</button>
@@ -578,7 +578,7 @@
           </div>
         </div>
 
-        <div id="reportToolbar" class="bg-white rounded-2xl border border-slate-100 p-4 mb-5 flex flex-wrap items-center gap-3">
+        <div id="expenseFilterToolbar" class="report-toolbar bg-white rounded-2xl border border-slate-100 p-4 mb-5 flex flex-wrap items-center gap-3">
           <div class="flex gap-2 flex-wrap" id="catFilter">
             <button class="tab-btn active" data-cat="all" onclick="filterExpenseCat(this,'all')">Semua</button>
             <span id="expenseCategoryFilterOptions" class="contents"></span>

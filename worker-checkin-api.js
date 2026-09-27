@@ -220,7 +220,7 @@ async function buildDashboardCatalogStatements(env, properties, now) {
 }
 
 function isMissingContactStatusColumn(error) {
-  return /contact_messages.*(?:no column named status|no such column: status)/i.test(
+  return /(?:no column named status|no such column: status|no such column: contact_messages\.status)/i.test(
     String(error?.message || error)
   );
 }
@@ -1101,8 +1101,8 @@ export default {
 
         const crew = String(body.crew || '').trim();
         if (crew !== crewSession.crew) return bad('Sesi crew tidak sesuai dengan check-in.', 403);
-        const unit = body.unit;
-        const jobType = body.job_type || body.jobType;
+        const unit = String(body.unit || '').trim();
+        const jobType = String(body.job_type || body.jobType || '').trim();
         const lat = body.lat;
         const lng = body.lng;
         const accuracy = body.accuracy;
@@ -1118,15 +1118,36 @@ export default {
           body.workPhotosBase64 ||
           body.workPhotos;
 
-        const workDate = body.work_date || body.workDate;
+        const workDate = String(body.work_date || body.workDate || '').trim();
         const clientCreatedAt = body.created_at || body.createdAt;
 
         if (!crew || !unit || !jobType) {
           return bad('crew, unit, job_type wajib');
         }
 
+        if (unit.length > 180 || jobType.length > 120) {
+          return bad('unit atau job_type terlalu panjang');
+        }
+
+        if (workDate && !/^\d{4}-\d{2}-\d{2}$/.test(workDate)) {
+          return bad('Tanggal kerja tidak valid.');
+        }
+
         if (lat == null || lng == null) {
           return bad('GPS wajib');
+        }
+
+        const numericLat = Number(lat);
+        const numericLng = Number(lng);
+        const numericAccuracy = accuracy == null || accuracy === '' ? null : Number(accuracy);
+
+        if (!Number.isFinite(numericLat) || !Number.isFinite(numericLng) ||
+            numericLat < -90 || numericLat > 90 || numericLng < -180 || numericLng > 180) {
+          return bad('Koordinat GPS tidak valid');
+        }
+
+        if (numericAccuracy != null && (!Number.isFinite(numericAccuracy) || numericAccuracy < 0)) {
+          return bad('Akurasi GPS tidak valid');
         }
 
         if (!selfie) {
@@ -1213,9 +1234,9 @@ export default {
             crew,
             unit,
             jobType,
-            Number(lat),
-            Number(lng),
-            accuracy == null ? null : Number(accuracy),
+            numericLat,
+            numericLng,
+            numericAccuracy,
             selfieUrl,
             JSON.stringify(workPhotoUrls),
             createdAt,
@@ -2395,7 +2416,7 @@ export default {
         const password = String(body.password || '').trim();
         const adminSecret = String(env.ADMIN_DASHBOARD_SECRET || '').trim();
 
-        if (!adminSecret || !password || password !== adminSecret) {
+        if (!adminSecret || !password || !constantTimeEqual(password, adminSecret)) {
           return bad('Password admin salah', 401);
         }
 
@@ -2469,7 +2490,9 @@ export default {
         const adminSecret = String(env.ADMIN_DASHBOARD_SECRET || '').trim();
         const adminIdentity = await getAdminTokenPayload(request, adminSecret);
         if (!adminIdentity) return bad('Login admin diperlukan', 401);
-        if (adminIdentity.account_id) return bad('Detail katalog hanya dapat diedit dari Admin Properti.', 403);
+        if (adminIdentity.account_id && !hasManagementRole(adminIdentity)) {
+          return bad('Hanya Master atau Admin yang dapat mengubah detail properti.', 403);
+        }
         const id = decodeURIComponent(propertyAdminMatch[1]);
         const current = await env.DB.prepare('SELECT id, dashboard_id, category, active, publication_status, image_url FROM properties WHERE id = ?').bind(id).first();
         if (!current) return bad('Properti tidak ditemukan', 404);
@@ -2657,7 +2680,9 @@ export default {
         const adminSecret = String(env.ADMIN_DASHBOARD_SECRET || '').trim();
         const adminIdentity = await getAdminTokenPayload(request, adminSecret);
         if (!adminIdentity) return bad('Login admin diperlukan', 401);
-        if (adminIdentity.account_id) return bad('Foto katalog hanya dapat diubah dari Admin Properti.', 403);
+        if (adminIdentity.account_id && !hasManagementRole(adminIdentity)) {
+          return bad('Hanya Master atau Admin yang dapat mengubah foto properti.', 403);
+        }
 
         const body = await request.json();
         const id = String(body.id || '').trim();
@@ -2754,10 +2779,11 @@ export default {
         }
 
         const hash = await sha256Hex(pin);
-        const masterSecret = String(env.DEV_IMPERSONATION_SECRET || '').trim();
-        const validCrewPin = hash === row.pin_hash;
-        const validMasterPin = Boolean(masterSecret) && pin === masterSecret;
-        if (!validCrewPin && !validMasterPin) {
+        const impersonationSecret = String(env.DEV_IMPERSONATION_SECRET || '').trim();
+        const impersonationEnabled = String(env.ALLOW_DEV_IMPERSONATION || '').trim() === '1' && Boolean(impersonationSecret);
+        const validCrewPin = constantTimeEqual(hash, row.pin_hash);
+        const validImpersonation = impersonationEnabled && constantTimeEqual(pin, impersonationSecret);
+        if (!validCrewPin && !validImpersonation) {
           return bad('PIN salah atau crew tidak aktif', 401);
         }
 
@@ -2778,37 +2804,45 @@ export default {
         }
 
         const body = await request.json();
-        const name = String(body.name || '').trim();
+        const name = String(body.name || '').trim().replace(/\s+/g, ' ');
         const pin = String(body.pin || '').trim();
-        const adminPin = String(body.admin_pin || '').trim();
+        const masterPin = String(body.admin_pin || '').trim();
 
-        if (!name || !/^\d{6}$/.test(pin) || !adminPin) {
-          return bad('name, pin (tepat 6 digit), dan admin_pin wajib diisi');
+        if (name.length < 2 || name.length > 80 || !/^\d{6}$/.test(pin)) {
+          return bad('Nama crew dan PIN tepat 6 digit wajib diisi.');
         }
+        if (!/^\d{4}$/.test(masterPin)) return bad('PIN Master tepat 4 digit wajib diisi.', 400);
 
-        if (adminPin !== '3124admin') {
-          return bad('PIN admin salah', 403);
-        }
+        const master = await env.DB.prepare(`
+          SELECT delete_pin_salt, delete_pin_hash FROM dashboard_users
+          WHERE account_id = 'master' AND active = 1
+        `).first();
+        if (!master?.delete_pin_hash) return bad('PIN Master belum diinisialisasi. Login sebagai Master terlebih dahulu.', 409);
+        const attemptedMasterPin = await hashDashboardPassword(masterPin, master.delete_pin_salt);
+        if (!constantTimeEqual(attemptedMasterPin, master.delete_pin_hash)) return bad('PIN Master salah.', 403);
 
         const pinHash = await sha256Hex(pin);
         const existing = await env.DB
-          .prepare('SELECT id FROM crews WHERE name = ?')
+          .prepare('SELECT id, crew_code FROM crews WHERE name = ? COLLATE NOCASE')
           .bind(name)
           .first();
 
         if (existing) {
           await env.DB
-            .prepare('UPDATE crews SET pin_hash = ?, active = 1 WHERE name = ?')
-            .bind(pinHash, name)
+            .prepare('UPDATE crews SET pin_hash = ?, active = 1 WHERE id = ?')
+            .bind(pinHash, existing.id)
             .run();
-        } else {
-          await env.DB
-            .prepare('INSERT INTO crews (id, name, pin_hash, active) VALUES (?, ?, ?, 1)')
-            .bind(crypto.randomUUID(), name, pinHash)
-            .run();
+          return json({ ok: true, data: { id: existing.id, name, crew_code: existing.crew_code } });
         }
 
-        return json({ ok: true, name });
+        const id = crypto.randomUUID();
+        const crewCode = `CR-${id.replace(/-/g, '').slice(0, 8).toUpperCase()}`;
+        await env.DB
+          .prepare('INSERT INTO crews (id, crew_code, name, pin_hash, active) VALUES (?, ?, ?, ?, 1)')
+          .bind(id, crewCode, name, pinHash)
+          .run();
+
+        return json({ ok: true, data: { id, name, crew_code: crewCode } });
       }
 
       if (request.method === 'POST' && path === '/owner/login') {
