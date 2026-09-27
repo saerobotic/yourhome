@@ -78,3 +78,7 @@ Booking baru disimpan ke D1 dan otomatis membuat pemasukan berkategori Booking p
 ## Owner Portal
 
 Jalankan `migration-owner-portal-accounts.sql` satu kali pada D1 sebelum deploy Worker terbaru. Portal Owner hanya menampilkan laporan bagi hasil yang sudah final pada `dashboard_owner_share_calculations`; perhitungan tidak diulang di browser owner. Master atau Admin membuka **Dashboard → Owner → Akses Portal** untuk membuat atau mereset password owner. Bagikan ID Owner dan password minimal 12 karakter melalui kanal aman. Owner masuk dari `owner-portal.html` dan hanya dapat membaca laporan final miliknya. Login Owner dibatasi 10 percobaan per IP dalam 15 menit dan sesi berlaku 24 jam.
+
+## Chat Internal Dashboard
+
+Jalankan `migration-dashboard-staff-chat.sql` satu kali pada D1 sebelum deploy Worker terbaru. Setelah itu deploy `worker-checkin-api.js` dan publikasikan `dasbord.html`. Menu **Chat Internal** menyediakan satu ruang percakapan bersama untuk akun Dashboard Master, Admin, dan IT. Pesan tersimpan di D1, hanya dapat dibaca atau dikirim oleh sesi Dashboard yang valid, dan dibatasi maksimal 2.000 karakter per pesan. Tidak ada secret, domain, atau binding Cloudflare baru yang diperlukan.

@@ -166,6 +166,10 @@
         <span>Owner</span>
       </button>
       <div class="px-3 pt-5 pb-2 text-[10px] uppercase tracking-wider text-slate-500 font-bold">Sistem</div>
+      <button onclick="toggleStaffChat()" class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left">
+        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg>
+        <span>Chat Internal</span>
+      </button>
       <button id="settingsNavItem" onclick="switchView('pengaturan')" class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left">
         <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
         <span>Pengaturan</span>
@@ -732,6 +736,12 @@
             <button type="button" onclick="shareOwnerShareWhatsApp()" class="inline-flex items-center gap-2 bg-slate-900 hover:bg-slate-800 text-white text-sm font-semibold px-3 py-2 rounded-lg"><svg width="15" height="15" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51"/></svg>Kirim WhatsApp</button>
           </div>
         </section>
+      </div>
+
+      <div id="staffChatWidget" class="fixed z-40 right-4 bottom-4 w-[calc(100vw-2rem)] sm:w-[380px] bg-white border border-slate-200 rounded-xl shadow-xl overflow-hidden hidden">
+        <div class="flex items-center justify-between gap-3 px-4 py-3 border-b border-slate-100"><div><h2 class="font-bold text-sm text-slate-900">Chat Internal</h2><p class="text-[11px] text-slate-500 mt-0.5">Master, Admin, dan IT</p></div><div class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-emerald-500" title="Aktif"></span><button type="button" onclick="toggleStaffChat()" class="p-1.5 text-slate-500 hover:bg-slate-100 rounded-lg" aria-label="Minimalkan chat" title="Minimalkan chat"><svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 12h12"/></svg></button></div></div>
+        <div id="staffChatMessages" class="h-72 overflow-y-auto bg-slate-50 p-3 space-y-2.5" aria-live="polite"></div>
+        <form id="staffChatForm" class="border-t border-slate-100 p-3"><div class="flex items-end gap-2"><label class="sr-only" for="staffChatMessage">Pesan</label><textarea id="staffChatMessage" required maxlength="2000" rows="2" placeholder="Tulis pesan..." class="min-h-[42px] flex-1 resize-none border border-slate-200 rounded-lg px-3 py-2 text-sm focus:border-brand-600"></textarea><button id="staffChatSendButton" type="submit" class="shrink-0 bg-brand-600 hover:bg-brand-700 disabled:opacity-60 text-white p-2.5 rounded-lg" aria-label="Kirim pesan" title="Kirim pesan"><svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4 20-7z"/></svg></button></div><p id="staffChatStatus" class="min-h-4 mt-1.5 text-[11px]" role="status" aria-live="polite"></p></form>
       </div>
 
       <!-- =========================================== -->
@@ -1343,6 +1353,7 @@ let expenseProofDataUrl = '';
 let editExpenseProofDataUrl = '';
 let financeCategoryKind = 'expense';
 let currentDashboardAccount = null;
+let staffChatMessages = [];
 let sessionExpiryTimer = null;
 const DASHBOARD_STORAGE_KEY = 'yourhome_management_data_v1';
 const DASHBOARD_SESSION_KEY = 'yourhome_dashboard_session';
@@ -3325,7 +3336,9 @@ function openOwnerPortalPasswordModal(ownerId, ownerName){
   document.getElementById('ownerPortalAccountLabel').textContent = ownerName;
   document.getElementById('ownerPortalPasswordForm').reset();
   document.getElementById('ownerPortalCurrentOwnerId').value = ownerId;
-  document.getElementById('ownerPortalOwnerId').value = ownerId;
+  document.getElementById('ownerPortalOwnerId').value = /^O(\d+)$/i.test(ownerId)
+    ? `0${ownerId.slice(1)}`
+    : ownerId;
   document.getElementById('ownerPortalPasswordStatus').textContent = '';
   openModal('modal-owner-portal');
 }
@@ -4669,6 +4682,67 @@ async function submitBookingCancellation(event){
 function updateContactItAccess(){
   document.getElementById('contactItForm').classList.toggle('hidden', !getDashboardToken());
 }
+async function toggleStaffChat(){
+  const widget = document.getElementById('staffChatWidget');
+  const opening = widget.classList.contains('hidden');
+  widget.classList.toggle('hidden');
+  if(opening){
+    await loadStaffChat(true);
+    document.getElementById('staffChatMessage').focus();
+  }
+}
+function isStaffChatOpen(){
+  return !document.getElementById('staffChatWidget').classList.contains('hidden');
+}
+function staffChatTime(value){
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? '' : date.toLocaleString('id-ID', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' });
+}
+function renderStaffChat(scrollToBottom=false){
+  const container = document.getElementById('staffChatMessages');
+  if(!staffChatMessages.length){
+    container.innerHTML = '<div class="h-full flex items-center justify-center text-center"><div><p class="font-semibold text-slate-700">Belum ada pesan</p><p class="text-sm text-slate-500 mt-1">Mulai percakapan dengan tim Anda.</p></div></div>';
+    return;
+  }
+  container.innerHTML = staffChatMessages.map(item => {
+    const ownMessage = item.sender_account_id === currentDashboardAccount?.account_id;
+    return `<article class="flex ${ownMessage ? 'justify-end' : 'justify-start'}"><div class="max-w-[85%] sm:max-w-[70%] ${ownMessage ? 'bg-brand-600 text-white' : 'bg-white border border-slate-200 text-slate-800'} rounded-xl px-3.5 py-3 shadow-sm"><div class="flex items-center gap-2 text-[11px] ${ownMessage ? 'text-indigo-100' : 'text-slate-500'}"><strong>${escapeHtml(item.sender_name)}</strong><span>${escapeHtml(item.sender_role)}</span><span>${escapeHtml(staffChatTime(item.created_at))}</span></div><p class="mt-1.5 text-sm whitespace-pre-wrap break-words">${escapeHtml(item.message)}</p></div></article>`;
+  }).join('');
+  if(scrollToBottom) container.scrollTop = container.scrollHeight;
+}
+async function loadStaffChat(scrollToBottom=false){
+  const status = document.getElementById('staffChatStatus');
+  try {
+    const result = await dashboardApi('/dashboard/staff-chat');
+    staffChatMessages = Array.isArray(result.data) ? result.data : [];
+    renderStaffChat(scrollToBottom);
+    status.textContent = '';
+  } catch(error) {
+    status.className = 'min-h-5 mt-2 text-xs text-rose-600';
+    status.textContent = error.message || 'Chat gagal dimuat.';
+  }
+}
+async function sendStaffChat(event){
+  event.preventDefault();
+  const input = document.getElementById('staffChatMessage');
+  const button = document.getElementById('staffChatSendButton');
+  const status = document.getElementById('staffChatStatus');
+  const message = input.value.trim();
+  if(!message) return;
+  button.disabled = true;
+  status.className = 'min-h-5 mt-2 text-xs text-slate-500';
+  status.textContent = 'Mengirim pesan...';
+  try {
+    await dashboardApi('/dashboard/staff-chat', { method:'POST', body:JSON.stringify({ message }) });
+    input.value = '';
+    await loadStaffChat(true);
+  } catch(error) {
+    status.className = 'min-h-5 mt-2 text-xs text-rose-600';
+    status.textContent = error.message || 'Pesan gagal dikirim.';
+  } finally {
+    button.disabled = false;
+  }
+}
 async function submitContactMessage(event){
   event.preventDefault();
   const form = event.currentTarget;
@@ -4735,6 +4809,7 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('cancelBookingForm').addEventListener('submit', submitBookingCancellation);
   setupPasswordToggles();
   document.getElementById('contactItForm').addEventListener('submit', submitContactMessage);
+  document.getElementById('staffChatForm').addEventListener('submit', sendStaffChat);
   document.getElementById('closeContactItDialog').addEventListener('click', () => document.getElementById('contactItDialog').close());
   fetch('https://your-home-checkin-api.saerobotic.workers.dev/settings', { cache: 'no-store' })
     .then(response => response.json())
@@ -4788,6 +4863,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if(currentView === 'booking' && !bookingEditorOpen) renderBookingView();
       if(currentView === 'owner') renderOwners();
       if(currentView === 'laporan') renderReport();
+      if(isStaffChatOpen()) await loadStaffChat();
     } catch(error) {
       console.warn('Refresh data dashboard otomatis gagal.', error);
     }

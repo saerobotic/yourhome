@@ -1359,6 +1359,65 @@ export default {
         return json({ ok: true, data: result.results || [] });
       }
 
+      if (path === '/dashboard/staff-chat') {
+        const adminSecret = String(env.ADMIN_DASHBOARD_SECRET || '').trim();
+        const tokenData = await getAdminTokenPayload(request, adminSecret);
+        if (!tokenData?.account_id || !['master', 'admin', 'it'].includes(tokenData.account_id)) {
+          return bad('Login Dashboard diperlukan.', 401);
+        }
+
+        if (request.method === 'GET') {
+          try {
+            const result = await env.DB.prepare(`
+              SELECT id, sender_account_id, sender_name, sender_role, message, created_at
+              FROM dashboard_staff_chat_messages
+              ORDER BY created_at DESC, id DESC
+              LIMIT 100
+            `).all();
+            return json({ ok:true, data:(result.results || []).reverse() });
+          } catch (error) {
+            if (/no such table: dashboard_staff_chat_messages/i.test(String(error?.message || error))) {
+              return bad('Ruang Chat belum disiapkan. Jalankan migration-dashboard-staff-chat.sql di D1.', 503);
+            }
+            throw error;
+          }
+        }
+
+        if (request.method === 'POST') {
+          const body = await request.json();
+          const message = String(body.message || '').trim();
+          if (!message || message.length > 2000) return bad('Pesan wajib diisi dan maksimal 2.000 karakter.');
+          const sender = await env.DB.prepare(`
+            SELECT account_id, display_name, role FROM dashboard_users
+            WHERE account_id = ? AND active = 1
+          `).bind(tokenData.account_id).first();
+          if (!sender) return bad('Akun Dashboard tidak aktif.', 401);
+          const data = {
+            id:crypto.randomUUID(),
+            sender_account_id:sender.account_id,
+            sender_name:sender.display_name,
+            sender_role:sender.role,
+            message,
+            created_at:new Date().toISOString(),
+          };
+          try {
+            await env.DB.prepare(`
+              INSERT INTO dashboard_staff_chat_messages (
+                id, sender_account_id, sender_name, sender_role, message, created_at
+              ) VALUES (?, ?, ?, ?, ?, ?)
+            `).bind(data.id, data.sender_account_id, data.sender_name, data.sender_role, data.message, data.created_at).run();
+            return json({ ok:true, data }, 201);
+          } catch (error) {
+            if (/no such table: dashboard_staff_chat_messages/i.test(String(error?.message || error))) {
+              return bad('Ruang Chat belum disiapkan. Jalankan migration-dashboard-staff-chat.sql di D1.', 503);
+            }
+            throw error;
+          }
+        }
+
+        return bad('Metode Chat tidak didukung.', 405);
+      }
+
       if (path === '/dashboard/crews') {
         const adminSecret = String(env.ADMIN_DASHBOARD_SECRET || '').trim();
         const tokenData = await getAdminTokenPayload(request, adminSecret);
