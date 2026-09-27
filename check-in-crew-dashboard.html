@@ -243,7 +243,6 @@
         </table>
         <div class="empty" id="monthlyMatrixEmpty"><strong>Belum ada rekap bulanan</strong><span>Data rekap crew akan muncul setelah ada absensi pada bulan yang dipilih.</span></div>
       </div>
-      <div class="pagination" id="monthlyMatrixPagination" aria-label="Navigasi rekap bulanan"></div>
     </section>
 
     <section class="panel records" id="pinManagementPanel">
@@ -300,6 +299,16 @@
         </div>
         <div class="recap-grid" id="recapGrid"></div>
       </div>
+      <div class="photo-section">
+        <h3>Kirim Slip Gaji</h3>
+        <label class="field"><span class="meta-label">Nomor WhatsApp Tujuan</span><input id="slipWhatsappNumber" type="tel" inputmode="tel" autocomplete="off" placeholder="Contoh: 08123456789 atau 628123456789" /></label>
+        <p class="hint">Nomor boleh dikosongkan lalu diketik. Format 08… atau 628… sama-sama diterima.</p>
+        <div class="admin-actions">
+          <button class="button" id="slipPdfBtn" type="button">Simpan PDF</button>
+          <button class="button primary" id="slipWhatsappBtn" type="button">Kirim ke WhatsApp</button>
+        </div>
+        <p id="slipActionMessage" class="pin-message" role="status" aria-live="polite"></p>
+      </div>
     </div>
   </div>
   <div class="modal" id="editModal" role="dialog" aria-modal="true" aria-labelledby="editTitle">
@@ -327,6 +336,7 @@
   </div>
   <div class="lightbox" id="lightbox"><button type="button" data-close="lightbox" aria-label="Tutup foto">&times;</button><img id="lightboxImage" alt="Foto diperbesar" /></div>
 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
   <script>
     const API_BASE = 'https://your-home-checkin-api.saerobotic.workers.dev';
     async function loadDashboardLogos() {
@@ -355,9 +365,10 @@
       sessionStorage.removeItem('dashboard_admin_token');
       sessionStorage.removeItem('dashboard_admin_login_date');
     }
-    const state = { records: [], filtered: [], salaryMap: {}, honorMap: {}, historyPage: 1, matrixPage: 1, adminToken: sessionStorage.getItem('dashboard_admin_token') || '' };
+    const state = { records: [], filtered: [], salaryMap: {}, honorMap: {}, historyPage: 1, adminToken: sessionStorage.getItem('dashboard_admin_token') || '' };
     let refreshInProgress = false;
     let detailRecord = null;
+    let currentSlip = null;
     let manualEntryMode = false;
     const el = id => document.getElementById(id);
 
@@ -529,7 +540,6 @@
       ).sort((a,b) => new Date(b.timestamp || `${b.date}T00:00:00`) - new Date(a.timestamp || `${a.date}T00:00:00`));
       renderSummary();
       state.historyPage = 1;
-      state.matrixPage = 1;
       renderRows();
       renderSlipGaji();
     }
@@ -607,7 +617,6 @@
       const head = el('monthlyMatrixHead');
       const body = el('monthlyMatrixBody');
       const empty = el('monthlyMatrixEmpty');
-      const pagination = el('monthlyMatrixPagination');
       const monthRecords = state.records.filter(record => record.date && record.date.slice(0,7) === month);
       const crews = [...new Set(monthRecords.map(record => record.crew).filter(Boolean))].sort((a,b) => a.localeCompare(b, 'id'));
       const properties = [...new Set(monthRecords.map(record => record.unit).filter(Boolean))].sort((a,b) => a.localeCompare(b, 'id'));
@@ -616,7 +625,6 @@
       if (!crews.length) {
         head.innerHTML = '';
         body.innerHTML = '';
-        pagination.innerHTML = '';
         empty.style.display = 'block';
         return;
       }
@@ -628,23 +636,13 @@
         values[crew] = Object.fromEntries(recaps[crew].list.map(item => [item.unit, item.honor]));
       });
       head.innerHTML = `<tr><th>Properti / Rekap</th>${crews.map(crew => `<th>${escapeHtml(crew)}</th>`).join('')}</tr>`;
-      const totalPages = Math.ceil(properties.length / PAGE_SIZE);
-      state.matrixPage = Math.max(1, Math.min(state.matrixPage, totalPages || 1));
-      const pageStart = (state.matrixPage - 1) * PAGE_SIZE;
-      const pageProperties = properties.slice(pageStart, pageStart + PAGE_SIZE);
-      const propertyRows = pageProperties.map(property => `<tr><td class="matrix-label">${escapeHtml(property)}</td>${crews.map(crew => `<td class="matrix-number">${values[crew][property] ? formatRupiah(values[crew][property]) : '-'}</td>`).join('')}</tr>`).join('');
+      // Seluruh baris ditampilkan sekaligus tanpa pemotongan dan tanpa area scroll.
+      const propertyRows = properties.map(property => `<tr><td class="matrix-label">${escapeHtml(property)}</td>${crews.map(crew => `<td class="matrix-number">${values[crew][property] ? formatRupiah(values[crew][property]) : '-'}</td>`).join('')}</tr>`).join('');
       const totalRow = `<tr class="matrix-total"><td class="matrix-label">TOTAL HONOR</td>${crews.map(crew => `<td class="matrix-number">${formatRupiah(recaps[crew].totalHonor)}</td>`).join('')}</tr>`;
       const workDaysRow = `<tr><td class="matrix-label">HARI CHECK IN</td>${crews.map(crew => `<td class="matrix-number">${recaps[crew].totalDays}</td>`).join('')}</tr>`;
       const absenceRow = `<tr class="matrix-absence"><td class="matrix-label">ABSEN</td>${crews.map(crew => `<td class="matrix-number">${Math.max(0, daysInMonth(month) - recaps[crew].totalDays)}</td>`).join('')}</tr>`;
       const paidRow = `<tr class="matrix-paid"><td class="matrix-label">GAJI DIBAYAR</td>${crews.map(crew => `<td class="matrix-number">${formatRupiah(recaps[crew].totalDays * DAILY_SALARY)}</td>`).join('')}</tr>`;
       body.innerHTML = propertyRows + totalRow + workDaysRow + absenceRow + paidRow;
-      if (totalPages > 1) {
-        pagination.innerHTML = `<button type="button" data-matrix-page="prev" ${state.matrixPage === 1 ? 'disabled' : ''}>Sebelumnya</button><span>Halaman ${state.matrixPage} dari ${totalPages}</span><button type="button" data-matrix-page="next" ${state.matrixPage === totalPages ? 'disabled' : ''}>Berikutnya</button>`;
-        pagination.querySelector('[data-matrix-page="prev"]').addEventListener('click', () => { state.matrixPage -= 1; renderMonthlyMatrix(month); });
-        pagination.querySelector('[data-matrix-page="next"]').addEventListener('click', () => { state.matrixPage += 1; renderMonthlyMatrix(month); });
-      } else {
-        pagination.innerHTML = '';
-      }
     }
     function renderSlipGaji() {
       const body = el('slipBody');
@@ -747,6 +745,208 @@
       }
 
       el('slipModal').classList.add('open');
+      // Simpan data slip aktif agar tombol Simpan PDF dan Kirim WhatsApp bisa memakainya.
+      currentSlip = { crew, month, totalDays, checkInDays, tidakCheckIn, potongan, dibayar, recap };
+      el('slipActionMessage').textContent = '';
+    }
+    // Ubah nomor apa pun menjadi format internasional Indonesia tanpa tanda baca.
+    function normalizeWhatsappNumber(value) {
+      const digits = String(value || '').replace(/\D/g, '');
+      if (!digits) return '';
+      if (digits.startsWith('620')) return `62${digits.slice(3)}`;
+      if (digits.startsWith('62')) return digits;
+      if (digits.startsWith('0')) return `62${digits.slice(1)}`;
+      return `62${digits}`;
+    }
+    function slipRecapLines(slip) {
+      if (!slip.recap.list.length) return ['(tidak ada data properti pada bulan ini)'];
+      return slip.recap.list.map(stat => {
+        const dayText = stat.days.size === 1 ? '1 hari' : `${stat.days.size} hari`;
+        return `- ${stat.unit}: ${formatRupiah(stat.honor)} (${dayText}, ${stat.visits} kunjungan)`;
+      });
+    }
+    function slipWhatsAppText(slip) {
+      return [
+        '*SLIP GAJI CREW - YOUR HOME*',
+        '',
+        `Crew: ${slip.crew}`,
+        `Periode: ${formatMonth(slip.month)}`,
+        `Hari di bulan: ${slip.totalDays} hari`,
+        `Hari check in: ${slip.checkInDays} hari`,
+        `Tidak check in: ${slip.tidakCheckIn} hari`,
+        `Honor per hari: ${formatRupiah(DAILY_SALARY)}`,
+        `Potongan: - ${formatRupiah(slip.potongan)}`,
+        `*Gaji dibayar: ${formatRupiah(slip.dibayar)}*`,
+        '',
+        '*Rekap honor per properti:*',
+        ...slipRecapLines(slip),
+        '',
+        `Dibuat: ${formatLocalDateTimeWib()}`,
+      ].join('\n');
+    }
+    function buildSlipPdf(slip) {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF({ unit:'pt', format:'a4' });
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const pageHeight = doc.internal.pageSize.getHeight();
+      const margin = 48;
+      const right = pageWidth - margin;
+      let y = margin + 4;
+
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(16);
+      doc.text('YOUR HOME', margin, y);
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(9);
+      doc.setTextColor(110);
+      doc.text(`Dibuat: ${formatLocalDateTimeWib()}`, right, y - 2, { align:'right' });
+      doc.setTextColor(0);
+      y += 16;
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(11);
+      doc.text('SLIP GAJI CREW', margin, y);
+      y += 22;
+
+      doc.setFontSize(13);
+      doc.text(String(slip.crew), margin, y);
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(10);
+      doc.setTextColor(110);
+      doc.text(`Periode ${formatMonth(slip.month)}`, right, y, { align:'right' });
+      doc.setTextColor(0);
+      y += 12;
+      doc.setDrawColor(190);
+      doc.line(margin, y, right, y);
+      y += 18;
+
+      const metaRows = [
+        ['Total hari di bulan', `${slip.totalDays} hari`],
+        ['Hari check in', `${slip.checkInDays} hari`],
+        ['Tidak check in', `${slip.tidakCheckIn} hari`],
+        ['Honor per hari', formatRupiah(DAILY_SALARY)],
+        ['Potongan', `- ${formatRupiah(slip.potongan)}`],
+      ];
+      doc.setFontSize(10);
+      metaRows.forEach(([label, value]) => {
+        doc.setTextColor(110);
+        doc.text(label, margin, y);
+        doc.setTextColor(0);
+        doc.setFont('helvetica', 'bold');
+        doc.text(value, right, y, { align:'right' });
+        doc.setFont('helvetica', 'normal');
+        y += 16;
+      });
+      y += 4;
+      doc.setDrawColor(190);
+      doc.line(margin, y, right, y);
+      y += 24;
+
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(10);
+      doc.text('REKAP HONOR PER PROPERTI', margin, y);
+      y += 8;
+      doc.setDrawColor(190);
+      doc.line(margin, y, right, y);
+      y += 14;
+
+      const colProperty = margin;
+      const colDays = margin + 300;
+      const colVisits = margin + 370;
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(8);
+      doc.setTextColor(120);
+      doc.text('PROPERTI', colProperty, y);
+      doc.text('HARI', colDays, y);
+      doc.text('KUNJUNGAN', colVisits, y);
+      doc.text('HONOR', right, y, { align:'right' });
+      doc.setTextColor(0);
+      y += 6;
+      doc.setDrawColor(220);
+      doc.line(margin, y, right, y);
+      y += 14;
+
+      doc.setFontSize(10);
+      if (!slip.recap.list.length) {
+        doc.setTextColor(120);
+        doc.text('Tidak ada data properti pada bulan ini.', colProperty, y);
+        doc.setTextColor(0);
+        y += 16;
+      } else {
+        slip.recap.list.forEach(stat => {
+          if (y > pageHeight - margin - 60) {
+            doc.addPage();
+            y = margin + 10;
+          }
+          doc.text(doc.splitTextToSize(String(stat.unit), 285)[0], colProperty, y);
+          doc.text(String(stat.days.size), colDays, y);
+          doc.text(String(stat.visits), colVisits, y);
+          doc.text(formatRupiah(stat.honor), right, y, { align:'right' });
+          y += 16;
+        });
+      }
+
+      y += 8;
+      doc.setDrawColor(60);
+      doc.setLineWidth(1.2);
+      doc.rect(margin, y, right - margin, 36);
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(11);
+      doc.text('GAJI DIBAYAR', margin + 12, y + 23);
+      doc.setFontSize(14);
+      doc.text(formatRupiah(slip.dibayar), right - 12, y + 23, { align:'right' });
+      doc.setLineWidth(0.5);
+      return doc;
+    }
+    function saveSlipPdf() {
+      if (!currentSlip) return;
+      const status = el('slipActionMessage');
+      const slip = currentSlip;
+      if (!window.jspdf?.jsPDF) {
+        status.className = 'pin-message error';
+        status.textContent = 'Pembuat PDF belum termuat. Periksa koneksi internet lalu muat ulang halaman.';
+        return;
+      }
+      try {
+        const fileName = `slip-gaji-${String(slip.crew).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}-${slip.month}.pdf`;
+        buildSlipPdf(slip).save(fileName);
+        status.className = 'pin-message success';
+        status.textContent = `PDF diunduh: ${fileName}`;
+      } catch (error) {
+        console.error('Gagal membuat PDF:', error);
+        status.className = 'pin-message error';
+        status.textContent = error.message || 'PDF gagal dibuat.';
+      }
+    }
+    function sendSlipWhatsApp() {
+      if (!currentSlip) return;
+      const status = el('slipActionMessage');
+      const input = el('slipWhatsappNumber');
+      const number = normalizeWhatsappNumber(input.value);
+      if (input.value.trim() && !/^62\d{8,13}$/.test(number)) {
+        status.className = 'pin-message error';
+        status.textContent = 'Nomor WhatsApp tidak valid. Gunakan format 08… atau 628….';
+        input.focus();
+        return;
+      }
+      const url = number
+        ? `https://wa.me/${number}?text=${encodeURIComponent(slipWhatsAppText(currentSlip))}`
+        : `https://wa.me/?text=${encodeURIComponent(slipWhatsAppText(currentSlip))}`;
+      if (url.length > 60000) {
+        status.className = 'pin-message error';
+        status.textContent = 'Slip terlalu panjang untuk tautan WhatsApp. Gunakan Simpan PDF.';
+        return;
+      }
+      const popup = window.open(url, '_blank');
+      if (!popup) {
+        status.className = 'pin-message error';
+        status.textContent = 'WhatsApp diblokir browser. Izinkan pop-up lalu coba lagi.';
+        return;
+      }
+      popup.opener = null;
+      status.className = 'pin-message success';
+      status.textContent = number
+        ? `Membuka WhatsApp untuk ${number}.`
+        : 'Nomor kosong: pilih kontak di WhatsApp lalu kirim.';
     }
     function photoButton(src, alt) {
       return `<button type="button" data-photo="${escapeHtml(src)}"><img src="${escapeHtml(src)}" alt="${escapeHtml(alt)}" loading="lazy" /></button>`;
@@ -1084,18 +1284,94 @@
       const link = document.createElement('a'); link.href = URL.createObjectURL(new Blob([content], { type:'application/vnd.ms-excel' })); link.download = 'absensi-crew.xls'; link.click(); URL.revokeObjectURL(link.href);
     }
     function exportPdf() {
-      const popup = window.open('', '_blank', 'width=1100,height=800');
-      if (!popup) { alert('Izinkan pop-up untuk mencetak PDF.'); return; }
-      const rows = state.filtered.map(record => `<tr><td>${escapeHtml(record.date)}</td><td>${escapeHtml(formatTime(record))}</td><td>${escapeHtml(record.crew || '')}</td><td>${escapeHtml(record.unit || '')}</td><td>${escapeHtml(record.jobType || '')}</td><td>${escapeHtml(record.lat ?? '')}, ${escapeHtml(record.lng ?? '')}</td></tr>`).join('');
-      popup.document.open();
-      popup.document.close();
-      popup.document.title = 'Laporan Absensi Crew';
-      const style = popup.document.createElement('style');
-      style.textContent = 'body{font-family:Arial,sans-serif;padding:24px;color:#222}table{width:100%;border-collapse:collapse;font-size:12px}th,td{border:1px solid #bbb;padding:7px;text-align:left}th{background:#eee}';
-      popup.document.head.appendChild(style);
-      popup.document.body.innerHTML = '<h1>YOUR HOME - Laporan Absensi Crew</h1><p>Dibuat: ' + escapeHtml(formatLocalDateTimeWib()) + '</p><table><thead><tr><th>Tanggal</th><th>Waktu</th><th>Crew</th><th>Properti</th><th>Pekerjaan</th><th>GPS</th></tr></thead><tbody>' + rows + '</tbody></table>';
-      popup.focus();
-      popup.print();
+      if (!window.jspdf?.jsPDF) {
+        alert('Pembuat PDF belum termuat. Periksa koneksi internet lalu muat ulang halaman.');
+        return;
+      }
+      const records = state.filtered;
+      if (!records.length) {
+        alert('Belum ada data untuk diunduh.');
+        return;
+      }
+      const doc = new window.jspdf.jsPDF({ unit:'pt', format:'a4', orientation:'landscape' });
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const pageHeight = doc.internal.pageSize.getHeight();
+      const margin = 36;
+      const right = pageWidth - margin;
+      const fixedWidths = [72, 52, 118, 186, 112];
+      const columns = [
+        { label:'TANGGAL', width:fixedWidths[0] },
+        { label:'WAKTU', width:fixedWidths[1] },
+        { label:'CREW', width:fixedWidths[2] },
+        { label:'PROPERTI', width:fixedWidths[3] },
+        { label:'PEKERJAAN', width:fixedWidths[4] },
+        { label:'GPS', width:right - margin - fixedWidths.reduce((sum, value) => sum + value, 0) },
+      ];
+      const rowHeight = 16;
+      let y = margin;
+
+      const drawHeader = () => {
+        doc.setFillColor(238);
+        doc.rect(margin, y, right - margin, rowHeight, 'F');
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(8);
+        doc.setTextColor(60);
+        let x = margin;
+        columns.forEach(col => {
+          doc.text(col.label, x + 4, y + 11);
+          x += col.width;
+        });
+        doc.setTextColor(0);
+        doc.setDrawColor(180);
+        doc.line(margin, y + rowHeight, right, y + rowHeight);
+        y += rowHeight;
+      };
+
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(14);
+      doc.text('YOUR HOME - Laporan Absensi Crew', margin, y + 4);
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(9);
+      doc.setTextColor(110);
+      doc.text(`Dibuat: ${formatLocalDateTimeWib()}  |  ${records.length} data`, right, y + 4, { align:'right' });
+      doc.setTextColor(0);
+      y += 22;
+
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(8);
+      drawHeader();
+
+      records.forEach((record, index) => {
+        if (y + rowHeight > pageHeight - margin) {
+          doc.addPage();
+          y = margin;
+          drawHeader();
+        }
+        const values = [
+          String(record.date || ''),
+          formatTime(record) || '',
+          String(record.crew || ''),
+          String(record.unit || ''),
+          String(record.jobType || ''),
+          record.lat != null && record.lng != null ? `${Number(record.lat).toFixed(5)}, ${Number(record.lng).toFixed(5)}` : '-',
+        ];
+        if (index % 2 === 1) {
+          doc.setFillColor(250);
+          doc.rect(margin, y, right - margin, rowHeight, 'F');
+        }
+        let x = margin;
+        values.forEach((value, columnIndex) => {
+          const col = columns[columnIndex];
+          const text = doc.splitTextToSize(value, col.width - 8)[0] || '-';
+          doc.text(text, x + 4, y + 11);
+          x += col.width;
+        });
+        doc.setDrawColor(225);
+        doc.line(margin, y + rowHeight, right, y + rowHeight);
+        y += rowHeight;
+      });
+
+      doc.save('laporan-absensi-crew.pdf');
     }
     function rebuildSalaryData() {
       state.salaryMap = computeSalaryMap(state.records);
@@ -1133,6 +1409,8 @@
       el('crewManagementForm').addEventListener('submit', submitCrewManagement);
       el('crewManagementRows').addEventListener('click', handleCrewManagementAction);
       el('crewCancelEditBtn').addEventListener('click', resetCrewManagementForm);
+      el('slipPdfBtn').addEventListener('click', saveSlipPdf);
+      el('slipWhatsappBtn').addEventListener('click', sendSlipWhatsApp);
       document.getElementById('detailEditBtn').addEventListener('click', () => {
         closeModal('detailModal');
         editRecord(detailRecord);

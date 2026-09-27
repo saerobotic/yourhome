@@ -6,6 +6,7 @@
 <title>Management Your Home</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 <script>
   tailwind.config = {
@@ -64,25 +65,6 @@
   input:focus,select:focus,textarea:focus{outline:none;border-color:#6366f1;box-shadow:0 0 0 3px rgba(99,102,241,.15);}
   #dashboardApp[hidden]{display:none;}
   .finance-row[hidden]{display:none;}
-  @media print{
-    @page{size:A4 landscape;margin:12mm;}
-    body{background:#fff!important;}
-    body *{visibility:hidden!important;}
-    body[data-print-view="owner-report"] #view-laporan,body[data-print-view="owner-report"] #view-laporan *,
-    body[data-print-view="owner-share"] #view-bagi-hasil,body[data-print-view="owner-share"] #view-bagi-hasil *{visibility:visible!important;}
-    body[data-print-view="owner-report"] #view-laporan,body[data-print-view="owner-share"] #view-bagi-hasil{display:block!important;position:absolute;inset:0;width:100%;padding:0!important;}
-    .report-toolbar{display:none!important;}
-    #shareCalcControls,#shareCalcRules,#shareCalcActions,#shareCalcSavedInfo{display:none!important;}
-    #reportContent .bg-white{border-color:#ddd!important;box-shadow:none!important;break-inside:avoid;}
-    #reportContent table{font-size:9pt!important;}
-    #reportContent tr{break-inside:avoid;}
-    #shareCalcResult .bg-white{border-color:#ddd!important;box-shadow:none!important;break-inside:auto;}
-    #shareCalcResult .overflow-x-auto{overflow:visible!important;}
-    #shareCalcResult table{font-size:7pt!important;min-width:0!important;width:100%!important;}
-    #shareCalcResult tr{break-inside:avoid;}
-    #shareCalcResult thead{display:table-header-group;}
-    #shareCalcResult h3,#shareCalcResult h4{break-after:avoid;}
-  }
 </style>
 </head>
 <body class="text-slate-800">
@@ -98,8 +80,7 @@
     <form id="dashboardLoginForm" class="space-y-4">
       <label class="block">
         <span class="block text-sm font-semibold text-slate-700 mb-1.5">ID Akun</span>
-        <input id="dashboardLoginAccount" list="dashboardAccountOptions" value="master" required autocomplete="username" placeholder="Contoh: admin-1" class="w-full border border-slate-200 rounded-lg px-3 py-2.5 text-sm bg-white">
-        <datalist id="dashboardAccountOptions"><option value="master">Master</option><option value="admin">Admin</option><option value="it">IT</option></datalist>
+        <select id="dashboardLoginAccount" required autocomplete="username" class="w-full border border-slate-200 rounded-lg px-3 py-2.5 text-sm bg-white"><option value="master">Master</option></select>
       </label>
       <label class="block">
         <span class="block text-sm font-semibold text-slate-700 mb-1.5">Password</span>
@@ -788,6 +769,7 @@
                     <th class="text-left font-semibold px-3 py-3">Role</th>
                     <th class="text-left font-semibold px-3 py-3 hidden md:table-cell">Akses</th>
                     <th class="text-center font-semibold px-5 py-3">Status</th>
+                    <th id="userActionsHeader" class="text-right font-semibold px-5 py-3" hidden>Aksi</th>
                   </tr>
                 </thead>
                 <tbody id="userTableBody" class="divide-y divide-slate-100"></tbody>
@@ -802,20 +784,6 @@
               <div class="text-lg font-extrabold text-brand-600">Per properti</div>
               <p class="text-xs text-slate-500 mt-1">Persentase owner dan agen disimpan tanpa menghitung nominal transfer.</p>
               <button onclick="switchView('properti')" class="mt-3 text-xs font-semibold text-brand-600 hover:text-brand-700">Atur properti →</button>
-            </div>
-            <div class="bg-white rounded-2xl p-5 border border-slate-100">
-              <h3 class="font-bold text-slate-900 mb-3">Notifikasi</h3>
-              <div class="space-y-2 text-sm">
-                <label class="flex items-center justify-between"><span>WhatsApp — Booking baru</span><input type="checkbox" checked class="w-4 h-4 accent-brand-600"></label>
-                <label class="flex items-center justify-between"><span>Email — Laporan bulanan</span><input type="checkbox" checked class="w-4 h-4 accent-brand-600"></label>
-                <label class="flex items-center justify-between"><span>WA — Pengeluaran &gt; Rp 5jt</span><input type="checkbox" checked class="w-4 h-4 accent-brand-600"></label>
-                <label class="flex items-center justify-between"><span>Email — Owner login</span><input type="checkbox" class="w-4 h-4 accent-brand-600"></label>
-              </div>
-            </div>
-            <div class="bg-white rounded-2xl p-5 border border-slate-100">
-              <h3 class="font-bold text-slate-900 mb-3">Mata Uang</h3>
-              <div class="text-sm text-slate-600">Utama: <b>IDR (Rp)</b></div>
-              <div class="text-xs text-slate-400 mt-1">Support: USD, SGD, AUD (auto-convert)</div>
             </div>
           </div>
         </div>
@@ -930,7 +898,7 @@
         </select>
       </div>
       <div id="bookingEditApprovalField" class="hidden">
-        <label class="block"><span class="block text-xs text-slate-500 font-semibold">PIN Master 4 digit untuk edit booking Cancelled</span><input id="bookingEditApprovalPin" type="password" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" autocomplete="off" class="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 mt-0.5" placeholder="PIN persetujuan Master"></label>
+        <label class="block"><span class="block text-xs text-slate-500 font-semibold">PIN Master 4 digit untuk edit booking Cancelled</span><span class="relative block"><input id="bookingEditApprovalPin" type="password" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" autocomplete="off" class="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 pr-12 mt-0.5" placeholder="PIN persetujuan Master"><button type="button" data-toggle-password="bookingEditApprovalPin" aria-label="Tampilkan PIN" class="absolute inset-y-0 right-0 px-3 text-slate-500 hover:text-slate-800"><svg data-eye-icon width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg></button></span></label>
       </div>
       <div>
         <label class="text-xs text-slate-500 font-semibold">Catatan (opsional)</label>
@@ -953,7 +921,7 @@
       <input id="cancelBookingId" type="hidden">
       <label class="block"><span class="block text-xs font-semibold text-slate-600 mb-1">Keterangan pembatalan</span><textarea id="cancelBookingReason" required minlength="3" maxlength="300" rows="3" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm" placeholder="Contoh: tamu membatalkan karena perubahan jadwal"></textarea></label>
       <label class="block"><span class="block text-xs font-semibold text-slate-600 mb-1">Uang yang dikembalikan (Rp)</span><input id="cancelBookingRefund" type="text" inputmode="numeric" pattern="[0-9.]*" data-currency-input required class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm" placeholder="Masukkan nominal refund"></label>
-      <label class="block"><span class="block text-xs font-semibold text-slate-600 mb-1">PIN Master (4 digit)</span><input id="cancelBookingPin" type="password" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" required autocomplete="off" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm" placeholder="PIN persetujuan Master"></label>
+      <label class="block"><span class="block text-xs font-semibold text-slate-600 mb-1">PIN Master (4 digit)</span><span class="relative block"><input id="cancelBookingPin" type="password" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" required autocomplete="off" class="w-full border border-slate-200 rounded-lg px-3 py-2 pr-12 text-sm" placeholder="PIN persetujuan Master"><button type="button" data-toggle-password="cancelBookingPin" aria-label="Tampilkan PIN" class="absolute inset-y-0 right-0 px-3 text-slate-500 hover:text-slate-800"><svg data-eye-icon width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg></button></span></label>
       <p id="cancelBookingStatus" class="text-sm" role="status" aria-live="polite"></p>
       <div class="flex gap-2"><button type="button" onclick="closeModal('modal-cancel-booking')" class="flex-1 border border-slate-200 rounded-lg px-4 py-2 text-sm font-semibold">Kembali</button><button id="cancelBookingButton" type="submit" class="flex-1 bg-rose-600 hover:bg-rose-700 text-white rounded-lg px-4 py-2 text-sm font-semibold">Cancel dan Catat Refund</button></div>
     </form>
@@ -1133,7 +1101,7 @@
     <p class="text-xs text-slate-500 mt-2">Properti diarsipkan dari daftar dan booking baru. Histori booking dan keuangan tetap tersimpan.</p>
     <form id="deletePropertyForm" class="mt-4 space-y-3">
       <input id="deletePropertyId" type="hidden">
-      <label class="block"><span class="block text-xs font-semibold text-slate-600 mb-1">PIN Master (4 digit)</span><input id="deletePropertyPin" type="password" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" required autocomplete="off" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm" placeholder="PIN persetujuan Master"></label>
+      <label class="block"><span class="block text-xs font-semibold text-slate-600 mb-1">PIN Master (4 digit)</span><span class="relative block"><input id="deletePropertyPin" type="password" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" required autocomplete="off" class="w-full border border-slate-200 rounded-lg px-3 py-2 pr-12 text-sm" placeholder="PIN persetujuan Master"><button type="button" data-toggle-password="deletePropertyPin" aria-label="Tampilkan PIN" class="absolute inset-y-0 right-0 px-3 text-slate-500 hover:text-slate-800"><svg data-eye-icon width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg></button></span></label>
       <p id="deletePropertyStatus" class="text-sm" role="status" aria-live="polite"></p>
       <div class="flex gap-2"><button type="button" onclick="closeModal('modal-delete-property')" class="flex-1 border border-slate-200 rounded-lg px-4 py-2 text-sm font-semibold">Batal</button><button id="deletePropertyButton" type="submit" class="flex-1 bg-rose-600 hover:bg-rose-700 text-white rounded-lg px-4 py-2 text-sm font-semibold">Arsipkan</button></div>
     </form>
@@ -1164,9 +1132,9 @@
       <h3 class="font-semibold text-slate-900">PIN Persetujuan Delete</h3>
       <p id="deletePinHelp" class="text-xs text-slate-500 mt-1">PIN awal Master adalah 1234. Ganti dengan PIN pribadi setelah login.</p>
       <form id="deletePinForm" class="mt-3 space-y-3">
-        <label class="block"><span class="block text-xs font-semibold text-slate-600 mb-1">PIN saat ini (4 digit)</span><input id="currentDeletePin" type="password" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" required autocomplete="off" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm"></label>
-        <label class="block"><span class="block text-xs font-semibold text-slate-600 mb-1">PIN baru (4 digit)</span><input id="newDeletePin" type="password" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" required autocomplete="new-password" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm"></label>
-        <label class="block"><span class="block text-xs font-semibold text-slate-600 mb-1">Ulangi PIN baru</span><input id="confirmDeletePin" type="password" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" required autocomplete="new-password" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm"></label>
+        <label class="block"><span class="block text-xs font-semibold text-slate-600 mb-1">PIN saat ini (4 digit)</span><span class="relative block"><input id="currentDeletePin" type="password" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" required autocomplete="off" class="w-full border border-slate-200 rounded-lg px-3 py-2 pr-12 text-sm"><button type="button" data-toggle-password="currentDeletePin" aria-label="Tampilkan PIN" class="absolute inset-y-0 right-0 px-3 text-slate-500 hover:text-slate-800"><svg data-eye-icon width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg></button></span></label>
+        <label class="block"><span class="block text-xs font-semibold text-slate-600 mb-1">PIN baru (4 digit)</span><span class="relative block"><input id="newDeletePin" type="password" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" required autocomplete="new-password" class="w-full border border-slate-200 rounded-lg px-3 py-2 pr-12 text-sm"><button type="button" data-toggle-password="newDeletePin" aria-label="Tampilkan PIN" class="absolute inset-y-0 right-0 px-3 text-slate-500 hover:text-slate-800"><svg data-eye-icon width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg></button></span></label>
+        <label class="block"><span class="block text-xs font-semibold text-slate-600 mb-1">Ulangi PIN baru</span><span class="relative block"><input id="confirmDeletePin" type="password" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" required autocomplete="new-password" class="w-full border border-slate-200 rounded-lg px-3 py-2 pr-12 text-sm"><button type="button" data-toggle-password="confirmDeletePin" aria-label="Tampilkan PIN" class="absolute inset-y-0 right-0 px-3 text-slate-500 hover:text-slate-800"><svg data-eye-icon width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg></button></span></label>
         <p id="deletePinStatus" class="text-sm" role="status" aria-live="polite"></p>
         <button type="submit" class="bg-amber-500 hover:bg-amber-600 text-slate-900 text-sm font-semibold px-4 py-2 rounded-lg">Ganti PIN</button>
       </form>
@@ -1180,10 +1148,23 @@
     <form id="createAdminForm" class="space-y-3">
       <label class="block"><span class="block text-xs font-semibold text-slate-600 mb-1">Nama awal Admin</span><input id="createAdminName" required minlength="2" maxlength="80" autocomplete="name" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm" placeholder="Contoh: Admin Operasional"></label>
       <label class="block"><span class="block text-xs font-semibold text-slate-600 mb-1">Email (opsional)</span><input id="createAdminEmail" type="email" maxlength="160" autocomplete="email" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm"></label>
-      <label class="block"><span class="block text-xs font-semibold text-slate-600 mb-1">Password awal (minimal 12 karakter)</span><input id="createAdminPassword" type="password" required minlength="12" maxlength="256" autocomplete="new-password" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm"></label>
+      <label class="block"><span class="block text-xs font-semibold text-slate-600 mb-1">Password awal (minimal 12 karakter)</span><span class="relative block"><input id="createAdminPassword" type="password" required minlength="12" maxlength="256" autocomplete="new-password" class="w-full border border-slate-200 rounded-lg px-3 py-2 pr-12 text-sm"><button type="button" data-toggle-password="createAdminPassword" aria-label="Tampilkan password" class="absolute inset-y-0 right-0 px-3 text-slate-500 hover:text-slate-800"><svg data-eye-icon width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg></button></span></label>
       <p class="text-xs text-slate-500">Admin dapat mengganti nama, email, dan password melalui Profil Akun setelah masuk.</p>
       <p id="createAdminStatus" class="text-sm" role="status" aria-live="polite"></p>
       <div class="flex gap-2"><button type="button" onclick="closeModal('modal-create-admin')" class="flex-1 border border-slate-200 rounded-lg px-4 py-2 text-sm font-semibold">Batal</button><button id="createAdminSubmitButton" type="submit" class="flex-1 bg-brand-600 hover:bg-brand-700 text-white rounded-lg px-4 py-2 text-sm font-semibold">Buat Admin</button></div>
+    </form>
+  </div>
+</div>
+
+<div id="modal-delete-account" class="modal-overlay fixed inset-0 bg-slate-900/50 z-50 hidden items-center justify-center p-4">
+  <div class="modal-panel bg-white rounded-xl max-w-sm w-full p-5">
+    <div class="flex items-center justify-between mb-4"><h3 class="font-bold text-lg text-slate-900">Hapus Akun Staf</h3><button type="button" onclick="closeModal('modal-delete-account')" aria-label="Tutup" class="p-1 hover:bg-slate-100 rounded-lg"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg></button></div>
+    <p id="deleteAccountDescription" class="text-sm text-slate-600"></p>
+    <form id="deleteAccountForm" class="mt-4 space-y-3">
+      <input id="deleteAccountId" type="hidden">
+      <label class="block"><span class="block text-xs font-semibold text-slate-600 mb-1">PIN Master (4 digit)</span><span class="relative block"><input id="deleteAccountPin" type="password" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" required autocomplete="off" class="w-full border border-slate-200 rounded-lg px-3 py-2 pr-12 text-sm" placeholder="PIN persetujuan Master"><button type="button" data-toggle-password="deleteAccountPin" aria-label="Tampilkan PIN" class="absolute inset-y-0 right-0 px-3 text-slate-500 hover:text-slate-800"><svg data-eye-icon width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg></button></span></label>
+      <p id="deleteAccountStatus" class="text-sm" role="status" aria-live="polite"></p>
+      <div class="flex gap-2"><button type="button" onclick="closeModal('modal-delete-account')" class="flex-1 border border-slate-200 rounded-lg px-4 py-2 text-sm font-semibold">Batal</button><button id="deleteAccountButton" type="submit" class="flex-1 bg-rose-600 hover:bg-rose-700 text-white rounded-lg px-4 py-2 text-sm font-semibold">Hapus Akun</button></div>
     </form>
   </div>
 </div>
@@ -1194,7 +1175,7 @@
     <form id="crewForm" class="space-y-3">
       <input id="crewEditId" type="hidden">
       <label class="block"><span class="block text-xs font-semibold text-slate-600 mb-1">Nama karyawan</span><input id="crewNameInput" required minlength="2" maxlength="80" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm"></label>
-      <label id="crewPinField" class="block"><span class="block text-xs font-semibold text-slate-600 mb-1">PIN login Check In Crew (wajib 6 digit)</span><input id="crewPinInputDashboard" type="password" inputmode="numeric" pattern="[0-9]{6}" minlength="6" maxlength="6" autocomplete="new-password" placeholder="6 digit" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm"></label>
+      <label id="crewPinField" class="block"><span class="block text-xs font-semibold text-slate-600 mb-1">PIN login Check In Crew (wajib 6 digit)</span><span class="relative block"><input id="crewPinInputDashboard" type="password" inputmode="numeric" pattern="[0-9]{6}" minlength="6" maxlength="6" autocomplete="new-password" placeholder="6 digit" class="w-full border border-slate-200 rounded-lg px-3 py-2 pr-12 text-sm"><button type="button" data-toggle-password="crewPinInputDashboard" aria-label="Tampilkan PIN" class="absolute inset-y-0 right-0 px-3 text-slate-500 hover:text-slate-800"><svg data-eye-icon width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg></button></span></label>
       <p class="text-xs text-slate-500">Tambah Crew cukup dengan nama dan PIN 6 digit. ID Crew dibuat otomatis dan dapat diganti Admin di Dashboard Check In Crew. Menghapus karyawan menonaktifkan login dan mempertahankan riwayat check-in.</p>
       <p id="crewFormStatus" class="text-sm" role="status" aria-live="polite"></p>
       <div class="flex gap-2"><button type="button" onclick="closeModal('modal-crew')" class="flex-1 border border-slate-200 rounded-lg px-4 py-2 text-sm font-semibold">Batal</button><button id="crewSaveButton" type="submit" class="flex-1 bg-brand-600 hover:bg-brand-700 text-white rounded-lg px-4 py-2 text-sm font-semibold">Simpan</button></div>
@@ -1208,7 +1189,7 @@
     <p id="deleteFinanceDescription" class="text-sm text-slate-600"></p>
     <form id="deleteFinanceForm" class="mt-4 space-y-3">
       <input id="deleteFinanceEntryId" type="hidden">
-      <label class="block"><span class="block text-xs font-semibold text-slate-600 mb-1">PIN Master (4 digit)</span><input id="deleteFinancePin" type="password" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" required autocomplete="off" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm"></label>
+      <label class="block"><span class="block text-xs font-semibold text-slate-600 mb-1">PIN Master (4 digit)</span><span class="relative block"><input id="deleteFinancePin" type="password" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" required autocomplete="off" class="w-full border border-slate-200 rounded-lg px-3 py-2 pr-12 text-sm"><button type="button" data-toggle-password="deleteFinancePin" aria-label="Tampilkan PIN" class="absolute inset-y-0 right-0 px-3 text-slate-500 hover:text-slate-800"><svg data-eye-icon width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg></button></span></label>
       <p id="deleteFinanceStatus" class="text-sm" role="status" aria-live="polite"></p>
       <div class="flex gap-2"><button type="button" onclick="closeModal('modal-delete-finance')" class="flex-1 border border-slate-200 rounded-lg px-4 py-2 text-sm font-semibold">Batal</button><button id="deleteFinanceButton" type="submit" class="flex-1 bg-rose-600 hover:bg-rose-700 text-white rounded-lg px-4 py-2 text-sm font-semibold">Hapus</button></div>
     </form>
@@ -1221,7 +1202,7 @@
     <p id="deleteCrewDescription" class="text-sm text-slate-600"></p>
     <form id="deleteCrewForm" class="mt-4 space-y-3">
       <input id="deleteCrewId" type="hidden">
-      <label class="block"><span class="block text-xs font-semibold text-slate-600 mb-1">PIN Master (4 digit)</span><input id="deleteCrewPin" type="password" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" required autocomplete="off" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm" placeholder="PIN persetujuan Master"></label>
+      <label class="block"><span class="block text-xs font-semibold text-slate-600 mb-1">PIN Master (4 digit)</span><span class="relative block"><input id="deleteCrewPin" type="password" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" required autocomplete="off" class="w-full border border-slate-200 rounded-lg px-3 py-2 pr-12 text-sm" placeholder="PIN persetujuan Master"><button type="button" data-toggle-password="deleteCrewPin" aria-label="Tampilkan PIN" class="absolute inset-y-0 right-0 px-3 text-slate-500 hover:text-slate-800"><svg data-eye-icon width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg></button></span></label>
       <p id="deleteCrewStatus" class="text-sm" role="status" aria-live="polite"></p>
       <div class="flex gap-2"><button type="button" onclick="closeModal('modal-delete-crew')" class="flex-1 border border-slate-200 rounded-lg px-4 py-2 text-sm font-semibold">Batal</button><button id="deleteCrewButton" type="submit" class="flex-1 bg-rose-600 hover:bg-rose-700 text-white rounded-lg px-4 py-2 text-sm font-semibold">Nonaktifkan</button></div>
     </form>
@@ -1235,7 +1216,7 @@
     <form id="deleteOwnerShareFinalForm" class="mt-4 space-y-3">
       <input id="deleteOwnerShareOwnerId" type="hidden">
       <input id="deleteOwnerShareMonth" type="hidden">
-      <label class="block"><span class="block text-xs font-semibold text-slate-600 mb-1">PIN Master (4 digit)</span><input id="deleteOwnerSharePin" type="password" inputmode="numeric" pattern="[0-9]{4}" minlength="4" maxlength="4" required autocomplete="off" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm" placeholder="PIN persetujuan Master"></label>
+      <label class="block"><span class="block text-xs font-semibold text-slate-600 mb-1">PIN Master (4 digit)</span><span class="relative block"><input id="deleteOwnerSharePin" type="password" inputmode="numeric" pattern="[0-9]{4}" minlength="4" maxlength="4" required autocomplete="off" class="w-full border border-slate-200 rounded-lg px-3 py-2 pr-12 text-sm" placeholder="PIN persetujuan Master"><button type="button" data-toggle-password="deleteOwnerSharePin" aria-label="Tampilkan PIN" class="absolute inset-y-0 right-0 px-3 text-slate-500 hover:text-slate-800"><svg data-eye-icon width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg></button></span></label>
       <p id="deleteOwnerShareStatus" class="text-sm" role="status" aria-live="polite"></p>
       <div class="flex gap-2"><button type="button" onclick="closeModal('modal-delete-owner-share-final')" class="flex-1 border border-slate-200 rounded-lg px-4 py-2 text-sm font-semibold">Batal</button><button id="deleteOwnerShareButton" type="submit" class="flex-1 bg-rose-600 hover:bg-rose-700 text-white rounded-lg px-4 py-2 text-sm font-semibold">Hapus Laporan Akhir</button></div>
     </form>
@@ -1253,7 +1234,7 @@
       <div class="grid grid-cols-2 gap-3"><label class="block"><span class="block text-xs font-semibold text-slate-600 mb-1">Penerima / Vendor</span><input id="editExpPayee" maxlength="120" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm"></label><label class="block"><span class="block text-xs font-semibold text-slate-600 mb-1">Jumlah (Rp)</span><input id="editExpAmount" type="text" inputmode="numeric" pattern="[0-9.]*" data-currency-input required class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm"></label></div>
       <label class="block"><span class="block text-xs font-semibold text-slate-600 mb-1">Frekuensi</span><select id="editExpRecurrence" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm bg-white"><option value="once">Tidak rutin / sekali</option><option value="weekly">Rutin mingguan</option><option value="monthly">Rutin bulanan</option><option value="quarterly">Rutin triwulanan</option><option value="yearly">Rutin tahunan</option></select></label>
       <div><label for="editExpProof" class="block text-xs font-semibold text-slate-600 mb-1">Ganti Foto Bukti (opsional, di bawah 100 KB)</label><input id="editExpProof" type="file" accept="image/*" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm"><p id="editExpenseProofStatus" class="text-xs text-slate-500 mt-1" role="status" aria-live="polite">Bukti yang ada tetap dipakai jika tidak memilih gambar baru.</p><img id="editExpenseProofPreview" class="hidden mt-2 max-h-40 max-w-full rounded border border-slate-200 object-contain" alt="Pratinjau bukti pengeluaran"></div>
-      <label class="block"><span class="block text-xs font-semibold text-slate-600 mb-1">PIN Master untuk menyimpan perubahan</span><input id="editFinancePin" type="password" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" required autocomplete="off" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm"></label>
+      <label class="block"><span class="block text-xs font-semibold text-slate-600 mb-1">PIN Master untuk menyimpan perubahan</span><span class="relative block"><input id="editFinancePin" type="password" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" required autocomplete="off" class="w-full border border-slate-200 rounded-lg px-3 py-2 pr-12 text-sm"><button type="button" data-toggle-password="editFinancePin" aria-label="Tampilkan PIN" class="absolute inset-y-0 right-0 px-3 text-slate-500 hover:text-slate-800"><svg data-eye-icon width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg></button></span></label>
       <p id="editFinanceStatus" class="text-sm" role="status" aria-live="polite"></p>
       <div class="flex gap-2"><button type="button" onclick="closeModal('modal-edit-finance')" class="flex-1 border border-slate-200 rounded-lg px-4 py-2 text-sm font-semibold">Batal</button><button id="editFinanceButton" type="submit" class="flex-1 bg-brand-600 hover:bg-brand-700 text-white rounded-lg px-4 py-2 text-sm font-semibold">Simpan Perubahan</button></div>
     </form>
@@ -1428,6 +1409,7 @@ function showDashboardApp(account){
   updateStaffChatClearAccess();
   document.getElementById('userManagementPanel').hidden = account.role === 'IT';
   document.getElementById('createAdminButton').classList.toggle('hidden', account.account_id !== 'master');
+  document.getElementById('userActionsHeader').hidden = account.account_id !== 'master';
   document.getElementById('crewManagementPanel').hidden = account.role === 'IT';
   document.getElementById('addPropertyButton').classList.toggle('hidden', account.role === 'IT');
   document.getElementById('settingsNavItem').classList.toggle('hidden', account.role === 'IT');
@@ -1457,6 +1439,30 @@ async function dashboardApi(path, options={}){
   }
   if(!response.ok || result.ok === false) throw new Error(result.error || result.message || `HTTP ${response.status}`);
   return result;
+}
+
+function loginAccountLabel(account){
+  const id = String(account.account_id || '');
+  if(id === 'master') return 'Master';
+  if(id === 'it') return 'IT Support';
+  if(id === 'admin') return 'Admin';
+  const adminMatch = id.match(/^admin-(\d+)$/);
+  return adminMatch ? `Admin ${adminMatch[1]}` : id;
+}
+
+async function loadLoginAccountOptions(){
+  const select = document.getElementById('dashboardLoginAccount');
+  try {
+    const response = await fetch(`${API_BASE}/dashboard/login-accounts`, { cache:'no-store' });
+    const result = await response.json().catch(() => ({}));
+    const accounts = Array.isArray(result.data) ? result.data : [];
+    if(!accounts.length) return;
+    const previous = select.value;
+    select.replaceChildren(...accounts.map(account => new Option(loginAccountLabel(account), account.account_id)));
+    if(accounts.some(account => account.account_id === previous)) select.value = previous;
+  } catch (error) {
+    console.warn('Daftar akun login tidak dapat dimuat.', error);
+  }
 }
 
 async function loginDashboard(event){
@@ -2064,7 +2070,7 @@ const VIEW_META = {
   'bagi-hasil': { title:'Kalkulator Bagi Hasil', sub:'Hitung pembagian bulanan sesuai perjanjian owner' },
   'owner': { title:'Owner', sub:'Daftar pemilik properti dengan persentase kepemilikan' },
   'bantuan': { title:'Bantuan', sub:'Laporkan bug atau kendala teknis kepada tim IT' },
-  'pengaturan': { title:'Pengaturan', sub:'User role, komisi, notifikasi & konfigurasi sistem' }
+  'pengaturan': { title:'Pengaturan', sub:'User role, komisi & konfigurasi sistem' }
 };
 function switchView(name){
   document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
@@ -2810,16 +2816,7 @@ async function loadFinanceData(){
   ]);
   financeCategories = result.data.categories || [];
   financeEntries = result.data.entries || [];
-  USERS.splice(0, USERS.length, ...(accountResult.data || []).map(account => ({
-    account_id:account.account_id,
-    name:account.display_name,
-    email:account.email || '-',
-    role:account.role,
-    access:'Dashboard operasional',
-    status:'active',
-    initial:account.display_name.split(/\s+/).filter(Boolean).slice(0, 2).map(part => part[0]).join('').toUpperCase(),
-    color:account.account_id === 'master' ? 'from-amber-400 to-orange-500' : account.account_id === 'it' ? 'from-blue-400 to-cyan-500' : 'from-emerald-400 to-teal-500'
-  })));
+  USERS.splice(0, USERS.length, ...(accountResult.data || []).map(mapDashboardAccount));
   const expenseEntries = financeEntries.filter(entry => entry.kind === 'expense');
   const mapExpenseEntry = entry => ({
     id:entry.id, date:entry.entry_date, propId:entry.property_id || '', propName:entry.property_name || '',
@@ -3589,7 +3586,7 @@ function renderReport(){
           <div id="reportShareStatusValue" class="text-2xl font-extrabold text-slate-500">Memeriksa final</div>
           <div id="reportShareStatusNote" class="text-xs text-slate-400 mt-1">Persentase owner dan agen tersimpan per properti</div>
         </div>
-      </div>
+      </div>, properties:propStats
     </div>
 
     <!-- Summary cards -->
@@ -4327,15 +4324,101 @@ async function saveOwnerShareFinal(){
   }
 }
 
-function printDashboardView(view, title){
-  const previousTitle = document.title;
-  document.title = title;
-  document.body.dataset.printView = view;
-  window.addEventListener('afterprint', () => {
-    delete document.body.dataset.printView;
-    document.title = previousTitle;
-  }, { once:true });
-  window.print();
+/* ============== PDF: selalu diunduh, tanpa dialog cetak ============== */
+function pdfTable(doc, options){
+  const { margin, columns, rows } = options;
+  const rowHeight = options.rowHeight || 16;
+  const pageHeight = doc.internal.pageSize.getHeight();
+  const totalWidth = columns.reduce((sum, column) => sum + column.width, 0);
+  let y = options.startY;
+  const drawHead = () => {
+    doc.setFillColor(238);
+    doc.rect(margin, y, totalWidth, rowHeight, 'F');
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(8);
+    doc.setTextColor(60);
+    let x = margin;
+    columns.forEach(column => {
+      const text = doc.splitTextToSize(String(column.label), column.width - 8)[0] || '';
+      if(column.align === 'right') doc.text(text, x + column.width - 4, y + 11, { align:'right' });
+      else doc.text(text, x + 4, y + 11);
+      x += column.width;
+    });
+    doc.setTextColor(0);
+    doc.setDrawColor(180);
+    doc.line(margin, y + rowHeight, margin + totalWidth, y + rowHeight);
+    y += rowHeight;
+  };
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(8);
+  drawHead();
+  rows.forEach((row, index) => {
+    if(y + rowHeight > pageHeight - margin){
+      doc.addPage();
+      y = margin;
+      drawHead();
+    }
+    if(row.emphasis){
+      doc.setFillColor(229, 240, 221);
+      doc.rect(margin, y, totalWidth, rowHeight, 'F');
+    } else if(index % 2 === 1){
+      doc.setFillColor(250);
+      doc.rect(margin, y, totalWidth, rowHeight, 'F');
+    }
+    doc.setFont('helvetica', row.emphasis ? 'bold' : 'normal');
+    doc.setFontSize(8);
+    let x = margin;
+    row.cells.forEach((value, columnIndex) => {
+      const column = columns[columnIndex];
+      const text = doc.splitTextToSize(String(value ?? ''), column.width - 8)[0] || '-';
+      if(column.align === 'right') doc.text(text, x + column.width - 4, y + 11, { align:'right' });
+      else doc.text(text, x + 4, y + 11);
+      x += column.width;
+    });
+    doc.setDrawColor(225);
+    doc.line(margin, y + rowHeight, margin + totalWidth, y + rowHeight);
+    y += rowHeight;
+  });
+  return y;
+}
+
+function pdfDocumentHeader(doc, title, subtitle){
+  const margin = 36;
+  const right = doc.internal.pageSize.getWidth() - margin;
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(15);
+  doc.text('YOUR HOME', margin, margin + 4);
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(8);
+  doc.setTextColor(110);
+  doc.text(`Dibuat: ${fmtBookingCreatedAt(new Date())}`, right, margin + 2, { align:'right' });
+  doc.setTextColor(0);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(11);
+  doc.text(title, margin, margin + 22);
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(9);
+  doc.setTextColor(110);
+  doc.text(subtitle, margin, margin + 36);
+  doc.setTextColor(0);
+  doc.setDrawColor(190);
+  doc.line(margin, margin + 46, right, margin + 46);
+  return margin + 58;
+}
+
+function pdfSave(doc, fileName){
+  if(doc.getNumberOfPages && doc.internal.getNumberOfPages() >= 0){
+    for(let page = 1; page <= doc.internal.getNumberOfPages(); page++){
+      doc.setPage(page);
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(8);
+      doc.setTextColor(140);
+      doc.text(`Halaman ${page} dari ${doc.internal.getNumberOfPages()}`, doc.internal.pageSize.getWidth() - 36, doc.internal.pageSize.getHeight() - 20, { align:'right' });
+      doc.setTextColor(0);
+    }
+  }
+  doc.save(fileName);
+  showToast(`PDF diunduh: ${fileName}`);
 }
 
 function downloadOwnerSharePdf(){
@@ -4343,8 +4426,58 @@ function downloadOwnerSharePdf(){
     showToast('Generate hasil terbaru terlebih dahulu.');
     return;
   }
-  const fileName = `bagi-hasil-${lastOwnerShareCalculation.ownerName}-${lastOwnerShareCalculation.month}`.replace(/[^a-z0-9_-]+/gi, '-');
-  printDashboardView('owner-share', fileName);
+  if(!window.jspdf?.jsPDF){
+    showToast('Pembuat PDF belum termuat. Periksa koneksi internet lalu muat ulang halaman.');
+    return;
+  }
+  const calculation = lastOwnerShareCalculation;
+  const monthLabel = new Date(`${calculation.month}-01T00:00:00`).toLocaleDateString('id-ID', { month:'long', year:'numeric' });
+  const doc = new window.jspdf.jsPDF({ unit:'pt', format:'a4', orientation:'landscape' });
+  const margin = 36;
+  const right = doc.internal.pageSize.getWidth() - margin;
+  const startY = pdfDocumentHeader(doc, 'Laporan Bagi Hasil Owner', `${calculation.ownerName} · ${monthLabel} · Laporan Final`);
+  const fixedWidths = [170, 55, 100, 95, 95, 100];
+  const columns = [
+    { label:'PROPERTI', width:fixedWidths[0] },
+    { label:'BOOKING', width:fixedWidths[1], align:'right' },
+    { label:'PENDAPATAN', width:fixedWidths[2], align:'right' },
+    { label:'PEMASUKAN LAIN', width:fixedWidths[3], align:'right' },
+    { label:'PLATFORM FEE', width:fixedWidths[4], align:'right' },
+    { label:'PENGELUARAN', width:fixedWidths[5], align:'right' },
+    { label:'BAGI HASIL OWNER', width:right - margin - fixedWidths.reduce((sum, value) => sum + value, 0), align:'right' },
+  ];
+  const rows = calculation.rows.map(row => ({
+    cells: [
+      row.propertyName || '-',
+      String(row.bookingCount || 0),
+      fmtRp(row.bookingRevenue || 0),
+      fmtRp(row.otherIncome || 0),
+      fmtRp(row.platformFee || 0),
+      fmtRp(row.operatingExpenses || 0),
+      fmtRp(row.ownerShare || 0),
+    ],
+  }));
+  const totals = calculation.totals;
+  rows.push({
+    emphasis: true,
+    cells: [
+      'TOTAL',
+      String(totals.bookingCount || 0),
+      fmtRp(totals.bookingRevenue || 0),
+      fmtRp(totals.otherIncome || 0),
+      fmtRp(totals.platformFee || 0),
+      fmtRp(totals.operatingExpenses || 0),
+      fmtRp(totals.ownerShare || 0),
+    ],
+  });
+  const endY = pdfTable(doc, { margin, columns, rows, startY });
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(9);
+  doc.setTextColor(110);
+  doc.text(`Nilai bersih sebelum bagi hasil: ${fmtRp(totals.netBase || 0)}${totals.deficit ? ` · Defisit: ${fmtRp(totals.deficit)}` : ''}`, margin, endY + 22);
+  doc.setTextColor(0);
+  const fileName = `bagi-hasil-${calculation.ownerName}-${calculation.month}`.replace(/[^a-z0-9_-]+/gi, '-') + '.pdf';
+  pdfSave(doc, fileName);
 }
 
 function downloadOwnerShareCsv(){
@@ -4512,8 +4645,55 @@ function exportReportPdf(){
     showToast('Pilih rentang tanggal laporan yang valid terlebih dahulu.');
     return;
   }
-  const ownerSlug = lastReportSummary.owner.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-  printDashboardView('owner-report', `laporan-${ownerSlug}-${lastReportSummary.period.replace(/[^0-9a-z]+/gi, '-')}`);
+  if(!window.jspdf?.jsPDF){
+    showToast('Pembuat PDF belum termuat. Periksa koneksi internet lalu muat ulang halaman.');
+    return;
+  }
+  const summary = lastReportSummary;
+  const doc = new window.jspdf.jsPDF({ unit:'pt', format:'a4', orientation:'landscape' });
+  const margin = 36;
+  const right = doc.internal.pageSize.getWidth() - margin;
+  const startY = pdfDocumentHeader(doc, 'Laporan Owner', `${summary.owner.name} · ${summary.period} · ${summary.propertyCount} properti`);
+  const fixedWidths = [210, 60, 120, 120];
+  const columns = [
+    { label:'PROPERTI', width:fixedWidths[0] },
+    { label:'BOOKING', width:fixedWidths[1], align:'right' },
+    { label:'PENDAPATAN BOOKING', width:fixedWidths[2], align:'right' },
+    { label:'PEMASUKAN LAIN', width:fixedWidths[3], align:'right' },
+    { label:'PENGELUARAN', width:right - margin - fixedWidths.reduce((sum, value) => sum + value, 0), align:'right' },
+  ];
+  const properties = Array.isArray(summary.properties) ? summary.properties : [];
+  const rows = properties.map(stat => ({
+    cells: [
+      stat.p?.name || '-',
+      String(stat.bookings || 0),
+      fmtRp(stat.grossRev || 0),
+      fmtRp(stat.otherIncome || 0),
+      fmtRp(stat.expTotal || 0),
+    ],
+  }));
+  if(!rows.length){
+    rows.push({ cells:['Tidak ada properti pada periode ini.', '-', '-', '-', '-'] });
+  }
+  const totals = summary.totals;
+  rows.push({
+    emphasis: true,
+    cells: [
+      'TOTAL',
+      String(totals.bookings || 0),
+      fmtRp(totals.grossRev || 0),
+      fmtRp(totals.otherIncome || 0),
+      fmtRp(totals.expTotal || 0),
+    ],
+  });
+  const endY = pdfTable(doc, { margin, columns, rows, startY });
+  const net = (totals.grossRev || 0) + (totals.otherIncome || 0) - (totals.expTotal || 0);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(11);
+  doc.text(`Nilai bersih: ${fmtRp(net)}`, margin, endY + 22);
+  const ownerSlug = summary.owner.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+  const fileName = `laporan-${ownerSlug}-${summary.period.replace(/[^0-9a-z]+/gi, '-')}.pdf`;
+  pdfSave(doc, fileName);
 }
 
 function shareReportWhatsApp(){
@@ -4558,10 +4738,28 @@ function shareReportWhatsApp(){
 }
 
 /* ============== USERS ============== */
+function mapDashboardAccount(account){
+  const name = String(account.display_name || account.account_id || '?');
+  return {
+    account_id:account.account_id,
+    name,
+    email:account.email || '-',
+    role:account.role,
+    access:'Dashboard operasional',
+    status:Number(account.active) === 1 ? 'active' : 'inactive',
+    initial:name.split(/\s+/).filter(Boolean).slice(0, 2).map(part => part[0]).join('').toUpperCase(),
+    color:account.role === 'Master' ? 'from-amber-400 to-orange-500' : account.role === 'IT' ? 'from-blue-400 to-cyan-500' : 'from-emerald-400 to-teal-500',
+  };
+}
+
 function renderUsers(){
   const roleStyles = {
     'Master':'bg-amber-50 text-amber-700','Admin':'bg-blue-50 text-blue-700','IT':'bg-cyan-50 text-cyan-700'
   };
+  const isMaster = currentDashboardAccount?.account_id === 'master';
+  const statusBadge = status => status === 'inactive'
+    ? '<span class="badge bg-slate-100 text-slate-500"><span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span>Nonaktif</span>'
+    : '<span class="badge bg-emerald-50 text-emerald-700"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>Aktif</span>';
   document.getElementById('userTableBody').innerHTML = USERS.map(u => `
     <tr>
       <td class="px-5 py-3">
@@ -4569,6 +4767,7 @@ function renderUsers(){
           <div class="w-9 h-9 rounded-full bg-gradient-to-br ${u.color} flex items-center justify-center text-white text-xs font-bold">${escapeHtml(u.initial)}</div>
           <div>
             <div class="font-semibold text-slate-900 text-sm">${escapeHtml(u.name)}</div>
+            <div class="text-[11px] text-slate-400">${escapeHtml(u.account_id)}</div>
             <div class="text-xs text-slate-400 sm:hidden">${escapeHtml(u.email)}</div>
           </div>
         </div>
@@ -4576,12 +4775,73 @@ function renderUsers(){
       <td class="px-3 py-3 hidden sm:table-cell text-sm text-slate-600">${escapeHtml(u.email)}</td>
       <td class="px-3 py-3"><span class="badge ${roleStyles[u.role] || 'bg-slate-100 text-slate-700'}">${escapeHtml(u.role)}</span></td>
       <td class="px-3 py-3 hidden md:table-cell text-xs text-slate-500">${escapeHtml(u.access)}</td>
-      <td class="px-5 py-3 text-center">
-        ${u.status==='active'
-          ? '<span class="badge bg-emerald-50 text-emerald-700"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>Aktif</span>'
-          : '<span class="badge bg-amber-50 text-amber-700"><span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>Pending</span>'}
-      </td>
+      <td class="px-5 py-3 text-center">${statusBadge(u.status)}</td>
+      ${isMaster ? `<td class="px-5 py-3 text-right whitespace-nowrap">${u.account_id === 'master'
+        ? '<span class="text-xs text-slate-300">—</span>'
+        : `${u.status === 'inactive'
+            ? `<button type="button" onclick="setAccountActive('${escapeHtml(u.account_id)}', 1)" class="text-xs font-semibold text-emerald-600 hover:text-emerald-800">Aktifkan</button>`
+            : `<button type="button" onclick="setAccountActive('${escapeHtml(u.account_id)}', 0)" class="text-xs font-semibold text-amber-600 hover:text-amber-800">Nonaktifkan</button>`}<button type="button" onclick="openAccountDeleteModal('${escapeHtml(u.account_id)}')" class="ml-3 text-xs font-semibold text-rose-600 hover:text-rose-800">Hapus</button>`}</td>` : ''}
     </tr>`).join('');
+}
+
+async function loadDashboardAccounts(){
+  const result = await dashboardApi('/dashboard/accounts');
+  USERS.splice(0, USERS.length, ...(result.data || []).map(mapDashboardAccount));
+  renderUsers();
+}
+
+async function setAccountActive(accountId, active){
+  const user = USERS.find(item => item.account_id === accountId);
+  const label = user ? user.name : accountId;
+  if(active === 0 && !window.confirm(`Nonaktifkan akun ${label}? Akun tidak dapat login lagi, tetapi data dan riwayatnya tetap tersimpan.`)) return;
+  try {
+    await dashboardApi(`/dashboard/accounts/${encodeURIComponent(accountId)}`, { method:'PATCH', body:JSON.stringify({ active }) });
+    await loadDashboardAccounts();
+    showToast(active === 1 ? `Akun ${label} diaktifkan kembali.` : `Akun ${label} dinonaktifkan.`);
+  } catch(error) {
+    showToast(error.message || 'Status akun gagal diubah.');
+  }
+}
+
+function openAccountDeleteModal(accountId){
+  const user = USERS.find(item => item.account_id === accountId);
+  if(!user) return;
+  document.getElementById('deleteAccountForm').reset();
+  document.getElementById('deleteAccountId').value = accountId;
+  document.getElementById('deleteAccountDescription').textContent = `Hapus permanen akun ${user.name} (${accountId})? Akun hilang dari daftar dan tidak dapat dipulihkan. Riwayat transaksi yang pernah dibuat tetap tersimpan.`;
+  document.getElementById('deleteAccountStatus').textContent = '';
+  openModal('modal-delete-account');
+  document.getElementById('deleteAccountPin').focus();
+}
+
+async function submitAccountDelete(event){
+  event.preventDefault();
+  const accountId = document.getElementById('deleteAccountId').value;
+  const pinInput = document.getElementById('deleteAccountPin');
+  const status = document.getElementById('deleteAccountStatus');
+  const button = document.getElementById('deleteAccountButton');
+  const user = USERS.find(item => item.account_id === accountId);
+  const label = user ? user.name : accountId;
+  if(!/^\d{4}$/.test(pinInput.value.trim())){
+    status.className = 'text-sm text-rose-600';
+    status.textContent = 'Masukkan PIN Master tepat 4 digit.';
+    return;
+  }
+  button.disabled = true;
+  status.className = 'text-sm text-slate-500';
+  status.textContent = 'Memverifikasi PIN Master...';
+  try {
+    await dashboardApi(`/dashboard/accounts/${encodeURIComponent(accountId)}`, { method:'DELETE', body:JSON.stringify({ pin:pinInput.value.trim() }) });
+    await loadDashboardAccounts();
+    closeModal('modal-delete-account');
+    showToast(`Akun ${label} dihapus.`);
+  } catch(error) {
+    pinInput.value = '';
+    status.className = 'text-sm text-rose-600';
+    status.textContent = error.message || 'Akun gagal dihapus.';
+  } finally {
+    button.disabled = false;
+  }
 }
 
 /* ============== FORM SUBMITS ============== */
@@ -4959,7 +5219,9 @@ async function submitContactMessage(event){
 /* ============== INIT ============== */
 document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('dashboardLoginForm').addEventListener('submit', loginDashboard);
+  loadLoginAccountOptions();
   document.getElementById('createAdminForm').addEventListener('submit', submitCreateAdmin);
+  document.getElementById('deleteAccountForm').addEventListener('submit', submitAccountDelete);
   document.getElementById('profileForm').addEventListener('submit', saveDashboardProfile);
   document.getElementById('passwordForm').addEventListener('submit', changeDashboardPassword);
   document.getElementById('deletePinForm').addEventListener('submit', changeDashboardDeletePin);
@@ -5035,6 +5297,8 @@ document.addEventListener('DOMContentLoaded', () => {
   setInterval(async () => {
     if(!currentDashboardAccount || document.hidden) return;
     try {
+      // Akun yang dinonaktifkan Master langsung kehilangan sesi pada pemeriksaan berikutnya.
+      await dashboardApi('/dashboard/profile');
       const bookingEditorOpen = ['modal-booking', 'modal-cancel-booking'].some(id => !document.getElementById(id).classList.contains('hidden'));
       if(!bookingEditorOpen) await loadBookingData(currentDashboardAccount);
       await loadFinanceData();
@@ -5043,6 +5307,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if(currentView === 'booking' && !bookingEditorOpen) renderBookingView();
       if(currentView === 'owner') renderOwners();
       if(currentView === 'laporan') renderReport();
+      if(currentView === 'pengaturan') renderUsers();
     } catch(error) {
       console.warn('Refresh data dashboard otomatis gagal.', error);
     }

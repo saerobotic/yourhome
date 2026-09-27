@@ -1264,6 +1264,28 @@ export default {
         });
       }
 
+      // Daftar akun untuk pilihan di halaman login.
+      // Sengaja hanya mengirim ID dan role; nama pegawai tidak dikirim keluar sebelum login.
+      if (request.method === 'GET' && path === '/dashboard/login-accounts') {
+        try {
+          const result = await env.DB.prepare(`
+            SELECT account_id, role FROM dashboard_users
+            WHERE active = 1
+            ORDER BY CASE role WHEN 'Master' THEN 0 WHEN 'Admin' THEN 1 ELSE 2 END, account_id COLLATE NOCASE
+          `).all();
+          return json({ ok:true, data: result.results || [] });
+        } catch (error) {
+          if (/no such table: dashboard_users/i.test(String(error?.message || error))) {
+            return json({ ok:true, data: [
+              { account_id:'master', role:'Master' },
+              { account_id:'admin', role:'Admin' },
+              { account_id:'it', role:'IT' },
+            ] });
+          }
+          throw error;
+        }
+      }
+
       if (request.method === 'POST' && path === '/dashboard/login') {
         const rate = await reserveLoginAttempt(env, request, 'dashboard-login');
         if (rate.unavailable) return bad('Tabel pembatas login belum tersedia. Jalankan migration-auth-login-rate-limits.sql di D1.', 503);
@@ -1350,7 +1372,7 @@ export default {
             SELECT account_id, display_name, email, role, delete_pin_must_change FROM dashboard_users
             WHERE account_id = ? AND active = 1
           `).bind(tokenData.account_id).first();
-          if (!account) return bad('Akun tidak ditemukan atau tidak aktif.', 404);
+          if (!account) return bad('Akun ini sudah dinonaktifkan. Hubungi Master.', 401);
           return json({ ok: true, data: account });
         }
 
@@ -1410,11 +1432,56 @@ export default {
           `).first();
           return json({ ok: true, data: account ? [account] : [] });
         }
+        // Master melihat seluruh akun, termasuk yang nonaktif, agar bisa diaktifkan kembali.
+        const isMasterViewer = tokenData.account_id === 'master' && tokenData.role === 'Master';
         const result = await env.DB.prepare(`
           SELECT account_id, display_name, email, role, active FROM dashboard_users
-          WHERE active = 1 ORDER BY CASE account_id WHEN 'master' THEN 0 ELSE 1 END
+          ${isMasterViewer ? '' : 'WHERE active = 1'}
+          ORDER BY CASE role WHEN 'Master' THEN 0 WHEN 'Admin' THEN 1 ELSE 2 END, account_id COLLATE NOCASE
         `).all();
         return json({ ok: true, data: result.results || [] });
+      }
+
+      const dashboardAccountMatch = path.match(/^\/dashboard\/accounts\/([^/]+)$/);
+      if (dashboardAccountMatch && ['PATCH', 'DELETE'].includes(request.method)) {
+        const adminSecret = String(env.ADMIN_DASHBOARD_SECRET || '').trim();
+        const tokenData = await getAdminTokenPayload(request, adminSecret);
+        if (tokenData?.account_id !== 'master' || tokenData.role !== 'Master') {
+          return bad('Hanya Master yang dapat mengelola akun staf.', 403);
+        }
+        const accountId = decodeURIComponent(dashboardAccountMatch[1]);
+        if (accountId === 'master') {
+          return bad('Akun Master tidak dapat dinonaktifkan atau dihapus.', 403);
+        }
+        const target = await env.DB.prepare(`
+          SELECT account_id, display_name, role, active FROM dashboard_users WHERE account_id = ?
+        `).bind(accountId).first();
+        if (!target) return bad('Akun tidak ditemukan.', 404);
+
+        if (request.method === 'PATCH') {
+          const body = await request.json();
+          const requested = body.active;
+          const active = requested === 1 || requested === true ? 1 : requested === 0 || requested === false ? 0 : null;
+          if (active === null) return bad('Status akun tidak valid.', 400);
+          await env.DB.prepare('UPDATE dashboard_users SET active = ?, updated_at = ? WHERE account_id = ?')
+            .bind(active, new Date().toISOString(), accountId).run();
+          return json({ ok: true, data: { account_id: accountId, active } });
+        }
+
+        // Hapus permanen memerlukan PIN Master.
+        let body = {};
+        try { body = await request.json(); } catch {}
+        const pin = String(body.pin || '').trim();
+        if (!/^\d{4}$/.test(pin)) return bad('Masukkan PIN Master tepat 4 digit.', 400);
+        const master = await env.DB.prepare(`
+          SELECT delete_pin_salt, delete_pin_hash FROM dashboard_users
+          WHERE account_id = 'master' AND active = 1
+        `).first();
+        if (!master?.delete_pin_hash) return bad('PIN Master belum diinisialisasi. Login sebagai Master terlebih dahulu.', 409);
+        const attemptedHash = await hashDashboardPassword(pin, master.delete_pin_salt);
+        if (!constantTimeEqual(attemptedHash, master.delete_pin_hash)) return bad('PIN Master salah.', 403);
+        await env.DB.prepare('DELETE FROM dashboard_users WHERE account_id = ?').bind(accountId).run();
+        return json({ ok: true, data: { account_id: accountId, deleted: true } });
       }
 
       if (path === '/dashboard/staff-chat') {

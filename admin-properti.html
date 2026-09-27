@@ -32,7 +32,7 @@
       <h1>Admin Website</h1>
       <p class="subtitle">Kelola data properti YOUR HOME.</p>
       <form id="loginForm" class="login-form">
-        <label class="field"><span class="meta-label">ID Staf</span><input id="adminStaffId" list="adminStaffOptions" value="master" autocomplete="username" placeholder="Contoh: admin-1" required /><datalist id="adminStaffOptions"><option value="master">Master</option><option value="admin">Admin</option><option value="it">IT</option></datalist></label>
+        <label class="field"><span class="meta-label">ID Staf</span><select id="adminStaffId" autocomplete="username" required><option value="master">Master</option></select></label>
         <label class="field"><span class="meta-label">Password</span><span class="password-wrap"><input id="adminPassword" type="password" autocomplete="current-password" required /><button id="toggleAdminPassword" class="password-toggle" type="button" aria-label="Tampilkan password" title="Tampilkan password">&#128065;</button></span></label>
         <button class="button primary" type="submit">Masuk</button>
         <p id="loginMessage" class="status error"></p>
@@ -487,6 +487,28 @@
           : error.message;
       }
     }
+    function loginAccountLabel(account){
+      const id = String(account.account_id || '');
+      if(id === 'master') return 'Master';
+      if(id === 'it') return 'IT Support';
+      if(id === 'admin') return 'Admin';
+      const adminMatch = id.match(/^admin-(\d+)$/);
+      return adminMatch ? `Admin ${adminMatch[1]}` : id;
+    }
+    async function loadLoginAccountOptions(){
+      const select = el('adminStaffId');
+      try {
+        const response = await fetch(`${API_BASE}/dashboard/login-accounts`, { cache:'no-store' });
+        const result = await response.json().catch(() => ({}));
+        const accounts = Array.isArray(result.data) ? result.data : [];
+        if(!accounts.length) return;
+        const previous = select.value;
+        select.replaceChildren(...accounts.map(account => new Option(loginAccountLabel(account), account.account_id)));
+        if(accounts.some(account => account.account_id === previous)) select.value = previous;
+      } catch (error) {
+        console.warn('Daftar akun login tidak dapat dimuat.', error);
+      }
+    }
     async function login(event) {
       event.preventDefault();
       const button = event.currentTarget.querySelector('button'); button.disabled = true;
@@ -620,6 +642,7 @@
       state.mainImagePreview = state.mainImageFile ? URL.createObjectURL(state.mainImageFile) : '';
       renderMainPreview();
     });
+    loadLoginAccountOptions();
     el('propertyImageFiles').addEventListener('change', event => {
       state.galleryChanged = true;
       state.newImagePreviews.forEach(url => URL.revokeObjectURL(url));
