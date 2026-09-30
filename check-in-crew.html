@@ -233,9 +233,10 @@
       <p id="todayDate" class="text-xs text-brand-100 mt-3"></p>
     </header>
 
-    <nav class="px-5 pt-5 flex gap-2" role="tablist" aria-label="Navigasi Check In Crew">
-      <button id="crewCheckinTab" type="button" role="tab" aria-selected="true" aria-controls="crewCheckinView" class="flex-1 rounded-xl bg-brand-600 px-4 py-3 text-sm font-semibold text-white">Check-in</button>
-      <button id="crewDocumentationTab" type="button" role="tab" aria-selected="false" aria-controls="crewDocumentationView" class="flex-1 rounded-xl bg-white border border-gray-200 px-4 py-3 text-sm font-semibold text-gray-700">Dokumentasi Saya</button>
+    <nav class="px-5 pt-5 grid grid-cols-3 gap-2" role="tablist" aria-label="Navigasi Check In Crew">
+      <button id="crewCheckinTab" type="button" role="tab" aria-selected="true" aria-controls="crewCheckinView" class="min-h-12 rounded-xl bg-brand-600 px-2 py-3 text-xs sm:text-sm font-semibold leading-tight text-white">Check-in</button>
+      <button id="crewDocumentationTab" type="button" role="tab" aria-selected="false" aria-controls="crewDocumentationView" class="min-h-12 rounded-xl bg-white border border-gray-200 px-2 py-3 text-xs sm:text-sm font-semibold leading-tight text-gray-700">Dokumentasi Saya</button>
+      <button id="crewTasksTab" type="button" role="tab" aria-selected="false" aria-controls="crewTasksView" class="min-h-12 rounded-xl bg-white border border-gray-200 px-2 py-3 text-xs sm:text-sm font-semibold leading-tight text-gray-700">Tugas Hari Ini <span id="crewTaskBadge" class="ml-1"></span></button>
     </nav>
 
     <!-- ===========================================================
@@ -372,7 +373,6 @@
           Simpan Check-in
         </button>
       </div>
-    </div>
 
     <!-- ===========================================================
          RIWAYAT CHECK-IN HARI INI
@@ -418,6 +418,12 @@
         </div>
       </div>
     </section>
+
+    <section id="crewTasksView" role="tabpanel" aria-labelledby="crewTasksTab" class="hidden px-5 pt-5">
+      <h3 class="font-bold text-gray-800 mb-3">Tugas Saya</h3>
+      <p id="crewTasksStatus" class="text-sm text-gray-500 mb-3" role="status" aria-live="polite"></p>
+      <div id="crewTasksList" class="space-y-3"></div>
+    </section>
   </section>
 
   <dialog id="checkinConfirmDialog" class="w-[calc(100%-2rem)] max-w-md rounded-xl border-0 p-0 shadow-2xl backdrop:bg-black/50">
@@ -460,6 +466,7 @@
     MAX_WORK_PHOTOS: 30
   };
   const PENDING_KEY = 'pending_checkins_v1';
+  const FIELD_TASKS_KEY = 'yourhome_field_tasks_draft_v1';
 
   function formatLocalDateKey(date = new Date()) {
     return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
@@ -480,6 +487,7 @@
   let crewDocumentationHasMore = false;
   let crewDocumentationLoading = false;
   let crewDocumentationRequestId = 0;
+  let crewTasks = [];
   const CREW_DOCUMENTATION_PAGE_SIZE = 10;
 
   /* ============================================================
@@ -570,9 +578,11 @@
   }
 
   async function getTodayRecordsForCrew(crew) {
-    const query = `date=${state.today}&crew=${encodeURIComponent(crew)}&_=${Date.now()}`;
-    const response = await api(`/checkins?${query}`, { cache: 'no-store' });
-    return recordsFromResponse(response);
+    const today = formatLocalDateKey();
+    state.today = today;
+    const params = new URLSearchParams({ month:today.slice(0, 7), limit:'50', offset:'0' });
+    const response = await api(`/crew/checkins?${params.toString()}`, { cache:'no-store' });
+    return recordsFromResponse(response).filter(record => record.crew === crew && record.work_date === today);
   }
 
   async function loadCrewDocumentation({ offset = 0 } = {}) {
@@ -620,6 +630,98 @@
     }
   }
 
+  function readCrewTasks() {
+    try {
+      const tasks = JSON.parse(localStorage.getItem(FIELD_TASKS_KEY) || '[]');
+      return Array.isArray(tasks) ? tasks : [];
+    } catch (error) {
+      console.error('Gagal membaca daftar tugas crew:', error);
+      return [];
+    }
+  }
+
+  function renderCrewTasks() {
+    const list = document.getElementById('crewTasksList');
+    const status = document.getElementById('crewTasksStatus');
+    const badge = document.getElementById('crewTaskBadge');
+    const today = formatLocalDateKey();
+    crewTasks = state.currentCrew
+      ? readCrewTasks()
+        .filter(task => task.date === today && task.crew === state.currentCrew)
+        .sort((left, right) => String(left.time || '').localeCompare(String(right.time || '')))
+      : [];
+    badge.textContent = crewTasks.length ? `· ${crewTasks.length}` : '';
+    document.getElementById('crewTasksTab').setAttribute('aria-label', `Tugas Hari Ini, ${crewTasks.length} tugas`);
+
+    if (!state.currentCrew) {
+      list.replaceChildren();
+      status.textContent = '';
+      return;
+    }
+    if (!crewTasks.length) {
+      list.replaceChildren();
+      status.textContent = 'Belum ada tugas untuk hari ini.';
+      return;
+    }
+
+    const checkedCount = crewTasks.filter(task => task.status === 'completed' || task.completionRequestedAt).length;
+    status.textContent = `${crewTasks.length} tugas hari ini · ${checkedCount} ditandai selesai · ${crewTasks.length - checkedCount} belum ditandai.`;
+    list.innerHTML = crewTasks.map(task => {
+      const completed = task.status === 'completed';
+      const waitingForCheckin = !completed && Boolean(task.completionRequestedAt);
+      const badgeText = completed ? 'Sudah dikerjakan' : waitingForCheckin ? 'Menunggu check-in' : 'Belum dikerjakan';
+      const badgeClass = completed ? 'bg-green-50 text-green-700' : waitingForCheckin ? 'bg-brand-50 text-brand-800' : 'bg-amber-50 text-amber-800';
+      const buttonText = completed ? 'Tandai belum dikerjakan' : waitingForCheckin ? 'Batalkan tanda selesai' : 'Tandai sudah dikerjakan';
+      const buttonClass = completed || waitingForCheckin
+        ? 'border-brand-600 bg-brand-600 text-white hover:bg-brand-700'
+        : 'border-gray-200 text-gray-700 hover:bg-gray-50';
+      const waitingText = waitingForCheckin ? '<p class="mt-2 text-xs text-gray-500">Menunggu check-in berhasil untuk mengonfirmasi tugas.</p>' : '';
+      return `<article class="rounded-xl border border-gray-200 bg-white p-4"><div class="flex flex-wrap items-start justify-between gap-2"><div class="min-w-0"><h4 class="font-bold text-gray-800">${escapeHtml(task.type || 'Tugas')}</h4><p class="mt-1 text-sm text-gray-600">${escapeHtml(task.property || 'Properti')}</p></div><span class="shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold ${badgeClass}">${badgeText}</span></div><p class="mt-2 text-xs text-gray-500">${escapeHtml(task.time || 'Tanpa jam')}${task.note ? ` · ${escapeHtml(task.note)}` : ''}</p>${waitingText}<button type="button" data-crew-task-id="${escapeHtml(task.id)}" aria-pressed="${completed || waitingForCheckin}" class="mt-3 rounded-lg border px-3 py-2 text-sm font-semibold transition ${buttonClass}">${buttonText}</button></article>`;
+    }).join('');
+  }
+
+  function handleCrewTaskAction(event) {
+    const button = event.target.closest('[data-crew-task-id]');
+    if (!button || !state.currentCrew) return;
+    const tasks = readCrewTasks();
+    const task = tasks.find(item => String(item.id) === button.dataset.crewTaskId
+      && item.date === formatLocalDateKey() && item.crew === state.currentCrew);
+    if (!task) {
+      renderCrewTasks();
+      return;
+    }
+    if (task.status === 'completed' || task.completionRequestedAt) {
+      task.status = 'assigned';
+      delete task.completedAt;
+      delete task.completionRequestedAt;
+    } else {
+      task.completionRequestedAt = new Date().toISOString();
+    }
+    localStorage.setItem(FIELD_TASKS_KEY, JSON.stringify(tasks));
+    renderCrewTasks();
+  }
+
+  function completeRequestedCrewTasks(property) {
+    const normalizedProperty = String(property || '').trim().toLocaleLowerCase('id');
+    if (!normalizedProperty || !state.currentCrew) return;
+    const tasks = readCrewTasks();
+    let changed = false;
+    tasks.forEach(task => {
+      if (task.crew === state.currentCrew && task.date === formatLocalDateKey()
+        && String(task.property || '').trim().toLocaleLowerCase('id') === normalizedProperty
+        && task.completionRequestedAt && task.status !== 'completed') {
+        task.status = 'completed';
+        task.completedAt = new Date().toISOString();
+        delete task.completionRequestedAt;
+        changed = true;
+      }
+    });
+    if (changed) {
+      localStorage.setItem(FIELD_TASKS_KEY, JSON.stringify(tasks));
+      renderCrewTasks();
+    }
+  }
+
   function renderCrewDocumentationCard(record) {
     const card = document.createElement('article');
     card.className = 'rounded-xl border border-gray-200 bg-white p-4';
@@ -639,15 +741,21 @@
 
   function switchCrewView(view) {
     const showDocumentation = view === 'documentation';
-    document.getElementById('crewCheckinView').classList.toggle('hidden', showDocumentation);
+    const showTasks = view === 'tasks';
+    document.getElementById('crewCheckinView').classList.toggle('hidden', showDocumentation || showTasks);
     document.getElementById('crewDocumentationView').classList.toggle('hidden', !showDocumentation);
+    document.getElementById('crewTasksView').classList.toggle('hidden', !showTasks);
     const checkinTab = document.getElementById('crewCheckinTab');
     const documentationTab = document.getElementById('crewDocumentationTab');
-    checkinTab.setAttribute('aria-selected', String(!showDocumentation));
+    const tasksTab = document.getElementById('crewTasksTab');
+    checkinTab.setAttribute('aria-selected', String(!showDocumentation && !showTasks));
     documentationTab.setAttribute('aria-selected', String(showDocumentation));
-    checkinTab.className = `flex-1 rounded-xl px-4 py-3 text-sm font-semibold ${showDocumentation ? 'bg-white border border-gray-200 text-gray-700' : 'bg-brand-600 text-white'}`;
-    documentationTab.className = `flex-1 rounded-xl px-4 py-3 text-sm font-semibold ${showDocumentation ? 'bg-brand-600 text-white' : 'bg-white border border-gray-200 text-gray-700'}`;
+    tasksTab.setAttribute('aria-selected', String(showTasks));
+    checkinTab.className = `min-h-12 rounded-xl px-2 py-3 text-xs sm:text-sm font-semibold leading-tight ${!showDocumentation && !showTasks ? 'bg-brand-600 text-white' : 'bg-white border border-gray-200 text-gray-700'}`;
+    documentationTab.className = `min-h-12 rounded-xl px-2 py-3 text-xs sm:text-sm font-semibold leading-tight ${showDocumentation ? 'bg-brand-600 text-white' : 'bg-white border border-gray-200 text-gray-700'}`;
+    tasksTab.className = `min-h-12 rounded-xl px-2 py-3 text-xs sm:text-sm font-semibold leading-tight ${showTasks ? 'bg-brand-600 text-white' : 'bg-white border border-gray-200 text-gray-700'}`;
     if (showDocumentation) loadCrewDocumentation();
+    if (showTasks) renderCrewTasks();
   }
 
   async function loadCheckinProperties({ silent = false } = {}) {
@@ -841,6 +949,7 @@
     document.getElementById('mainApp').classList.add('screen');
     document.getElementById('greetingCrew').textContent = state.currentCrew;
     switchCrewView('checkin');
+    renderCrewTasks();
     await loadCheckinProperties({ silent:true });
     await checkLocationAvailability();
     updatePendingBadge();
@@ -949,6 +1058,7 @@
       crewDocumentationRequestId += 1;
       crewDocumentationLoading = false;
       switchCrewView('checkin');
+      renderCrewTasks();
       document.getElementById('crewDocumentationList').replaceChildren();
       document.getElementById('crewDocumentationStatus').textContent = '';
       document.getElementById('crewDocumentationSummary').textContent = 'Riwayat kerja yang tersimpan atas akun Crew ini.';
@@ -966,6 +1076,8 @@
     document.getElementById('refreshPropertiesBtn').addEventListener('click', () => loadCheckinProperties());
     document.getElementById('crewCheckinTab').addEventListener('click', () => switchCrewView('checkin'));
     document.getElementById('crewDocumentationTab').addEventListener('click', () => switchCrewView('documentation'));
+    document.getElementById('crewTasksTab').addEventListener('click', () => switchCrewView('tasks'));
+    document.getElementById('crewTasksList').addEventListener('click', handleCrewTaskAction);
     document.getElementById('refreshCrewDocumentationBtn').addEventListener('click', () => loadCrewDocumentation());
     document.getElementById('previousCrewDocumentationBtn').addEventListener('click', () => loadCrewDocumentation({ offset:crewDocumentationOffset - CREW_DOCUMENTATION_PAGE_SIZE }));
     document.getElementById('nextCrewDocumentationBtn').addEventListener('click', () => loadCrewDocumentation({ offset:crewDocumentationOffset + CREW_DOCUMENTATION_PAGE_SIZE }));
@@ -976,7 +1088,18 @@
       if (state.currentCrew) loadCheckinProperties({ silent:true });
     });
     document.addEventListener('visibilitychange', () => {
-      if (!document.hidden && state.currentCrew) loadCheckinProperties({ silent:true });
+      if (!document.hidden && state.currentCrew) {
+        loadCheckinProperties({ silent:true });
+        renderCrewTasks();
+      }
+    });
+    window.addEventListener('storage', event => {
+      if (event.key === FIELD_TASKS_KEY) renderCrewTasks();
+    });
+    window.addEventListener('focus', () => {
+      if (state.currentCrew) {
+        renderCrewTasks();
+      }
     });
     window.addEventListener('online', updateNetworkStatus);
     window.addEventListener('offline', updateNetworkStatus);
@@ -1010,10 +1133,23 @@
     document.getElementById('confirmSaveCheckinBtn').addEventListener('click', confirmCheckinSubmission);
 
     // --- Refresh riwayat ---
-    document.getElementById('refreshHistoryBtn').addEventListener('click', async () => {
-      await renderHistory();
-      await updateStats();
-      showToast('Riwayat diperbarui.', 'info');
+    const refreshHistoryButton = document.getElementById('refreshHistoryBtn');
+    refreshHistoryButton.addEventListener('click', async () => {
+      if (!state.currentCrew || refreshHistoryButton.disabled) return;
+      refreshHistoryButton.disabled = true;
+      refreshHistoryButton.textContent = 'Memuat...';
+      try {
+        const records = await getTodayRecordsForCrew(state.currentCrew);
+        renderHistoryRecords(records);
+        updateStatsFromRecords(records);
+        showToast('Riwayat diperbarui.', 'info');
+      } catch (error) {
+        console.error('Gagal memuat riwayat check-in:', error);
+        showToast(error.message || 'Gagal memuat riwayat check-in.', 'error');
+      } finally {
+        refreshHistoryButton.disabled = false;
+        refreshHistoryButton.textContent = 'Refresh';
+      }
     });
   }
 
@@ -1341,6 +1477,7 @@
       if (!res.ok || data.ok === false) {
         throw new Error(data.error || data.message || text || ('HTTP ' + res.status));
       }
+      completeRequestedCrewTasks(unit);
       showToast('Check-in berhasil disimpan! ✅', 'success');
       resetForm();
       await renderHistory();
@@ -1411,6 +1548,7 @@
           if (!response.ok || data.ok === false) {
             throw new Error(data.error || data.message || text || `HTTP ${response.status}`);
           }
+          completeRequestedCrewTasks(item.payload.unit);
           sent += 1;
         } catch (error) {
           console.error('Gagal mengirim check-in tertunda:', item.id, error);
@@ -1458,8 +1596,6 @@
      RENDER: riwayat hari ini (khusus crew yang login)
      ============================================================ */
   async function renderHistory() {
-    const list = document.getElementById('historyList');
-    const empty = document.getElementById('historyEmpty');
     if (!state.currentCrew) return;
 
     let myRecords;
@@ -1467,12 +1603,18 @@
       myRecords = await getTodayRecordsForCrew(state.currentCrew);
     } catch (error) {
       console.error('Gagal memuat riwayat check-in:', error);
-      list.innerHTML = '';
-      empty.classList.remove('hidden');
+      renderHistoryRecords([]);
       showToast('Gagal memuat riwayat check-in.', 'error');
       return;
     }
 
+    renderHistoryRecords(myRecords);
+    updateStatsFromRecords(myRecords);
+  }
+
+  function renderHistoryRecords(myRecords) {
+    const list = document.getElementById('historyList');
+    const empty = document.getElementById('historyEmpty');
     if (myRecords.length === 0) {
       list.innerHTML = '';
       empty.classList.remove('hidden');
@@ -1522,6 +1664,10 @@
       console.error('Gagal memuat statistik check-in:', error);
       return;
     }
+    updateStatsFromRecords(records);
+  }
+
+  function updateStatsFromRecords(records) {
     document.getElementById('statTotal').textContent = records.length;
     // Total unit unik (case-insensitive, trimmed)
     const uniqueUnits = new Set(records.map(r => r.unit.trim().toLowerCase()));
