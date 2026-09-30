@@ -13,23 +13,35 @@
   <style>body{background:#f6f7fb}*{font-family:Inter,sans-serif}details summary{cursor:pointer}details summary::-webkit-details-marker{display:none}</style>
 </head>
 <body class="text-slate-800">
-  <main id="loginScreen" class="min-h-screen flex items-center justify-center p-4 bg-slate-100">
-    <section class="w-full max-w-md bg-white border border-slate-200 rounded-xl shadow-sm p-6 sm:p-8">
-      <div class="mb-6">
-        <img id="ownerLoginLogo" src="https://ik.imagekit.io/o1hnx31yy/yh%20(2).png?tr=f-jpg" alt="YOUR HOME" class="mx-auto w-52 max-h-20 object-contain mb-5" />
-        <p class="text-xs font-bold uppercase tracking-wider text-brand-600">YOUR HOME · Owner Portal</p>
-        <h1 class="text-2xl font-extrabold text-slate-900 mt-2">Laporan Properti</h1>
-        <p class="text-sm text-slate-500 mt-1">Masuk untuk melihat laporan bagi hasil final Anda.</p>
+  <main id="loginScreen" class="min-h-screen grid lg:grid-cols-[1.05fr_1fr]">
+    <aside class="hidden lg:flex relative overflow-hidden bg-slate-900 text-white p-12 flex-col justify-between" aria-hidden="true">
+      <div class="absolute -left-28 -bottom-32 w-96 h-96 rounded-full border-[56px] border-white/10"></div>
+      <div class="absolute right-12 top-12 w-28 h-28 rounded-full border border-white/15"></div>
+      <div class="relative z-10 text-sm font-extrabold tracking-wide uppercase">YOUR HOME</div>
+      <div class="relative z-10">
+        <h2 class="text-3xl xl:text-4xl font-extrabold leading-tight max-w-xs">Pantau bagi hasil properti Anda kapan saja.</h2>
+        <p class="text-slate-300 mt-4 max-w-sm text-sm">Lihat laporan pendapatan, biaya operasional, dan hak bagi hasil final untuk setiap properti yang Anda miliki.</p>
       </div>
-      <form id="loginForm" class="space-y-4">
-        <label class="block"><span class="block text-sm font-semibold text-slate-700 mb-1.5">ID Owner</span><input id="ownerId" required maxlength="80" autocomplete="username" placeholder="Contoh: O1" class="w-full border border-slate-200 rounded-lg px-3 py-2.5 text-sm" /></label>
-        <label class="block"><span class="block text-sm font-semibold text-slate-700 mb-1.5">Password</span><span class="relative block"><input id="ownerPassword" type="password" required autocomplete="current-password" class="w-full border border-slate-200 rounded-lg px-3 py-2.5 pr-12 text-sm" /><button id="togglePassword" type="button" aria-label="Tampilkan password" title="Tampilkan password" class="absolute inset-y-0 right-0 px-3 text-slate-500 hover:text-slate-800">&#128065;</button></span></label>
-        <label class="flex items-center gap-2 text-xs text-slate-600"><input id="rememberSession" type="checkbox" class="w-3.5 h-3.5 accent-brand-600" /> Ingat sesi di perangkat ini</label>
-        <p id="loginStatus" class="min-h-5 text-sm text-rose-600" role="alert" aria-live="polite"></p>
-        <button id="loginButton" type="submit" class="w-full bg-brand-600 hover:bg-brand-700 disabled:opacity-60 text-white text-sm font-semibold px-4 py-2.5 rounded-lg">Masuk</button>
-        <p class="text-xs text-slate-400 text-center">Akses dan password diberikan oleh Admin YOUR HOME.</p>
-      </form>
-    </section>
+      <div class="relative z-10 text-xs text-slate-400">Panel khusus Owner YOUR HOME</div>
+    </aside>
+    <div class="flex items-center justify-center p-4 bg-slate-100">
+      <section class="w-full max-w-md bg-white border border-slate-200 rounded-xl shadow-sm p-6 sm:p-8">
+        <div class="mb-6">
+          <img id="ownerLoginLogo" src="https://ik.imagekit.io/o1hnx31yy/yh%20(2).png?tr=f-jpg" alt="YOUR HOME" class="w-52 max-h-20 object-contain object-left mb-5" />
+          <p class="text-xs font-bold uppercase tracking-wider text-brand-600">YOUR HOME · Owner Portal</p>
+          <h1 class="text-2xl font-extrabold text-slate-900 mt-2">Laporan Properti</h1>
+          <p class="text-sm text-slate-500 mt-1">Masuk untuk melihat laporan bagi hasil final Anda.</p>
+        </div>
+        <form id="loginForm" class="space-y-4">
+          <label class="block"><span class="block text-sm font-semibold text-slate-700 mb-1.5">ID Owner</span><input id="ownerId" required maxlength="80" autocomplete="username" placeholder="Contoh: O1" class="w-full border border-slate-200 rounded-lg px-3 py-2.5 text-sm" /></label>
+          <label class="block"><span class="block text-sm font-semibold text-slate-700 mb-1.5">Password</span><span class="relative block"><input id="ownerPassword" type="password" required autocomplete="current-password" class="w-full border border-slate-200 rounded-lg px-3 py-2.5 pr-12 text-sm" /><button id="togglePassword" type="button" aria-label="Tampilkan password" title="Tampilkan password" class="absolute inset-y-0 right-0 px-3 text-slate-500 hover:text-slate-800">&#128065;</button></span></label>
+          <label class="flex items-center gap-2 text-xs text-slate-600"><input id="rememberSession" type="checkbox" class="w-3.5 h-3.5 accent-brand-600" /> Ingat sesi di perangkat ini</label>
+          <p id="loginStatus" class="min-h-5 text-sm text-rose-600" role="alert" aria-live="polite"></p>
+          <button id="loginButton" type="submit" class="w-full bg-brand-600 hover:bg-brand-700 disabled:opacity-60 text-white text-sm font-semibold px-4 py-2.5 rounded-lg">Masuk</button>
+          <p class="text-xs text-slate-400 text-center">Akses dan password diberikan oleh Admin YOUR HOME.</p>
+        </form>
+      </section>
+    </div>
   </main>
 
   <div id="appShell" class="hidden min-h-screen">
