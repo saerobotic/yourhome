@@ -13,7 +13,7 @@ Contoh:
   c:/python314/python.exe tools/siapkan-import-excel.py --text data-excel-2024.txt --period 2024
   c:/python314/python.exe tools/siapkan-import-excel.py --xlsx "D:/Master.xlsx" --sheet 2024 --period 2024
 
-Hasil: file SQL di akar proyek (default import-excel.sql), plus ringkasan di layar.
+Hasil: file SQL di sql/imports/ (default import-excel.sql), plus ringkasan di layar.
 """
 
 import argparse
@@ -338,7 +338,9 @@ def main():
     default_name = f"import-excel-{args.period}.sql" if args.period else "import-excel.sql"
     if args.plain:
         default_name = default_name.replace(".sql", "-tanpa-komentar.sql")
-    out_path = args.out or os.path.join(ROOT, default_name)
+    out_path = args.out or os.path.join(ROOT, "sql", "imports", default_name)
+    output_dir = os.path.dirname(out_path) or "."
+    os.makedirs(output_dir, exist_ok=True)
 
     parts = []
     if args.split and len(bookings) > args.split:
@@ -351,7 +353,7 @@ def main():
     for number, part in enumerate(parts, start=1):
         part_marker = marker if len(parts) == 1 else f"{marker}-bagian{number}"
         this_path = out_path if len(parts) == 1 else os.path.join(
-            ROOT, default_name.replace(".sql", f"-bagian{number}.sql")
+            output_dir, default_name.replace(".sql", f"-bagian{number}.sql")
         )
         sql = build_sql(part, part_marker, label)
         if args.plain:

@@ -18,7 +18,7 @@ Aturan penting:
 Contoh:
   c:/python314/python.exe tools/siapkan-pengeluaran-buku-kas.py --xlsx "D:/Book4.xlsx" --prefix import-pengeluaran-2026
 
-Hasil: file SQL di akar proyek, plus ringkasan di layar.
+Hasil: file SQL di sql/imports/, plus ringkasan di layar.
 """
 
 import argparse
@@ -351,6 +351,8 @@ def main():
 
     bulan = sorted({row["tanggal"][:7] for row in hasil if row["tanggal"]})
     kelompok = [bulan[i:i + args.bulan_per_file] for i in range(0, len(bulan), args.bulan_per_file)]
+    output_dir = os.path.join(ROOT, "sql", "imports")
+    os.makedirs(output_dir, exist_ok=True)
 
     ditulis = []
     for nomor, isi_bulan in enumerate(kelompok, start=1):
@@ -365,7 +367,7 @@ def main():
         nama = f"{args.prefix}-bagian{nomor}-{rentang}.sql" if len(kelompok) > 1 else f"{args.prefix}-{rentang}.sql"
         if args.plain:
             nama = nama.replace(".sql", "-tanpa-komentar.sql")
-        path = os.path.join(ROOT, nama)
+        path = os.path.join(output_dir, nama)
         sql = build_sql(bagian_rows, marker, label)
         if args.plain:
             sql = strip_comments(sql)
