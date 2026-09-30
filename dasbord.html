@@ -127,11 +127,17 @@
         <span>Properti</span>
         <span id="propertyNavCount" class="ml-auto text-[10px] bg-slate-800 text-slate-400 px-1.5 py-0.5 rounded">31</span>
       </button>
+      <div class="px-3 pt-5 pb-2 text-[10px] uppercase tracking-wider text-slate-500 font-bold">Manajemen Booking</div>
       <button onclick="switchView('booking')" class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left">
         <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
         <span>Booking</span>
         <span id="bookingNavCount" class="ml-auto text-[10px] bg-amber-500/20 text-amber-300 px-1.5 py-0.5 rounded">0</span>
       </button>
+      <button onclick="switchView('daftar-booking')" class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left">
+        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>
+        <span>Daftar Booking</span>
+      </button>
+      <div class="px-3 pt-5 pb-2 text-[10px] uppercase tracking-wider text-slate-500 font-bold">Keuangan</div>
       <button onclick="switchView('pengeluaran')" class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left">
         <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
         <span>Keuangan</span>
@@ -140,8 +146,6 @@
         <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 19h16M7 16V9m5 7V5m5 11v-4"/></svg>
         <span>Omset</span>
       </button>
-
-      <div class="px-3 pt-5 pb-2 text-[10px] uppercase tracking-wider text-slate-500 font-bold">Keuangan</div>
       <button onclick="switchView('laporan')" class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left">
         <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
         <span>Laporan Owner</span>
@@ -361,7 +365,7 @@
                 <h3 class="font-bold text-slate-900">Booking Terbaru</h3>
                 <p class="text-xs text-slate-500">5 transaksi terakhir</p>
               </div>
-              <button onclick="switchView('booking')" class="text-xs font-semibold text-brand-600 hover:text-brand-700">Lihat semua →</button>
+              <button onclick="switchView('daftar-booking')" class="text-xs font-semibold text-brand-600 hover:text-brand-700">Lihat semua →</button>
             </div>
             <div class="overflow-x-auto">
               <table class="w-full text-sm">
@@ -432,41 +436,6 @@
       <!-- BOOKING VIEW                                 -->
       <!-- =========================================== -->
       <div id="view-booking" class="view">
-        <!-- Filter bar -->
-        <div id="bookingFilterToolbar" class="report-toolbar bg-white rounded-2xl border border-slate-100 p-4 mb-5 flex flex-wrap items-center gap-3">
-          <div class="flex gap-2 flex-wrap">
-            <button class="tab-btn active" onclick="filterBookingStatus(this,'all')">Semua</button>
-            <button class="tab-btn" onclick="filterBookingStatus(this,'Inquiry')">Inquiry</button>
-            <button class="tab-btn" onclick="filterBookingStatus(this,'Confirmed')">Confirmed</button>
-            <button class="tab-btn" onclick="filterBookingStatus(this,'Checked-in')">Checked-in</button>
-            <button class="tab-btn" onclick="filterBookingStatus(this,'Checked-out')">Checked-out</button>
-            <button class="tab-btn" onclick="filterBookingStatus(this,'Cancelled')">Cancelled</button>
-          </div>
-          <div class="flex-1"></div>
-          <select id="filterPropBooking" onchange="renderBookingView()" class="text-sm border border-slate-200 rounded-lg px-3 py-2 bg-white">
-            <option value="all">Semua Properti</option>
-            <option value="apartment">Apartemen</option>
-            <option value="villa">Villa</option>
-            <option value="guesthouse">Guest House</option>
-            <option value="kos">Kosan</option>
-          </select>
-          <select id="filterPlatformBooking" onchange="renderBookingView()" class="text-sm border border-slate-200 rounded-lg px-3 py-2 bg-white">
-            <option value="all">Semua Platform</option>
-            <option>Airbnb</option>
-            <option>Booking.com</option>
-            <option>Agoda</option>
-            <option>Tiket.com</option>
-            <option>Traveloka</option>
-            <option>Direct</option>
-            <option>Agen Offline</option>
-            <option>Website</option>
-          </select>
-          <button onclick="openBookingModal()" class="flex items-center gap-2 bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold px-4 py-2 rounded-lg">
-            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 4v16m8-8H4"/></svg>
-            <span class="hidden sm:inline">Booking Baru</span>
-          </button>
-        </div>
-
         <!-- Calendar -->
         <div class="bg-white rounded-2xl border border-slate-100 p-5 mb-5 overflow-x-auto">
           <div class="flex items-center justify-between mb-4">
@@ -486,6 +455,42 @@
             <div id="calendarHeader" class="grid grid-cols-9 gap-1 mb-1 text-xs text-slate-500 font-semibold"></div>
             <div id="calendarBody" class="space-y-1"></div>
           </div>
+        </div>
+      </div>
+
+      <div id="view-daftar-booking" class="view">
+        <div id="bookingFilterToolbar" class="report-toolbar bg-white rounded-2xl border border-slate-100 p-4 mb-5 flex flex-wrap items-center gap-3">
+          <div class="flex gap-2 flex-wrap">
+            <button class="tab-btn active" onclick="filterBookingStatus(this,'all')">Semua</button>
+            <button class="tab-btn" onclick="filterBookingStatus(this,'Inquiry')">Inquiry</button>
+            <button class="tab-btn" onclick="filterBookingStatus(this,'Confirmed')">Confirmed</button>
+            <button class="tab-btn" onclick="filterBookingStatus(this,'Checked-in')">Checked-in</button>
+            <button class="tab-btn" onclick="filterBookingStatus(this,'Checked-out')">Checked-out</button>
+            <button class="tab-btn" onclick="filterBookingStatus(this,'Cancelled')">Cancelled</button>
+          </div>
+          <div class="flex-1"></div>
+          <select id="filterPropBooking" onchange="renderBookingsTable()" class="text-sm border border-slate-200 rounded-lg px-3 py-2 bg-white">
+            <option value="all">Semua Properti</option>
+            <option value="apartment">Apartemen</option>
+            <option value="villa">Villa</option>
+            <option value="guesthouse">Guest House</option>
+            <option value="kos">Kosan</option>
+          </select>
+          <select id="filterPlatformBooking" onchange="renderBookingsTable()" class="text-sm border border-slate-200 rounded-lg px-3 py-2 bg-white">
+            <option value="all">Semua Platform</option>
+            <option>Airbnb</option>
+            <option>Booking.com</option>
+            <option>Agoda</option>
+            <option>Tiket.com</option>
+            <option>Traveloka</option>
+            <option>Direct</option>
+            <option>Agen Offline</option>
+            <option>Website</option>
+          </select>
+          <button onclick="openBookingModal()" class="flex items-center gap-2 bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold px-4 py-2 rounded-lg">
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 4v16m8-8H4"/></svg>
+            <span class="hidden sm:inline">Booking Baru</span>
+          </button>
         </div>
 
         <!-- Booking table -->
@@ -2326,6 +2331,7 @@ const VIEW_META = {
   'dashboard': { title:'Dashboard', sub:'Ringkasan kinerja seluruh properti Anda' },
   'properti': { title:'Manajemen Properti', sub:'Kelola semua apartemen & villa yang Anda manageable' },
   'booking': { title:'Booking Management', sub:'Kelola booking dari semua platform' },
+  'daftar-booking': { title:'Daftar Booking', sub:'Cari, filter, dan kelola booking berdasarkan status' },
   'pengeluaran': { title:'Keuangan', sub:'Catat pemasukan dan pantau pengeluaran properti' },
   'omset': { title:'Omset', sub:'Daftar omset bulanan Januari sampai Desember per tahun' },
   'laporan': { title:'Laporan Owner', sub:'Generate laporan keuangan per owner' },
@@ -2347,7 +2353,8 @@ function switchView(name){
   window.scrollTo({top:0,behavior:'smooth'});
   /* Lazy init views */
   if(name==='properti') renderProperties();
-  if(name==='booking'){ renderCalendar(); renderBookingsTable(); populatePropSelects(); }
+  if(name==='booking') renderCalendar();
+  if(name==='daftar-booking'){ renderBookingsTable(); populatePropSelects(); }
   if(name==='pengeluaran'){ renderExpenseTable(); renderExpenseSummary(); populatePropSelects(); }
   if(name==='omset') renderMonthlyRevenue();
   if(name==='owner') renderOwners();
@@ -3238,7 +3245,7 @@ function populatePropSelects(){
   populateNotaPropertySelect();
 }
 function filterBookingStatus(btn, status){
-  document.querySelectorAll('#view-booking .tab-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('#view-daftar-booking .tab-btn').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
   currentBookingStatus = status;
   currentBookingPage = 1;
@@ -6304,7 +6311,7 @@ async function submitBooking(){
     if(!editId){
       currentBookingPage = 1;
       currentBookingStatus = 'all';
-      document.querySelectorAll('#view-booking .tab-btn').forEach((tab,index)=>tab.classList.toggle('active', index === 0));
+      document.querySelectorAll('#view-daftar-booking .tab-btn').forEach((tab,index)=>tab.classList.toggle('active', index === 0));
       const propertyFilter = document.getElementById('filterPropBooking');
       const platformFilter = document.getElementById('filterPlatformBooking');
       if(propertyFilter) propertyFilter.value = 'all';
