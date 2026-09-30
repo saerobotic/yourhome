@@ -70,6 +70,18 @@ function slug(value) {
     .replace(/[^a-z0-9_-]/g, '');
 }
 
+// Kalender billing kos (Kamar/Penyewa/Pembayaran di kosan.html). Diperbarui manual
+// tiap kali periode bisnis maju; harus tetap sinkron dengan DATA.meta di kosan.html.
+const KOSAN_PERIODS = [
+  { key:'2025-03', label:'Maret 2025' }, { key:'2025-04', label:'April 2025' }, { key:'2025-05', label:'Mei 2025' },
+  { key:'2025-06', label:'Juni 2025' }, { key:'2025-07', label:'Juli 2025' }, { key:'2025-08', label:'Agustus 2025' },
+  { key:'2025-09', label:'September 2025' }, { key:'2025-10', label:'Oktober 2025' }, { key:'2025-11', label:'November 2025' },
+  { key:'2025-12', label:'Desember 2025' }, { key:'2026-01', label:'Januari 2026' }, { key:'2026-02', label:'Februari 2026' },
+  { key:'2026-03', label:'Maret 2026' }, { key:'2026-04', label:'April 2026' }, { key:'2026-05', label:'Mei 2026' },
+  { key:'2026-06', label:'Juni 2026' }, { key:'2026-07', label:'Juli 2026' },
+];
+const KOSAN_CURRENT_PERIOD = '2026-07';
+
 function fileKeyFromPath(pathname) {
   let key = pathname.slice('/files/'.length);
 
@@ -1957,6 +1969,47 @@ export default {
         return json({ ok:true, data:{ id:property.id, dashboard_id:dashboardId, publication_status:nextStatus } });
       }
 
+      const dashboardPropertyPurgeMatch = path.match(/^\/dashboard\/properties\/([^/]+)\/purge$/);
+      if (request.method === 'POST' && dashboardPropertyPurgeMatch) {
+        const adminSecret = String(env.ADMIN_DASHBOARD_SECRET || '').trim();
+        const tokenData = await getAdminTokenPayload(request, adminSecret);
+        if (!hasManagementRole(tokenData)) {
+          return bad('Hanya Master atau Admin yang dapat menghapus properti.', 403);
+        }
+        const dashboardId = decodeURIComponent(dashboardPropertyPurgeMatch[1]);
+        const body = await request.json();
+        const pin = String(body.pin || '').trim();
+        if (!/^\d{4}$/.test(pin)) return bad('Masukkan PIN Master tepat 4 digit.', 400);
+        const master = await env.DB.prepare(`
+          SELECT delete_pin_salt, delete_pin_hash FROM dashboard_users
+          WHERE account_id = 'master' AND active = 1
+        `).first();
+        if (!master?.delete_pin_hash) return bad('PIN Master belum diinisialisasi.', 409);
+        const attemptedHash = await hashDashboardPassword(pin, master.delete_pin_salt);
+        if (!constantTimeEqual(attemptedHash, master.delete_pin_hash)) return bad('PIN Master salah.', 403);
+
+        const saved = await env.DB.prepare(`
+          SELECT data_json FROM dashboard_management_data WHERE id = 'main'
+        `).first();
+        if (!saved) return bad('Data Dashboard belum tersedia.', 503);
+        let managementData;
+        try { managementData = JSON.parse(saved.data_json); }
+        catch { return bad('Data Dashboard rusak dan properti tidak dapat dihapus.', 500); }
+        const managedProperty = (managementData.properties || []).find(item => item.id === dashboardId);
+        if (!managedProperty) return bad('Properti tidak ditemukan.', 404);
+        if (managedProperty.active !== false) return bad('Hanya properti yang diarsipkan yang dapat dihapus permanen.', 409);
+
+        managementData.properties = (managementData.properties || []).filter(item => item.id !== dashboardId);
+        const now = new Date().toISOString();
+        await env.DB.batch([
+          env.DB.prepare('DELETE FROM properties WHERE dashboard_id = ?').bind(dashboardId),
+          env.DB.prepare(`
+            UPDATE dashboard_management_data SET data_json = ?, updated_by = ?, updated_at = ? WHERE id = 'main'
+          `).bind(JSON.stringify(managementData), tokenData.account_id, now),
+        ]);
+        return json({ ok:true, data:{ id:dashboardId, deleted:true } });
+      }
+
       if (path === '/dashboard/owner-share-calculations') {
         const adminSecret = String(env.ADMIN_DASHBOARD_SECRET || '').trim();
         const tokenData = await getAdminTokenPayload(request, adminSecret);
@@ -2165,8 +2218,8 @@ export default {
         const result = await env.DB.prepare('SELECT * FROM dashboard_bookings ORDER BY checkin DESC, created_at DESC').all();
         return json({ ok:true, data:(result.results || []).map(row => ({
           id:row.id, propId:row.property_id, propName:row.property_name, propCode:row.property_code,
-          guest:row.guest, platform:row.platform, status:row.status, checkin:row.checkin,
-          checkout:row.checkout, nights:Number(row.nights), amount:Number(row.amount),
+          guest:row.guest, phone:row.guest_phone || '', platform:row.platform, status:row.status, checkin:row.checkin,
+          checkout:row.checkout, nights:Number(row.nights), amount:Number(row.amount), grossAmount:Number(row.gross_amount || 0),
           extraBedQuantity:Number(row.extra_bed_quantity || 0), extraBedPrice:Number(row.extra_bed_price || 0),
           cleaningFee:Number(row.cleaning_fee), platformFeePct:Number(row.platform_fee_pct),
           note:row.note, cancellationReason:row.cancellation_reason, refundAmount:Number(row.refund_amount),
@@ -2184,11 +2237,14 @@ export default {
         const propertyName = String(body.propName || '').trim();
         const propertyCode = String(body.propCode || '').trim();
         const guest = String(body.guest || '').trim();
+        const phone = String(body.phone || '').trim();
         const platform = String(body.platform || '').trim();
         const status = String(body.status || 'Confirmed');
         const checkin = String(body.checkin || '');
         const checkout = String(body.checkout || '');
         const amount = Number(body.amount);
+        const managementType = String(body.managementType || 'managed').trim();
+        const grossAmount = Number(body.grossAmount || 0);
         const extraBedQuantity = Number(body.extraBedQuantity || 0);
         const extraBedPrice = Number(body.extraBedPrice || 0);
         const cleaningFee = Number(body.cleaningFee || 0);
@@ -2196,32 +2252,36 @@ export default {
         const note = String(body.note || '').trim();
         const validStatuses = ['Inquiry', 'Confirmed', 'Checked-in', 'Checked-out', 'Cancelled'];
         const validPlatforms = ['Airbnb', 'Booking.com', 'Agoda', 'Tiket.com', 'Traveloka', 'Direct', 'Agen Offline', 'Website'];
-        if (!/^BK[A-Za-z0-9_-]{1,60}$/.test(id) || !propertyId || propertyName.length > 160 || propertyCode.length > 30 || guest.length < 2 || guest.length > 120 || !validPlatforms.includes(platform) || !validStatuses.includes(status)) {
+        const validManagementTypes = ['managed', 'partner'];
+        if (!/^BK[A-Za-z0-9_-]{1,60}$/.test(id) || !propertyId || propertyName.length > 160 || propertyCode.length > 30 || guest.length < 2 || guest.length > 120 || phone.length > 30 || !validPlatforms.includes(platform) || !validStatuses.includes(status) || !validManagementTypes.includes(managementType)) {
           return bad('Data booking tidak valid.');
         }
-        if (!/^\d{4}-\d{2}-\d{2}$/.test(checkin) || !/^\d{4}-\d{2}-\d{2}$/.test(checkout) || checkout <= checkin || !Number.isSafeInteger(amount) || amount <= 0 || !Number.isSafeInteger(extraBedQuantity) || extraBedQuantity < 0 || !Number.isSafeInteger(extraBedPrice) || extraBedPrice < 0 || !Number.isSafeInteger(cleaningFee) || cleaningFee < 0 || !Number.isInteger(platformFeePct) || platformFeePct < 0 || platformFeePct > 50 || note.length > 500) {
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(checkin) || !/^\d{4}-\d{2}-\d{2}$/.test(checkout) || checkout <= checkin || !Number.isSafeInteger(amount) || amount <= 0 || !Number.isSafeInteger(grossAmount) || grossAmount < 0 || !Number.isSafeInteger(extraBedQuantity) || extraBedQuantity < 0 || !Number.isSafeInteger(extraBedPrice) || extraBedPrice < 0 || !Number.isSafeInteger(cleaningFee) || cleaningFee < 0 || !Number.isInteger(platformFeePct) || platformFeePct < 0 || platformFeePct > 50 || note.length > 500) {
           return bad('Tanggal, jumlah, biaya, atau catatan booking tidak valid.');
         }
         const nights = Math.round((Date.parse(`${checkout}T00:00:00Z`) - Date.parse(`${checkin}T00:00:00Z`)) / 86400000);
         const now = new Date().toISOString();
         const incomeEntryId = `booking-income-${id}`;
+        const incomeCategoryId = managementType === 'partner' ? 'income-partner-fee' : 'income-booking';
+        const incomeCategoryName = managementType === 'partner' ? 'Fee Mitra' : 'Booking';
+        const incomeDescription = managementType === 'partner' ? `Fee Mitra ${id} - ${guest}` : `Booking ${id} - ${guest}`;
         await env.DB.batch([
           env.DB.prepare(`
             INSERT OR IGNORE INTO dashboard_bookings (
-              id, property_id, property_name, property_code, guest, platform, status,
-              checkin, checkout, nights, amount, extra_bed_quantity, extra_bed_price, cleaning_fee, platform_fee_pct, note,
+              id, property_id, property_name, property_code, guest, guest_phone, platform, status,
+              checkin, checkout, nights, amount, gross_amount, extra_bed_quantity, extra_bed_price, cleaning_fee, platform_fee_pct, note,
               cancellation_reason, refund_amount, income_entry_id, created_by, created_at, updated_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, '', 0, ?, ?, ?, ?)
-          `).bind(id, propertyId, propertyName, propertyCode, guest, platform, status, checkin, checkout,
-            nights, amount, extraBedQuantity, extraBedPrice, cleaningFee, platformFeePct, note, incomeEntryId, tokenData.account_id || '', now, now),
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, '', 0, ?, ?, ?, ?)
+          `).bind(id, propertyId, propertyName, propertyCode, guest, phone, platform, status, checkin, checkout,
+            nights, amount, grossAmount, extraBedQuantity, extraBedPrice, cleaningFee, platformFeePct, note, incomeEntryId, tokenData.account_id || '', now, now),
           env.DB.prepare(`
             INSERT INTO finance_entries (
               id, kind, category_id, category_name, property_id, property_name,
               entry_date, amount, description, payee, recurrence, created_by, created_at
-            ) SELECT ?, 'income', 'income-booking', 'Booking', ?, ?, ?, ?, ?, ?, 'once', ?, ?
+            ) SELECT ?, 'income', ?, ?, ?, ?, ?, ?, ?, ?, 'once', ?, ?
               WHERE changes() = 1 AND ? <> 'Cancelled'
-          `).bind(incomeEntryId, propertyId, propertyName, now.slice(0, 10), amount,
-            `Booking ${id} - ${guest}`, platform, tokenData.account_id || '', now, status),
+          `).bind(incomeEntryId, incomeCategoryId, incomeCategoryName, propertyId, propertyName, now.slice(0, 10), amount,
+            incomeDescription, platform, tokenData.account_id || '', now, status),
           env.DB.prepare(`
             INSERT INTO finance_entries (
               id, kind, category_id, category_name, property_id, property_name,
@@ -2315,11 +2375,14 @@ export default {
         const propertyName = String(body.propName || '').trim();
         const propertyCode = String(body.propCode || '').trim();
         const guest = String(body.guest || '').trim();
+        const phone = String(body.phone || '').trim();
         const platform = String(body.platform || '').trim();
         const status = isCancelledBooking ? booking.status : String(body.status || 'Confirmed');
         const checkin = String(body.checkin || '');
         const checkout = String(body.checkout || '');
         const amount = Number(body.amount);
+        const managementType = String(body.managementType || 'managed').trim();
+        const grossAmount = Number(body.grossAmount || 0);
         const extraBedQuantity = Number(body.extraBedQuantity || 0);
         const extraBedPrice = Number(body.extraBedPrice || 0);
         const cleaningFee = Number(body.cleaningFee || 0);
@@ -2327,7 +2390,8 @@ export default {
         const note = String(body.note || '').trim();
         const validStatuses = isCancelledBooking ? [booking.status] : ['Inquiry', 'Confirmed', 'Checked-in', 'Checked-out'];
         const validPlatforms = ['Airbnb', 'Booking.com', 'Agoda', 'Tiket.com', 'Traveloka', 'Direct', 'Agen Offline', 'Website'];
-        if (!propertyId || propertyName.length > 160 || propertyCode.length > 30 || guest.length < 2 || guest.length > 120 || !validPlatforms.includes(platform) || !validStatuses.includes(status) || !/^\d{4}-\d{2}-\d{2}$/.test(checkin) || !/^\d{4}-\d{2}-\d{2}$/.test(checkout) || checkout <= checkin || !Number.isSafeInteger(amount) || amount <= 0 || !Number.isSafeInteger(extraBedQuantity) || extraBedQuantity < 0 || !Number.isSafeInteger(extraBedPrice) || extraBedPrice < 0 || !Number.isSafeInteger(cleaningFee) || cleaningFee < 0 || !Number.isInteger(platformFeePct) || platformFeePct < 0 || platformFeePct > 50 || note.length > 500) {
+        const validManagementTypes = ['managed', 'partner'];
+        if (!propertyId || propertyName.length > 160 || propertyCode.length > 30 || guest.length < 2 || guest.length > 120 || phone.length > 30 || !validPlatforms.includes(platform) || !validStatuses.includes(status) || !validManagementTypes.includes(managementType) || !/^\d{4}-\d{2}-\d{2}$/.test(checkin) || !/^\d{4}-\d{2}-\d{2}$/.test(checkout) || checkout <= checkin || !Number.isSafeInteger(amount) || amount <= 0 || !Number.isSafeInteger(grossAmount) || grossAmount < 0 || !Number.isSafeInteger(extraBedQuantity) || extraBedQuantity < 0 || !Number.isSafeInteger(extraBedPrice) || extraBedPrice < 0 || !Number.isSafeInteger(cleaningFee) || cleaningFee < 0 || !Number.isInteger(platformFeePct) || platformFeePct < 0 || platformFeePct > 50 || note.length > 500) {
           return bad('Data booking tidak valid.');
         }
         const nights = Math.round((Date.parse(`${checkout}T00:00:00Z`) - Date.parse(`${checkin}T00:00:00Z`)) / 86400000);
@@ -2337,22 +2401,25 @@ export default {
         const baseRefundAmount = Math.min(retainedRefund, amount);
         const extraBedRefundAmount = Math.max(0, retainedRefund - baseRefundAmount);
         const bookingIncomeAmount = Math.max(0, amount - baseRefundAmount);
+        const incomeCategoryId = managementType === 'partner' ? 'income-partner-fee' : 'income-booking';
+        const incomeCategoryName = managementType === 'partner' ? 'Fee Mitra' : 'Booking';
+        const incomeLabel = managementType === 'partner' ? 'Fee Mitra' : 'Booking';
         const bookingIncomeDescription = isCancelledBooking
-          ? `Booking ${id} - ${guest} - Dibatalkan: ${booking.cancellation_reason}. Refund Rp ${retainedRefund}; pemasukan bersih Rp ${bookingIncomeAmount}.`
-          : `Booking ${id} - ${guest}`;
+          ? `${incomeLabel} ${id} - ${guest} - Dibatalkan: ${booking.cancellation_reason}. Refund Rp ${retainedRefund}; pemasukan bersih Rp ${bookingIncomeAmount}.`
+          : `${incomeLabel} ${id} - ${guest}`;
         const results = await env.DB.batch([
           env.DB.prepare(`
             UPDATE dashboard_bookings SET
-              property_id = ?, property_name = ?, property_code = ?, guest = ?, platform = ?, status = ?,
-              checkin = ?, checkout = ?, nights = ?, amount = ?, extra_bed_quantity = ?, extra_bed_price = ?,
+              property_id = ?, property_name = ?, property_code = ?, guest = ?, guest_phone = ?, platform = ?, status = ?,
+              checkin = ?, checkout = ?, nights = ?, amount = ?, gross_amount = ?, extra_bed_quantity = ?, extra_bed_price = ?,
               cleaning_fee = ?, platform_fee_pct = ?, note = ?, updated_at = ?
             WHERE id = ? AND status = ?
-          `).bind(propertyId, propertyName, propertyCode, guest, platform, status, checkin, checkout,
-            nights, amount, extraBedQuantity, extraBedPrice, cleaningFee, platformFeePct, note, now, id, booking.status),
+          `).bind(propertyId, propertyName, propertyCode, guest, phone, platform, status, checkin, checkout,
+            nights, amount, grossAmount, extraBedQuantity, extraBedPrice, cleaningFee, platformFeePct, note, now, id, booking.status),
           env.DB.prepare(`
-            UPDATE finance_entries SET property_id = ?, property_name = ?, amount = ?, description = ?, payee = ?
+            UPDATE finance_entries SET property_id = ?, property_name = ?, category_id = ?, category_name = ?, amount = ?, description = ?, payee = ?
             WHERE id = (SELECT income_entry_id FROM dashboard_bookings WHERE id = ?) AND kind = 'income' AND changes() = 1
-          `).bind(propertyId, propertyName, bookingIncomeAmount, bookingIncomeDescription, platform, id),
+          `).bind(propertyId, propertyName, incomeCategoryId, incomeCategoryName, bookingIncomeAmount, bookingIncomeDescription, platform, id),
         ]);
         if (!results[0]?.meta?.changes) return bad('Booking sudah berubah. Muat ulang lalu coba lagi.', 409);
         if (extraBedTotal > 0) {
@@ -2374,6 +2441,21 @@ export default {
             .bind(`booking-extra-bed-${id}`).run();
         }
         return json({ ok:true, data:{ id } });
+      }
+
+      if (request.method === 'DELETE' && dashboardBookingMatch) {
+        const adminSecret = String(env.ADMIN_DASHBOARD_SECRET || '').trim();
+        const tokenData = await getAdminTokenPayload(request, adminSecret);
+        if (!hasManagementRole(tokenData)) return bad('Hanya Master atau Admin yang dapat menghapus booking.', 403);
+        const id = decodeURIComponent(dashboardBookingMatch[1]);
+        const booking = await env.DB.prepare('SELECT id, income_entry_id FROM dashboard_bookings WHERE id = ?').bind(id).first();
+        if (!booking) return bad('Booking tidak ditemukan.', 404);
+        await env.DB.batch([
+          env.DB.prepare('DELETE FROM finance_entries WHERE id = ?').bind(booking.income_entry_id),
+          env.DB.prepare('DELETE FROM finance_entries WHERE id = ?').bind(`booking-extra-bed-${id}`),
+          env.DB.prepare('DELETE FROM dashboard_bookings WHERE id = ?').bind(id),
+        ]);
+        return json({ ok:true, data:{ id, deleted:true } });
       }
 
       if (request.method === 'GET' && path === '/admin/finance') {
@@ -2519,6 +2601,364 @@ export default {
         const result = await env.DB.prepare('DELETE FROM finance_entries WHERE id = ?').bind(id).run();
         if (!result.meta?.changes) return bad('Transaksi tidak ditemukan.', 404);
         return json({ ok: true, data: { id } });
+      }
+
+      // ================= KOSAN ROOMS (Kamar/Penyewa/Pembayaran kos) =================
+      // Butuh migrations/migration-kosan-rooms.sql dijalankan di D1 sebelum endpoint ini dipakai.
+      if (request.method === 'GET' && path === '/kosan/rooms') {
+        const adminSecret = String(env.ADMIN_DASHBOARD_SECRET || '').trim();
+        const tokenData = await getAdminTokenPayload(request, adminSecret);
+        if (!hasDashboardRole(tokenData)) return bad('Login dashboard diperlukan.', 401);
+        const status = String(url.searchParams.get('status') || 'approved');
+
+        if (status === 'pending') {
+          const result = await env.DB.prepare(`
+            SELECT id, building, building_code, room_number, tenant_name, price, depo, status, notes, created_at
+            FROM kosan_room_requests WHERE decision_status = 'pending' ORDER BY created_at ASC
+          `).all();
+          return json({ ok:true, data:result.results || [] });
+        }
+
+        const [roomsResult, paymentsResult] = await Promise.all([
+          env.DB.prepare('SELECT * FROM kosan_rooms ORDER BY building, room_number').all(),
+          env.DB.prepare('SELECT * FROM kosan_room_payments').all(),
+        ]);
+        const paymentsByRoom = new Map();
+        for (const row of paymentsResult.results || []) {
+          if (!paymentsByRoom.has(row.room_id)) paymentsByRoom.set(row.room_id, new Map());
+          paymentsByRoom.get(row.room_id).set(row.period, row);
+        }
+        const rooms = (roomsResult.results || []).map(room => {
+          const existing = paymentsByRoom.get(room.id) || new Map();
+          const payments = KOSAN_PERIODS.map(period => {
+            const row = existing.get(period.key);
+            return { period:period.key, label:period.label, status:row?.status || 'unpaid', date:row?.date || null };
+          });
+          return {
+            id:room.id, building:room.building, building_code:room.building_code, room_number:room.room_number,
+            room_label:room.room_label, tenant_name:room.tenant_name, price:Number(room.price || 0),
+            depo:{ amount:Number(room.depo_amount || 0), refundable:Boolean(room.depo_refundable) },
+            status:room.status, notes:room.notes, payments,
+          };
+        });
+        return json({ ok:true, data:rooms });
+      }
+
+      if (request.method === 'POST' && path === '/kosan/rooms') {
+        const adminSecret = String(env.ADMIN_DASHBOARD_SECRET || '').trim();
+        const tokenData = await getAdminTokenPayload(request, adminSecret);
+        if (!hasDashboardRole(tokenData)) return bad('Login dashboard diperlukan.', 401);
+        const body = await request.json();
+        const building = String(body.building || '').trim();
+        const buildingCode = String(body.building_code || '').trim().slice(0, 20);
+        const roomNumber = String(body.room_number || '').trim();
+        const tenantName = String(body.tenant_name || '').trim();
+        const price = Number(body.price);
+        const depo = Number(body.depo || 0);
+        const status = 'occupied';
+        const notes = String(body.notes || '').trim();
+        if (!building || building.length > 100) return bad('Nama kost/gedung wajib diisi.');
+        if (!roomNumber || roomNumber.length > 20) return bad('Nomor kamar wajib diisi.');
+        if (!tenantName || tenantName.length > 120) return bad('Nama penyewa wajib diisi dan maksimal 120 karakter.');
+        if (!Number.isSafeInteger(price) || price <= 0) return bad('Harga sewa wajib diisi dan valid.');
+        if (!Number.isSafeInteger(depo) || depo <= 0) return bad('Deposit wajib lebih dari Rp0.');
+        if (notes.length > 500) return bad('Catatan terlalu panjang.');
+        const id = crypto.randomUUID();
+        await env.DB.prepare(`
+          INSERT INTO kosan_room_requests (id, building, building_code, room_number, tenant_name, price, depo, status, notes, decision_status, submitted_by, created_at)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?, ?)
+        `).bind(id, building, buildingCode, roomNumber, tenantName, price, depo, status, notes, String(tokenData.account_id || ''), new Date().toISOString()).run();
+        return json({ ok:true, data:{ id } }, 201);
+      }
+
+      const kosanRoomDecisionMatch = path.match(/^\/kosan\/rooms\/([^/]+)\/(approve|reject)$/);
+      if (request.method === 'POST' && kosanRoomDecisionMatch) {
+        const adminSecret = String(env.ADMIN_DASHBOARD_SECRET || '').trim();
+        const tokenData = await getAdminTokenPayload(request, adminSecret);
+        if (!hasManagementRole(tokenData)) return bad('Hanya Master atau Admin yang dapat memutuskan pengajuan kamar.', 403);
+        const [, requestId, action] = kosanRoomDecisionMatch;
+        const submission = await env.DB.prepare(`SELECT * FROM kosan_room_requests WHERE id = ? AND decision_status = 'pending'`).bind(requestId).first();
+        if (!submission) return bad('Pengajuan tidak ditemukan atau sudah diputuskan.', 404);
+        const now = new Date().toISOString();
+        if (action === 'reject') {
+          await env.DB.prepare(`UPDATE kosan_room_requests SET decision_status = 'rejected', decided_by = ?, decided_at = ? WHERE id = ?`)
+            .bind(String(tokenData.account_id || ''), now, requestId).run();
+          return json({ ok:true, data:{ id:requestId, decision:'rejected' } });
+        }
+        const existingRoom = await env.DB.prepare('SELECT id FROM kosan_rooms WHERE building = ? AND room_number = ?')
+          .bind(submission.building, submission.room_number).first();
+        const roomId = existingRoom?.id || crypto.randomUUID();
+        await env.DB.batch([
+          env.DB.prepare(`
+            INSERT INTO kosan_rooms (id, building, building_code, room_number, room_label, tenant_name, price, depo_amount, depo_refundable, status, notes, created_at, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?, ?)
+            ON CONFLICT(building, room_number) DO UPDATE SET
+              tenant_name = excluded.tenant_name, price = excluded.price, depo_amount = excluded.depo_amount,
+              status = excluded.status, notes = excluded.notes, updated_at = excluded.updated_at
+          `).bind(roomId, submission.building, submission.building_code, submission.room_number, `Kamar ${submission.room_number}`,
+            submission.tenant_name, submission.price, submission.depo, submission.status, submission.notes, now, now),
+          env.DB.prepare(`UPDATE kosan_room_requests SET decision_status = 'approved', decided_by = ?, decided_at = ? WHERE id = ?`)
+            .bind(String(tokenData.account_id || ''), now, requestId),
+        ]);
+        return json({ ok:true, data:{ id:requestId, decision:'approved', room_id:roomId } });
+      }
+
+      if (request.method === 'POST' && path === '/kosan/room-status/checkout') {
+        const adminSecret = String(env.ADMIN_DASHBOARD_SECRET || '').trim();
+        const tokenData = await getAdminTokenPayload(request, adminSecret);
+        if (!hasDashboardRole(tokenData)) return bad('Login dashboard diperlukan.', 401);
+        const body = await request.json();
+        const building = String(body.building || '').trim();
+        const roomNumber = String(body.room_number || '').trim();
+        if (!building || !roomNumber) return bad('Gedung dan nomor kamar wajib diisi.');
+        let room = await env.DB.prepare('SELECT id FROM kosan_rooms WHERE building = ? AND room_number = ?').bind(building, roomNumber).first();
+        const now = new Date().toISOString();
+        const currentPeriodMeta = KOSAN_PERIODS.find(p => p.key === KOSAN_CURRENT_PERIOD);
+        const statements = [];
+        if (!room) {
+          const snapshot = body.room && typeof body.room === 'object' ? body.room : null;
+          if (!snapshot) return bad('Kamar belum ada di D1 dan snapshot kamar tidak tersedia.', 404);
+          const buildingCode = String(snapshot.building_code || '').trim().slice(0, 20);
+          const roomLabel = String(snapshot.room_label || `Kamar ${roomNumber}`).trim().slice(0, 100);
+          const tenantName = String(snapshot.tenant_name || '').trim();
+          const price = Number(snapshot.price);
+          const depoAmount = Number(snapshot.depo_amount || 0);
+          const depoRefundable = snapshot.depo_refundable ? 1 : 0;
+          const notes = String(snapshot.notes || '').trim();
+          if (!Number.isSafeInteger(price) || price < 0 || !Number.isSafeInteger(depoAmount) || depoAmount < 0) {
+            return bad('Data harga/deposit kamar tidak valid.');
+          }
+          if (tenantName.length > 120 || notes.length > 500) return bad('Nama penyewa atau catatan terlalu panjang.');
+
+          const roomId = `room-${crypto.randomUUID()}`;
+          await env.DB.prepare(`
+            INSERT OR IGNORE INTO kosan_rooms
+              (id, building, building_code, room_number, room_label, tenant_name, price, depo_amount, depo_refundable, status, notes, created_at, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'vacant', ?, ?, ?)
+          `).bind(roomId, building, buildingCode, roomNumber, roomLabel, tenantName, price, depoAmount, depoRefundable, notes, now, now).run();
+          room = await env.DB.prepare('SELECT id FROM kosan_rooms WHERE building = ? AND room_number = ?').bind(building, roomNumber).first();
+          if (!room) return bad('Kamar gagal disiapkan di D1.', 500);
+
+          const payments = Array.isArray(snapshot.payments) ? snapshot.payments : [];
+          payments.forEach(payment => {
+            const period = KOSAN_PERIODS.find(item => item.key === String(payment.period || '').trim());
+            if (!period) return;
+            const paymentStatus = ['paid', 'unpaid', 'checkout', 'none'].includes(payment.status) ? payment.status : 'unpaid';
+            const paymentDate = typeof payment.date === 'string' && payment.date ? payment.date : null;
+            statements.push(env.DB.prepare(`
+              INSERT OR IGNORE INTO kosan_room_payments (id, room_id, period, label, status, date, updated_at)
+              VALUES (?, ?, ?, ?, ?, ?, ?)
+            `).bind(`${room.id}-${period.key}`, room.id, period.key, period.label, paymentStatus, paymentDate, now));
+          });
+        }
+        statements.push(
+          env.DB.prepare(`UPDATE kosan_rooms SET status = 'vacant', tenant_name = '', price = 0, updated_at = ? WHERE id = ?`).bind(now, room.id),
+          env.DB.prepare(`
+            INSERT INTO kosan_room_payments (id, room_id, period, label, status, date, updated_at)
+            VALUES (?, ?, ?, ?, 'checkout', NULL, ?)
+            ON CONFLICT(room_id, period) DO UPDATE SET status = 'checkout', date = NULL, updated_at = excluded.updated_at
+          `).bind(`${room.id}-${KOSAN_CURRENT_PERIOD}`, room.id, KOSAN_CURRENT_PERIOD, currentPeriodMeta?.label || KOSAN_CURRENT_PERIOD, now),
+        );
+        await env.DB.batch(statements);
+        return json({ ok:true, data:{ building, room_number:roomNumber } });
+      }
+
+      // ================= GUEST FEEDBACK (form-kritik-saran.html) =================
+      // Butuh migrations/migration-guest-feedback.sql dijalankan di D1 sebelum endpoint ini dipakai.
+      if (request.method === 'POST' && path === '/guest-feedback') {
+        const rate = await reserveLoginAttempt(env, request, 'guest-feedback');
+        if (rate.limited) return bad('Terlalu banyak pengiriman dari perangkat ini. Coba lagi dalam 15 menit.', 429);
+        const body = await request.json();
+        const propertyType = String(body.property_type || '').trim();
+        const propertyName = String(body.property_name || '').trim();
+        const checkinDate = String(body.checkin_date || '').trim();
+        const stayDuration = String(body.stay_duration || '').trim();
+        const bookingSource = String(body.booking_source || '').trim();
+        const guestName = String(body.guest_name || '').trim();
+        const guestPhone = String(body.guest_phone || '').trim();
+        const guestEmail = String(body.guest_email || '').trim();
+        const guestCity = String(body.guest_city || '').trim();
+        const purpose = String(body.purpose || '').trim();
+        const ratings = body.ratings && typeof body.ratings === 'object' ? body.ratings : {};
+        const ratingFields = ['cleanliness', 'comfort', 'facilities', 'location', 'service', 'value'];
+        const ratingValues = {};
+        for (const key of ratingFields) {
+          const value = Number(ratings[key]);
+          if (!Number.isInteger(value) || value < 1 || value > 5) return bad(`Rating "${key}" wajib diisi (1-5).`);
+          ratingValues[key] = value;
+        }
+        const avgRating = ratingFields.reduce((sum, key) => sum + ratingValues[key], 0) / ratingFields.length;
+        const liked = String(body.liked || '').trim();
+        const improve = String(body.improve || '').trim();
+        const suggestion = String(body.suggestion || '').trim();
+        const npsScore = Number(body.nps_score);
+        const followUpConsent = body.follow_up_consent ? 1 : 0;
+        const testimonialConsent = body.testimonial_consent ? 1 : 0;
+
+        if (!['villa', 'apartment', 'kos', 'guesthouse'].includes(propertyType)) return bad('Jenis properti tidak valid.');
+        if (!propertyName || propertyName.length > 160) return bad('Nama properti wajib diisi.');
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(checkinDate)) return bad('Tanggal check-in tidak valid.');
+        if (!stayDuration || stayDuration.length > 40) return bad('Durasi menginap wajib diisi.');
+        if (bookingSource.length > 80) return bad('Sumber booking terlalu panjang.');
+        if (!guestName || guestName.length > 120) return bad('Nama tamu wajib diisi.');
+        if (!guestPhone || guestPhone.length < 8 || guestPhone.length > 30) return bad('No. WhatsApp tidak valid.');
+        if (guestEmail.length > 160) return bad('Email terlalu panjang.');
+        if (!guestCity || guestCity.length > 80) return bad('Kota asal wajib diisi.');
+        if (purpose.length > 40) return bad('Tujuan kunjungan tidak valid.');
+        if (!liked || liked.length > 1000) return bad('Kolom "apa yang paling disukai" wajib diisi (maks 1000 karakter).');
+        if (improve.length > 1000 || suggestion.length > 1000) return bad('Saran/masukan terlalu panjang (maks 1000 karakter).');
+        if (!Number.isInteger(npsScore) || npsScore < 0 || npsScore > 10) return bad('Skor rekomendasi tidak valid.');
+
+        const id = crypto.randomUUID();
+        await env.DB.prepare(`
+          INSERT INTO guest_feedback (
+            id, property_type, property_name, checkin_date, stay_duration, booking_source,
+            guest_name, guest_phone, guest_email, guest_city, purpose,
+            rating_cleanliness, rating_comfort, rating_facilities, rating_location, rating_service, rating_value,
+            avg_rating, liked, improve, suggestion, nps_score, follow_up_consent, testimonial_consent, created_at
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `).bind(
+          id, propertyType, propertyName, checkinDate, stayDuration, bookingSource,
+          guestName, guestPhone, guestEmail, guestCity, purpose,
+          ratingValues.cleanliness, ratingValues.comfort, ratingValues.facilities, ratingValues.location, ratingValues.service, ratingValues.value,
+          avgRating, liked, improve, suggestion, npsScore, followUpConsent, testimonialConsent, new Date().toISOString()
+        ).run();
+        return json({ ok:true, data:{ id } }, 201);
+      }
+
+      if (request.method === 'GET' && path === '/admin/guest-feedback') {
+        const adminSecret = String(env.ADMIN_DASHBOARD_SECRET || '').trim();
+        const tokenData = await getAdminTokenPayload(request, adminSecret);
+        if (!hasDashboardRole(tokenData)) return bad('Login dashboard diperlukan.', 401);
+        const limit = Math.min(Math.max(Number(url.searchParams.get('limit')) || 50, 1), 200);
+        const offset = Math.max(Number(url.searchParams.get('offset')) || 0, 0);
+        try {
+          const [result, totalRow] = await Promise.all([
+            env.DB.prepare('SELECT * FROM guest_feedback ORDER BY created_at DESC LIMIT ? OFFSET ?').bind(limit, offset).all(),
+            env.DB.prepare('SELECT COUNT(*) AS total FROM guest_feedback').first(),
+          ]);
+          return json({ ok:true, data:result.results || [], pagination:{ limit, offset, total:Number(totalRow?.total || 0) } });
+        } catch (error) {
+          if (/no such table: guest_feedback/i.test(String(error?.message || error))) {
+            return bad('Tabel masukan tamu belum tersedia. Jalankan migration-guest-feedback.sql di D1.', 503);
+          }
+          throw error;
+        }
+      }
+
+      // Hitungan ringan untuk lampu notifikasi di kartu "QR Kritik & Saran" (hub admin_yourhome).
+      if (request.method === 'GET' && path === '/admin/guest-feedback/unread-count') {
+        const adminSecret = String(env.ADMIN_DASHBOARD_SECRET || '').trim();
+        const tokenData = await getAdminTokenPayload(request, adminSecret);
+        if (!hasDashboardRole(tokenData)) return bad('Login dashboard diperlukan.', 401);
+        try {
+          const row = await env.DB.prepare(`SELECT COUNT(*) AS count FROM guest_feedback WHERE status = 'unread'`).first();
+          return json({ ok:true, data:{ count:Number(row?.count || 0) } });
+        } catch (error) {
+          if (/no such table: guest_feedback|no such column: status/i.test(String(error?.message || error))) {
+            return json({ ok:true, data:{ count:0 } });
+          }
+          throw error;
+        }
+      }
+
+      const guestFeedbackStatusMatch = path.match(/^\/admin\/guest-feedback\/([^/]+)$/);
+      if (request.method === 'PATCH' && guestFeedbackStatusMatch) {
+        const adminSecret = String(env.ADMIN_DASHBOARD_SECRET || '').trim();
+        const tokenData = await getAdminTokenPayload(request, adminSecret);
+        if (!hasDashboardRole(tokenData)) return bad('Login dashboard diperlukan.', 401);
+        const id = decodeURIComponent(guestFeedbackStatusMatch[1]);
+        const body = await request.json();
+        const status = String(body.status || '').trim();
+        if (!['read', 'unread'].includes(status)) return bad('Status tidak valid.');
+        const result = await env.DB.prepare('UPDATE guest_feedback SET status = ? WHERE id = ?').bind(status, id).run();
+        if (!result.meta?.changes) return bad('Masukan tamu tidak ditemukan.', 404);
+        return json({ ok:true, data:{ id, status } });
+      }
+
+      // ================= KEY ROOM (password pintu smart lock + akses crew) =================
+      // Butuh migrations/migration-key-room.sql dijalankan di D1 sebelum endpoint ini dipakai.
+      // Data sensitif (password pintu fisik) -- hanya Master/Admin, IT tidak diizinkan sama sekali.
+      if (request.method === 'GET' && path === '/admin/key-room') {
+        const adminSecret = String(env.ADMIN_DASHBOARD_SECRET || '').trim();
+        const tokenData = await getAdminTokenPayload(request, adminSecret);
+        if (!hasManagementRole(tokenData)) return bad('Hanya Master atau Admin yang dapat membuka Key Room.', 403);
+        try {
+          const [passwordsResult, grantsResult, crewsResult] = await Promise.all([
+            env.DB.prepare('SELECT * FROM door_passwords ORDER BY property_name COLLATE NOCASE').all(),
+            env.DB.prepare('SELECT * FROM door_access_grants ORDER BY created_at DESC').all(),
+            env.DB.prepare('SELECT id, crew_code, name, active FROM crews WHERE active = 1 ORDER BY name COLLATE NOCASE').all(),
+          ]);
+          return json({ ok:true, data:{
+            passwords: passwordsResult.results || [],
+            grants: grantsResult.results || [],
+            crews: crewsResult.results || [],
+          } });
+        } catch (error) {
+          if (/no such table: door_passwords|no such table: door_access_grants/i.test(String(error?.message || error))) {
+            return bad('Key Room belum disiapkan. Jalankan migration-key-room.sql di D1.', 503);
+          }
+          throw error;
+        }
+      }
+
+      if (request.method === 'PUT' && path === '/admin/key-room/passwords') {
+        const adminSecret = String(env.ADMIN_DASHBOARD_SECRET || '').trim();
+        const tokenData = await getAdminTokenPayload(request, adminSecret);
+        if (!hasManagementRole(tokenData)) return bad('Hanya Master atau Admin yang dapat mengubah password pintu.', 403);
+        const body = await request.json();
+        const propertyName = String(body.property_name || '').trim();
+        const password = String(body.password || '').trim();
+        const notes = String(body.notes || '').trim();
+        if (!propertyName || propertyName.length > 160) return bad('Nama properti wajib diisi.');
+        if (!password || password.length > 60) return bad('Password pintu wajib diisi (maks 60 karakter).');
+        if (notes.length > 240) return bad('Catatan terlalu panjang.');
+        const now = new Date().toISOString();
+        const id = `door-${slug(propertyName)}`;
+        await env.DB.prepare(`
+          INSERT INTO door_passwords (id, property_name, password, notes, updated_by, updated_at)
+          VALUES (?, ?, ?, ?, ?, ?)
+          ON CONFLICT(property_name) DO UPDATE SET
+            password = excluded.password, notes = excluded.notes,
+            updated_by = excluded.updated_by, updated_at = excluded.updated_at
+        `).bind(id, propertyName, password, notes, String(tokenData.account_id || ''), now).run();
+        return json({ ok:true, data:{ id, property_name:propertyName, password, notes, updated_at:now } });
+      }
+
+      if (request.method === 'POST' && path === '/admin/key-room/grants') {
+        const adminSecret = String(env.ADMIN_DASHBOARD_SECRET || '').trim();
+        const tokenData = await getAdminTokenPayload(request, adminSecret);
+        if (!hasManagementRole(tokenData)) return bad('Hanya Master atau Admin yang dapat mengatur akses crew.', 403);
+        const body = await request.json();
+        const crewId = String(body.crew_id || '').trim();
+        const propertyName = String(body.property_name || '').trim();
+        if (!crewId || !propertyName || propertyName.length > 160) return bad('Crew dan properti wajib dipilih.');
+        const crew = await env.DB.prepare('SELECT id FROM crews WHERE id = ? AND active = 1').bind(crewId).first();
+        if (!crew) return bad('Crew tidak ditemukan atau tidak aktif.', 404);
+        const id = crypto.randomUUID();
+        try {
+          await env.DB.prepare(`
+            INSERT INTO door_access_grants (id, crew_id, property_name, granted_by, created_at)
+            VALUES (?, ?, ?, ?, ?)
+          `).bind(id, crewId, propertyName, String(tokenData.account_id || ''), new Date().toISOString()).run();
+        } catch (error) {
+          if (/UNIQUE constraint failed/i.test(String(error?.message || error))) {
+            return bad('Crew ini sudah punya akses ke properti tersebut.', 409);
+          }
+          throw error;
+        }
+        return json({ ok:true, data:{ id, crew_id:crewId, property_name:propertyName } }, 201);
+      }
+
+      const keyRoomGrantMatch = path.match(/^\/admin\/key-room\/grants\/([^/]+)$/);
+      if (request.method === 'DELETE' && keyRoomGrantMatch) {
+        const adminSecret = String(env.ADMIN_DASHBOARD_SECRET || '').trim();
+        const tokenData = await getAdminTokenPayload(request, adminSecret);
+        if (!hasManagementRole(tokenData)) return bad('Hanya Master atau Admin yang dapat mengatur akses crew.', 403);
+        const id = decodeURIComponent(keyRoomGrantMatch[1]);
+        const result = await env.DB.prepare('DELETE FROM door_access_grants WHERE id = ?').bind(id).run();
+        if (!result.meta?.changes) return bad('Akses tidak ditemukan.', 404);
+        return json({ ok:true, data:{ id, deleted:true } });
       }
 
       // POST /admin/login { password }

@@ -977,7 +977,7 @@
       <div class="grid grid-cols-2 gap-3">
         <div>
           <label class="text-xs text-slate-500 font-semibold">Properti</label>
-          <select id="newBookingProp" required class="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 bg-white mt-0.5"></select>
+          <select id="newBookingProp" required onchange="updateBookingFormForPropertyType()" class="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 bg-white mt-0.5"></select>
         </div>
         <div>
           <label class="text-xs text-slate-500 font-semibold">Platform</label>
@@ -993,9 +993,15 @@
           </select>
         </div>
       </div>
-      <div>
-        <label class="text-xs text-slate-500 font-semibold">Nama Tamu</label>
-        <input id="newBookingGuest" type="text" required placeholder="cth: Budi Santoso" class="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 mt-0.5">
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="text-xs text-slate-500 font-semibold">Nama Tamu</label>
+          <input id="newBookingGuest" type="text" required placeholder="cth: Budi Santoso" class="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 mt-0.5">
+        </div>
+        <div>
+          <label class="text-xs text-slate-500 font-semibold">No. HP Tamu</label>
+          <input id="newBookingPhone" type="tel" maxlength="30" placeholder="cth: 081234567890" class="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 mt-0.5">
+        </div>
       </div>
       <div class="grid grid-cols-2 gap-3">
         <div>
@@ -1008,8 +1014,13 @@
         </div>
       </div>
       <div>
-        <label class="text-xs text-slate-500 font-semibold">Nilai Booking (Rp)</label>
+        <label id="newBookingAmountLabel" class="text-xs text-slate-500 font-semibold">Nilai Booking (Rp)</label>
         <input id="newBookingAmount" type="text" inputmode="numeric" pattern="[0-9.]*" data-currency-input required placeholder="5.000.000" class="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 mt-0.5">
+      </div>
+      <div id="newBookingGrossAmountField" class="hidden">
+        <label class="text-xs text-slate-500 font-semibold">Total Transaksi Tamu (Rp, opsional)</label>
+        <input id="newBookingGrossAmount" type="text" inputmode="numeric" pattern="[0-9.]*" data-currency-input value="0" placeholder="cth: 2.000.000" class="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 mt-0.5">
+        <p class="text-xs text-slate-500 mt-1">Hanya catatan nilai yang dibayar tamu ke Mitra. Tidak dihitung sebagai pemasukan kita.</p>
       </div>
       <div class="grid grid-cols-2 gap-3">
         <label class="block"><span class="block text-xs text-slate-500 font-semibold">Extra Bed (jumlah)</span><input id="newBookingExtraBedQuantity" type="number" min="0" step="1" value="0" class="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 mt-0.5"></label>
@@ -1265,14 +1276,22 @@
           </select>
         </div>
       </div>
-      <div class="grid grid-cols-2 gap-3">
+      <div>
+        <label for="newPropertyManagementType" class="text-xs text-slate-500 font-semibold">Tipe Kerja Sama</label>
+        <select id="newPropertyManagementType" onchange="togglePropertyManagementFields()" class="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 bg-white mt-0.5">
+          <option value="managed">Kelola Penuh (bagi hasil dengan Owner)</option>
+          <option value="partner">Mitra (kita hanya terima fee per booking)</option>
+        </select>
+        <p id="propertyManagementTypeHint" class="text-xs text-slate-500 mt-1"></p>
+      </div>
+      <div id="propertyOwnerFields" class="grid grid-cols-2 gap-3">
         <div>
           <label for="newPropertyOwner" class="text-xs text-slate-500 font-semibold">Owner</label>
-          <select id="newPropertyOwner" required class="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 bg-white mt-0.5"></select>
+          <select id="newPropertyOwner" class="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 bg-white mt-0.5"></select>
         </div>
         <div>
           <label for="newPropertyOwnerShare" class="text-xs text-slate-500 font-semibold">Bagian Owner (%)</label>
-          <input id="newPropertyOwnerShare" type="number" min="0" max="100" step="0.01" value="100" required class="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 mt-0.5">
+          <input id="newPropertyOwnerShare" type="number" min="0" max="100" step="0.01" value="100" class="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 mt-0.5">
         </div>
       </div>
       <div class="grid grid-cols-2 gap-3">
@@ -1551,6 +1570,25 @@ const ownerIdsByProperty = {
 PROPERTIES.forEach(property => {
   property.owners = [{ id:ownerIdsByProperty[property.id] || 'O6', share:100 }];
 });
+function isPlaceholderDashboardProperty(property){
+  if(!property || typeof property !== 'object') return true;
+  const name = String(property.name || '').trim();
+  const code = String(property.code || '').trim();
+  const combined = `${name} ${code}`.trim().toLowerCase();
+  return [
+    /^properti\s+\d+$/i,
+    /^properti\s+[a-z0-9-]+\s*-\s*(kode perlu diperiksa|perlu dipetakan|perlu diperiksa)$/i,
+    /^belum[-\s]/i,
+    /(?:kode perlu diperiksa|perlu dipetakan|perlu diperiksa)$/i,
+    /^.*\b(?:czb|ckb|csb|vib|smr|dago|gca|hib|ora|rekan|[a-z]{2,4})\b.*(?:perlu dipetakan|kode perlu diperiksa)$/i
+  ].some(pattern => pattern.test(name) || pattern.test(code) || pattern.test(combined));
+}
+
+function sanitizeDashboardProperties(list){
+  if(!Array.isArray(list)) return [];
+  return list.filter(property => property && !isPlaceholderDashboardProperty(property));
+}
+
 const DASHBOARD_DEFAULT_MANAGEMENT_SIGNATURE = JSON.stringify({ owners:OWNERS, properties:PROPERTIES });
 
 const BOOKINGS = [];
@@ -2040,11 +2078,12 @@ function loadDashboardData(){
     const saved = JSON.parse(localStorage.getItem(DASHBOARD_STORAGE_KEY) || 'null');
     if(!saved || typeof saved !== 'object') return;
     if(Array.isArray(saved.properties)){
-      PROPERTIES.splice(0, PROPERTIES.length, ...saved.properties.map(property => ({
+      const cleaned = sanitizeDashboardProperties(saved.properties).map(property => ({
         ...property,
         owners: Array.isArray(property.owners) ? property.owners : [],
         agents: Array.isArray(property.agents) ? property.agents : []
-      })));
+      }));
+      PROPERTIES.splice(0, PROPERTIES.length, ...cleaned);
     }
     if(Array.isArray(saved.owners)){
       OWNERS.splice(0, OWNERS.length, ...saved.owners.filter(owner => owner && owner.id && owner.name));
@@ -2060,7 +2099,7 @@ function readLocalDashboardManagementData(){
   try {
     const saved = JSON.parse(localStorage.getItem(DASHBOARD_STORAGE_KEY) || 'null');
     if(!saved || !Array.isArray(saved.owners) || !saved.owners.length || !Array.isArray(saved.properties) || !saved.properties.length) return null;
-    return { owners:saved.owners, properties:saved.properties };
+    return { owners:saved.owners, properties:sanitizeDashboardProperties(saved.properties) };
   } catch {
     return null;
   }
@@ -2072,7 +2111,7 @@ function isDefaultDashboardManagementData(data){
 
 function applyDashboardManagementData(data){
   OWNERS.splice(0, OWNERS.length, ...(data.owners || []).filter(owner => owner && owner.id && owner.name));
-  PROPERTIES.splice(0, PROPERTIES.length, ...(data.properties || []).map(property => ({
+  PROPERTIES.splice(0, PROPERTIES.length, ...sanitizeDashboardProperties(data.properties || []).map(property => ({
     ...property,
     owners:Array.isArray(property.owners) ? property.owners : [],
     agents:Array.isArray(property.agents) ? property.agents : [],
@@ -2259,8 +2298,12 @@ async function loadBookingData(account){
 
 function persistDashboardData(options={}){
   try {
+    const filteredProperties = sanitizeDashboardProperties(PROPERTIES);
+    if(filteredProperties.length !== PROPERTIES.length){
+      PROPERTIES.splice(0, PROPERTIES.length, ...filteredProperties);
+    }
     localStorage.setItem(DASHBOARD_STORAGE_KEY, JSON.stringify({
-      properties: PROPERTIES,
+      properties: filteredProperties,
       owners: OWNERS,
       bookings: BOOKINGS,
       expenses: EXPENSES
@@ -2840,6 +2883,8 @@ function renderProperties(){
       : p.publication_status === 'draft'
         ? '<span class="text-[10px] font-semibold text-amber-800 bg-amber-100 px-2 py-1 rounded-md">Draft · perlu dilengkapi</span>'
         : '<span class="text-[10px] font-semibold text-emerald-800 bg-emerald-100 px-2 py-1 rounded-md">Tampil di website</span>';
+    const managementBadge = p.managementType === 'partner'
+      ? '<span class="text-[10px] font-semibold text-indigo-800 bg-indigo-100 px-2 py-1 rounded-md ml-1">Mitra · Fee Only</span>' : '';
     const canManageProperties = ['Master', 'Admin'].includes(currentDashboardAccount?.role);
     const statusActions = [];
     if(archived && canManageProperties) statusActions.push(`<button type="button" onclick="restoreDashboardProperty('${escapeHtml(p.id)}')" class="text-xs font-semibold text-emerald-700 hover:text-emerald-900">Pulihkan</button>`);
@@ -2858,7 +2903,7 @@ function renderProperties(){
         <div class="p-4">
           <div class="flex items-start justify-between gap-2 mb-2">
             <div class="min-w-0">
-              <div class="mb-1">${statusBadge}</div>
+              <div class="mb-1">${statusBadge}${managementBadge}</div>
               <h3 class="font-bold text-slate-900 truncate">${escapeHtml(p.name)}</h3>
               <p class="text-xs text-slate-500 truncate">${escapeHtml(p.area)}</p>
             </div>
@@ -2940,6 +2985,15 @@ function populatePropertyOwnerSelect(){
   if(OWNERS.some(owner => owner.id === selected)) select.value = selected;
 }
 
+function togglePropertyManagementFields(){
+  const isPartner = document.getElementById('newPropertyManagementType').value === 'partner';
+  document.getElementById('propertyOwnerFields').classList.toggle('hidden', isPartner);
+  document.getElementById('newPropertyOwnerShare').required = !isPartner;
+  document.getElementById('propertyManagementTypeHint').textContent = isPartner
+    ? 'Properti Mitra tidak dibagi hasilkan lewat Dashboard ini. Nilai yang tercatat dari booking properti ini hanya fee yang kita terima.'
+    : '';
+}
+
 function openPropertyModal(propertyId=''){
   const form = document.querySelector('#modal-property form');
   form.reset();
@@ -2950,17 +3004,20 @@ function openPropertyModal(propertyId=''){
   document.getElementById('propertySubmitButton').textContent = propertyId ? 'Simpan Perubahan' : 'Simpan Properti';
   document.getElementById('newPropertyOwnerShare').value = 100;
   document.getElementById('newPropertyAgentShare').value = 0;
+  document.getElementById('newPropertyManagementType').value = 'managed';
 
   const property = PROPERTIES.find(item => item.id === propertyId);
   if(property){
     document.getElementById('newPropertyName').value = property.name;
     document.getElementById('newPropertyCode').value = property.code;
     document.getElementById('newPropertyType').value = property.type;
+    document.getElementById('newPropertyManagementType').value = property.managementType === 'partner' ? 'partner' : 'managed';
     document.getElementById('newPropertyOwner').value = property.owners?.[0]?.id || OWNERS[0].id;
     document.getElementById('newPropertyOwnerShare').value = property.owners?.[0]?.share ?? 100;
     document.getElementById('newPropertyAgentName').value = property.agents?.[0]?.name || '';
     document.getElementById('newPropertyAgentShare').value = property.agents?.[0]?.share ?? 0;
   }
+  togglePropertyManagementFields();
   openModal('modal-property');
 }
 
@@ -2978,13 +3035,14 @@ async function submitProperty(){
     status.textContent = 'Data Dashboard belum tersinkron ke server.';
     return;
   }
+  const managementType = document.getElementById('newPropertyManagementType').value === 'partner' ? 'partner' : 'managed';
   const ownerShare = Number(document.getElementById('newPropertyOwnerShare').value);
   const agentShare = Number(document.getElementById('newPropertyAgentShare').value);
   const agentName = document.getElementById('newPropertyAgentName').value.trim();
   const code = document.getElementById('newPropertyCode').value.trim().toUpperCase();
   const duplicateCode = PROPERTIES.some(property => String(property.code || '').toUpperCase() === code && property.id !== editId);
 
-  if(ownerShare + agentShare > 100){
+  if(managementType === 'managed' && ownerShare + agentShare > 100){
     status.className = 'text-sm text-rose-600';
     status.textContent = 'Bagian owner dan agen tidak boleh melebihi 100%.';
     return;
@@ -3019,7 +3077,8 @@ async function submitProperty(){
     guests: existing?.guests || 0,
     price: existing?.price || 0,
     gradient: existing?.gradient || gradients[type],
-    owners: [{ id: document.getElementById('newPropertyOwner').value, share: ownerShare }],
+    managementType,
+    owners: managementType === 'partner' ? [] : [{ id: document.getElementById('newPropertyOwner').value, share: ownerShare }],
     agents: agentShare > 0 ? [{ name: agentName, share: agentShare }] : [],
     active: existing ? existing.active !== false : true,
     publication_status: existing?.publication_status || 'draft'
@@ -3239,20 +3298,21 @@ function changeMonth(delta){
   renderCalendar();
 }
 function populatePropSelects(){
-  const fillPropertySelect = (select, includeAll=false, includeGeneral=false) => {
+  const fillPropertySelect = (select, includeAll=false, includeGeneral=false, excludeCodes=[]) => {
     if(!select) return;
     const selected = select.value;
     const options = [];
     if(includeAll) options.push(new Option('Semua Properti', 'all'));
     if(includeGeneral) options.push(new Option('Operasional Umum / tanpa properti', ''));
-    options.push(...PROPERTIES.filter(property => property.active !== false).map(property => new Option(`${property.name} (${property.code})`, property.id)));
+    options.push(...PROPERTIES.filter(property => property.active !== false && !excludeCodes.includes(property.code)).map(property => new Option(`${property.name} (${property.code})`, property.id)));
     select.replaceChildren(...options);
     if(Array.from(select.options).some(option => option.value === selected)) select.value = selected;
   };
   const filter2 = document.getElementById('filterPropExp');
   fillPropertySelect(filter2, true);
   fillPropertySelect(document.getElementById('newBookingProp'));
-  fillPropertySelect(document.getElementById('newExpProp'), false, true);
+  // Pengeluaran Kosan De Orange (KDO) hanya bisa diinput dari kosan.html, bukan dari sini.
+  fillPropertySelect(document.getElementById('newExpProp'), false, true, ['KDO']);
   fillPropertySelect(document.getElementById('newIncomeProperty'), false, true);
   populateNotaPropertySelect();
 }
@@ -3298,7 +3358,7 @@ function renderBookingsTable(){
         <td class="px-5 py-3"><span class="text-xs font-mono text-slate-500">${b.id}</span></td>
         <td class="px-3 py-3">
           <div class="font-semibold text-slate-900 text-sm">${escapeHtml(b.guest)}</div>
-          <div class="text-xs text-slate-400">${b.nights} malam${b.note?' · '+escapeHtml(b.note):''}</div>
+          <div class="text-xs text-slate-400">${b.nights} malam${b.phone?' · '+escapeHtml(b.phone):''}${b.note?' · '+escapeHtml(b.note):''}</div>
         </td>
         <td class="px-3 py-3 hidden md:table-cell text-sm text-slate-600">${escapeHtml(b.propName)}</td>
         <td class="px-3 py-3 hidden lg:table-cell text-sm text-slate-600">${fmtDate(b.checkin)} → ${fmtDate(b.checkout)}</td>
@@ -3535,6 +3595,11 @@ async function submitFinanceEntry(kind){
   const button = document.getElementById(isIncome ? 'incomeSubmitButton' : 'expenseSubmitButton');
   const propertyId = document.getElementById(isIncome ? 'newIncomeProperty' : 'newExpProp').value;
   const property = PROPERTIES.find(item => item.id === propertyId);
+  if(!isIncome && property?.code === 'KDO'){
+    status.className = 'text-sm text-rose-600';
+    status.textContent = 'Pengeluaran Kosan De Orange hanya bisa diinput dari halaman Kosan.';
+    return;
+  }
   const categoryId = document.getElementById(isIncome ? 'newIncomeCategory' : 'newExpCat').value;
   const category = financeCategories.find(item => item.id === categoryId);
   const isSalary = !isIncome && category?.name.trim().toLowerCase() === 'gaji';
@@ -3603,6 +3668,11 @@ async function submitFinanceEntry(kind){
 function deleteFinanceEntry(id){
   const entry = financeEntries.find(item => item.id === id);
   if(!entry) return;
+  const property = PROPERTIES.find(item => item.id === entry.property_id || normalizePropertyNameForMatch(entry.property_name) === normalizePropertyNameForMatch(item.name));
+  if(entry.kind === 'expense' && property?.code === 'KDO'){
+    showToast('Pengeluaran Kosan De Orange hanya bisa dikelola dari halaman Kosan.');
+    return;
+  }
   document.getElementById('deleteFinanceForm').reset();
   document.getElementById('deleteFinanceEntryId').value = id;
   document.getElementById('deleteFinanceDescription').textContent = `Hapus ${entry.kind === 'income' ? 'pemasukan' : 'pengeluaran'} "${entry.description || entry.category_name}" sebesar ${fmtRp(entry.amount)}?`;
@@ -3614,6 +3684,10 @@ function openExpenseEditModal(id){
   const entry = EXPENSES.find(item => item.id === id);
   if(!entry || entry.createdBy === 'checkin-payroll') return;
   const property = PROPERTIES.find(item => financeEntryMatchesProperty(entry, item));
+  if(property?.code === 'KDO'){
+    showToast('Pengeluaran Kosan De Orange hanya bisa dikelola dari halaman Kosan.');
+    return;
+  }
   const categorySelect = document.getElementById('editExpCategory');
   const propertySelect = document.getElementById('editExpProperty');
   categorySelect.replaceChildren(...financeCategories.filter(item => item.kind === 'expense').map(item => new Option(item.name, item.id)));
@@ -3926,9 +4000,11 @@ function renderExpenseTable(){
       const proofCell = entry.proofUrl
         ? `<a href="${escapeHtml(entry.proofUrl)}" target="_blank" rel="noopener noreferrer" aria-label="Lihat bukti pengeluaran" title="Lihat bukti" class="text-brand-600 hover:text-brand-700">Lihat</a>`
         : '<span class="text-slate-300">—</span>';
-      const actionCell = canEdit
-        ? `<button type="button" onclick="openExpenseEditModal('${escapeHtml(entry.id)}')" class="text-xs font-semibold text-brand-600 hover:text-brand-800">Edit</button><button type="button" onclick="deleteFinanceEntry('${escapeHtml(entry.id)}')" aria-label="Hapus pengeluaran" title="Hapus pengeluaran" class="ml-3 text-slate-400 hover:text-rose-600"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2m-9 0l1 14h8l1-14M10 11v5m4-5v5"/></svg></button>`
-        : '—';
+      const actionCell = property?.code === 'KDO'
+        ? '<span class="text-xs text-slate-400" title="Dikelola dari halaman Kosan">Kelola di Kosan</span>'
+        : canEdit
+          ? `<button type="button" onclick="openExpenseEditModal('${escapeHtml(entry.id)}')" class="text-xs font-semibold text-brand-600 hover:text-brand-800">Edit</button><button type="button" onclick="deleteFinanceEntry('${escapeHtml(entry.id)}')" aria-label="Hapus pengeluaran" title="Hapus pengeluaran" class="ml-3 text-slate-400 hover:text-rose-600"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2m-9 0l1 14h8l1-14M10 11v5m4-5v5"/></svg></button>`
+          : '—';
       return `
         <tr>
           <td class="px-5 py-3 text-sm text-slate-600">${fmtDate(entry.date)}</td>
@@ -6224,10 +6300,12 @@ function openBookingModal(bookingId=''){
   document.getElementById('newBookingCheckout').value = booking?.checkout || new Date(Date.now() + 86400000).toISOString().slice(0, 10);
   document.getElementById('newBookingExtraBedQuantity').value = booking?.extraBedQuantity ?? 0;
   setCurrencyInputValue(document.getElementById('newBookingExtraBedPrice'), booking?.extraBedPrice ?? 0);
+  setCurrencyInputValue(document.getElementById('newBookingGrossAmount'), booking?.grossAmount ?? 0);
   if(booking){
     document.getElementById('newBookingProp').value = booking.propId;
     document.getElementById('newBookingPlatform').value = booking.platform;
     document.getElementById('newBookingGuest').value = booking.guest;
+    document.getElementById('newBookingPhone').value = booking.phone || '';
     setCurrencyInputValue(document.getElementById('newBookingAmount'), booking.amount);
     statusSelect.value = booking.status;
     statusSelect.disabled = cancelled;
@@ -6239,7 +6317,17 @@ function openBookingModal(bookingId=''){
     syncBookingCancelAmounts('refund');
   }
   updateBookingExtraBedTotal();
+  updateBookingFormForPropertyType();
   openModal('modal-booking');
+}
+
+function updateBookingFormForPropertyType(){
+  const propId = document.getElementById('newBookingProp').value;
+  const property = PROPERTIES.find(item => item.id === propId);
+  const isPartner = property?.managementType === 'partner';
+  document.getElementById('newBookingAmountLabel').textContent = isPartner ? 'Fee Kita (Rp)' : 'Nilai Booking (Rp)';
+  document.getElementById('newBookingAmount').placeholder = isPartner ? 'cth: 150.000' : '5.000.000';
+  document.getElementById('newBookingGrossAmountField').classList.toggle('hidden', !isPartner);
 }
 
 function openBookingCancelModal(bookingId){
@@ -6264,9 +6352,12 @@ async function submitBooking(){
   const prop = PROPERTIES.find(p=>p.id===propId);
   const platform = document.getElementById('newBookingPlatform').value;
   const guest = document.getElementById('newBookingGuest').value.trim();
+  const phone = document.getElementById('newBookingPhone').value.trim();
   const checkin = document.getElementById('newBookingCheckin').value;
   const checkout = document.getElementById('newBookingCheckout').value;
   const amount = parseCurrencyInput(document.getElementById('newBookingAmount').value);
+  const managementType = prop?.managementType === 'partner' ? 'partner' : 'managed';
+  const grossAmount = managementType === 'partner' ? parseCurrencyInput(document.getElementById('newBookingGrossAmount').value) : 0;
   const extraBedQuantity = Number(document.getElementById('newBookingExtraBedQuantity').value) || 0;
   const extraBedPrice = parseCurrencyInput(document.getElementById('newBookingExtraBedPrice').value);
   const platformFeePct = 0;
@@ -6274,7 +6365,7 @@ async function submitBooking(){
   const note = document.getElementById('newBookingNote').value.trim();
   const statusElement = document.getElementById('bookingFormStatus');
   const button = document.getElementById('bookingSubmitButton');
-  if(!prop || checkout <= checkin || !Number.isSafeInteger(amount) || amount <= 0 || !Number.isSafeInteger(extraBedQuantity) || extraBedQuantity < 0 || !Number.isSafeInteger(extraBedPrice) || extraBedPrice < 0){
+  if(!prop || checkout <= checkin || !Number.isSafeInteger(amount) || amount <= 0 || !Number.isSafeInteger(extraBedQuantity) || extraBedQuantity < 0 || !Number.isSafeInteger(extraBedPrice) || extraBedPrice < 0 || !Number.isSafeInteger(grossAmount) || grossAmount < 0){
     statusElement.className = 'text-sm text-rose-600';
     statusElement.textContent = 'Properti, rentang tanggal, dan jumlah booking wajib valid.';
     return;
@@ -6294,7 +6385,7 @@ async function submitBooking(){
   }
   const payload = {
     ...(editId ? { id:editId } : {}), propId, propName:prop.name, propCode:prop.code,
-    guest, platform, status:cancelledEdit ? editedBooking.status : status, checkin, checkout, amount, extraBedQuantity, extraBedPrice, platformFeePct, note,
+    guest, phone, platform, status:cancelledEdit ? editedBooking.status : status, checkin, checkout, amount, grossAmount, managementType, extraBedQuantity, extraBedPrice, platformFeePct, note,
     ...(cancelledEdit ? { pin:approvalPin, refund_amount:retainedRefund } : {})
   };
   button.disabled = true;
@@ -6308,10 +6399,10 @@ async function submitBooking(){
       ...(editedBooking || {}),
       id:editId || saveResult.data?.id,
       createdAt:saveResult.data?.created_at || editedBooking?.createdAt || new Date().toISOString(),
-      propId, propName:prop.name, propCode:prop.code, guest, platform,
+      propId, propName:prop.name, propCode:prop.code, guest, phone, platform,
       status:payload.status, checkin, checkout,
       nights:Math.round((Date.parse(`${checkout}T00:00:00Z`) - Date.parse(`${checkin}T00:00:00Z`)) / 86400000),
-      amount, extraBedQuantity, extraBedPrice, platformFeePct, note,
+      amount, grossAmount, extraBedQuantity, extraBedPrice, platformFeePct, note,
       cancellationReason:editedBooking?.cancellationReason || '',
       refundAmount:retainedRefund
     };

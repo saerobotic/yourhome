@@ -812,6 +812,10 @@ table tbody tr:last-child td { border-bottom: none; }
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
       Laporan
     </a>
+    <a class="nav-item" data-view="pengeluaran">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 3H8a2 2 0 0 0-2 2v2h12V5a2 2 0 0 0-2-2z"/><path d="M12 11v6M9 14h6"/></svg>
+      Pengeluaran
+    </a>
     <a class="nav-item" data-view="database">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14a9 3 0 0 0 18 0V5"/><path d="M3 12a9 3 0 0 0 18 0"/></svg>
       Database Kosan
@@ -883,7 +887,8 @@ table tbody tr:last-child td { border-bottom: none; }
         <div class="hero-stats" id="hero-stats"></div>
       </div>
 
-      <div class="stat-grid" id="stat-grid"></div>
+      <div class="stat-grid" id="stat-grid-top"></div>
+      <div class="stat-grid" id="stat-grid-bottom"></div>
 
       <div class="grid-2">
         <div class="card">
@@ -1104,6 +1109,37 @@ table tbody tr:last-child td { border-bottom: none; }
       </div>
     </section>
 
+    <!-- ============ PENGELUARAN ============ -->
+    <section class="view" id="view-pengeluaran">
+      <div class="stat-grid" id="exp-stat-grid"></div>
+
+      <div class="card" style="padding:0; overflow:hidden;">
+        <div class="card-head">
+          <h3>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 3H8a2 2 0 0 0-2 2v2h12V5a2 2 0 0 0-2-2z"/></svg>
+            Pengeluaran Kosan De Orange
+          </h3>
+          <div class="actions">
+            <button class="btn" onclick="openKosanExpenseModal()">+ Tambah Pengeluaran</button>
+          </div>
+        </div>
+        <div class="filters" style="border-top:1px solid var(--ink-200);border-bottom:1px solid var(--ink-200);">
+          <div class="tabs" id="exp-cat-filter">
+            <button data-cat="all" class="active" onclick="filterKosanExpenseCat(this,'all')">Semua</button>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Tanggal</th><th>Kategori</th><th>Deskripsi</th><th>Penerima</th><th>Bukti</th><th class="text-right">Jumlah</th><th></th></tr>
+            </thead>
+            <tbody id="exp-table-body"></tbody>
+          </table>
+        </div>
+      </div>
+      <p class="mou-hint" style="margin-top:10px">Honor Crew tercatat otomatis dari Check In Crew dan tidak bisa diedit di sini &mdash; perbarui datanya lewat menu Check In Crew.</p>
+    </section>
+
     <!-- ============ DATABASE KOSAN ============ -->
     <section class="view" id="view-database">
       <div class="stat-grid" id="database-stat-grid"></div>
@@ -1161,7 +1197,7 @@ table tbody tr:last-child td { border-bottom: none; }
             Ajukan Kamar / Penyewa Baru
           </h3>
         </div>
-        <div class="tk-hint">Karena harga sewa berbeda-beda tiap kamar (tidak flat), isi harga secara manual sesuai kesepakatan. Data ini hanya bersifat <strong>generate / pengajuan</strong> — baru tercatat resmi di Database Kosan setelah disetujui (Approve) oleh Master/Admin.</div>
+        <div class="tk-hint">Isi dan generate pengajuan kamar terlebih dahulu. Setelah disetujui Master/Admin dan masuk Database Kosan, lanjutkan ke menu <strong>MOU Digital</strong> untuk membuat MOU penyewa.</div>
         <div class="mou-grid">
           <div class="mou-form-group">
             <label class="mou-label">Nama Kost / Gedung *</label>
@@ -1169,28 +1205,24 @@ table tbody tr:last-child td { border-bottom: none; }
             <datalist id="tk-building-list"></datalist>
           </div>
           <div class="mou-form-group">
-            <label class="mou-label">Nomor Kamar *</label>
-            <input type="text" class="mou-input" id="tk-room-number" placeholder="Contoh: 5">
-          </div>
-          <div class="mou-form-group">
-            <label class="mou-label">Nama Penyewa</label>
-            <input type="text" class="mou-input" id="tk-tenant-name" placeholder="Kosongkan jika kamar belum ada penyewa">
-          </div>
-          <div class="mou-form-group">
-            <label class="mou-label">Status Kamar</label>
-            <select class="mou-select" id="tk-status">
-              <option value="occupied">Terisi</option>
-              <option value="vacant">Kosong</option>
-              <option value="checkout">Check-out</option>
+            <label class="mou-label" for="tk-room-number">Pilih Kamar *</label>
+            <select class="mou-select" id="tk-room-number">
+              <option value="">— Pilih gedung terlebih dahulu —</option>
             </select>
+            <input type="text" class="mou-input hidden" id="tk-new-room-number" placeholder="Masukkan nomor kamar baru">
+            <div class="mou-hint" id="tk-room-availability" style="margin-top:6px">Kamar kosong bisa dipilih. Kamar terisi dan check-out ditampilkan sebagai info.</div>
+          </div>
+          <div class="mou-form-group">
+            <label class="mou-label" for="tk-tenant-name">Nama Penyewa *</label>
+            <input type="text" class="mou-input" id="tk-tenant-name" placeholder="Masukkan nama penyewa" required>
           </div>
           <div class="mou-form-group">
             <label class="mou-label">Harga Sewa / Bulan (Rp) *</label>
             <input type="number" class="mou-input" id="tk-price" placeholder="1200000">
           </div>
           <div class="mou-form-group">
-            <label class="mou-label">Deposit (Rp)</label>
-            <input type="number" class="mou-input" id="tk-depo" value="500000">
+            <label class="mou-label" for="tk-depo">Deposit wajib (Rp) *</label>
+            <input type="number" class="mou-input" id="tk-depo" min="1" step="1" value="500000" required>
           </div>
           <div class="mou-form-group span-2">
             <label class="mou-label">Catatan (opsional)</label>
@@ -4795,8 +4827,10 @@ const DATA = {
 const PERIODS = DATA.meta.periods;
 const CURRENT_PERIOD = DATA.meta.current_period;
 const CURRENT_PERIOD_LABEL = DATA.meta.current_period_label;
-const BUILDINGS = DATA.buildings;
-const ALL_ROOMS = BUILDINGS.flatMap(b => b.rooms.map(r => ({...r, building: b.name, buildingCode: b.code})));
+// Seed awal (dipakai sebelum data live dari D1 selesai dimuat); diganti sepenuhnya oleh
+// applyKosanRoomsFromApi() setelah loadKosanRoomsFromDb() berhasil.
+let BUILDINGS = DATA.buildings;
+let ALL_ROOMS = BUILDINGS.flatMap(b => b.rooms.map(r => ({...r, building: b.name, buildingCode: b.code})));
 
 // Helpers
 const fmtIDR = (n) => {
@@ -4833,6 +4867,7 @@ const VIEWS = {
   penyewa:   { title: 'Penyewa', sub: 'Daftar penyewa aktif & riwayat' },
   pembayaran:{ title: 'Pembayaran', sub: 'Tracking pembayaran sewa bulanan' },
   laporan:   { title: 'Laporan', sub: 'Analisa pendapatan & hunian' },
+  pengeluaran: { title: 'Pengeluaran', sub: 'Catat pengeluaran operasional Kosan De Orange (honor crew otomatis dari Check In Crew)' },
   database:  { title: 'Database Kosan', sub: 'Data lengkap seluruh kamar & gedung' },
   'tambah-kamar': { title: 'Tambah Kamar/Penyewa', sub: 'Ajukan data baru & setujui sebelum masuk database' },
   mou:       { title: 'MOU Digital', sub: 'Surat pernyataan & MOU penghuni kost' },
@@ -4857,6 +4892,7 @@ function navigate(view) {
   if (view === 'penyewa') renderPenyewa();
   if (view === 'pembayaran') renderPembayaran();
   if (view === 'laporan') renderLaporan();
+  if (view === 'pengeluaran') initPengeluaranView();
   if (view === 'database') renderDatabase();
   if (view === 'tambah-kamar') initTambahKamarView();
   if (view === 'mou') initMouView();
@@ -4909,7 +4945,31 @@ function renderHero() {
 
 function renderStats() {
   const s = calcStats();
-  const cards = [
+  const topCards = [
+    {
+      label: 'Pendapatan ' + CURRENT_PERIOD_LABEL, value: fmtIDRShort(s.incomeCurrent), delta: `${s.paidCount} kamar lunas`,
+      accent: 'var(--orange-600)', accentBg: 'var(--orange-50)',
+      icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>'
+    },
+    {
+      label: 'Pengeluaran ' + CURRENT_PERIOD_LABEL,
+      value: kosanDashboardExpenseCurrent === null ? '...' : fmtIDRShort(kosanDashboardExpenseCurrent),
+      delta: kosanDashboardExpenseCurrent === null ? 'memuat...' : `${kosanDashboardExpenseCount} transaksi · lihat di Pengeluaran`,
+      accent: 'var(--red-600)', accentBg: 'var(--red-100)',
+      icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 3H8a2 2 0 0 0-2 2v2h12V5a2 2 0 0 0-2-2z"/></svg>'
+    },
+    {
+      label: 'Belum Bayar ' + CURRENT_PERIOD_LABEL, value: s.unpaidCount, delta: 'kamar perlu ditagih',
+      accent: 'var(--red-600)', accentBg: 'var(--red-100)',
+      icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>'
+    },
+    {
+      label: 'Total Pendapatan 17 Bulan', value: fmtIDRShort(s.incomeTotal), delta: 'Maret 2025 - Juli 2026',
+      accent: 'var(--amber-600)', accentBg: 'var(--amber-100)',
+      icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>'
+    },
+  ];
+  const bottomCards = [
     {
       label: 'Total Kamar', value: s.total, delta: `${BUILDINGS.length} gedung dikelola`,
       accent: 'var(--orange-600)', accentBg: 'var(--orange-50)',
@@ -4925,23 +4985,8 @@ function renderStats() {
       accent: 'var(--ink-500)', accentBg: 'var(--ink-100)',
       icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="9" y1="9" x2="15" y2="9"/><line x1="9" y1="13" x2="15" y2="13"/></svg>'
     },
-    {
-      label: 'Pendapatan ' + CURRENT_PERIOD_LABEL, value: fmtIDRShort(s.incomeCurrent), delta: `${s.paidCount} kamar lunas`,
-      accent: 'var(--orange-600)', accentBg: 'var(--orange-50)',
-      icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>'
-    },
-    {
-      label: 'Belum Bayar ' + CURRENT_PERIOD_LABEL, value: s.unpaidCount, delta: 'kamar perlu ditagih',
-      accent: 'var(--red-600)', accentBg: 'var(--red-100)',
-      icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>'
-    },
-    {
-      label: 'Total Pendapatan 17 Bulan', value: fmtIDRShort(s.incomeTotal), delta: 'Maret 2025 - Juli 2026',
-      accent: 'var(--amber-600)', accentBg: 'var(--amber-100)',
-      icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>'
-    },
   ];
-  document.getElementById('stat-grid').innerHTML = cards.map(c => `
+  const renderCards = cards => cards.map(c => `
     <div class="stat-card" style="--accent:${c.accent}; --accent-bg:${c.accentBg}">
       <div class="label">${c.label}</div>
       <div class="value">${c.value}</div>
@@ -4949,6 +4994,8 @@ function renderStats() {
       <div class="icon" style="background:${c.accentBg}; color:${c.accent}">${c.icon}</div>
     </div>
   `).join('');
+  document.getElementById('stat-grid-top').innerHTML = renderCards(topCards);
+  document.getElementById('stat-grid-bottom').innerHTML = renderCards(bottomCards);
 }
 
 // Chart: Income Trend
@@ -5717,6 +5764,538 @@ function closeModal() {
 }
 
 // ==========================================================
+// PENGELUARAN KOSAN (khusus Kosan De Orange Kost)
+// Input pengeluaran hanya bisa dari sini; honor crew masuk
+// otomatis dari Check In Crew (created_by = 'checkin-payroll').
+// Data tetap satu tabel finance_entries yang sama dipakai Dashboard,
+// jadi laporan keuangan gabungan di Dashboard tetap akurat.
+// ==========================================================
+const escapeHtmlKosan = value => String(value ?? '').replace(/[&<>"']/g, ch => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[ch]));
+function normalizeNameForMatch(value){
+  return String(value || '').normalize('NFKD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+}
+function parseCurrencyInput(value){
+  const digits = String(value ?? '').replace(/\D/g, '');
+  return digits ? Number(digits) : 0;
+}
+function setCurrencyInputValue(input, value){
+  const amount = parseCurrencyInput(value);
+  input.value = amount ? amount.toLocaleString('id-ID') : value === '' ? '' : '0';
+}
+function setupCurrencyInputs(root=document){
+  root.querySelectorAll('[data-currency-input]').forEach(input => {
+    setCurrencyInputValue(input, input.value);
+    input.addEventListener('input', () => setCurrencyInputValue(input, input.value));
+  });
+}
+
+let kdoProperty = null;
+let kosanExpenseCategories = [];
+let kosanExpenseEntries = [];
+let kosanExpenseCatFilter = 'all';
+let kosanExpenseProofDataUrl = '';
+let kosanEditExpenseProofDataUrl = '';
+let kosanDashboardExpenseCurrent = null;
+let kosanDashboardExpenseCount = 0;
+
+async function refreshKosanDashboardExpense(){
+  try {
+    await ensureKdoProperty();
+    await loadKosanExpenseData();
+    const now = new Date();
+    const monthPrefix = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+    const thisMonth = kosanExpenseEntries.filter(e => String(e.entry_date || '').startsWith(monthPrefix));
+    kosanDashboardExpenseCurrent = thisMonth.reduce((sum, e) => sum + Number(e.amount || 0), 0);
+    kosanDashboardExpenseCount = thisMonth.length;
+    if(document.getElementById('view-dashboard')?.classList.contains('active')) renderStats();
+  } catch(error) {
+    console.warn('Pengeluaran Kosan De Orange tidak dapat dimuat untuk Dashboard.', error);
+  }
+}
+
+async function ensureKdoProperty(){
+  if(kdoProperty) return kdoProperty;
+  const result = await kosanApi('/dashboard/management-data');
+  const properties = Array.isArray(result.data?.properties) ? result.data.properties : [];
+  const found = properties.find(p => String(p.code || '').toUpperCase() === 'KDO')
+    || properties.find(p => normalizeNameForMatch(p.name) === normalizeNameForMatch('Kosan De Orange Kost'));
+  if(!found) throw new Error('Properti Kosan De Orange belum terdaftar di Dashboard. Tambahkan dulu di menu Properti Dashboard.');
+  kdoProperty = { id:found.id, name:found.name, code:found.code };
+  return kdoProperty;
+}
+
+async function loadKosanExpenseData(){
+  const result = await kosanApi('/admin/finance');
+  kosanExpenseCategories = (result.data.categories || []).filter(c => c.kind === 'expense');
+  const allEntries = result.data.entries || [];
+  const kdoName = normalizeNameForMatch(kdoProperty?.name || '');
+  kosanExpenseEntries = allEntries.filter(entry => entry.kind === 'expense' && (
+    (entry.property_id && kdoProperty && entry.property_id === kdoProperty.id) ||
+    (kdoName && normalizeNameForMatch(entry.property_name) === kdoName)
+  ));
+}
+
+async function initPengeluaranView(){
+  try {
+    await ensureKdoProperty();
+    await loadKosanExpenseData();
+    renderKosanExpenseStats();
+    renderKosanExpenseCategoryFilter();
+    renderKosanExpenseTable();
+  } catch(error) {
+    showToast(error.message || 'Gagal memuat data pengeluaran.');
+  }
+}
+
+function renderKosanExpenseStats(){
+  const now = new Date();
+  const monthPrefix = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+  const thisMonth = kosanExpenseEntries.filter(e => String(e.entry_date || '').startsWith(monthPrefix));
+  const total = thisMonth.reduce((sum, e) => sum + Number(e.amount || 0), 0);
+  const byCat = new Map();
+  thisMonth.forEach(e => byCat.set(e.category_name, (byCat.get(e.category_name) || 0) + Number(e.amount || 0)));
+  let topCat = '—', topCatVal = 0;
+  for(const [name, val] of byCat){ if(val > topCatVal){ topCat = name; topCatVal = val; } }
+  const cards = [
+    {
+      label:'Total Pengeluaran Bulan Ini', value:fmtIDR(total), delta:`${thisMonth.length} transaksi`,
+      accent:'var(--red-600)', accentBg:'var(--red-100)',
+      icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 3H8a2 2 0 0 0-2 2v2h12V5a2 2 0 0 0-2-2z"/></svg>'
+    },
+    {
+      label:'Kategori Terbesar', value:topCat, delta:topCatVal ? fmtIDR(topCatVal) : '—',
+      accent:'var(--amber-600)', accentBg:'var(--amber-100)',
+      icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>'
+    },
+    {
+      label:'Transaksi Bulan Ini', value:String(thisMonth.length), delta:'item',
+      accent:'var(--orange-600)', accentBg:'var(--orange-50)',
+      icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>'
+    },
+  ];
+  document.getElementById('exp-stat-grid').innerHTML = cards.map(c => `
+    <div class="stat-card" style="--accent:${c.accent}; --accent-bg:${c.accentBg}">
+      <div class="label">${c.label}</div>
+      <div class="value">${c.value}</div>
+      <div class="delta">${c.delta}</div>
+      <div class="icon" style="background:${c.accentBg}; color:${c.accent}">${c.icon}</div>
+    </div>
+  `).join('');
+}
+
+function renderKosanExpenseCategoryFilter(){
+  const container = document.getElementById('exp-cat-filter');
+  const usedCatIds = new Set(kosanExpenseEntries.map(e => e.category_id));
+  const cats = kosanExpenseCategories.filter(c => usedCatIds.has(c.id));
+  container.innerHTML = `<button data-cat="all" class="${kosanExpenseCatFilter === 'all' ? 'active' : ''}" onclick="filterKosanExpenseCat(this,'all')">Semua</button>` +
+    cats.map(c => `<button data-cat="${c.id}" class="${kosanExpenseCatFilter === c.id ? 'active' : ''}" onclick="filterKosanExpenseCat(this,'${c.id}')">${escapeHtmlKosan(c.name)}</button>`).join('');
+}
+function filterKosanExpenseCat(btn, catId){
+  kosanExpenseCatFilter = catId;
+  document.querySelectorAll('#exp-cat-filter button').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderKosanExpenseTable();
+}
+
+function renderKosanExpenseTable(){
+  let filtered = [...kosanExpenseEntries].sort((a, b) => (b.entry_date || '').localeCompare(a.entry_date || '') || (b.created_at || '').localeCompare(a.created_at || ''));
+  if(kosanExpenseCatFilter !== 'all') filtered = filtered.filter(e => e.category_id === kosanExpenseCatFilter);
+  const tbody = document.getElementById('exp-table-body');
+  if(!filtered.length){
+    tbody.innerHTML = '<tr><td colspan="7" class="text-center" style="padding:40px;color:var(--ink-400)">Belum ada pengeluaran tercatat</td></tr>';
+    return;
+  }
+  tbody.innerHTML = filtered.map(e => {
+    const isAuto = e.created_by === 'checkin-payroll';
+    const desc = isAuto ? `Honor Crew — ${e.description || ''}` : (e.description || e.category_name);
+    const proofCell = e.proof_url ? `<a href="${escapeHtmlKosan(e.proof_url)}" target="_blank" rel="noopener noreferrer">Lihat</a>` : '<span class="muted">&mdash;</span>';
+    const actionCell = isAuto
+      ? '<span class="muted" style="font-size:11px">Otomatis</span>'
+      : `<button class="btn-ghost btn" style="padding:4px 8px;font-size:11px" onclick="openKosanExpenseEditModal('${escapeHtmlKosan(e.id)}')">Edit</button> <button class="btn-ghost btn" style="padding:4px 8px;font-size:11px;color:var(--red-600)" onclick="openKosanExpenseDeleteModal('${escapeHtmlKosan(e.id)}')">Hapus</button>`;
+    return `
+      <tr>
+        <td>${fmtDateID(e.entry_date)}</td>
+        <td><span class="badge" style="background:var(--orange-50);color:var(--orange-700)">${escapeHtmlKosan(e.category_name)}</span></td>
+        <td>${escapeHtmlKosan(desc)}</td>
+        <td class="muted">${escapeHtmlKosan(e.payee || '-')}</td>
+        <td>${proofCell}</td>
+        <td class="text-right cell-strong" style="color:var(--red-600)">- ${fmtIDR(Number(e.amount || 0))}</td>
+        <td class="text-right" style="white-space:nowrap">${actionCell}</td>
+      </tr>`;
+  }).join('');
+}
+
+function kosanPopulateCategorySelect(select){
+  if(!select) return;
+  const selected = select.value;
+  select.innerHTML = kosanExpenseCategories.map(c => `<option value="${c.id}">${escapeHtmlKosan(c.name)}</option>`).join('');
+  if(kosanExpenseCategories.some(c => c.id === selected)) select.value = selected;
+}
+
+function kosanToggleAddCategory(){
+  document.getElementById('kexp-add-cat-row')?.classList.toggle('hidden');
+}
+
+async function kosanSubmitNewCategory(){
+  const nameInput = document.getElementById('kexp-new-cat-name');
+  const status = document.getElementById('kexp-new-cat-status');
+  const name = nameInput.value.trim();
+  if(name.length < 2 || name.length > 60){ status.textContent = 'Nama kategori 2-60 karakter.'; return; }
+  status.textContent = 'Menyimpan kategori...';
+  try {
+    const result = await kosanApi('/admin/finance/categories', { method:'POST', body:JSON.stringify({ kind:'expense', name }) });
+    kosanExpenseCategories.push(result.data);
+    kosanPopulateCategorySelect(document.getElementById('kexp-cat'));
+    document.getElementById('kexp-cat').value = result.data.id;
+    nameInput.value = '';
+    status.textContent = '';
+    document.getElementById('kexp-add-cat-row').classList.add('hidden');
+    showToast(`Kategori ${result.data.name} tersimpan.`);
+  } catch(error) {
+    status.textContent = error.message || 'Gagal menyimpan kategori.';
+  }
+}
+
+async function kosanCompressExpenseProof(file){
+  if(!file?.type?.startsWith('image/')) throw new Error('Pilih file gambar.');
+  const bitmap = await createImageBitmap(file);
+  try {
+    const maxBytes = 100 * 1024;
+    let scale = Math.min(1, 1600 / Math.max(bitmap.width, bitmap.height));
+    let quality = 0.84;
+    for(let attempt = 0; attempt < 16; attempt++){
+      const canvas = document.createElement('canvas');
+      canvas.width = Math.max(1, Math.round(bitmap.width * scale));
+      canvas.height = Math.max(1, Math.round(bitmap.height * scale));
+      const context = canvas.getContext('2d');
+      context.fillStyle = '#fff';
+      context.fillRect(0, 0, canvas.width, canvas.height);
+      context.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+      const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', quality));
+      if(blob && blob.size < maxBytes){
+        const dataUrl = await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(String(reader.result));
+          reader.onerror = () => reject(new Error('Gambar gagal diproses.'));
+          reader.readAsDataURL(blob);
+        });
+        return { dataUrl, size:blob.size };
+      }
+      if(quality > 0.4) quality -= 0.12;
+      else { scale *= 0.82; quality = 0.82; }
+    }
+    throw new Error('Gambar tidak dapat dikompres hingga di bawah 100 KB.');
+  } finally {
+    bitmap.close?.();
+  }
+}
+
+async function handleKosanExpenseProofSelection(event){
+  const file = event.target.files?.[0];
+  const status = document.getElementById('kexp-proof-status');
+  const preview = document.getElementById('kexp-proof-preview');
+  kosanExpenseProofDataUrl = '';
+  preview.removeAttribute('src');
+  preview.classList.add('hidden');
+  if(!file){ status.textContent = 'Gambar akan dikompres otomatis sebelum diunggah.'; return; }
+  status.textContent = 'Mengompres gambar...';
+  try {
+    const compressed = await kosanCompressExpenseProof(file);
+    kosanExpenseProofDataUrl = compressed.dataUrl;
+    preview.src = compressed.dataUrl;
+    preview.classList.remove('hidden');
+    status.textContent = `${file.name} dikompres menjadi ${(compressed.size / 1024).toFixed(1)} KB.`;
+  } catch(error) {
+    event.target.value = '';
+    status.textContent = error.message || 'Gambar gagal dikompres.';
+  }
+}
+
+async function handleKosanEditExpenseProofSelection(event){
+  const file = event.target.files?.[0];
+  const status = document.getElementById('kexp-edit-proof-status');
+  const preview = document.getElementById('kexp-edit-proof-preview');
+  kosanEditExpenseProofDataUrl = '';
+  if(!file){ status.textContent = 'Bukti tidak diubah.'; return; }
+  status.textContent = 'Mengompres gambar...';
+  try {
+    const compressed = await kosanCompressExpenseProof(file);
+    kosanEditExpenseProofDataUrl = compressed.dataUrl;
+    preview.src = compressed.dataUrl;
+    preview.classList.remove('hidden');
+    status.textContent = `Gambar pengganti: ${(compressed.size / 1024).toFixed(1)} KB.`;
+  } catch(error) {
+    event.target.value = '';
+    status.textContent = error.message || 'Gambar gagal dikompres.';
+  }
+}
+
+function openKosanExpenseModal(){
+  document.getElementById('modal-title').textContent = 'Tambah Pengeluaran — ' + (kdoProperty?.name || 'Kosan De Orange Kost');
+  document.getElementById('modal-body').innerHTML = `
+    <form id="kosan-expense-form" onsubmit="submitKosanExpense(event)">
+      <div class="mou-grid">
+        <div class="mou-form-group">
+          <label class="mou-label">Tanggal</label>
+          <input type="date" class="mou-input" id="kexp-date" required>
+        </div>
+        <div class="mou-form-group">
+          <label class="mou-label">Kategori</label>
+          <div style="display:flex;gap:8px">
+            <select class="mou-select" id="kexp-cat" required style="flex:1"></select>
+            <button type="button" class="btn btn-ghost" onclick="kosanToggleAddCategory()">+</button>
+          </div>
+        </div>
+        <div id="kexp-add-cat-row" class="mou-form-group span-2 hidden">
+          <label class="mou-label">Nama Kategori Baru</label>
+          <div style="display:flex;gap:8px">
+            <input type="text" class="mou-input" id="kexp-new-cat-name" style="flex:1" maxlength="60">
+            <button type="button" class="btn" onclick="kosanSubmitNewCategory()">Simpan</button>
+          </div>
+          <div class="mou-hint" id="kexp-new-cat-status"></div>
+        </div>
+        <div class="mou-form-group span-2">
+          <label class="mou-label">Keterangan (opsional)</label>
+          <input type="text" class="mou-input" id="kexp-desc" maxlength="240" placeholder="Otomatis memakai nama kategori jika dikosongkan">
+        </div>
+        <div class="mou-form-group">
+          <label class="mou-label">Penerima / Vendor</label>
+          <input type="text" class="mou-input" id="kexp-payee" maxlength="120" placeholder="cth: PLN, Toko Bangunan">
+        </div>
+        <div class="mou-form-group">
+          <label class="mou-label">Jumlah (Rp)</label>
+          <input type="text" class="mou-input" inputmode="numeric" pattern="[0-9.]*" data-currency-input id="kexp-amount" required placeholder="500.000">
+        </div>
+        <div class="mou-form-group">
+          <label class="mou-label">Frekuensi</label>
+          <select class="mou-select" id="kexp-recurrence">
+            <option value="once">Tidak rutin / sekali</option>
+            <option value="weekly">Rutin mingguan</option>
+            <option value="monthly">Rutin bulanan</option>
+            <option value="quarterly">Rutin triwulanan</option>
+            <option value="yearly">Rutin tahunan</option>
+          </select>
+        </div>
+        <div class="mou-form-group span-2">
+          <label class="mou-label">Foto Bukti (opsional, otomatis dikompres di bawah 100 KB)</label>
+          <input type="file" class="mou-input" accept="image/*" id="kexp-proof" onchange="handleKosanExpenseProofSelection(event)">
+          <div class="mou-hint" id="kexp-proof-status">Gambar akan dikompres otomatis sebelum diunggah.</div>
+          <img id="kexp-proof-preview" class="hidden" style="margin-top:8px;max-height:140px;border-radius:8px;border:1px solid var(--ink-200)">
+        </div>
+      </div>
+      <p id="kexp-form-status" class="mou-hint" style="margin-top:10px"></p>
+      <div class="mou-action-bar" style="margin-top:14px">
+        <button type="submit" class="btn" id="kexp-submit-btn">Simpan Pengeluaran</button>
+      </div>
+    </form>
+  `;
+  kosanExpenseProofDataUrl = '';
+  kosanPopulateCategorySelect(document.getElementById('kexp-cat'));
+  document.getElementById('kexp-date').value = new Date().toISOString().slice(0, 10);
+  setupCurrencyInputs(document.getElementById('modal-body'));
+  document.getElementById('modal-overlay').classList.add('show');
+}
+
+async function submitKosanExpense(event){
+  event.preventDefault();
+  const status = document.getElementById('kexp-form-status');
+  const button = document.getElementById('kexp-submit-btn');
+  const categoryId = document.getElementById('kexp-cat').value;
+  const category = kosanExpenseCategories.find(c => c.id === categoryId);
+  const amount = parseCurrencyInput(document.getElementById('kexp-amount').value);
+  const entryDate = document.getElementById('kexp-date').value;
+  if(!category){ status.style.color = 'var(--red-600)'; status.textContent = 'Tambahkan atau pilih kategori terlebih dahulu.'; return; }
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(entryDate) || !Number.isSafeInteger(amount) || amount <= 0){
+    status.style.color = 'var(--red-600)'; status.textContent = 'Tanggal dan jumlah pengeluaran wajib valid.'; return;
+  }
+  const payload = {
+    kind:'expense',
+    category_id:category.id,
+    property_id:kdoProperty.id,
+    property_name:kdoProperty.name,
+    entry_date:entryDate,
+    amount,
+    description:document.getElementById('kexp-desc').value.trim() || category.name,
+    payee:document.getElementById('kexp-payee').value.trim(),
+    recurrence:document.getElementById('kexp-recurrence').value,
+    ...(kosanExpenseProofDataUrl ? { proof_image:kosanExpenseProofDataUrl } : {})
+  };
+  button.disabled = true;
+  status.style.color = 'var(--ink-500)';
+  status.textContent = 'Menyimpan pengeluaran...';
+  try {
+    await kosanApi('/admin/finance/entries', { method:'POST', body:JSON.stringify(payload) });
+    closeModal();
+    showToast('Pengeluaran tersimpan.');
+    await initPengeluaranView();
+  } catch(error) {
+    status.style.color = 'var(--red-600)';
+    status.textContent = error.message || 'Pengeluaran gagal disimpan.';
+  } finally {
+    button.disabled = false;
+  }
+}
+
+function openKosanExpenseEditModal(id){
+  const entry = kosanExpenseEntries.find(e => e.id === id);
+  if(!entry || entry.created_by === 'checkin-payroll') return;
+  document.getElementById('modal-title').textContent = 'Edit Pengeluaran';
+  document.getElementById('modal-body').innerHTML = `
+    <form id="kosan-expense-edit-form" onsubmit="submitKosanExpenseEdit(event)">
+      <input type="hidden" id="kexp-edit-id">
+      <div class="mou-grid">
+        <div class="mou-form-group">
+          <label class="mou-label">Tanggal</label>
+          <input type="date" class="mou-input" id="kexp-edit-date" required>
+        </div>
+        <div class="mou-form-group">
+          <label class="mou-label">Kategori</label>
+          <select class="mou-select" id="kexp-edit-cat" required></select>
+        </div>
+        <div class="mou-form-group span-2">
+          <label class="mou-label">Keterangan</label>
+          <input type="text" class="mou-input" id="kexp-edit-desc" maxlength="240">
+        </div>
+        <div class="mou-form-group">
+          <label class="mou-label">Penerima / Vendor</label>
+          <input type="text" class="mou-input" id="kexp-edit-payee" maxlength="120">
+        </div>
+        <div class="mou-form-group">
+          <label class="mou-label">Jumlah (Rp)</label>
+          <input type="text" class="mou-input" inputmode="numeric" pattern="[0-9.]*" data-currency-input id="kexp-edit-amount" required>
+        </div>
+        <div class="mou-form-group">
+          <label class="mou-label">Frekuensi</label>
+          <select class="mou-select" id="kexp-edit-recurrence">
+            <option value="once">Tidak rutin / sekali</option>
+            <option value="weekly">Rutin mingguan</option>
+            <option value="monthly">Rutin bulanan</option>
+            <option value="quarterly">Rutin triwulanan</option>
+            <option value="yearly">Rutin tahunan</option>
+          </select>
+        </div>
+        <div class="mou-form-group span-2">
+          <label class="mou-label">Ganti Foto Bukti (opsional)</label>
+          <input type="file" class="mou-input" accept="image/*" id="kexp-edit-proof" onchange="handleKosanEditExpenseProofSelection(event)">
+          <div class="mou-hint" id="kexp-edit-proof-status">Bukti yang ada tetap dipakai jika tidak memilih gambar baru.</div>
+          <img id="kexp-edit-proof-preview" class="hidden" style="margin-top:8px;max-height:140px;border-radius:8px;border:1px solid var(--ink-200)">
+        </div>
+        <div class="mou-form-group span-2">
+          <label class="mou-label">PIN Master (4 digit) &mdash; wajib untuk menyimpan perubahan</label>
+          <input type="password" class="mou-input" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" id="kexp-edit-pin" required>
+        </div>
+      </div>
+      <p id="kexp-edit-status" class="mou-hint" style="margin-top:10px"></p>
+      <div class="mou-action-bar" style="margin-top:14px">
+        <button type="submit" class="btn" id="kexp-edit-submit-btn">Simpan Perubahan</button>
+        <button type="button" class="btn btn-ghost" style="color:var(--red-600)" onclick="openKosanExpenseDeleteModal('${escapeHtmlKosan(entry.id)}')">Hapus Pengeluaran</button>
+      </div>
+    </form>
+  `;
+  kosanPopulateCategorySelect(document.getElementById('kexp-edit-cat'));
+  document.getElementById('kexp-edit-id').value = entry.id;
+  document.getElementById('kexp-edit-cat').value = entry.category_id;
+  document.getElementById('kexp-edit-date').value = entry.entry_date;
+  document.getElementById('kexp-edit-desc').value = entry.description || '';
+  document.getElementById('kexp-edit-payee').value = entry.payee || '';
+  document.getElementById('kexp-edit-recurrence').value = entry.recurrence || 'once';
+  kosanEditExpenseProofDataUrl = '';
+  const preview = document.getElementById('kexp-edit-proof-preview');
+  if(entry.proof_url){ preview.src = entry.proof_url; preview.classList.remove('hidden'); }
+  setupCurrencyInputs(document.getElementById('modal-body'));
+  setCurrencyInputValue(document.getElementById('kexp-edit-amount'), entry.amount);
+  document.getElementById('modal-overlay').classList.add('show');
+}
+
+async function submitKosanExpenseEdit(event){
+  event.preventDefault();
+  const id = document.getElementById('kexp-edit-id').value;
+  const status = document.getElementById('kexp-edit-status');
+  const button = document.getElementById('kexp-edit-submit-btn');
+  const categoryId = document.getElementById('kexp-edit-cat').value;
+  const category = kosanExpenseCategories.find(c => c.id === categoryId);
+  const amount = parseCurrencyInput(document.getElementById('kexp-edit-amount').value);
+  const entryDate = document.getElementById('kexp-edit-date').value;
+  const pin = document.getElementById('kexp-edit-pin').value;
+  if(!category || !/^\d{4}-\d{2}-\d{2}$/.test(entryDate) || !Number.isSafeInteger(amount) || amount <= 0){
+    status.style.color = 'var(--red-600)'; status.textContent = 'Kategori, tanggal, dan jumlah wajib valid.'; return;
+  }
+  if(!/^\d{4}$/.test(pin)){
+    status.style.color = 'var(--red-600)'; status.textContent = 'Masukkan PIN Master 4 digit.'; return;
+  }
+  const body = {
+    pin,
+    category_id:category.id,
+    property_id:kdoProperty.id,
+    property_name:kdoProperty.name,
+    entry_date:entryDate,
+    amount,
+    description:document.getElementById('kexp-edit-desc').value.trim() || category.name,
+    payee:document.getElementById('kexp-edit-payee').value.trim(),
+    recurrence:document.getElementById('kexp-edit-recurrence').value,
+    ...(kosanEditExpenseProofDataUrl ? { proof_image:kosanEditExpenseProofDataUrl } : {})
+  };
+  button.disabled = true;
+  status.style.color = 'var(--ink-500)';
+  status.textContent = 'Memverifikasi PIN dan menyimpan perubahan...';
+  try {
+    await kosanApi(`/admin/finance/entries/${encodeURIComponent(id)}`, { method:'PATCH', body:JSON.stringify(body) });
+    closeModal();
+    showToast('Pengeluaran berhasil diperbarui.');
+    await initPengeluaranView();
+  } catch(error) {
+    status.style.color = 'var(--red-600)';
+    status.textContent = error.message || 'Perubahan pengeluaran gagal disimpan.';
+  } finally {
+    button.disabled = false;
+  }
+}
+
+function openKosanExpenseDeleteModal(id){
+  const entry = kosanExpenseEntries.find(e => e.id === id);
+  if(!entry || entry.created_by === 'checkin-payroll') return;
+  document.getElementById('modal-title').textContent = 'Hapus Pengeluaran';
+  document.getElementById('modal-body').innerHTML = `
+    <form onsubmit="submitKosanExpenseDelete(event)">
+      <input type="hidden" id="kexp-delete-id" value="${escapeHtmlKosan(entry.id)}">
+      <p>Hapus pengeluaran "${escapeHtmlKosan(entry.description || entry.category_name)}" sebesar ${fmtIDR(Number(entry.amount || 0))}?</p>
+      <div class="mou-form-group" style="margin-top:12px">
+        <label class="mou-label">PIN Master (4 digit)</label>
+        <input type="password" class="mou-input" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" id="kexp-delete-pin" required>
+      </div>
+      <p id="kexp-delete-status" class="mou-hint" style="margin-top:10px"></p>
+      <div class="mou-action-bar" style="margin-top:14px">
+        <button type="submit" class="btn" style="background:var(--red-600)" id="kexp-delete-btn">Hapus Permanen</button>
+      </div>
+    </form>
+  `;
+  document.getElementById('modal-overlay').classList.add('show');
+}
+
+async function submitKosanExpenseDelete(event){
+  event.preventDefault();
+  const id = document.getElementById('kexp-delete-id').value;
+  const pin = document.getElementById('kexp-delete-pin').value;
+  const status = document.getElementById('kexp-delete-status');
+  const button = document.getElementById('kexp-delete-btn');
+  if(!/^\d{4}$/.test(pin)){ status.style.color = 'var(--red-600)'; status.textContent = 'Masukkan PIN Master 4 digit.'; return; }
+  button.disabled = true;
+  status.style.color = 'var(--ink-500)';
+  status.textContent = 'Memverifikasi PIN Master...';
+  try {
+    await kosanApi(`/admin/finance/entries/${encodeURIComponent(id)}`, { method:'DELETE', body:JSON.stringify({ pin }) });
+    closeModal();
+    showToast('Pengeluaran berhasil dihapus.');
+    await initPengeluaranView();
+  } catch(error) {
+    status.style.color = 'var(--red-600)';
+    status.textContent = error.message || 'Gagal menghapus pengeluaran.';
+  } finally {
+    button.disabled = false;
+  }
+}
+
+// ==========================================================
 // MOU DIGITAL
 // ==========================================================
 const MOU_POLICY_SECTIONS = [
@@ -6378,6 +6957,7 @@ function populateBuildingSelects() {
   });
   const list = document.getElementById('tk-building-list');
   if (list) list.innerHTML = names.map(name => `<option value="${name}"></option>`).join('');
+  tkPopulateRoomOptions();
 }
 
 function getDashboardToken() { return sessionStorage.getItem(KOSAN_ADMIN_TOKEN_KEY) || ''; }
@@ -6398,86 +6978,99 @@ async function kosanApi(path, options = {}) {
   return result;
 }
 
-// Gabungkan kamar yang sudah di-approve dari D1 ke ALL_ROOMS/BUILDINGS
-// supaya langsung muncul di Database Kosan, dropdown MOU, dan statistik dashboard.
-async function loadKosanApprovedRooms() {
-  try {
-    const result = await fetch(`${KOSAN_API_BASE}/kosan/rooms?status=approved`, { cache: 'no-store' })
-      .then(r => r.json());
-    if (!result.ok || !Array.isArray(result.data)) return;
-    let changed = false;
-    result.data.forEach(row => {
-      const already = ALL_ROOMS.some(r => r.building === row.building && r.room_number === row.room_number);
-      if (already) return;
-      if (!BUILDINGS.some(b => b.name === row.building)) {
-        BUILDINGS.push({ name: row.building, code: row.building_code || row.building, rooms: [] });
-      }
-      ALL_ROOMS.push({
-        building: row.building,
-        buildingCode: row.building_code || row.building,
-        room_number: row.room_number,
-        room_label: `Kamar ${row.room_number}`,
-        tenant_name: row.tenant_name || '',
-        price: Number(row.price) || 0,
-        depo: Number(row.depo) || 0,
-        status: row.status || 'occupied',
-        payments: [],
-      });
-      changed = true;
+// Ganti BUILDINGS/ALL_ROOMS sepenuhnya dengan data live dari D1 (kosan_rooms +
+// kosan_room_payments, lewat GET /kosan/rooms?status=approved). Dipanggil sekali saat
+// boot dan lagi setiap kali ada perubahan (checkout, approve pengajuan kamar baru),
+// supaya database D1 selalu jadi satu-satunya sumber kebenaran — bukan lagi snapshot statis.
+function applyKosanRoomsFromApi(apiRooms) {
+  const roomKey = room => `${room.building}\u0000${room.room_number}`;
+  const localRooms = DATA.buildings.flatMap(building => building.rooms.map(room => ({
+    ...room,
+    building:building.name,
+    buildingCode:building.code,
+  })));
+  const localKeys = new Set(localRooms.map(roomKey));
+  const apiByKey = new Map(apiRooms.map(room => [roomKey(room), room]));
+  const mergedRooms = [
+    ...localRooms.map(room => apiByKey.get(roomKey(room)) || room),
+    ...apiRooms.filter(room => !localKeys.has(roomKey(room))),
+  ];
+  const grouped = new Map();
+  mergedRooms.forEach(row => {
+    if (!grouped.has(row.building)) grouped.set(row.building, { name: row.building, code: row.building_code || row.buildingCode || row.building, rooms: [] });
+    grouped.get(row.building).rooms.push({
+      building: row.building,
+      room_number: row.room_number,
+      room_label: row.room_label || `Kamar ${row.room_number}`,
+      tenant_name: row.tenant_name || '',
+      price: Number(row.price) || 0,
+      depo: row.depo,
+      status: row.status || 'vacant',
+      payments: Array.isArray(row.payments) ? row.payments : [],
     });
-    if (changed) {
-      populateBuildingSelects();
-      if (typeof populateMouTenantSelect === 'function') {
-        populateMouTenantSelect();
-        mouTenantSelectReady = true;
-      }
-      renderStats();
-    }
-  } catch (e) {
-    console.warn('Gagal memuat kamar hasil approval:', e);
-  }
+  });
+  BUILDINGS = [...grouped.values()];
+  ALL_ROOMS = BUILDINGS.flatMap(b => b.rooms.map(r => ({ ...r, building: b.name, buildingCode: b.code })));
 }
 
-// Terapkan hasil check-out (kamar jadi kosong) dari D1 ke atas ALL_ROOMS,
-// baik kamar dari data statis Kosan.xlsx maupun kamar hasil approval di atas.
-async function loadKosanRoomStatusOverrides() {
+async function loadKosanRoomsFromDb() {
   try {
-    const result = await fetch(`${KOSAN_API_BASE}/kosan/room-status`, { cache: 'no-store' })
-      .then(r => r.json());
-    if (!result.ok || !Array.isArray(result.data)) return;
-    let changed = false;
-    result.data.forEach(row => {
-      const r = ALL_ROOMS.find(x => x.building === row.building && x.room_number === row.room_number);
-      if (!r) return;
-      if (r.status === row.status && r.tenant_name === (row.tenant_name || '')) return;
-      r.status = row.status || 'vacant';
-      r.tenant_name = row.tenant_name || '';
-      changed = true;
-    });
-    if (changed) renderStats();
+    const result = await kosanApi('/kosan/rooms?status=approved');
+    const apiRooms = Array.isArray(result.data) ? result.data : [];
+    if (apiRooms.length) {
+      applyKosanRoomsFromApi(apiRooms);
+    } else {
+      BUILDINGS = DATA.buildings;
+      ALL_ROOMS = BUILDINGS.flatMap(building => building.rooms.map(room => ({
+        ...room,
+        building:building.name,
+        buildingCode:building.code,
+      })));
+      showToast('D1 masih kosong. Menampilkan snapshot data lokal; perubahan kamar belum tersimpan ke database.');
+    }
+    if (typeof populateMouTenantSelect === 'function') {
+      populateMouTenantSelect();
+      mouTenantSelectReady = true;
+    }
+    return true;
   } catch (e) {
-    console.warn('Gagal memuat status check-out kamar:', e);
+    console.warn('Gagal memuat data kamar dari database. Pastikan migrations/migration-kosan-rooms.sql sudah dijalankan di D1 dan Worker terbaru sudah dideploy.', e);
+    showToast('Gagal memuat data kamar dari database: ' + e.message);
+    return false;
   }
 }
 
 async function checkoutRoom(building, roomNum) {
-  const response = await fetch(`${KOSAN_API_BASE}/kosan/room-status/checkout`, {
-    method: 'POST', headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ building, room_number: roomNum }),
+  const room = ALL_ROOMS.find(item => item.building === building && String(item.room_number) === String(roomNum));
+  if (!room) throw new Error('Data kamar tidak ditemukan di halaman. Muat ulang lalu coba lagi.');
+  await kosanApi('/kosan/room-status/checkout', {
+    method: 'POST',
+    body: JSON.stringify({
+      building,
+      room_number: roomNum,
+      room: {
+        building_code:room.buildingCode || '',
+        room_label:room.room_label || `Kamar ${roomNum}`,
+        tenant_name:room.tenant_name || '',
+        price:Number(room.price) || 0,
+        depo_amount:Number(room.depo?.amount ?? room.depo_amount) || 0,
+        depo_refundable:Boolean(room.depo?.refundable ?? room.depo_refundable),
+        notes:room.notes || '',
+        payments:Array.isArray(room.payments) ? room.payments : [],
+      },
+    }),
   });
-  const result = await response.json().catch(() => ({}));
-  if (!response.ok || result.ok === false) throw new Error(result.error || 'Gagal memproses check-out');
 }
 
 async function confirmCheckout(building, roomNum) {
-  const ok = confirm(`Check-out penyewa dari Kamar ${roomNum} (${building})?\n\nKamar akan langsung berstatus Kosong dan tersedia untuk booking baru. Aksi ini tersimpan langsung tanpa approval.`);
+  const ok = confirm(`Check-out penyewa dari Kamar ${roomNum} (${building})?\n\nKamar akan langsung berstatus Kosong, harga sewa direset ke 0, dan tersedia untuk booking baru. Tersimpan langsung ke database tanpa approval.`);
   if (!ok) return;
   try {
     await checkoutRoom(building, roomNum);
-    const r = ALL_ROOMS.find(x => x.building === building && x.room_number === roomNum);
-    if (r) { r.status = 'vacant'; r.tenant_name = ''; }
+    await loadKosanRoomsFromDb();
     closeModal();
-    showToast('Check-out berhasil, kamar sekarang tersedia untuk booking');
+    showToast('Check-out berhasil, kamar sekarang kosong dan tersimpan di database');
+    populateBuildingSelects();
     renderKamar();
     renderPenyewa();
     renderPembayaran();
@@ -6495,50 +7088,121 @@ function tkAccountLabel(accountId) {
 function initTambahKamarView() {
   const list = document.getElementById('tk-building-list');
   if (list) list.innerHTML = [...new Set(BUILDINGS.map(b => b.name))].map(name => `<option value="${name}"></option>`).join('');
+  const buildingInput = document.getElementById('tk-building');
+  const roomSelect = document.getElementById('tk-room-number');
+  const newRoomInput = document.getElementById('tk-new-room-number');
+  buildingInput.oninput = tkPopulateRoomOptions;
+  roomSelect.onchange = () => {
+    const isNewRoom = roomSelect.value === '__new__';
+    newRoomInput.classList.toggle('hidden', !isNewRoom);
+    if (isNewRoom) {
+      newRoomInput.value = '';
+      newRoomInput.focus();
+    } else if (roomSelect.value) {
+      buildingInput.value = roomSelect.value.split('||')[0];
+    }
+    tkPopulateRoomOptions();
+  };
+  tkPopulateRoomOptions();
   // Seluruh kosan.html sudah di belakang login Master/Admin, jadi antrean langsung dimuat.
   tkLoadQueue();
 }
 
+function tkPopulateRoomOptions() {
+  const buildingInput = document.getElementById('tk-building');
+  const roomSelect = document.getElementById('tk-room-number');
+  const availability = document.getElementById('tk-room-availability');
+  if (!buildingInput || !roomSelect || !availability) return;
+  const building = buildingInput.value.trim();
+  const rooms = ALL_ROOMS
+    .filter(room => !building || room.building === building)
+    .slice()
+    .sort((left, right) => left.room_number.localeCompare(right.room_number, undefined, { numeric:true }));
+  const selected = roomSelect.value;
+  const options = [new Option(building ? '— Pilih kamar —' : '— Pilih gedung atau kamar —', '')];
+  const roomsByBuilding = new Map();
+  rooms.forEach(room => {
+    if (!roomsByBuilding.has(room.building)) roomsByBuilding.set(room.building, []);
+    roomsByBuilding.get(room.building).push(room);
+  });
+  roomsByBuilding.forEach((buildingRooms, buildingName) => {
+    const group = document.createElement('optgroup');
+    group.label = buildingName;
+    buildingRooms.forEach(room => {
+      const vacant = room.status === 'vacant';
+      const status = statusLabel(room.status);
+      const tenant = room.tenant_name ? ` · ${room.tenant_name}` : '';
+      const option = new Option(`Kamar ${room.room_number} · ${status}${tenant}`, `${room.building}||${room.room_number}`);
+      option.disabled = !vacant;
+      group.appendChild(option);
+    });
+    options.push(group);
+  });
+  options.push(new Option('＋ Ajukan nomor kamar baru…', '__new__'));
+  roomSelect.replaceChildren(...options);
+  if ([...roomSelect.options].some(option => option.value === selected)) roomSelect.value = selected;
+  const vacantCount = rooms.filter(room => room.status === 'vacant').length;
+  availability.textContent = rooms.length
+    ? `${vacantCount} kamar kosong tersedia. Kamar terisi/check-out tidak dapat dipilih. Nomor baru bisa diketik manual.`
+    : 'Belum ada kamar terdaftar di gedung ini. Pilih “Ajukan nomor kamar baru…” untuk menambahkan nomor baru.';
+}
+
 async function tkGenerate() {
-  const building = document.getElementById('tk-building').value.trim();
-  const roomNumber = document.getElementById('tk-room-number').value.trim();
+  let building = document.getElementById('tk-building').value.trim();
+  const roomSelection = document.getElementById('tk-room-number').value;
+  const roomNumber = roomSelection === '__new__'
+    ? document.getElementById('tk-new-room-number').value.trim()
+    : roomSelection.includes('||')
+      ? roomSelection.split('||')[1]
+      : '';
+  if (roomSelection.includes('||')) building = roomSelection.split('||')[0];
   const tenantName = document.getElementById('tk-tenant-name').value.trim();
-  const status = document.getElementById('tk-status').value;
   const price = Number(document.getElementById('tk-price').value) || 0;
   const depo = Number(document.getElementById('tk-depo').value) || 0;
   const notes = document.getElementById('tk-notes').value.trim();
   const statusEl = document.getElementById('tk-generate-status');
 
-  if (!building || !roomNumber || !price) {
-    statusEl.textContent = 'Nama kost, nomor kamar, dan harga sewa wajib diisi.';
+  if (!building || !roomSelection || !roomNumber || !price) {
+    statusEl.textContent = 'Pilih gedung, kamar kosong atau nomor kamar baru, dan isi harga sewa.';
     showToast('Lengkapi field wajib (*) terlebih dahulu');
     return;
   }
-
+  const existingRoom = ALL_ROOMS.find(room => room.building === building && String(room.room_number) === roomNumber);
+  if (existingRoom && existingRoom.status !== 'vacant') {
+    statusEl.textContent = `Kamar ${roomNumber} berstatus ${statusLabel(existingRoom.status)}; pilih kamar kosong.`;
+    showToast('Kamar yang terisi atau check-out tidak dapat diajukan untuk penyewa baru.');
+    return;
+  }
+  if (!tenantName) {
+    statusEl.textContent = 'Nama penyewa wajib diisi untuk kamar yang akan ditempati.';
+    showToast('Nama penyewa wajib diisi.');
+    return;
+  }
+  if (depo <= 0) {
+    statusEl.textContent = 'Deposit wajib lebih dari Rp0.';
+    showToast('Isi deposit dengan nominal lebih dari Rp0.');
+    return;
+  }
   statusEl.textContent = 'Mengirim pengajuan...';
   try {
-    const response = await fetch(`${KOSAN_API_BASE}/kosan/rooms`, {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
+    await kosanApi('/kosan/rooms', {
+      method: 'POST',
       body: JSON.stringify({
         building, building_code: building.toUpperCase().replace(/\s+/g, ''),
-        room_number: roomNumber, tenant_name: tenantName, price, depo, status, notes,
+        room_number: roomNumber, tenant_name: tenantName, price, depo, status:'occupied', notes,
       }),
     });
-    const result = await response.json().catch(() => ({}));
-    if (!response.ok || result.ok === false) {
-      statusEl.textContent = result.error || 'Gagal mengirim pengajuan.';
-      showToast(result.error || 'Gagal mengirim pengajuan');
-      return;
-    }
     statusEl.textContent = 'Pengajuan terkirim, menunggu approval Master/Admin.';
     showToast('Pengajuan berhasil di-generate, menunggu approval');
-    ['tk-building','tk-room-number','tk-tenant-name','tk-price','tk-notes'].forEach(id => { document.getElementById(id).value = ''; });
+    ['tk-building','tk-tenant-name','tk-price','tk-notes','tk-new-room-number'].forEach(id => { document.getElementById(id).value = ''; });
+    document.getElementById('tk-room-number').value = '';
+    document.getElementById('tk-new-room-number').classList.add('hidden');
+    tkPopulateRoomOptions();
     document.getElementById('tk-depo').value = 500000;
-    document.getElementById('tk-status').value = 'occupied';
     tkLoadQueue();
   } catch (e) {
-    statusEl.textContent = 'Gagal menghubungi server.';
-    showToast('Gagal menghubungi server');
+    statusEl.textContent = e.message || 'Gagal menghubungi server.';
+    showToast(e.message || 'Gagal menghubungi server');
   }
 }
 
@@ -6571,7 +7235,11 @@ async function tkDecide(id, action) {
     await kosanApi(`/kosan/rooms/${encodeURIComponent(id)}/${action}`, { method: 'POST' });
     showToast(action === 'approve' ? 'Pengajuan disetujui & masuk Database Kosan' : 'Pengajuan ditolak');
     tkLoadQueue();
-    if (action === 'approve') loadKosanApprovedRooms();
+    if (action === 'approve') {
+      await loadKosanRoomsFromDb();
+      populateBuildingSelects();
+      renderStats();
+    }
   } catch (e) {
     showToast('Gagal memproses: ' + e.message);
     if (getDashboardToken()) tkLoadQueue();
@@ -6930,9 +7598,9 @@ function boot() {
 // ==========================================================
 // INIT
 // ==========================================================
-function init() {
+async function init() {
+  await loadKosanRoomsFromDb();
   populateBuildingSelects();
-  loadKosanApprovedRooms().then(loadKosanRoomStatusOverrides);
   // Populate period select
   document.getElementById('pay-period').innerHTML = PERIODS.map(p => 
     `<option value="${p.key}" ${p.key===CURRENT_PERIOD?'selected':''}>${p.label}</option>`
@@ -6944,6 +7612,7 @@ function init() {
   // Render dashboard
   renderHero();
   renderStats();
+  refreshKosanDashboardExpense();
   renderIncomeChart('all');
   renderStatusChart();
   renderRecentPayments();
