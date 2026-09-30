@@ -52,10 +52,17 @@
   .glass{backdrop-filter:blur(8px);background:rgba(255,255,255,.85);}
   .platform-dot{width:8px;height:8px;border-radius:50%;display:inline-block;}
   .dropdown{position:relative;}
-  .dropdown-menu{display:none;position:absolute;right:0;top:100%;margin-top:6px;background:#fff;border:1px solid #e2e8f0;border-radius:12px;box-shadow:0 12px 30px -8px rgba(15,23,42,.18);min-width:220px;z-index:30;padding:6px;}
+  .dropdown-menu{display:none;position:absolute;right:0;top:100%;margin-top:6px;background:#fff;border:1px solid #e2e8f0;border-radius:12px;box-shadow:0 12px 30px -8px rgba(15,23,42,.18);min-width:250px;max-height:min(70vh,520px);overflow-y:auto;overscroll-behavior:contain;z-index:30;padding:6px;}
   .dropdown.open .dropdown-menu{display:block;animation:fadeIn .15s ease-out;}
   .dropdown-item{padding:8px 12px;border-radius:8px;cursor:pointer;font-size:14px;display:flex;align-items:center;gap:10px;}
   .dropdown-item:hover{background:#f1f5f9;}
+  .dropdown-item.active{background:#e2e8f0;font-weight:600;}
+  .period-year{flex:1 1 56px;min-width:56px;text-align:center;padding:6px 8px;border-radius:8px;border:1px solid #e2e8f0;background:#fff;color:#475569;font-size:13px;font-weight:600;cursor:pointer;}
+  .period-year:hover{background:#f1f5f9;}
+  .period-year.active{background:#0f172a;border-color:#0f172a;color:#fff;}
+  .period-months{min-height:88px;max-height:190px;flex:1 1 auto;overflow-y:auto;overscroll-behavior:contain;border-top:1px solid #f1f5f9;}
+  #periodMenu{display:none;max-height:min(70vh,520px);}
+  .dropdown.open #periodMenu{display:flex;flex-direction:column;overflow-y:auto;}
   .toast{position:fixed;bottom:24px;right:24px;background:#0f172a;color:#fff;padding:14px 20px;border-radius:12px;box-shadow:0 12px 30px -8px rgba(0,0,0,.4);z-index:80;font-size:14px;display:flex;align-items:center;gap:10px;transform:translateY(100px);opacity:0;transition:all .3s;}
   .toast.show{transform:translateY(0);opacity:1;}
   .tab-btn{padding:8px 14px;border-radius:8px;font-size:13px;font-weight:500;color:#64748b;cursor:pointer;transition:all .15s;}
@@ -129,6 +136,10 @@
         <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
         <span>Keuangan</span>
       </button>
+      <button onclick="switchView('omset')" class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left">
+        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 19h16M7 16V9m5 7V5m5 11v-4"/></svg>
+        <span>Omset</span>
+      </button>
 
       <div class="px-3 pt-5 pb-2 text-[10px] uppercase tracking-wider text-slate-500 font-bold">Keuangan</div>
       <button onclick="switchView('laporan')" class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left">
@@ -138,6 +149,10 @@
       <button onclick="switchView('bagi-hasil')" class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left">
         <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 3v18m5-14H9.5a3.5 3.5 0 100 7h5a3.5 3.5 0 110 7H6"/></svg>
         <span>Kalkulator Bagi Hasil</span>
+      </button>
+      <button id="notaNavItem" onclick="openNotaLunas()" class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left">
+        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 12h6m-6 3.5h3M7 3h7l5 5v11a2 2 0 01-2 2H7a2 2 0 01-2-2V5a2 2 0 012-2z"/><path d="M14 3v5h5"/></svg>
+        <span>Nota Lunas</span>
       </button>
       <button onclick="switchView('owner')" class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left">
         <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 20h5v-2a4 4 0 00-3-3.87M9 20H4v-2a4 4 0 013-3.87m6-1.13a4 4 0 10-4-4 4 4 0 004 4zm6 0a3 3 0 10-3-3"/></svg>
@@ -155,7 +170,7 @@
       </button>
       <button onclick="switchView('bantuan')" class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left">
         <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.399-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-        <span>Bantuan</span>
+        <span>Lapor Bug</span>
       </button>
     </nav>
 
@@ -200,17 +215,12 @@
 
         <!-- Period filter -->
         <div class="dropdown relative" id="periodDropdown">
-          <button onclick="document.getElementById('periodDropdown').classList.toggle('open')" class="flex items-center gap-2 px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm hover:bg-slate-50">
+          <button onclick="togglePeriodMenu()" class="flex items-center gap-2 px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm hover:bg-slate-50">
             <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
             <span id="periodLabel" class="hidden sm:inline">September 2026</span>
             <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7"/></svg>
           </button>
-          <div class="dropdown-menu">
-            <div class="dropdown-item" onclick="setPeriod('September 2026')"><span class="w-2 h-2 rounded-full bg-emerald-500"></span>September 2026 (Bulan ini)</div>
-            <div class="dropdown-item" onclick="setPeriod('Agustus 2026')"><span class="w-2 h-2 rounded-full bg-slate-300"></span>Agustus 2026</div>
-            <div class="dropdown-item" onclick="setPeriod('Q3 2026')"><span class="w-2 h-2 rounded-full bg-blue-500"></span>Q3 2026 (Jul-Sept)</div>
-            <div class="dropdown-item" onclick="setPeriod('YTD 2026')"><span class="w-2 h-2 rounded-full bg-amber-500"></span>Year to Date 2026</div>
-          </div>
+          <div class="dropdown-menu" id="periodMenu"></div>
         </div>
 
         <!-- Notifications -->
@@ -485,9 +495,9 @@
               <h3 class="font-bold text-slate-900">Daftar Booking</h3>
               <p class="text-xs text-slate-500"><span id="bookingCount">0</span> booking ditampilkan</p>
             </div>
-            <button onclick="showToast('Import CSV dari Airbnb/Booking/Agoda — siap di v2')" class="text-xs font-semibold text-brand-600 hover:text-brand-700 flex items-center gap-1.5">
+            <button type="button" onclick="openBookingImportModal()" class="text-xs font-semibold text-brand-600 hover:text-brand-700 flex items-center gap-1.5">
               <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
-              Import CSV
+              Import Banyak Booking
             </button>
           </div>
           <div class="overflow-x-auto">
@@ -593,18 +603,40 @@
         </div>
 
         <section id="incomePanel" class="hidden">
-          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-5">
+          <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-5">
+            <div class="bg-white rounded-xl p-4 border border-slate-100"><div class="text-xs text-slate-500">Pemasukan booking bulan ini</div><div id="incomeBookingTotal" class="text-xl font-extrabold text-emerald-600 mt-1">Rp 0</div></div>
             <div class="bg-white rounded-xl p-4 border border-slate-100"><div class="text-xs text-slate-500">Pemasukan tambahan bulan ini</div><div id="incomeTotal" class="text-xl font-extrabold text-emerald-600 mt-1">Rp 0</div></div>
             <div class="bg-white rounded-xl p-4 border border-slate-100"><div class="text-xs text-slate-500">Akumulasi saldo awal tercatat</div><div id="incomeOpeningBalance" class="text-xl font-extrabold text-slate-900 mt-1">Rp 0</div></div>
             <div class="bg-white rounded-xl p-4 border border-slate-100"><div class="text-xs text-slate-500">Transaksi bulan ini</div><div id="incomeCount" class="text-xl font-extrabold text-slate-900 mt-1">0</div></div>
           </div>
           <div class="bg-white rounded-xl border border-slate-100 overflow-hidden">
-            <div class="p-5 pb-3"><h3 class="font-bold text-slate-900">Daftar Pemasukan</h3><p class="text-xs text-slate-500">Catat pemasukan tambahan di luar booking, termasuk extra bed dan saldo awal.</p></div>
+            <div class="p-5 pb-3"><h3 class="font-bold text-slate-900">Daftar Pemasukan</h3><p class="text-xs text-slate-500">Termasuk booking, extra bed, pemasukan tambahan, dan saldo awal. Booking dikelola dari menu Booking.</p></div>
             <div class="overflow-x-auto"><table class="w-full text-sm">
               <thead class="bg-slate-50 text-slate-500 text-xs uppercase tracking-wider"><tr>
                 <th class="text-left font-semibold px-5 py-3">Tanggal</th><th class="text-left font-semibold px-3 py-3">Kategori</th><th class="text-left font-semibold px-3 py-3">Keterangan</th><th class="text-left font-semibold px-3 py-3 hidden md:table-cell">Properti</th><th class="text-right font-semibold px-5 py-3">Jumlah</th><th class="px-3 py-3"></th>
               </tr></thead><tbody id="incomeTableBody" class="divide-y divide-slate-100"></tbody>
             </table></div>
+          </div>
+        </section>
+      </div>
+
+      <!-- =========================================== -->
+      <!-- OMSET VIEW                                   -->
+      <!-- =========================================== -->
+      <div id="view-omset" class="view">
+        <section class="bg-white rounded-2xl border border-slate-100 overflow-hidden">
+          <div class="p-5 pb-3 flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h3 class="font-bold text-slate-900">Omset Bulanan</h3>
+              <p class="text-xs text-slate-500">Total pemasukan Januari sampai Desember untuk setiap tahun. Saldo awal tidak dihitung sebagai omset.</p>
+            </div>
+            <div id="monthlyRevenueNote" class="text-xs text-slate-500"></div>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+              <thead id="monthlyRevenueHead" class="bg-slate-50 text-slate-500 text-xs uppercase tracking-wider"></thead>
+              <tbody id="monthlyRevenueBody" class="divide-y divide-slate-100"></tbody>
+            </table>
           </div>
         </section>
       </div>
@@ -730,6 +762,69 @@
             <button type="button" onclick="downloadOwnerShareCsv()" class="inline-flex items-center gap-2 border border-emerald-200 hover:bg-emerald-50 text-emerald-800 text-sm font-semibold px-3 py-2 rounded-lg"><svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414A1 1 0 0119 9v10a2 2 0 01-2 2z"/></svg>Unduh Excel</button>
             <label class="block w-full sm:w-48"><span class="block text-xs text-slate-500 font-semibold mb-1">Nomor WhatsApp owner</span><input id="shareCalcWhatsappPhone" type="tel" inputmode="tel" autocomplete="tel" placeholder="08xxxxxxxxxx" class="w-full text-sm border border-slate-200 rounded-lg px-3 py-2"></label>
             <button type="button" onclick="shareOwnerShareWhatsApp()" class="inline-flex items-center gap-2 bg-slate-900 hover:bg-slate-800 text-white text-sm font-semibold px-3 py-2 rounded-lg"><svg width="15" height="15" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51"/></svg>Kirim WhatsApp</button>
+          </div>
+        </section>
+
+        <!-- =========================================== -->
+        <!-- GENERATOR NOTA LUNAS (tidak menyimpan data)  -->
+        <!-- =========================================== -->
+        <section id="notaPanel" class="mt-6 bg-white border border-slate-200 rounded-xl overflow-hidden">
+          <div class="p-4 sm:p-5 border-b border-slate-100 flex flex-wrap items-start justify-between gap-3">
+            <div class="min-w-0">
+              <h2 class="font-bold text-slate-900">Generator Nota Lunas</h2>
+              <p class="text-xs text-slate-500 mt-1">Untuk tamu yang meminta invoice lunas. Isi data, unduh PDF, lalu kirim ke WhatsApp tamu. Nota hanya dibuat di browser dan tidak masuk ke sistem, D1, maupun laporan keuangan.</p>
+              <p id="notaLogoStatus" class="text-[11px] mt-1 text-slate-500">Kop nota memakai logo header website.</p>
+            </div>
+            <span class="inline-flex items-center gap-1.5 text-[11px] font-semibold text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-2.5 py-1">Tidak disimpan ke sistem</span>
+          </div>
+
+          <div class="p-4 sm:p-5 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
+            <label class="block xl:col-span-2"><span class="block text-xs text-slate-500 font-semibold mb-1">Properti</span><select id="notaProperty" class="w-full text-sm border border-slate-200 rounded-lg px-3 py-2.5 bg-white"></select></label>
+            <label class="block"><span class="block text-xs text-slate-500 font-semibold mb-1">Tanggal Nota</span><input id="notaDate" type="date" class="w-full text-sm border border-slate-200 rounded-lg px-3 py-2.5"></label>
+            <label class="block"><span class="block text-xs text-slate-500 font-semibold mb-1">Nama Tamu</span><input id="notaGuestName" type="text" maxlength="120" autocomplete="off" placeholder="cth: Budi Santoso" class="w-full text-sm border border-slate-200 rounded-lg px-3 py-2.5"></label>
+            <label class="block"><span class="block text-xs text-slate-500 font-semibold mb-1">Nomor WhatsApp Tamu</span><input id="notaGuestPhone" type="tel" inputmode="tel" autocomplete="off" maxlength="30" placeholder="08xxxxxxxxxx" class="w-full text-sm border border-slate-200 rounded-lg px-3 py-2.5"></label>
+            <label class="block"><span class="block text-xs text-slate-500 font-semibold mb-1">Nomor Nota</span><input id="notaNumber" type="text" maxlength="40" class="w-full text-sm border border-slate-200 rounded-lg px-3 py-2.5"></label>
+            <label class="block"><span class="block text-xs text-slate-500 font-semibold mb-1">Check-in</span><input id="notaCheckin" type="date" class="w-full text-sm border border-slate-200 rounded-lg px-3 py-2.5"></label>
+            <label class="block"><span class="block text-xs text-slate-500 font-semibold mb-1">Check-out</span><input id="notaCheckout" type="date" class="w-full text-sm border border-slate-200 rounded-lg px-3 py-2.5"></label>
+            <label class="block"><span class="block text-xs text-slate-500 font-semibold mb-1">Metode Pembayaran</span><select id="notaPaymentMethod" class="w-full text-sm border border-slate-200 rounded-lg px-3 py-2.5 bg-white">
+              <option>Transfer Bank</option>
+              <option>Tunai</option>
+              <option>QRIS</option>
+              <option>Kartu Kredit</option>
+              <option>Platform OTA</option>
+              <option>Lainnya</option>
+            </select></label>
+          </div>
+
+          <div class="px-4 sm:px-5 pb-4">
+            <div class="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <h3 class="text-sm font-bold text-slate-900">Rincian Tagihan</h3>
+                <p class="text-xs text-slate-500">Baris pertama terisi otomatis dari properti dan tanggal. Sesuaikan dengan tagihan tamu.</p>
+              </div>
+              <button type="button" onclick="addNotaItemRow('', 0, false)" class="inline-flex items-center gap-2 border border-slate-200 hover:bg-slate-50 text-slate-700 text-sm font-semibold px-3 py-2 rounded-lg"><svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 4v16m8-8H4"/></svg>Tambah Baris</button>
+            </div>
+            <div id="notaItems" class="mt-3 space-y-2"></div>
+          </div>
+
+          <div class="px-4 sm:px-5 pb-4 grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <label class="block"><span class="block text-xs text-slate-500 font-semibold mb-1">Diskon (Rp)</span><input id="notaDiscount" type="text" inputmode="numeric" pattern="[0-9.]*" data-currency-input value="0" class="w-full text-sm border border-slate-200 rounded-lg px-3 py-2.5"></label>
+            <label class="block sm:col-span-2"><span class="block text-xs text-slate-500 font-semibold mb-1">Catatan Nota (opsional)</span><input id="notaNote" type="text" maxlength="200" placeholder="cth: Termasuk sarapan untuk 4 tamu" class="w-full text-sm border border-slate-200 rounded-lg px-3 py-2.5"></label>
+          </div>
+
+          <div class="px-4 sm:px-5 pb-4 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm">
+            <span class="text-slate-500">Subtotal: <strong id="notaSubtotal" class="text-slate-800">Rp 0</strong></span>
+            <span class="text-slate-500">Diskon: <strong id="notaDiscountValue" class="text-rose-600">Rp 0</strong></span>
+            <span class="text-slate-500">Total Dibayar: <strong id="notaTotal" class="text-emerald-700 text-base">Rp 0</strong></span>
+          </div>
+
+          <div id="notaPreview" class="px-4 sm:px-5 pb-5"></div>
+
+          <div class="px-4 sm:px-5 py-4 border-t border-slate-100 flex flex-wrap items-end gap-2">
+            <button type="button" onclick="downloadNotaPdf()" class="inline-flex items-center gap-2 bg-rose-600 hover:bg-rose-700 text-white text-sm font-semibold px-4 py-2.5 rounded-lg"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 3v12m0 0 4-4m-4 4-4-4"/><path d="M5 17v4h14v-4"/></svg>Unduh PDF Nota</button>
+            <button type="button" onclick="sendNotaWhatsApp()" class="inline-flex items-center gap-2 bg-slate-900 hover:bg-slate-800 text-white text-sm font-semibold px-4 py-2.5 rounded-lg"><svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51l-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.999-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>Kirim WhatsApp</button>
+            <button type="button" onclick="resetNotaForm()" class="inline-flex items-center gap-2 border border-slate-200 hover:bg-slate-50 text-slate-700 text-sm font-semibold px-4 py-2.5 rounded-lg">Bersihkan Form</button>
+            <p class="text-xs text-slate-500 sm:flex-1 sm:min-w-[240px]">WhatsApp hanya terisi kalimat pembuka. Unduh PDF nota lebih dahulu, lalu lampirkan file pada chat secara manual.</p>
           </div>
         </section>
       </div>
@@ -904,6 +999,14 @@
         <label class="block"><span class="block text-xs text-slate-500 font-semibold">Harga per Extra Bed (Rp)</span><input id="newBookingExtraBedPrice" type="text" inputmode="numeric" pattern="[0-9.]*" data-currency-input value="0" class="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 mt-0.5"></label>
       </div>
       <p id="newBookingExtraBedTotal" class="text-xs text-slate-500">Total Extra Bed: Rp 0. Dicatat terpisah dari nilai booking.</p>
+      <div id="bookingRefundFields" class="hidden space-y-3 rounded-lg border border-amber-200 bg-amber-50/70 p-3">
+        <p class="text-xs font-semibold text-amber-900">Booking ini sudah dibatalkan. Potongan dan nilai bersih dapat dikoreksi di sini.</p>
+        <div class="grid grid-cols-2 gap-3">
+          <label class="block"><span class="block text-xs font-semibold text-slate-600">Potongan / Refund (Rp)</span><input id="bookingRefundAmount" type="text" inputmode="numeric" pattern="[0-9.]*" data-currency-input value="0" class="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 mt-0.5"></label>
+          <label class="block"><span class="block text-xs font-semibold text-slate-600">Pemasukan bersih (Rp)</span><input id="bookingNetAmount" type="text" inputmode="numeric" pattern="[0-9.]*" data-currency-input value="0" class="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 mt-0.5"></label>
+        </div>
+        <p id="bookingRefundHint" class="text-[11px] text-amber-800"></p>
+      </div>
       <div>
         <label class="text-xs text-slate-500 font-semibold">Status</label>
         <select id="newBookingStatus" class="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 bg-white mt-0.5">
@@ -922,11 +1025,25 @@
         <textarea id="newBookingNote" rows="2" placeholder="Permintaan khusus tamu..." class="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 mt-0.5"></textarea>
       </div>
       <div class="flex gap-2 pt-2">
+        <button id="bookingDeleteButton" type="button" onclick="deleteBookingFromModal()" class="hidden text-sm font-semibold px-4 py-2.5 border border-rose-200 text-rose-600 rounded-lg hover:bg-rose-50">Hapus</button>
         <button type="button" onclick="closeModal('modal-booking')" class="flex-1 text-sm font-semibold px-4 py-2.5 border border-slate-200 rounded-lg hover:bg-slate-50">Batal</button>
         <button id="bookingSubmitButton" type="submit" class="flex-1 text-sm font-semibold px-4 py-2.5 bg-brand-600 hover:bg-brand-700 text-white rounded-lg">Simpan Booking</button>
       </div>
       <p id="bookingFormStatus" class="text-sm" role="status" aria-live="polite"></p>
     </form>
+  </div>
+</div>
+
+<div id="modal-day-bookings" class="modal-overlay fixed inset-0 bg-slate-900/50 z-50 hidden items-center justify-center p-4">
+  <div class="modal-panel bg-white rounded-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
+    <div class="p-5 border-b border-slate-100 flex items-center justify-between sticky top-0 bg-white">
+      <div>
+        <h3 id="dayBookingsTitle" class="font-bold text-lg text-slate-900">Booking pada tanggal ini</h3>
+        <p class="text-xs text-slate-500">Klik salah satu untuk lihat/edit detailnya</p>
+      </div>
+      <button onclick="closeModal('modal-day-bookings')" class="p-1 hover:bg-slate-100 rounded-lg"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg></button>
+    </div>
+    <div id="dayBookingsList" class="p-5 space-y-2"></div>
   </div>
 </div>
 
@@ -942,6 +1059,55 @@
       <p id="cancelBookingStatus" class="text-sm" role="status" aria-live="polite"></p>
       <div class="flex gap-2"><button type="button" onclick="closeModal('modal-cancel-booking')" class="flex-1 border border-slate-200 rounded-lg px-4 py-2 text-sm font-semibold">Kembali</button><button id="cancelBookingButton" type="submit" class="flex-1 bg-rose-600 hover:bg-rose-700 text-white rounded-lg px-4 py-2 text-sm font-semibold">Cancel dan Catat Refund</button></div>
     </form>
+  </div>
+</div>
+
+<!-- ============== MODAL: IMPORT BANYAK BOOKING ============== -->
+<div id="modal-import-booking" class="modal-overlay fixed inset-0 bg-slate-900/50 z-50 hidden items-center justify-center p-4">
+  <div class="modal-panel bg-white rounded-2xl max-w-3xl w-full max-h-[92vh] overflow-y-auto">
+    <div class="p-5 border-b border-slate-100 flex items-center justify-between sticky top-0 bg-white z-10">
+      <div>
+        <h3 class="font-bold text-lg text-slate-900">Import Banyak Booking</h3>
+        <p class="text-xs text-slate-500">Tempel atau pilih file berisi banyak tamu sekaligus. Setiap baris membuat booking beserta pemasukan Booking-nya.</p>
+      </div>
+      <button onclick="closeModal('modal-import-booking')" aria-label="Tutup" class="p-1 hover:bg-slate-100 rounded-lg"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg></button>
+    </div>
+    <div class="p-5 space-y-4">
+      <div class="rounded-xl border border-slate-200 bg-slate-50 p-3">
+        <p class="text-xs text-slate-600">Urutan kolom setiap baris:</p>
+        <p class="mt-1 text-xs font-semibold text-slate-800">Nama | Kode Properti | Check-in | Check-out | Jumlah malam | Platform | Total payment | Harga per hari</p>
+        <p class="mt-1 text-[11px] text-slate-500">Pemisah boleh <strong>|</strong>, TAB, titik koma, atau koma. Tulis <strong>WA</strong> supaya dianggap Direct. Kolom jumlah malam boleh dikosongkan karena dihitung otomatis dari tanggal.</p>
+      </div>
+      <label class="block">
+        <span class="block text-sm font-semibold text-slate-700 mb-1.5">Data booking</span>
+        <textarea id="importBookingText" rows="8" spellcheck="false" placeholder="Budi Santoso | SUD-19 | 2026-08-05 | 2026-08-07 | 2 | WA | 1818000 | 909000" class="w-full resize-y border border-slate-200 rounded-lg px-3 py-2.5 text-xs font-mono text-slate-700"></textarea>
+      </label>
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <label class="block"><span class="block text-xs text-slate-500 font-semibold mb-1">File CSV / TXT (opsional)</span><input id="importBookingFile" type="file" accept=".csv,.txt,text/csv,text/plain" class="w-full text-xs border border-slate-200 rounded-lg px-3 py-2 bg-white"></label>
+        <label class="block"><span class="block text-xs text-slate-500 font-semibold mb-1">Tanggal pemasukan</span><select id="importBookingEntryDate" class="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 bg-white">
+          <option value="checkin" selected>Ikut tanggal check-in</option>
+          <option value="today">Tanggal hari ini</option>
+        </select></label>
+        <label class="block"><span class="block text-xs text-slate-500 font-semibold mb-1">Status booking</span><select id="importBookingStatus" class="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 bg-white">
+          <option value="Checked-out" selected>Checked-out (sudah selesai)</option>
+          <option value="Confirmed">Confirmed</option>
+          <option value="Checked-in">Checked-in</option>
+          <option value="Inquiry">Inquiry</option>
+        </select></label>
+      </div>
+      <label class="block"><span class="block text-xs text-slate-500 font-semibold mb-1">Catatan untuk semua baris (opsional)</span><input id="importBookingNote" type="text" maxlength="200" placeholder="cth: rekap Agustus dari WhatsApp" class="w-full text-sm border border-slate-200 rounded-lg px-3 py-2"></label>
+      <details class="rounded-lg border border-slate-200 bg-white p-3">
+        <summary class="text-xs font-semibold text-slate-700 cursor-pointer">Lihat kode properti yang valid</summary>
+        <p id="importBookingCodeList" class="mt-2 text-[11px] leading-5 text-slate-600"></p>
+      </details>
+      <p id="importBookingStatusMessage" class="text-sm" role="status" aria-live="polite"></p>
+      <div id="importBookingPreview"></div>
+      <div class="flex flex-wrap gap-2 pt-1">
+        <button type="button" onclick="checkBookingImport()" class="border border-slate-200 hover:bg-slate-50 text-slate-700 text-sm font-semibold px-4 py-2.5 rounded-lg">Periksa Data</button>
+        <button type="button" id="importBookingSubmitButton" onclick="submitBookingImport()" disabled class="bg-brand-600 hover:bg-brand-700 disabled:opacity-50 text-white text-sm font-semibold px-4 py-2.5 rounded-lg">Simpan Semua Booking</button>
+        <button type="button" onclick="closeModal('modal-import-booking')" class="border border-slate-200 hover:bg-slate-50 text-slate-700 text-sm font-semibold px-4 py-2.5 rounded-lg">Tutup</button>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -1121,6 +1287,20 @@
       <label class="block"><span class="block text-xs font-semibold text-slate-600 mb-1">PIN Master (4 digit)</span><span class="relative block"><input id="deletePropertyPin" type="password" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" required autocomplete="off" class="w-full border border-slate-200 rounded-lg px-3 py-2 pr-12 text-sm" placeholder="PIN persetujuan Master"><button type="button" data-toggle-password="deletePropertyPin" aria-label="Tampilkan PIN" class="absolute inset-y-0 right-0 px-3 text-slate-500 hover:text-slate-800"><svg data-eye-icon width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg></button></span></label>
       <p id="deletePropertyStatus" class="text-sm" role="status" aria-live="polite"></p>
       <div class="flex gap-2"><button type="button" onclick="closeModal('modal-delete-property')" class="flex-1 border border-slate-200 rounded-lg px-4 py-2 text-sm font-semibold">Batal</button><button id="deletePropertyButton" type="submit" class="flex-1 bg-rose-600 hover:bg-rose-700 text-white rounded-lg px-4 py-2 text-sm font-semibold">Arsipkan</button></div>
+    </form>
+  </div>
+</div>
+
+<div id="modal-purge-property" class="modal-overlay fixed inset-0 bg-slate-900/50 z-50 hidden items-center justify-center p-4">
+  <div class="modal-panel bg-white rounded-xl max-w-sm w-full p-5">
+    <div class="flex items-center justify-between mb-3"><h3 class="font-bold text-lg text-rose-700">Hapus Permanen Properti</h3><button type="button" onclick="closeModal('modal-purge-property')" aria-label="Tutup" class="p-1 hover:bg-slate-100 rounded-lg"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg></button></div>
+    <p id="purgePropertyDescription" class="text-sm text-slate-600"></p>
+    <p class="text-xs text-rose-700 font-semibold mt-2">Tindakan ini tidak dapat dibatalkan. Properti hilang dari daftar Dashboard dan dari katalog website.</p>
+    <form id="purgePropertyForm" class="mt-4 space-y-3">
+      <input id="purgePropertyId" type="hidden">
+      <label class="block"><span class="block text-xs font-semibold text-slate-600 mb-1">PIN Master (4 digit)</span><span class="relative block"><input id="purgePropertyPin" type="password" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" required autocomplete="off" class="w-full border border-slate-200 rounded-lg px-3 py-2 pr-12 text-sm" placeholder="PIN persetujuan Master"><button type="button" data-toggle-password="purgePropertyPin" aria-label="Tampilkan PIN" class="absolute inset-y-0 right-0 px-3 text-slate-500 hover:text-slate-800"><svg data-eye-icon width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg></button></span></label>
+      <p id="purgePropertyStatus" class="text-sm" role="status" aria-live="polite"></p>
+      <div class="flex gap-2"><button type="button" onclick="closeModal('modal-purge-property')" class="flex-1 border border-slate-200 rounded-lg px-4 py-2 text-sm font-semibold">Batal</button><button id="purgePropertyButton" type="submit" class="flex-1 bg-rose-600 hover:bg-rose-700 text-white rounded-lg px-4 py-2 text-sm font-semibold">Hapus Permanen</button></div>
     </form>
   </div>
 </div>
@@ -1396,6 +1576,7 @@ let sessionExpiryTimer = null;
 const DASHBOARD_STORAGE_KEY = 'yourhome_management_data_v1';
 const DASHBOARD_SESSION_KEY = 'yourhome_dashboard_session';
 const DASHBOARD_MANAGEMENT_IMPORT_CHECKED_KEY = 'yourhome_management_d1_import_checked_v1';
+const DASHBOARD_BOOKING_MIGRATION_KEY = 'yourhome_booking_local_migration_v1';
 const API_BASE = 'https://your-home-checkin-api.saerobotic.workers.dev';
 let dashboardManagementDataReady = false;
 let dashboardManagementSyncTimer = null;
@@ -1473,11 +1654,18 @@ async function dashboardApi(path, options={}){
   return result;
 }
 
+// Label akun pada pilihan login. Worker hanya mengirim account_id dan role,
+// jadi nama tampilan diatur di sini. admin-1 dipakai sebagai akun Operasional.
+const LOGIN_ACCOUNT_LABELS = {
+  master:'Master',
+  it:'IT Support',
+  admin:'Admin',
+  'admin-1':'Operasional',
+};
+
 function loginAccountLabel(account){
   const id = String(account.account_id || '');
-  if(id === 'master') return 'Master';
-  if(id === 'it') return 'IT Support';
-  if(id === 'admin') return 'Admin';
+  if(LOGIN_ACCOUNT_LABELS[id]) return LOGIN_ACCOUNT_LABELS[id];
   const adminMatch = id.match(/^admin-(\d+)$/);
   return adminMatch ? `Admin ${adminMatch[1]}` : id;
 }
@@ -1981,34 +2169,75 @@ async function saveDashboardManagementDataNow(){
   persistDashboardData({ skipCloudSync:true });
 }
 
+const LEGACY_PROPERTY_CODE_ALIASES = {
+  AZA:'AZR',
+  CSB:'VCB',
+  CKB:'VCKB',
+  'GH-KBP':'DVH',
+};
+
+function normalizePropertyKey(value){
+  return String(value || '').trim().toLowerCase().replace(/\s+/g, ' ');
+}
+
+// Booking lama bisa menyimpan kode/ID properti yang sudah tidak dipakai, sehingga
+// kartu properti tidak menghitungnya. Satukan ke properti aktif lewat kode
+// (termasuk kode lama) atau lewat nama properti.
+function normalizeBookingProperties(bookings){
+  const byCode = new Map();
+  const byName = new Map();
+  PROPERTIES.forEach(property => {
+    const code = String(property.code || '').trim().toUpperCase();
+    if(code) byCode.set(code, property);
+    const name = normalizePropertyKey(property.name);
+    if(name) byName.set(name, property);
+  });
+  return bookings.map(booking => {
+    const sourceCode = String(booking.propCode || '').trim().toUpperCase();
+    const propertyCode = LEGACY_PROPERTY_CODE_ALIASES[sourceCode] || sourceCode;
+    const property = byCode.get(propertyCode) || byName.get(normalizePropertyKey(booking.propName));
+    if(!property) return booking;
+    return { ...booking, propId:property.id, propCode:property.code, propName:property.name };
+  });
+}
+
 async function loadBookingData(account){
   const legacyBookings = [...BOOKINGS];
   const canMigrate = ['Master', 'Admin'].includes(account.role);
-  let result = await dashboardApi('/dashboard/bookings');
-  let remoteBookings = Array.isArray(result.data) ? result.data : [];
+  const migrationDone = localStorage.getItem(DASHBOARD_BOOKING_MIGRATION_KEY) === '1';
+  const result = await dashboardApi('/dashboard/bookings');
 
-  if(canMigrate && legacyBookings.length){
+  // Kalau server tidak mengembalikan daftar booking (gangguan jaringan/izin),
+  // data lokal dipertahankan supaya tampilan tidak dikosongkan keliru.
+  if(!Array.isArray(result && result.data)) return;
+  let remoteBookings = result.data;
+
+  // Kirim booking lokal ke D1 HANYA SEKALI, dan HANYA saat buku besar D1 benar-benar
+  // kosong (migrasi awal dari local storage ke D1). Syarat remoteBookings.length===0 ini
+  // sengaja ditambahkan di atas penanda per-browser: begitu D1 sudah punya data sama
+  // sekali, browser mana pun (baru, cache lama, atau yang belum pernah set penanda)
+  // TIDAK BOLEH lagi menganggap booking yang hilang dari D1 sebagai "belum termigrasi" —
+  // itu artinya booking tersebut memang sengaja dihapus, bukan belum disinkronkan.
+  if(canMigrate && !migrationDone && remoteBookings.length === 0){
     const remoteIds = new Set(remoteBookings.map(booking => booking.id));
     const missingBookings = legacyBookings.filter(booking => !remoteIds.has(booking.id));
-    for(const booking of missingBookings){
-      await dashboardApi('/dashboard/bookings', {
-        method:'POST', body:JSON.stringify(booking)
-      });
-    }
+    localStorage.setItem(DASHBOARD_BOOKING_MIGRATION_KEY, '1');
     if(missingBookings.length){
-      result = await dashboardApi('/dashboard/bookings');
-      remoteBookings = Array.isArray(result.data) ? result.data : [];
+      for(const booking of missingBookings){
+        await dashboardApi('/dashboard/bookings', {
+          method:'POST', body:JSON.stringify(booking)
+        });
+      }
+      const refreshed = await dashboardApi('/dashboard/bookings');
+      remoteBookings = Array.isArray(refreshed && refreshed.data) ? refreshed.data : remoteBookings;
     }
   }
 
-  if(!remoteBookings.length && legacyBookings.length){
-    if(!canMigrate) return;
-    throw new Error('Booking lokal masih ada, tetapi belum berhasil ditemukan di D1. Data lokal dipertahankan.');
-  }
-
-  BOOKINGS.splice(0, BOOKINGS.length, ...remoteBookings);
+  BOOKINGS.splice(0, BOOKINGS.length, ...normalizeBookingProperties(remoteBookings));
   document.getElementById('bookingNavCount').textContent = BOOKINGS.length;
   persistDashboardData();
+  // Menu periode ikut menyesuaikan diri kalau ada data tahun yang lebih baru.
+  renderPeriodMenu();
 }
 
 function persistDashboardData(options={}){
@@ -2098,6 +2327,7 @@ const VIEW_META = {
   'properti': { title:'Manajemen Properti', sub:'Kelola semua apartemen & villa yang Anda manageable' },
   'booking': { title:'Booking Management', sub:'Kelola booking dari semua platform' },
   'pengeluaran': { title:'Keuangan', sub:'Catat pemasukan dan pantau pengeluaran properti' },
+  'omset': { title:'Omset', sub:'Daftar omset bulanan Januari sampai Desember per tahun' },
   'laporan': { title:'Laporan Owner', sub:'Generate laporan keuangan per owner' },
   'bagi-hasil': { title:'Kalkulator Bagi Hasil', sub:'Hitung pembagian bulanan sesuai perjanjian owner' },
   'owner': { title:'Owner', sub:'Daftar pemilik properti dengan persentase kepemilikan' },
@@ -2119,9 +2349,10 @@ function switchView(name){
   if(name==='properti') renderProperties();
   if(name==='booking'){ renderCalendar(); renderBookingsTable(); populatePropSelects(); }
   if(name==='pengeluaran'){ renderExpenseTable(); renderExpenseSummary(); populatePropSelects(); }
+  if(name==='omset') renderMonthlyRevenue();
   if(name==='owner') renderOwners();
   if(name==='laporan'){ populateOwnerSelect(); renderReport(); }
-  if(name==='bagi-hasil'){ populateShareCalculatorOwners(); renderShareCalculatorInputs(); }
+  if(name==='bagi-hasil'){ populateShareCalculatorOwners(); renderShareCalculatorInputs(); prepareNotaForm(); }
   if(name==='pengaturan') renderUsers();
   /* Close mobile sidebar */
   if(window.innerWidth < 1024){
@@ -2200,14 +2431,164 @@ function getCrewExpenseDescription(entry){
   job = job.replace(/\s+\(\d{4}-\d{2}-\d{2}\)$/, '').trim() || 'Pekerjaan';
   return crew ? `${crew} - ${job}` : job;
 }
+const PERIOD_OLDEST_YEAR = 2023;
+
 function getPeriodRange(period=currentPeriod){
-  const ranges = {
-    'September 2026':['2026-09-01','2026-10-01'],
-    'Agustus 2026':['2026-08-01','2026-09-01'],
-    'Q3 2026':['2026-07-01','2026-10-01'],
-    'YTD 2026':['2026-01-01','2026-10-01']
-  };
-  return ranges[period] || null;
+  const monthMatch = /^YTD \d{4}$/.test(period) ? null : period.match(/^([A-Za-z]+) (\d{4})$/);
+  if(monthMatch){
+    const monthIndex = MONTH_NAMES.findIndex(name => name.toLowerCase() === monthMatch[1].toLowerCase());
+    if(monthIndex < 0) return null;
+    const year = Number(monthMatch[2]);
+    return [
+      `${year}-${String(monthIndex + 1).padStart(2, '0')}-01`,
+      new Date(Date.UTC(year, monthIndex + 1, 1)).toISOString().slice(0, 10),
+    ];
+  }
+  const quarterMatch = period.match(/^Q([1-4]) (\d{4})$/);
+  if(quarterMatch){
+    const year = Number(quarterMatch[2]);
+    const startMonth = (Number(quarterMatch[1]) - 1) * 3;
+    return [
+      `${year}-${String(startMonth + 1).padStart(2, '0')}-01`,
+      new Date(Date.UTC(year, startMonth + 3, 1)).toISOString().slice(0, 10),
+    ];
+  }
+  const ytdMatch = period.match(/^YTD (\d{4})$/);
+  if(ytdMatch){
+    const year = Number(ytdMatch[1]);
+    const now = new Date();
+    const isCurrentYear = year === now.getUTCFullYear();
+    return [
+      `${year}-01-01`,
+      isCurrentYear
+        ? new Date(Date.UTC(year, now.getUTCMonth() + 1, 1)).toISOString().slice(0, 10)
+        : `${year + 1}-01-01`,
+    ];
+  }
+  return null;
+}
+
+function getCurrentPeriodLabel(){
+  const now = new Date();
+  return `${MONTH_NAMES[now.getUTCMonth()]} ${now.getUTCFullYear()}`;
+}
+
+let periodMenuYear = null;
+
+// Rentang tahun yang benar-benar ada datanya, digabung dengan tahun berjalan.
+function getPeriodYearBounds(){
+  const currentYear = new Date().getUTCFullYear();
+  let newest = currentYear;
+  let oldest = PERIOD_OLDEST_YEAR;
+  const items = [...BOOKINGS, ...INCOMES, ...EXPENSES];
+  items.forEach(entry => {
+    const raw = entry.checkin || entry.entryDate || entry.date || '';
+    const year = Number(String(raw).slice(0, 4));
+    if(!year || Number.isNaN(year)) return;
+    if(year > newest) newest = year;
+    if(year < oldest) oldest = year;
+  });
+  if(oldest > currentYear) oldest = currentYear;
+  return { newest, oldest };
+}
+
+function periodYearFromLabel(label){
+  const match = String(label || '').match(/(\d{4})/);
+  return match ? Number(match[1]) : null;
+}
+
+function togglePeriodMenu(){
+  const dropdown = document.getElementById('periodDropdown');
+  if(!dropdown) return;
+  if(!dropdown.classList.contains('open')){
+    const { newest } = getPeriodYearBounds();
+    periodMenuYear = periodYearFromLabel(currentPeriod) || newest;
+    renderPeriodMenu();
+  }
+  dropdown.classList.toggle('open');
+}
+
+function setPeriodMenuYear(year){
+  periodMenuYear = year;
+  renderPeriodMenu();
+  // Klik tahun langsung menampilkan seluruh tahun itu (YTD), bukan sekadar membuka daftar bulannya.
+  setPeriod(`YTD ${year}`);
+}
+
+// Menu periode dibuat ringkas: periode cepat + tombol tahun + bulan tahun terpilih saja,
+// supaya daftarnya tidak makin panjang ketika tahun bertambah.
+function renderPeriodMenu(){
+  const menu = document.getElementById('periodMenu');
+  if(!menu) return;
+  const now = new Date();
+  const currentYear = now.getUTCFullYear();
+  const currentMonthIndex = now.getUTCMonth();
+  const { newest, oldest } = getPeriodYearBounds();
+  const requested = periodMenuYear || periodYearFromLabel(currentPeriod) || newest;
+  const year = Math.min(Math.max(requested, oldest), newest);
+  periodMenuYear = year;
+  const caption = text => `<div class="px-4 pt-3 pb-1 text-[10px] font-bold uppercase tracking-wider text-slate-400">${text}</div>`;
+  const item = (label, dot, active) => `<div class="dropdown-item${active ? ' active' : ''}" onclick="setPeriod('${label}')"><span class="w-2 h-2 rounded-full ${dot}"></span>${label}</div>`;
+  const thisMonth = `${MONTH_NAMES[currentMonthIndex]} ${currentYear}`;
+  const previousDate = new Date(Date.UTC(currentYear, currentMonthIndex - 1, 1));
+  const previousMonth = `${MONTH_NAMES[previousDate.getUTCMonth()]} ${previousDate.getUTCFullYear()}`;
+  const html = [caption('Periode cepat')];
+  html.push(`<div class="dropdown-item${currentPeriod === thisMonth ? ' active' : ''}" onclick="setPeriod('${thisMonth}')"><span class="w-2 h-2 rounded-full bg-emerald-500"></span>${thisMonth}<span class="text-xs text-slate-400">Bulan ini</span></div>`);
+  html.push(`<div class="dropdown-item${currentPeriod === previousMonth ? ' active' : ''}" onclick="setPeriod('${previousMonth}')"><span class="w-2 h-2 rounded-full bg-slate-400"></span>${previousMonth}<span class="text-xs text-slate-400">Bulan lalu</span></div>`);
+  html.push(item(`YTD ${currentYear}`, 'bg-amber-500', currentPeriod === `YTD ${currentYear}`));
+  html.push(item(`Q${Math.floor(currentMonthIndex / 3) + 1} ${currentYear}`, 'bg-blue-500', currentPeriod === `Q${Math.floor(currentMonthIndex / 3) + 1} ${currentYear}`));
+  html.push(caption('Pilih tahun'));
+  const yearButtons = [];
+  for(let value = newest; value >= oldest; value--){
+    yearButtons.push(`<button type="button" class="period-year${value === year ? ' active' : ''}" onclick="event.stopPropagation(); setPeriodMenuYear(${value});">${value}</button>`);
+  }
+  html.push(`<div class="flex flex-wrap gap-1 px-3 pb-2">${yearButtons.join('')}</div>`);
+  html.push(`<div class="period-months">`);
+  html.push(caption(`Bulan ${year}`));
+  for(let month = 11; month >= 0; month--){
+    if(year === currentYear && month > currentMonthIndex) continue;
+    const label = `${MONTH_NAMES[month]} ${year}`;
+    const isCurrentMonth = year === currentYear && month === currentMonthIndex;
+    html.push(item(label, isCurrentMonth ? 'bg-emerald-500' : 'bg-slate-300', currentPeriod === label));
+  }
+  html.push(caption(`Ringkasan ${year}`));
+  html.push(item(`YTD ${year}`, 'bg-amber-500', currentPeriod === `YTD ${year}`));
+  for(let quarter = 4; quarter >= 1; quarter--){
+    const label = `Q${quarter} ${year}`;
+    html.push(item(label, 'bg-blue-500', currentPeriod === label));
+  }
+  html.push(`</div>`);
+  menu.innerHTML = html.join('');
+  if(!getPeriodRange(currentPeriod)) setPeriod(getCurrentPeriodLabel());
+  const label = document.getElementById('periodLabel');
+  if(label) label.textContent = currentPeriod;
+  renderPeriodOptions();
+}
+
+// Pilihan periode di panel Laporan Owner ikut mengikuti rentang tahun yang tersedia.
+function renderPeriodOptions(){
+  const select = document.getElementById('reportPeriod');
+  if(!select) return;
+  const now = new Date();
+  const currentYear = now.getUTCFullYear();
+  const currentMonthIndex = now.getUTCMonth();
+  const { newest, oldest } = getPeriodYearBounds();
+  const labels = [];
+  const add = value => { if(!labels.includes(value)) labels.push(value); };
+  add(`${MONTH_NAMES[currentMonthIndex]} ${currentYear}`);
+  add(`YTD ${currentYear}`);
+  add(`Q${Math.floor(currentMonthIndex / 3) + 1} ${currentYear}`);
+  for(let year = newest; year >= oldest; year--){
+    for(let month = 11; month >= 0; month--){
+      if(year === currentYear && month > currentMonthIndex) continue;
+      add(`${MONTH_NAMES[month]} ${year}`);
+    }
+    add(`YTD ${year}`);
+    for(let quarter = 4; quarter >= 1; quarter--) add(`Q${quarter} ${year}`);
+  }
+  if(currentPeriod && !labels.includes(currentPeriod)) labels.unshift(currentPeriod);
+  select.innerHTML = labels.map(value => `<option>${value}</option>`).join('');
+  select.value = currentPeriod;
 }
 function getPeriodMonthKeys(period=currentPeriod){
   const range = getPeriodRange(period);
@@ -2252,6 +2633,18 @@ function getOwnerProps(ownerId){
   return PROPERTIES.filter(p => p.owners.some(o => o.id === ownerId));
 }
 
+// Warna kartu properti. Properti baru dari Dashboard belum punya gradient,
+// jadi dipakai warna per jenis properti agar kotaknya tidak tampil putih.
+const PROPERTY_TYPE_GRADIENTS = {
+  apartment:'from-blue-500 to-cyan-600',
+  villa:'from-emerald-500 to-teal-700',
+  guesthouse:'from-amber-500 to-orange-600',
+  kos:'from-rose-500 to-pink-600'
+};
+function propertyGradientOf(property){
+  return property?.gradient || PROPERTY_TYPE_GRADIENTS[property?.type] || 'from-indigo-500 to-purple-700';
+}
+
 /* ============== DASHBOARD ============== */
 function renderDashboard(){
   const monthBookings = BOOKINGS.filter(b => isDateInReportPeriod(b.checkin));
@@ -2293,15 +2686,16 @@ function renderDashboard(){
     const occ = Math.min(95, Math.round(bk.length / 30 * 100 * 1.4));
     const ownerName = p.owners.map(o => {
       const ow = OWNERS.find(x=>x.id===o.id);
+      if(!ow) return '';
       return ow.name.split(' ')[0] + (p.owners.length>1?' ('+o.share+'%)':'');
-    }).join(', ');
-    return { prop:p, bookings:bk.length, rev, exp, net:rev-exp, occ, ownerName };
+    }).filter(Boolean).join(', ');
+    return { prop:p, gradient:propertyGradientOf(p), bookings:bk.length, rev, exp, net:rev-exp, occ, ownerName };
   }).sort((a,b)=>b.rev-a.rev);
   document.getElementById('topPropsBody').innerHTML = propStats.map(s => `
     <tr>
       <td class="px-4 py-3">
         <div class="flex items-center gap-3">
-          <div class="w-9 h-9 rounded-lg bg-gradient-to-br ${s.prop.gradient} flex items-center justify-center text-white text-[10px] font-bold">${escapeHtml(s.prop.code)}</div>
+          <div class="w-9 h-9 rounded-lg bg-gradient-to-br ${s.gradient} flex items-center justify-center text-white text-[10px] font-bold">${escapeHtml(s.prop.code)}</div>
           <div>
             <div class="font-semibold text-slate-900 text-sm">${escapeHtml(s.prop.name)}</div>
             <div class="text-xs text-slate-400">${escapeHtml(s.prop.area)}</div>
@@ -2415,7 +2809,7 @@ function renderProperties(){
     const rev = allBookings.reduce((sum, booking) => sum + getBookingNetAmount(booking), 0) + INCOMES.filter(entry => entry.propId === p.id && !['income-opening-balance', 'income-booking'].includes(entry.categoryId) && isDateInReportPeriod(entry.date)).reduce((sum, entry) => sum + entry.amount, 0);
     const exp = getPropExpenses(p.id).reduce((s,e)=>s+e.amount,0);
     const occ = Math.min(95, Math.round(bk.length/30*140));
-    const propertyGradient = p.gradient || ({ apartment:'from-blue-500 to-cyan-600', villa:'from-emerald-500 to-teal-700', guesthouse:'from-amber-500 to-orange-600', kos:'from-rose-500 to-pink-600' }[p.type] || 'from-slate-500 to-slate-700');
+    const propertyGradient = propertyGradientOf(p);
     const ownerChips = p.owners.map(o => {
       const ow = OWNERS.find(x=>x.id===o.id);
       return `<div class="flex items-center gap-1.5 px-2 py-1 bg-white/15 backdrop-blur rounded-md text-[10px] font-medium"><div class="w-4 h-4 rounded-full bg-gradient-to-br ${ow.color} flex items-center justify-center text-[8px] font-bold text-white">${ow.initial}</div>${ow.name.split(' ')[0]}<span class="opacity-70">${o.share}%</span></div>`;
@@ -2430,6 +2824,7 @@ function renderProperties(){
     const canManageProperties = ['Master', 'Admin'].includes(currentDashboardAccount?.role);
     const statusActions = [];
     if(archived && canManageProperties) statusActions.push(`<button type="button" onclick="restoreDashboardProperty('${escapeHtml(p.id)}')" class="text-xs font-semibold text-emerald-700 hover:text-emerald-900">Pulihkan</button>`);
+    if(archived && canManageProperties) statusActions.push(`<button type="button" onclick="openPropertyPurgeModal('${escapeHtml(p.id)}')" aria-label="Hapus permanen ${escapeHtml(p.name)}" title="Hapus permanen (PIN Master)" class="p-1.5 rounded-md text-slate-400 hover:text-rose-700 hover:bg-rose-50"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2m-9 0 1 14h8l1-14M10 11v5m4-5v5"/></svg></button>`);
     if(!archived && canManageProperties) statusActions.push(`<button type="button" onclick="openPropertyDeleteModal('${escapeHtml(p.id)}')" aria-label="Arsipkan ${escapeHtml(p.name)}" title="Arsipkan (PIN Master)" class="p-1.5 rounded-md text-slate-400 hover:text-rose-700 hover:bg-rose-50"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2m-9 0 1 14h8l1-14M10 11v5m4-5v5"/></svg></button>`);
     return `
       <div class="prop-card bg-white rounded-2xl overflow-hidden border border-slate-100">
@@ -2697,6 +3092,57 @@ async function submitPropertyDelete(event){
   }
 }
 
+function openPropertyPurgeModal(propertyId){
+  const property = PROPERTIES.find(item => item.id === propertyId && item.active === false);
+  if(!property || currentDashboardAccount?.role === 'IT') return;
+  document.getElementById('purgePropertyForm').reset();
+  document.getElementById('purgePropertyId').value = property.id;
+  document.getElementById('purgePropertyDescription').textContent = `Hapus permanen ${property.name} (${property.code})?`;
+  document.getElementById('purgePropertyStatus').textContent = '';
+  openModal('modal-purge-property');
+}
+
+async function submitPropertyPurge(event){
+  event.preventDefault();
+  const propertyId = document.getElementById('purgePropertyId').value;
+  const pinInput = document.getElementById('purgePropertyPin');
+  const status = document.getElementById('purgePropertyStatus');
+  const button = document.getElementById('purgePropertyButton');
+  const property = PROPERTIES.find(item => item.id === propertyId && item.active === false);
+  if(!property){
+    status.className = 'text-sm text-rose-600';
+    status.textContent = 'Properti tidak ditemukan atau belum diarsipkan.';
+    return;
+  }
+  if(currentDashboardAccount?.role === 'IT'){
+    status.className = 'text-sm text-rose-600';
+    status.textContent = 'Role IT tidak dapat menghapus properti.';
+    return;
+  }
+  if(!/^\d{4}$/.test(pinInput.value)){
+    status.className = 'text-sm text-rose-600';
+    status.textContent = 'Masukkan PIN Master tepat 4 digit.';
+    return;
+  }
+  button.disabled = true;
+  status.className = 'text-sm text-slate-500';
+  status.textContent = 'Menghapus properti...';
+  try {
+    await dashboardApi(`/dashboard/properties/${encodeURIComponent(propertyId)}/purge`, {
+      method:'POST', body:JSON.stringify({ pin:pinInput.value })
+    });
+    await refreshDashboardPropertyData();
+    closeModal('modal-purge-property');
+    showToast(`${property.name} dihapus permanen.`);
+  } catch(error) {
+    status.className = 'text-sm text-rose-600';
+    status.textContent = error.message || 'Properti gagal dihapus.';
+    pinInput.value = '';
+  } finally {
+    button.disabled = false;
+  }
+}
+
 /* ============== BOOKING ============== */
 const MONTH_NAMES = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
 function renderCalendar(){
@@ -2738,8 +3184,11 @@ function renderCalendar(){
         b.status !== 'Cancelled' &&
         (platformFilter === 'all' || b.platform === platformFilter)
       );
-      const toastMessage = `${p.code} — ${d} ${MONTH_NAMES[month].slice(0,3)}: ${dayBookings.length} booking`;
-      let cell = `<div class="cal-cell relative h-9 border border-slate-100 rounded text-[9px] flex items-center justify-center cursor-pointer" onclick="showToast(${escapeHtml(JSON.stringify(toastMessage))})">`;
+      const dayBookingIds = dayBookings.map(b => b.id);
+      const cellClick = dayBookingIds.length
+        ? `showDayBookings(${escapeHtml(JSON.stringify(dayBookingIds))})`
+        : '';
+      let cell = `<div class="cal-cell relative h-9 border border-slate-100 rounded text-[9px] flex items-center justify-center ${dayBookingIds.length ? 'cursor-pointer' : ''}" ${cellClick ? `onclick="${cellClick}"` : ''}>`;
       if(dayBookings.length > 0){
         const b = dayBookings[0];
         const color = b.status === 'Checked-in' ? 'bg-emerald-500' :
@@ -2786,13 +3235,18 @@ function populatePropSelects(){
   fillPropertySelect(document.getElementById('newBookingProp'));
   fillPropertySelect(document.getElementById('newExpProp'), false, true);
   fillPropertySelect(document.getElementById('newIncomeProperty'), false, true);
+  populateNotaPropertySelect();
 }
 function filterBookingStatus(btn, status){
   document.querySelectorAll('#view-booking .tab-btn').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
   currentBookingStatus = status;
   currentBookingPage = 1;
-  renderBookingView();
+  renderBookingsTable();
+}
+function normalizeBookingStatus(status){
+  const normalized = String(status || '').trim().toLowerCase().replace(/\s+/g, '-');
+  return normalized === 'canceled' ? 'cancelled' : normalized;
 }
 function renderBookingView(){
   currentBookingPage = 1;
@@ -2804,7 +3258,7 @@ function renderBookingsTable(){
   const platFilter = document.getElementById('filterPlatformBooking')?.value || 'all';
   let filtered = [...BOOKINGS].sort((a,b)=>b.checkin.localeCompare(a.checkin));
   filtered = filtered.filter(booking => isDateInReportPeriod(booking.checkin, currentPeriod));
-  if(currentBookingStatus !== 'all') filtered = filtered.filter(b=>b.status===currentBookingStatus);
+  if(currentBookingStatus !== 'all') filtered = filtered.filter(booking => normalizeBookingStatus(booking.status) === normalizeBookingStatus(currentBookingStatus));
   if(categoryFilter !== 'all') filtered = filtered.filter(booking => PROPERTIES.some(property => property.id === booking.propId && property.type === categoryFilter));
   if(platFilter !== 'all') filtered = filtered.filter(b=>b.platform===platFilter);
   document.getElementById('bookingCount').textContent = filtered.length;
@@ -2833,7 +3287,7 @@ function renderBookingsTable(){
         <td class="px-3 py-3"><span class="badge ${isBookingCancelled(b) ? STATUS_STYLES.Cancelled : STATUS_STYLES[b.status] || ''}">${escapeHtml(b.status)}</span>${isBookingCancelled(b)?`<div class="mt-1 max-w-48 text-[10px] text-rose-600">${escapeHtml(b.cancellationReason)} · Refund ${fmtRp(b.refundAmount || 0)}</div>`:''}</td>
         <td class="px-5 py-3 text-right font-bold text-slate-900">${fmtRp(getBookingNetAmount(b))}${isBookingCancelled(b)?`<div class="text-[10px] font-normal text-slate-400">Nilai awal ${fmtRp(b.amount)}</div>`:''}</td>
         <td class="px-3 py-3 whitespace-nowrap text-xs text-slate-600">${fmtBookingCreatedAt(b.createdAt || b.created_at)}</td>
-        <td class="px-3 py-3 text-right whitespace-nowrap">${currentDashboardAccount?.role !== 'IT' ? `<button type="button" onclick="openBookingModal('${b.id}')" title="${isBookingCancelled(b) ? 'Edit memerlukan PIN Master' : 'Edit booking'}" class="text-xs font-semibold text-brand-600 hover:text-brand-800">Edit</button>${isBookingCancelled(b) ? '' : `<button type="button" onclick="openBookingCancelModal('${b.id}')" class="ml-3 text-xs font-semibold text-rose-600 hover:text-rose-800">Cancel</button>`}` : '—'}</td>
+        <td class="px-3 py-3 text-right whitespace-nowrap">${currentDashboardAccount?.role !== 'IT' ? `<button type="button" onclick="openBookingModal('${b.id}')" title="${isBookingCancelled(b) ? 'Edit memerlukan PIN Master' : 'Edit booking'}" class="text-xs font-semibold text-brand-600 hover:text-brand-800">Edit</button>${isBookingCancelled(b) ? '' : `<button type="button" onclick="openBookingCancelModal('${b.id}')" class="ml-3 text-xs font-semibold text-rose-600 hover:text-rose-800">Cancel</button>`}<button type="button" onclick="deleteBooking('${b.id}')" title="Hapus permanen booking (tanpa PIN)" class="ml-3 text-xs font-semibold text-rose-800 hover:text-rose-900 underline">Delete</button>` : '—'}</td>
       </tr>`).join('');
 }
 function changeBookingPage(direction){
@@ -3286,13 +3740,65 @@ async function submitFinanceDelete(event){
 
 function renderIncomeSummary(){
   const periodEntries = INCOMES.filter(entry => isDateInReportPeriod(entry.date));
+  const bookingIncome = periodEntries.filter(entry => entry.categoryId === 'income-booking')
+    .reduce((sum, entry) => sum + entry.amount, 0);
   const openingBalance = periodEntries.filter(entry => entry.cat === 'Saldo Awal / Carry-over')
     .reduce((sum, entry) => sum + entry.amount, 0);
-  const otherIncome = periodEntries.filter(entry => entry.cat !== 'Saldo Awal / Carry-over')
+  const otherIncome = periodEntries.filter(entry => entry.categoryId !== 'income-booking' && entry.cat !== 'Saldo Awal / Carry-over')
     .reduce((sum, entry) => sum + entry.amount, 0);
+  document.getElementById('incomeBookingTotal').textContent = fmtRp(bookingIncome);
   document.getElementById('incomeTotal').textContent = fmtRp(otherIncome);
   document.getElementById('incomeOpeningBalance').textContent = fmtRp(openingBalance);
   document.getElementById('incomeCount').textContent = periodEntries.length;
+}
+
+const MONTHLY_REVENUE_LABELS = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+
+// Omset memakai Booking sebagai sumber utama agar semua booking tercatat,
+// lalu ditambah pemasukan non-booking (misalnya Extra Bed). Income Booking
+// dikecualikan di sini karena sudah dihitung dari daftar booking.
+function monthlyRevenueEntries(){
+  const bookingRevenue = BOOKINGS
+    .filter(booking => /^\d{4}-\d{2}/.test(String(booking.checkin || '')))
+    .map(booking => ({ date:booking.checkin, amount:getBookingNetAmount(booking) }));
+  const nonBookingIncome = INCOMES.filter(entry =>
+    entry.categoryId !== 'income-booking' &&
+    entry.cat !== 'Saldo Awal / Carry-over' &&
+    /^\d{4}-\d{2}/.test(String(entry.date || ''))
+  );
+  return [...bookingRevenue, ...nonBookingIncome];
+}
+
+function renderMonthlyRevenue(){
+  const head = document.getElementById('monthlyRevenueHead');
+  const body = document.getElementById('monthlyRevenueBody');
+  if(!head || !body) return;
+  const entries = monthlyRevenueEntries();
+  const years = [...new Set(entries.map(entry => entry.date.slice(0, 4)))].sort();
+  if(!years.length){
+    head.innerHTML = '';
+    body.innerHTML = '<tr><td class="px-5 py-8 text-center text-slate-400">Belum ada data omset.</td></tr>';
+    document.getElementById('monthlyRevenueNote').textContent = '';
+    return;
+  }
+  const totals = {};
+  years.forEach(year => { totals[year] = new Array(12).fill(0); });
+  entries.forEach(entry => {
+    const year = entry.date.slice(0, 4);
+    const monthIndex = Number(entry.date.slice(5, 7)) - 1;
+    if(monthIndex >= 0 && monthIndex < 12) totals[year][monthIndex] += Number(entry.amount) || 0;
+  });
+  head.innerHTML = `<tr><th class="text-left font-semibold px-5 py-3">Bulan</th>${years.map(year => `<th class="text-right font-semibold px-4 py-3">${year}</th>`).join('')}</tr>`;
+  const monthRows = MONTHLY_REVENUE_LABELS.map((label, index) => {
+    const cells = years.map(year => {
+      const value = totals[year][index];
+      return `<td class="px-4 py-2.5 text-right whitespace-nowrap ${value ? 'font-semibold text-slate-800' : 'text-slate-300'}">${value ? fmtRp(value) : '—'}</td>`;
+    }).join('');
+    return `<tr><td class="px-5 py-2.5 text-sm text-slate-600">${label}</td>${cells}</tr>`;
+  }).join('');
+  const totalRow = `<tr class="bg-slate-50"><td class="px-5 py-3 text-sm font-bold text-slate-900">Total Omset</td>${years.map(year => `<td class="px-4 py-3 text-right font-extrabold text-emerald-700 whitespace-nowrap">${fmtRp(totals[year].reduce((sum, value) => sum + value, 0))}</td>`).join('')}</tr>`;
+  body.innerHTML = monthRows + totalRow;
+  document.getElementById('monthlyRevenueNote').textContent = `${years.length} tahun · ${BOOKINGS.length} booking + ${INCOMES.filter(entry => entry.categoryId !== 'income-booking' && entry.cat !== 'Saldo Awal / Carry-over').length} pemasukan non-booking`;
 }
 
 function renderIncomeTable(){
@@ -3307,8 +3813,9 @@ function renderIncomeTable(){
       <td class="px-3 py-3 text-sm text-slate-700">${escapeHtml(entry.desc)}</td>
       <td class="px-3 py-3 hidden md:table-cell text-sm text-slate-600">${escapeHtml(entry.propName || 'Umum')}</td>
       <td class="px-5 py-3 text-right font-bold text-emerald-700">+ ${fmtRp(entry.amount)}</td>
-      <td class="px-3 py-3 text-right">${canDelete ? `<button onclick="deleteFinanceEntry('${escapeHtml(entry.id)}')" aria-label="Hapus pemasukan" class="text-slate-400 hover:text-rose-600"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2m-9 0l1 14h8l1-14M10 11v5m4-5v5"/></svg></button>` : '—'}</td>
-    </tr>`).join('') : '<tr><td colspan="6" class="text-center py-10 text-slate-400">Belum ada pemasukan tambahan</td></tr>';
+      <td class="px-3 py-3 text-right">${canDelete && entry.categoryId !== 'income-booking' ? `<button onclick="deleteFinanceEntry('${escapeHtml(entry.id)}')" aria-label="Hapus pemasukan" class="text-slate-400 hover:text-rose-600"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2m-9 0l1 14h8l1-14M10 11v5m4-5v5"/></svg></button>` : '—'}</td>
+    </tr>`).join('') : '<tr><td colspan="6" class="text-center py-10 text-slate-400">Belum ada pemasukan pada periode ini</td></tr>';
+  renderMonthlyRevenue();
 }
 
 /* ============== EXPENSE ============== */
@@ -3385,7 +3892,7 @@ function renderExpenseTable(){
   const propFilter = document.getElementById('filterPropExp')?.value || 'all';
   const selectedProperty = PROPERTIES.find(property => property.id === propFilter);
   const canEdit = currentDashboardAccount?.role !== 'IT';
-  let filtered = [...EXPENSES].sort((a,b)=>b.date.localeCompare(a.date));
+  let filtered = [...EXPENSES].filter(entry => isDateInReportPeriod(entry.date)).sort((a,b)=>b.date.localeCompare(a.date));
   if(currentExpCat !== 'all') filtered = filtered.filter(entry => entry.categoryId === currentExpCat);
   if(propFilter !== 'all') filtered = filtered.filter(entry => selectedProperty && financeEntryMatchesProperty(entry, selectedProperty));
   document.getElementById('expenseTableBody').innerHTML = filtered.length === 0 ?
@@ -4839,6 +5346,587 @@ function shareReportWhatsApp(){
   else showToast('WhatsApp diblokir browser. Izinkan pop-up untuk membuka pilihan kontak.');
 }
 
+/* ============== GENERATOR NOTA LUNAS ============== */
+/* Nota dibuat hanya di browser: tidak ada panggilan API, tidak masuk D1,
+   dan tidak memengaruhi booking maupun laporan keuangan. */
+function defaultNotaNumber(){
+  const now = new Date();
+  const stamp = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`;
+  return `INV-${stamp}-${String(Math.floor(Math.random() * 900) + 100)}`;
+}
+
+/* Logo kop nota memakai header logo website, sumber yang sama dipakai Admin Properti. */
+let notaLogoDataUrl = '';
+let notaLogoFormat = 'PNG';
+let notaLogoRatio = 0;
+let notaLogoSourceUrl = '';
+let notaLogoSettingsUrl = '';
+const DEFAULT_NOTA_LOGO_URL = 'https://ik.imagekit.io/o1hnx31yy/yh%20(2).png?tr=f-jpg';
+
+function setNotaLogoStatus(message, isError=false){
+  const status = document.getElementById('notaLogoStatus');
+  if(!status) return;
+  status.className = `text-[11px] mt-1 ${isError ? 'text-rose-600' : 'text-slate-500'}`;
+  status.textContent = message;
+}
+
+async function loadNotaLogo(url){
+  if(!url || notaLogoDataUrl || notaLogoSourceUrl === url) return;
+  notaLogoSourceUrl = url;
+  setNotaLogoStatus('Memuat logo nota...');
+  try {
+    const response = await fetch(url, { cache:'no-store' });
+    if(!response.ok) throw new Error(`HTTP ${response.status}`);
+    const blob = await response.blob();
+    const dataUrl = await new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result || ''));
+      reader.onerror = () => reject(new Error('file logo tidak terbaca'));
+      reader.readAsDataURL(blob);
+    });
+    const size = await new Promise(resolve => {
+      const probe = new Image();
+      probe.onload = () => resolve({ width:probe.naturalWidth || 0, height:probe.naturalHeight || 0 });
+      probe.onerror = () => resolve({ width:0, height:0 });
+      probe.src = dataUrl;
+    });
+    notaLogoDataUrl = dataUrl;
+    notaLogoFormat = (dataUrl.match(/^data:image\/([a-z0-9.+-]+)/i)?.[1] || 'png').replace(/^jpg$/i, 'jpeg').toUpperCase();
+    notaLogoRatio = size.width && size.height ? size.width / size.height : 0;
+    setNotaLogoStatus('Logo nota siap dipakai dari header logo website.');
+    refreshNotaSummary();
+  } catch(error) {
+    notaLogoDataUrl = '';
+    notaLogoRatio = 0;
+    notaLogoSourceUrl = '';
+    setNotaLogoStatus(`Logo gagal dimuat (${error.message || 'koneksi ditolak'}). Nota memakai teks YOUR HOME.`, true);
+    refreshNotaSummary();
+  }
+}
+
+async function ensureNotaLogo(){
+  if(notaLogoDataUrl) return notaLogoDataUrl;
+  await loadNotaLogo(notaLogoSettingsUrl || DEFAULT_NOTA_LOGO_URL);
+  return notaLogoDataUrl;
+}
+
+function notaLogoBox(maxWidth, maxHeight){
+  const ratio = notaLogoRatio > 0 ? notaLogoRatio : 3;
+  let width = maxHeight * ratio;
+  let height = maxHeight;
+  if(width > maxWidth){
+    width = maxWidth;
+    height = maxWidth / ratio;
+  }
+  return { width, height };
+}
+
+/* Nomor WhatsApp kantor untuk footer nota. */
+let notaContactPhone = '+62 882-7678-8800';
+const DEFAULT_NOTA_PHONE = '+62 882-7678-8800';
+
+function populateNotaPropertySelect(){
+  const select = document.getElementById('notaProperty');
+  if(!select) return;
+  const selected = select.value;
+  select.replaceChildren(...PROPERTIES.map(property => new Option(
+    `${property.name} (${property.code})${property.active === false ? ' · Arsip' : ''}`,
+    property.id
+  )));
+  if(Array.from(select.options).some(option => option.value === selected)) select.value = selected;
+}
+
+function getNotaProperty(){
+  const id = document.getElementById('notaProperty')?.value || '';
+  return PROPERTIES.find(property => property.id === id) || null;
+}
+
+function fmtNotaDate(value){
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(String(value || ''))) return '-';
+  const date = new Date(`${value}T00:00:00`);
+  if(Number.isNaN(date.getTime())) return '-';
+  return date.toLocaleDateString('id-ID', { day:'numeric', month:'long', year:'numeric' });
+}
+
+function getNotaNights(){
+  const checkin = document.getElementById('notaCheckin')?.value || '';
+  const checkout = document.getElementById('notaCheckout')?.value || '';
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(checkin) || !/^\d{4}-\d{2}-\d{2}$/.test(checkout) || checkout <= checkin) return 0;
+  return Math.round((new Date(`${checkout}T00:00:00Z`) - new Date(`${checkin}T00:00:00Z`)) / 86400000);
+}
+
+function suggestNotaDescription(){
+  const property = getNotaProperty();
+  if(!property) return '';
+  const nights = getNotaNights();
+  const checkin = document.getElementById('notaCheckin')?.value || '';
+  const checkout = document.getElementById('notaCheckout')?.value || '';
+  const label = nights ? `Sewa ${property.name} · ${nights} malam` : `Sewa ${property.name}`;
+  if(nights) return `${label} (${fmtNotaDate(checkin)} - ${fmtNotaDate(checkout)})`;
+  return label;
+}
+
+function notaTerbilang(value){
+  const units = ['', 'satu', 'dua', 'tiga', 'empat', 'lima', 'enam', 'tujuh', 'delapan', 'sembilan', 'sepuluh', 'sebelas'];
+  const spell = number => {
+    if(number < 12) return units[number];
+    if(number < 20) return `${spell(number - 10)} belas`;
+    if(number < 100) return `${spell(Math.floor(number / 10))} puluh${number % 10 ? ` ${spell(number % 10)}` : ''}`;
+    if(number < 200) return `seratus${number % 100 ? ` ${spell(number % 100)}` : ''}`;
+    if(number < 1000) return `${spell(Math.floor(number / 100))} ratus${number % 100 ? ` ${spell(number % 100)}` : ''}`;
+    if(number < 2000) return `seribu${number % 1000 ? ` ${spell(number % 1000)}` : ''}`;
+    if(number < 1000000) return `${spell(Math.floor(number / 1000))} ribu${number % 1000 ? ` ${spell(number % 1000)}` : ''}`;
+    if(number < 1000000000) return `${spell(Math.floor(number / 1000000))} juta${number % 1000000 ? ` ${spell(number % 1000000)}` : ''}`;
+    return `${spell(Math.floor(number / 1000000000))} miliar${number % 1000000000 ? ` ${spell(number % 1000000000)}` : ''}`;
+  };
+  const amount = Math.floor(Number(value) || 0);
+  if(amount <= 0) return 'Nol rupiah';
+  const words = spell(amount).replace(/\s+/g, ' ').trim();
+  return `${words.charAt(0).toUpperCase()}${words.slice(1)} rupiah`;
+}
+
+function addNotaItemRow(description='', amount=0, auto=false){
+  const container = document.getElementById('notaItems');
+  if(!container) return null;
+  const row = document.createElement('div');
+  row.dataset.notaRow = '1';
+  row.dataset.notaAuto = auto ? '1' : '0';
+  row.className = 'grid grid-cols-1 sm:grid-cols-[minmax(0,1fr)_170px_40px] gap-2 items-end';
+  row.innerHTML = `
+    <label class="block"><span class="block text-xs text-slate-500 font-semibold mb-1">Keterangan</span><input data-nota-description type="text" maxlength="120" placeholder="cth: Sewa villa 2 malam" class="w-full text-sm border border-slate-200 rounded-lg px-3 py-2"></label>
+    <label class="block"><span class="block text-xs text-slate-500 font-semibold mb-1">Jumlah (Rp)</span><input data-nota-amount type="text" inputmode="numeric" pattern="[0-9.]*" data-currency-input value="0" class="w-full text-sm border border-slate-200 rounded-lg px-3 py-2"></label>
+    <button type="button" data-nota-remove class="h-[38px] w-[38px] inline-flex items-center justify-center border border-slate-200 hover:border-rose-300 hover:text-rose-700 text-slate-500 rounded-lg" aria-label="Hapus baris" title="Hapus baris">&#10005;</button>`;
+  container.appendChild(row);
+  row.querySelector('[data-nota-description]').value = description;
+  setCurrencyInputValue(row.querySelector('[data-nota-amount]'), amount);
+  setupCurrencyInputs(row);
+  return row;
+}
+
+function syncNotaAutoFirstRow(mode='auto'){
+  const row = document.querySelector('#notaItems [data-nota-row]');
+  if(!row) return;
+  const descriptionInput = row.querySelector('[data-nota-description]');
+  const amountInput = row.querySelector('[data-nota-amount]');
+  const autoRow = mode === 'force' || row.dataset.notaAuto === '1';
+  const suggestion = suggestNotaDescription();
+  if(suggestion && (autoRow || !descriptionInput.value.trim())) descriptionInput.value = suggestion;
+  const property = getNotaProperty();
+  if(property && (autoRow || !parseCurrencyInput(amountInput.value))){
+    const nights = getNotaNights();
+    const price = Number(property.price) || 0;
+    setCurrencyInputValue(amountInput, nights > 0 ? nights * price : price);
+  }
+  if(mode === 'force') row.dataset.notaAuto = '1';
+  refreshNotaSummary();
+}
+
+function handleNotaItemInput(event){
+  const row = event.target.closest('[data-nota-row]');
+  if(row && (event.target.matches('[data-nota-description]') || event.target.matches('[data-nota-amount]'))) row.dataset.notaAuto = '0';
+  refreshNotaSummary();
+}
+
+function handleNotaItemAction(event){
+  const removeButton = event.target.closest('[data-nota-remove]');
+  if(!removeButton) return;
+  const row = removeButton.closest('[data-nota-row]');
+  const container = document.getElementById('notaItems');
+  if(!row || !container) return;
+  if(container.querySelectorAll('[data-nota-row]').length <= 1){
+    row.querySelector('[data-nota-description]').value = '';
+    setCurrencyInputValue(row.querySelector('[data-nota-amount]'), 0);
+    row.dataset.notaAuto = '0';
+  } else {
+    row.remove();
+  }
+  refreshNotaSummary();
+}
+
+function readNotaItems(){
+  return Array.from(document.querySelectorAll('#notaItems [data-nota-row]')).map(row => ({
+    description:String(row.querySelector('[data-nota-description]').value || '').trim(),
+    amount:parseCurrencyInput(row.querySelector('[data-nota-amount]').value),
+  })).filter(item => item.description || item.amount);
+}
+
+function getNotaTotals(){
+  const items = readNotaItems();
+  const subtotal = items.reduce((sum, item) => sum + item.amount, 0);
+  const discount = Math.min(parseCurrencyInput(document.getElementById('notaDiscount')?.value), subtotal);
+  return { items, subtotal, discount, total:Math.max(0, subtotal - discount) };
+}
+
+function buildNotaPreviewHtml(totals){
+  const guest = document.getElementById('notaGuestName')?.value.trim() || '';
+  const property = getNotaProperty();
+  const number = document.getElementById('notaNumber')?.value.trim() || '';
+  const date = document.getElementById('notaDate')?.value || '';
+  const method = document.getElementById('notaPaymentMethod')?.value || '';
+  const logoHtml = notaLogoSourceUrl
+    ? `<img src="${escapeHtml(notaLogoSourceUrl)}" alt="YOUR HOME" class="h-8 max-w-[160px] object-contain mb-1">`
+    : '';
+  return `
+    <div class="border border-dashed border-slate-300 rounded-xl p-4 bg-slate-50">
+      <div class="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          ${logoHtml}
+          <div class="text-[11px] uppercase tracking-wider text-slate-500 font-bold">Nota Lunas</div>
+          <div class="text-sm font-bold text-slate-900 mt-1">${escapeHtml(number || 'Nomor nota belum diisi')}</div>
+          <div class="text-xs text-slate-500 mt-1">${escapeHtml(fmtNotaDate(date))} · ${escapeHtml(method || '-')}</div>
+        </div>
+        <span class="inline-flex items-center gap-1.5 text-[11px] font-semibold text-emerald-800 bg-emerald-50 border border-emerald-200 rounded-lg px-2.5 py-1">LUNAS</span>
+      </div>
+      <div class="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2">
+        <div><span class="text-[11px] text-slate-400">Tamu</span><div class="text-sm font-semibold text-slate-800">${escapeHtml(guest || '-')}</div></div>
+        <div><span class="text-[11px] text-slate-400">Properti</span><div class="text-sm font-semibold text-slate-800">${escapeHtml(property ? `${property.name} (${property.code})` : '-')}</div></div>
+      </div>
+      <div class="mt-3 border-t border-slate-200 divide-y divide-slate-200">
+        ${totals.items.length
+          ? totals.items.map(item => `<div class="flex items-start justify-between gap-3 py-1.5 text-sm"><span class="text-slate-700">${escapeHtml(item.description || 'Tanpa keterangan')}</span><strong class="text-slate-900 whitespace-nowrap">${fmtRp(item.amount)}</strong></div>`).join('')
+          : '<p class="py-2 text-sm text-slate-500">Belum ada rincian tagihan.</p>'}
+      </div>
+      <div class="mt-3 border-t border-slate-200 pt-2 flex items-center justify-between gap-3">
+        <span class="text-sm font-semibold text-slate-700">Total dibayar</span>
+        <strong class="text-base text-emerald-700">${fmtRp(totals.total)}</strong>
+      </div>
+      <p class="mt-2 text-[11px] text-[#a0522d]">Terbilang: ${escapeHtml(notaTerbilang(totals.total))}</p>
+      <div class="mt-3 border-t-2 border-[#c6581a] bg-[#faf7f2] rounded-lg px-3 py-2.5 flex flex-wrap items-end justify-between gap-2">
+        <div>
+          <div class="text-[11px] font-bold text-[#3e2723]">Questions?</div>
+          <div class="text-[11px] text-slate-500 mt-0.5">whatsapp or call us at <strong class="text-[#a0522d]">${escapeHtml(notaContactPhone)}</strong></div>
+        </div>
+        <div class="text-right">
+          <div class="text-sm font-bold text-[#c6581a]">THANK YOU!</div>
+          <div class="text-[11px] font-semibold text-[#a0522d] mt-0.5">www.yourhome.id</div>
+        </div>
+      </div>
+    </div>`;
+}
+
+function refreshNotaSummary(){
+  const totals = getNotaTotals();
+  document.getElementById('notaSubtotal').textContent = fmtRp(totals.subtotal);
+  document.getElementById('notaDiscountValue').textContent = `- ${fmtRp(totals.discount)}`;
+  document.getElementById('notaTotal').textContent = fmtRp(totals.total);
+  document.getElementById('notaPreview').innerHTML = buildNotaPreviewHtml(totals);
+}
+
+function prepareNotaForm(){
+  const dateInput = document.getElementById('notaDate');
+  if(dateInput && !dateInput.value) dateInput.value = new Date().toISOString().slice(0, 10);
+  const numberInput = document.getElementById('notaNumber');
+  if(numberInput && !numberInput.value.trim()) numberInput.value = defaultNotaNumber();
+  populateNotaPropertySelect();
+  if(!document.querySelector('#notaItems [data-nota-row]')) addNotaItemRow('', 0, true);
+  syncNotaAutoFirstRow('auto');
+}
+
+function resetNotaForm(){
+  ['notaGuestName','notaGuestPhone','notaCheckin','notaCheckout','notaNote'].forEach(id => {
+    const field = document.getElementById(id);
+    if(field) field.value = '';
+  });
+  const dateInput = document.getElementById('notaDate');
+  if(dateInput) dateInput.value = new Date().toISOString().slice(0, 10);
+  const numberInput = document.getElementById('notaNumber');
+  if(numberInput) numberInput.value = defaultNotaNumber();
+  setCurrencyInputValue(document.getElementById('notaDiscount'), 0);
+  document.getElementById('notaItems').innerHTML = '';
+  addNotaItemRow('', 0, true);
+  syncNotaAutoFirstRow('force');
+  refreshNotaSummary();
+  showToast('Form nota dibersihkan. Tidak ada data yang disimpan ke sistem.');
+}
+
+function readNotaForm(){
+  const totals = getNotaTotals();
+  const guest = document.getElementById('notaGuestName').value.trim();
+  if(!guest){
+    showToast('Isi nama tamu terlebih dahulu.');
+    document.getElementById('notaGuestName').focus();
+    return null;
+  }
+  const property = getNotaProperty();
+  if(!property){
+    showToast('Pilih properti untuk nota.');
+    document.getElementById('notaProperty').focus();
+    return null;
+  }
+  if(!totals.items.length){
+    showToast('Tambahkan minimal satu rincian tagihan.');
+    return null;
+  }
+  if(totals.total <= 0){
+    showToast('Total nota harus lebih dari Rp 0.');
+    return null;
+  }
+  return {
+    guest,
+    phone:document.getElementById('notaGuestPhone').value.trim(),
+    number:document.getElementById('notaNumber').value.trim() || defaultNotaNumber(),
+    date:document.getElementById('notaDate').value || new Date().toISOString().slice(0, 10),
+    checkin:document.getElementById('notaCheckin').value,
+    checkout:document.getElementById('notaCheckout').value,
+    nights:getNotaNights(),
+    method:document.getElementById('notaPaymentMethod').value,
+    note:document.getElementById('notaNote').value.trim(),
+    issuedBy:currentDashboardAccount?.display_name || 'Admin YOUR HOME',
+    property,
+    ...totals,
+  };
+}
+
+async function downloadNotaPdf(){
+  const nota = readNotaForm();
+  if(!nota) return;
+  if(!window.jspdf?.jsPDF){
+    showToast('Pembuat PDF belum termuat. Periksa koneksi internet lalu muat ulang halaman.');
+    return;
+  }
+  if(!notaLogoDataUrl) await ensureNotaLogo();
+  const doc = new window.jspdf.jsPDF({ unit:'pt', format:'a4', orientation:'portrait' });
+  const margin = 42;
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const pageHeight = doc.internal.pageSize.getHeight();
+  const right = pageWidth - margin;
+  let y = margin;
+
+  /* Garis warna terracotta di tepi atas halaman. */
+  doc.setFillColor(160, 82, 45);
+  doc.rect(0, 0, pageWidth, 7, 'F');
+
+  /* Kop nota memakai logo header website bila tersedia. */
+  let kopBottom = y;
+  let logoDrawn = false;
+  if(notaLogoDataUrl){
+    const box = notaLogoBox(210, 46);
+    try {
+      doc.addImage(notaLogoDataUrl, notaLogoFormat, margin, y, box.width, box.height);
+      logoDrawn = true;
+      kopBottom = y + box.height;
+    } catch(error) {
+      logoDrawn = false;
+    }
+  }
+  if(logoDrawn){
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8.5);
+    doc.setTextColor(120, 110, 102);
+    doc.text('yourhome.id', margin, kopBottom + 11);
+    kopBottom += 15;
+  } else {
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(17);
+    doc.setTextColor(62, 39, 35);
+    doc.text('YOUR HOME', margin, y + 4);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(9);
+    doc.setTextColor(120, 110, 102);
+    doc.text('yourhome.id', margin, y + 19);
+    kopBottom = y + 26;
+  }
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(16);
+  doc.setTextColor(160, 82, 45);
+  doc.text('NOTA LUNAS', right, y + 4, { align:'right' });
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(9);
+  doc.setTextColor(120, 110, 102);
+  doc.text(`No. ${nota.number}`, right, y + 19, { align:'right' });
+
+  /* Badge LUNAS berwarna hijau. */
+  const badgeWidth = 64;
+  const badgeHeight = 18;
+  const badgeX = right - badgeWidth;
+  const badgeY = y + 25;
+  doc.setFillColor(63, 90, 58);
+  doc.roundedRect(badgeX, badgeY, badgeWidth, badgeHeight, 9, 9, 'F');
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(8.5);
+  doc.setTextColor(255, 255, 255);
+  doc.text('LUNAS', badgeX + badgeWidth / 2, badgeY + 12.5, { align:'center' });
+
+  y = Math.max(kopBottom, badgeY + badgeHeight) + 14;
+  doc.setDrawColor(160, 82, 45);
+  doc.setLineWidth(1.4);
+  doc.line(margin, y, right, y);
+  doc.setLineWidth(0.2);
+  y += 22;
+
+  const metaRows = [
+    ['Nama Tamu', nota.guest],
+    ['WhatsApp', nota.phone || '-'],
+    ['Properti', `${nota.property.name} (${nota.property.code})`],
+    ['Lokasi', nota.property.area || '-'],
+    ['Check-in', nota.checkin ? fmtNotaDate(nota.checkin) : '-'],
+    ['Check-out', nota.checkout ? fmtNotaDate(nota.checkout) : '-'],
+    ['Durasi', nota.nights ? `${nota.nights} malam` : '-'],
+    ['Tanggal Nota', fmtNotaDate(nota.date)],
+    ['Metode Pembayaran', nota.method],
+  ];
+  /* Blok data nota: latar krem dengan aksen terracotta. */
+  const metaTop = y;
+  const metaHeight = metaRows.length * 14 + 16;
+  doc.setFillColor(250, 247, 242);
+  doc.roundedRect(margin, metaTop, right - margin, metaHeight, 6, 6, 'F');
+  doc.setFillColor(160, 82, 45);
+  doc.rect(margin + 1.5, metaTop + 6, 3, metaHeight - 12, 'F');
+  y = metaTop + 17;
+  doc.setFontSize(9);
+  metaRows.forEach(([label, value]) => {
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(160, 82, 45);
+    doc.text(label, margin + 14, y);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(45, 38, 32);
+    doc.text(doc.splitTextToSize(String(value), right - (margin + 140))[0], margin + 140, y);
+    y += 14;
+  });
+  y = metaTop + metaHeight + 18;
+
+  doc.setFillColor(160, 82, 45);
+  doc.rect(margin, y, right - margin, 20, 'F');
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(8.5);
+  doc.setTextColor(255, 255, 255);
+  doc.text('KETERANGAN', margin + 8, y + 13.5);
+  doc.text('JUMLAH', right - 8, y + 13.5, { align:'right' });
+  y += 20;
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(9.5);
+  doc.setTextColor(45, 38, 32);
+  nota.items.forEach((item, index) => {
+    doc.setFillColor(index % 2 === 1 ? '#faf7f2' : '#ffffff');
+    doc.rect(margin, y, right - margin, 20, 'F');
+    doc.text(doc.splitTextToSize(item.description || 'Tanpa keterangan', right - margin - 140)[0], margin + 8, y + 13);
+    doc.text(fmtRp(item.amount), right - 8, y + 13, { align:'right' });
+    doc.setDrawColor(228, 222, 214);
+    doc.line(margin, y + 20, right, y + 20);
+    y += 20;
+  });
+
+  y += 16;
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(9.5);
+  doc.setTextColor(120, 112, 104);
+  doc.text('Subtotal', right - 170, y);
+  doc.setTextColor(45, 38, 32);
+  doc.text(fmtRp(nota.subtotal), right - 8, y, { align:'right' });
+  y += 15;
+  if(nota.discount > 0){
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(120, 112, 104);
+    doc.text('Diskon', right - 170, y);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(180, 35, 24);
+    doc.text(`- ${fmtRp(nota.discount)}`, right - 8, y, { align:'right' });
+    y += 15;
+  }
+  doc.setFillColor(63, 90, 58);
+  doc.roundedRect(right - 220, y - 12, 220, 24, 6, 6, 'F');
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(10.5);
+  doc.setTextColor(255, 255, 255);
+  doc.text('TOTAL DIBAYAR', right - 208, y + 4);
+  doc.text(fmtRp(nota.total), right - 16, y + 4, { align:'right' });
+  y += 34;
+
+  /* Ruang footer berwarna di dasar halaman. */
+  const footerBandHeight = 76;
+  const footerBandTop = pageHeight - 34 - footerBandHeight;
+  if(y > footerBandTop - 46){
+    doc.addPage();
+    y = margin;
+  }
+
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(9);
+  doc.setTextColor(160, 82, 45);
+  const terbilang = doc.splitTextToSize(`Terbilang: ${notaTerbilang(nota.total)}`, right - margin);
+  doc.text(terbilang, margin, y);
+  y += terbilang.length * 12 + 8;
+
+  if(nota.note){
+    doc.setTextColor(120, 112, 104);
+    const noteLines = doc.splitTextToSize(`Catatan: ${nota.note}`, right - margin);
+    doc.text(noteLines, margin, y);
+    y += noteLines.length * 12 + 8;
+  }
+
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(9);
+  doc.setTextColor(120, 112, 104);
+  const statement = doc.splitTextToSize('Nota ini diterbitkan sebagai bukti pembayaran lunas atas pemesanan di atas.', right - margin);
+  doc.text(statement, margin, y);
+  y += statement.length * 12 + 6;
+  doc.setFontSize(8);
+  doc.setTextColor(150, 142, 134);
+  doc.text(`Dibuat: ${fmtBookingCreatedAt(new Date())}`, margin, y);
+
+  /* Footer: strip krem penuh lebar dengan garis oranye di atasnya. */
+  doc.setFillColor(198, 88, 26);
+  doc.rect(0, footerBandTop, pageWidth, 3.5, 'F');
+  doc.setFillColor(250, 247, 242);
+  doc.rect(0, footerBandTop + 3.5, pageWidth, footerBandHeight - 3.5, 'F');
+
+  const footerTextY = footerBandTop + 32;
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(10.5);
+  doc.setTextColor(62, 39, 35);
+  doc.text('Questions?', margin, footerTextY);
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(9);
+  doc.setTextColor(120, 112, 104);
+  const phonePrefix = 'whatsapp or call us at ';
+  const phonePrefixWidth = doc.getTextWidth(phonePrefix);
+  doc.text(phonePrefix, margin, footerTextY + 15);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(160, 82, 45);
+  doc.text(notaContactPhone, margin + phonePrefixWidth, footerTextY + 15);
+
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(13);
+  doc.setTextColor(198, 88, 26);
+  doc.text('THANK YOU!', right, footerTextY, { align:'right' });
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(9);
+  doc.setTextColor(160, 82, 45);
+  doc.text('www.yourhome.id', right, footerTextY + 15, { align:'right' });
+
+  const guestSlug = nota.guest.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'tamu';
+  const numberSlug = nota.number.toLowerCase().replace(/[^a-z0-9_-]+/g, '-');
+  pdfSave(doc, `nota-${guestSlug}-${numberSlug}.pdf`);
+}
+
+function sendNotaWhatsApp(){
+  const nota = readNotaForm();
+  if(!nota) return;
+  const phone = normalizeWhatsAppPhone(nota.phone);
+  if(!/^\d{8,15}$/.test(phone)){
+    showToast('Masukkan nomor WhatsApp tamu yang valid, misalnya 08xxxxxxxxxx.');
+    document.getElementById('notaGuestPhone')?.focus();
+    return;
+  }
+  /* Hanya kalimat pembuka: PDF nota dikirim manual oleh staf sebagai lampiran. */
+  const message = 'Berikut kami kirim invoice-nya. Mohon dicek ya, terima kasih.';
+  const url = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+  const popup = window.open(url, '_blank');
+  if(popup) popup.opener = null;
+  else showToast('WhatsApp diblokir browser. Izinkan pop-up untuk membuka chat tamu.');
+}
+
+/* Menu khusus agar Generator Nota Lunas langsung terlihat di Dashboard. */
+function openNotaLunas(){
+  switchView('bagi-hasil');
+  prepareNotaForm();
+  document.getElementById('pageTitle').textContent = 'Nota Lunas';
+  document.getElementById('pageSubtitle').textContent = 'Buat nota lunas tamu, unduh PDF, lalu kirim ke WhatsApp (tidak disimpan ke sistem)';
+  document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+  document.getElementById('notaNavItem')?.classList.add('active');
+  setTimeout(() => document.getElementById('notaPanel')?.scrollIntoView({ behavior:'smooth', block:'start' }), 150);
+}
+
 /* ============== USERS ============== */
 function mapDashboardAccount(account){
   const name = String(account.display_name || account.account_id || '?');
@@ -5021,8 +6109,78 @@ function updateBookingExtraBedTotal(){
   const quantity = Number(document.getElementById('newBookingExtraBedQuantity').value) || 0;
   const price = parseCurrencyInput(document.getElementById('newBookingExtraBedPrice').value);
   document.getElementById('newBookingExtraBedTotal').textContent = `Total Extra Bed: ${fmtRp(quantity * price)}. Dicatat terpisah dari nilai booking.`;
+  syncBookingCancelAmounts('amount');
 }
 
+// Booking yang sudah dibatalkan: potongan dan pemasukan bersih saling menyesuaikan.
+function syncBookingCancelAmounts(source){
+  const fields = document.getElementById('bookingRefundFields');
+  if(!fields || fields.classList.contains('hidden')) return;
+  const refundInput = document.getElementById('bookingRefundAmount');
+  const netInput = document.getElementById('bookingNetAmount');
+  const hint = document.getElementById('bookingRefundHint');
+  const amount = parseCurrencyInput(document.getElementById('newBookingAmount').value);
+  const quantity = Number(document.getElementById('newBookingExtraBedQuantity').value) || 0;
+  const extraBedTotal = quantity * parseCurrencyInput(document.getElementById('newBookingExtraBedPrice').value);
+  const maxRefund = amount + extraBedTotal;
+  let refund = Math.min(Math.max(parseCurrencyInput(refundInput.value), 0), maxRefund);
+  let net = parseCurrencyInput(netInput.value);
+  if(source === 'net'){
+    net = Math.min(Math.max(net, 0), amount);
+    refund = Math.max(0, amount - net);
+  } else {
+    net = Math.max(0, amount - Math.min(refund, amount));
+  }
+  setCurrencyInputValue(refundInput, refund);
+  setCurrencyInputValue(netInput, net);
+  const baseRefund = Math.min(refund, amount);
+  const extraBedRefund = Math.max(0, refund - amount);
+  const extraBedNet = Math.max(0, extraBedTotal - extraBedRefund);
+  hint.textContent = `Nilai booking ${fmtRp(amount)} − potongan ${fmtRp(baseRefund)} = bersih ${fmtRp(net)}.` +
+    (extraBedTotal > 0 ? ` Extra bed ${fmtRp(extraBedTotal)} − potongan ${fmtRp(extraBedRefund)} = bersih ${fmtRp(extraBedNet)}.` : '');
+}
+
+async function deleteBookingFromDayList(id, ids){
+  await deleteBooking(id);
+  if(BOOKINGS.some(b => b.id === id)) return; // dibatalkan atau gagal, biarkan popup tetap terbuka
+  const remaining = (Array.isArray(ids) ? ids : []).filter(x => x !== id);
+  if(remaining.length) showDayBookings(remaining);
+  else closeModal('modal-day-bookings');
+}
+function showDayBookings(ids){
+  if(!Array.isArray(ids) || !ids.length) return;
+  if(ids.length === 1){ openBookingModal(ids[0]); return; }
+  const list = document.getElementById('dayBookingsList');
+  list.innerHTML = ids.map(id => {
+    const b = BOOKINGS.find(x => x.id === id);
+    if(!b) return '';
+    const statusColor = b.status === 'Checked-in' ? 'bg-emerald-100 text-emerald-700' :
+                         b.status === 'Confirmed' ? 'bg-blue-100 text-blue-700' :
+                         b.status === 'Inquiry' ? 'bg-amber-100 text-amber-700' :
+                         b.status === 'Cancelled' ? 'bg-rose-100 text-rose-700' : 'bg-slate-100 text-slate-600';
+    return `
+      <div class="p-3 rounded-xl border border-slate-100 hover:border-indigo-200 transition flex items-center justify-between gap-3">
+        <div class="min-w-0 flex-1">
+          <div class="font-semibold text-slate-900 text-sm truncate">${escapeHtml(b.guest || '(tanpa nama)')}</div>
+          <div class="text-xs text-slate-500 truncate">${escapeHtml(b.propName || '')} · ${fmtDate(b.checkin)} → ${fmtDate(b.checkout)} · ${escapeHtml(b.id)}</div>
+          <span class="inline-block mt-1 text-[11px] font-semibold px-2 py-0.5 rounded-full ${statusColor}">${escapeHtml(b.status)}</span>
+        </div>
+        <div class="flex gap-1.5 flex-shrink-0">
+          <button type="button" onclick="closeModal('modal-day-bookings');openBookingModal('${b.id}')" class="text-xs font-semibold px-2.5 py-1.5 border border-slate-200 rounded-lg hover:bg-slate-50">Edit</button>
+          <button type="button" onclick="deleteBookingFromDayList('${b.id}', ${escapeHtml(JSON.stringify(ids))})" class="text-xs font-semibold px-2.5 py-1.5 border border-rose-200 text-rose-600 rounded-lg hover:bg-rose-50">Hapus</button>
+        </div>
+      </div>
+    `;
+  }).join('');
+  document.getElementById('dayBookingsTitle').textContent = `${ids.length} Booking pada tanggal ini`;
+  openModal('modal-day-bookings');
+}
+async function deleteBookingFromModal(){
+  const id = document.getElementById('bookingEditId').value;
+  if(!id) return;
+  await deleteBooking(id);
+  if(!BOOKINGS.some(b => b.id === id)) closeModal('modal-booking');
+}
 function openBookingModal(bookingId=''){
   const form = document.getElementById('bookingForm');
   const booking = BOOKINGS.find(item => item.id === bookingId);
@@ -5037,9 +6195,11 @@ function openBookingModal(bookingId=''){
   approvalPin.value = '';
   approvalPin.required = cancelled;
   document.getElementById('bookingEditApprovalField').classList.toggle('hidden', !cancelled);
+  document.getElementById('bookingRefundFields').classList.toggle('hidden', !cancelled);
   document.getElementById('bookingEditId').value = booking?.id || '';
   document.getElementById('bookingModalTitle').textContent = booking ? 'Edit Booking' : 'Tambah Booking';
   document.getElementById('bookingSubmitButton').textContent = booking ? 'Simpan Perubahan' : 'Simpan Booking';
+  document.getElementById('bookingDeleteButton').classList.toggle('hidden', !booking);
   document.getElementById('bookingFormStatus').textContent = '';
   document.getElementById('newBookingCheckin').value = booking?.checkin || new Date().toISOString().slice(0, 10);
   document.getElementById('newBookingCheckout').value = booking?.checkout || new Date(Date.now() + 86400000).toISOString().slice(0, 10);
@@ -5053,6 +6213,11 @@ function openBookingModal(bookingId=''){
     statusSelect.value = booking.status;
     statusSelect.disabled = cancelled;
     document.getElementById('newBookingNote').value = booking.note || '';
+  }
+  if(cancelled){
+    setCurrencyInputValue(document.getElementById('bookingRefundAmount'), Number(booking.refundAmount || 0));
+    setCurrencyInputValue(document.getElementById('bookingNetAmount'), getBookingNetAmount(booking));
+    syncBookingCancelAmounts('refund');
   }
   updateBookingExtraBedTotal();
   openModal('modal-booking');
@@ -5100,16 +6265,18 @@ async function submitBooking(){
     statusElement.textContent = 'Masukkan PIN Master 4 digit untuk mengedit booking Cancelled.';
     return;
   }
-  const retainedRefund = Number(editedBooking?.refundAmount || 0);
+  const retainedRefund = cancelledEdit
+    ? parseCurrencyInput(document.getElementById('bookingRefundAmount').value)
+    : 0;
   if(cancelledEdit && retainedRefund > amount + extraBedQuantity * extraBedPrice){
     statusElement.className = 'text-sm text-rose-600';
-    statusElement.textContent = 'Nilai booking dan Extra Bed baru tidak boleh lebih kecil dari refund yang tercatat.';
+    statusElement.textContent = 'Potongan/refund tidak boleh lebih besar dari nilai booking + Extra Bed.';
     return;
   }
   const payload = {
     ...(editId ? { id:editId } : {}), propId, propName:prop.name, propCode:prop.code,
     guest, platform, status:cancelledEdit ? editedBooking.status : status, checkin, checkout, amount, extraBedQuantity, extraBedPrice, platformFeePct, note,
-    ...(cancelledEdit ? { pin:approvalPin } : {})
+    ...(cancelledEdit ? { pin:approvalPin, refund_amount:retainedRefund } : {})
   };
   button.disabled = true;
   statusElement.className = 'text-sm text-slate-500';
@@ -5177,6 +6344,319 @@ async function submitBooking(){
   }
 }
 
+/* ============== IMPORT BANYAK BOOKING ============== */
+let bookingImportPlan = null;
+
+function openBookingImportModal(){
+  document.getElementById('importBookingText').value = '';
+  document.getElementById('importBookingFile').value = '';
+  document.getElementById('importBookingNote').value = '';
+  document.getElementById('importBookingEntryDate').value = 'checkin';
+  document.getElementById('importBookingStatus').value = 'Checked-out';
+  const codeList = document.getElementById('importBookingCodeList');
+  if(codeList) codeList.textContent = PROPERTIES.map(property => `${property.code || property.id} = ${property.name}`).join(' · ');
+  invalidateBookingImportPreview();
+  openModal('modal-import-booking');
+}
+
+function splitBookingImportLine(line){
+  if(line.includes('|')) return line.split('|');
+  if(line.includes('\t')) return line.split('\t');
+  if(line.includes(';')) return line.split(';');
+  return line.split(',');
+}
+
+function isValidIsoDate(iso){
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(iso)) return false;
+  const date = new Date(`${iso}T00:00:00Z`);
+  return !Number.isNaN(date.getTime()) && date.toISOString().slice(0, 10) === iso;
+}
+
+function parseBookingImportDate(value){
+  const text = String(value || '').trim();
+  let match = text.match(/^(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})$/);
+  if(match){
+    const iso = `${match[1]}-${String(match[2]).padStart(2, '0')}-${String(match[3]).padStart(2, '0')}`;
+    return isValidIsoDate(iso) ? iso : '';
+  }
+  match = text.match(/^(\d{1,2})[-/.](\d{1,2})[-/.](\d{4})$/);
+  if(match){
+    const iso = `${match[3]}-${String(match[2]).padStart(2, '0')}-${String(match[1]).padStart(2, '0')}`;
+    return isValidIsoDate(iso) ? iso : '';
+  }
+  return '';
+}
+
+function normalizeBookingImportPlatform(value){
+  const raw = String(value || '').trim().toLowerCase();
+  if(!raw) return { platform:'Direct', warning:false };
+  if(/^(wa|whatsapp|wa\.me|direct|langsung|telp|telepon|call)$/.test(raw)) return { platform:'Direct', warning:false };
+  if(raw.includes('airbnb')) return { platform:'Airbnb', warning:false };
+  if(raw.includes('booking')) return { platform:'Booking.com', warning:false };
+  if(raw.includes('agoda')) return { platform:'Agoda', warning:false };
+  if(raw.includes('tiket')) return { platform:'Tiket.com', warning:false };
+  if(raw.includes('traveloka')) return { platform:'Traveloka', warning:false };
+  if(raw.includes('agen') || raw.includes('offline')) return { platform:'Agen Offline', warning:false };
+  if(raw.includes('web') || raw.includes('situs')) return { platform:'Website', warning:false };
+  return { platform:'Direct', warning:true };
+}
+
+function findImportProperty(token){
+  const key = String(token || '').trim().toLowerCase();
+  if(!key) return null;
+  const compact = key.replace(/[^a-z0-9]/g, '');
+  return PROPERTIES.find(property => String(property.code || '').toLowerCase() === key)
+    || PROPERTIES.find(property => String(property.code || '').toLowerCase().replace(/[^a-z0-9]/g, '') === compact)
+    || PROPERTIES.find(property => property.name.toLowerCase() === key)
+    || PROPERTIES.find(property => property.name.toLowerCase().includes(key))
+    || null;
+}
+
+function parseBookingImport(text){
+  const rows = [];
+  const lines = String(text || '').split(/\r?\n/);
+  lines.forEach((rawLine, index) => {
+    const line = rawLine.trim();
+    if(!line || line.startsWith('#')) return;
+    const cells = splitBookingImportLine(line).map(cell => cell.trim());
+    if(/^(nama|name)$/i.test(cells[0] || '')) return;
+    const errors = [];
+    const warnings = [];
+    const guest = cells[0] || '';
+    if(guest.length < 2 || guest.length > 120) errors.push('nama tamu tidak valid');
+    const property = findImportProperty(cells[1]);
+    if(!property) errors.push(`kode properti "${cells[1] || '-'}" tidak dikenali`);
+    const checkin = parseBookingImportDate(cells[2]);
+    const checkout = parseBookingImportDate(cells[3]);
+    if(!checkin) errors.push('tanggal check-in tidak valid');
+    if(!checkout) errors.push('tanggal check-out tidak valid');
+    if(checkin && checkout && checkout <= checkin) errors.push('check-out harus setelah check-in');
+    const computedNights = checkin && checkout && checkout > checkin
+      ? Math.round((Date.parse(`${checkout}T00:00:00Z`) - Date.parse(`${checkin}T00:00:00Z`)) / 86400000)
+      : 0;
+    let cursor = 4;
+    let givenNights = 0;
+    if(/^\d{1,3}$/.test(cells[cursor] || '')){
+      givenNights = Number(cells[cursor]);
+      cursor += 1;
+    }
+    const platformRaw = cells[cursor] || '';
+    const platformInfo = normalizeBookingImportPlatform(platformRaw);
+    cursor += 1;
+    const amount = parseCurrencyInput(cells[cursor]);
+    cursor += 1;
+    const rate = parseCurrencyInput(cells[cursor]);
+    if(platformInfo.warning) warnings.push(`platform "${platformRaw || '-'}" dianggap Direct`);
+    if(computedNights && givenNights && givenNights !== computedNights) warnings.push(`jumlah malam tertulis ${givenNights}, dari tanggal ${computedNights} malam`);
+    if(!Number.isSafeInteger(amount) || amount <= 0) errors.push('total payment tidak valid');
+    if(rate && computedNights && rate * computedNights !== amount) warnings.push(`total ${fmtRp(amount)} tidak sama dengan ${computedNights} x ${fmtRp(rate)}`);
+    rows.push({
+      lineNumber:index + 1, guest, property, checkin, checkout,
+      nights:computedNights || givenNights,
+      platform:platformInfo.platform, amount, rate, warnings, errors,
+    });
+  });
+  return {
+    rows,
+    valid:rows.filter(row => !row.errors.length),
+    invalid:rows.filter(row => row.errors.length),
+  };
+}
+
+function renderBookingImportPreview(plan){
+  const container = document.getElementById('importBookingPreview');
+  if(!plan.rows.length){
+    container.innerHTML = '<p class="text-sm text-slate-500">Belum ada baris data yang bisa dibaca.</p>';
+    return;
+  }
+  const rowsHtml = plan.rows.map(row => {
+    const state = row.errors.length ? 'error' : row.warnings.length ? 'warning' : 'ok';
+    const badgeClass = state === 'error' ? 'bg-rose-50 text-rose-700 border-rose-200'
+      : state === 'warning' ? 'bg-amber-50 text-amber-800 border-amber-200'
+        : 'bg-emerald-50 text-emerald-700 border-emerald-200';
+    const badgeText = state === 'error' ? 'Perlu dibetulkan' : state === 'warning' ? 'Perlu dicek' : 'Siap';
+    const notes = [...row.errors, ...row.warnings].join('; ');
+    return `
+      <tr class="border-t border-slate-100">
+        <td class="px-3 py-2 text-xs text-slate-500">${row.lineNumber}</td>
+        <td class="px-3 py-2 text-xs font-semibold text-slate-800">${escapeHtml(row.guest || '-')}</td>
+        <td class="px-3 py-2 text-xs text-slate-700">${escapeHtml(row.property ? `${row.property.code || row.property.id} · ${row.property.name}` : '-')}</td>
+        <td class="px-3 py-2 text-xs text-slate-600 whitespace-nowrap">${escapeHtml(row.checkin || '-')} → ${escapeHtml(row.checkout || '-')}</td>
+        <td class="px-3 py-2 text-xs text-slate-600 text-center">${row.nights || '-'}</td>
+        <td class="px-3 py-2 text-xs text-slate-600">${escapeHtml(row.platform)}</td>
+        <td class="px-3 py-2 text-xs text-right font-semibold text-slate-800 whitespace-nowrap">${fmtRp(row.amount)}</td>
+        <td class="px-3 py-2 text-xs"><span class="inline-flex rounded-md border px-2 py-0.5 font-semibold ${badgeClass}">${badgeText}</span>${notes ? `<span class="block mt-1 text-[11px] text-slate-500">${escapeHtml(notes)}</span>` : ''}</td>
+      </tr>`;
+  }).join('');
+  container.innerHTML = `
+    <div class="rounded-xl border border-slate-200 overflow-hidden">
+      <div class="overflow-x-auto">
+        <table class="w-full min-w-[860px] text-sm">
+          <thead class="bg-slate-50 text-slate-500 text-[11px] uppercase tracking-wider">
+            <tr>
+              <th class="text-left font-semibold px-3 py-2">Baris</th>
+              <th class="text-left font-semibold px-3 py-2">Tamu</th>
+              <th class="text-left font-semibold px-3 py-2">Properti</th>
+              <th class="text-left font-semibold px-3 py-2">Tanggal</th>
+              <th class="text-center font-semibold px-3 py-2">Malam</th>
+              <th class="text-left font-semibold px-3 py-2">Platform</th>
+              <th class="text-right font-semibold px-3 py-2">Total</th>
+              <th class="text-left font-semibold px-3 py-2">Status</th>
+            </tr>
+          </thead>
+          <tbody>${rowsHtml}</tbody>
+        </table>
+      </div>
+      <div class="border-t border-slate-100 px-3 py-2 text-xs text-slate-600">
+        ${plan.valid.length} baris siap disimpan · ${plan.invalid.length} baris perlu dibetulkan · total ${fmtRp(plan.valid.reduce((sum, row) => sum + row.amount, 0))}
+      </div>
+    </div>`;
+}
+
+function checkBookingImport(){
+  const status = document.getElementById('importBookingStatusMessage');
+  const plan = parseBookingImport(document.getElementById('importBookingText').value);
+  bookingImportPlan = plan;
+  renderBookingImportPreview(plan);
+  const submitButton = document.getElementById('importBookingSubmitButton');
+  if(!plan.rows.length){
+    status.className = 'text-sm text-rose-600';
+    status.textContent = 'Belum ada baris data. Tempel data atau pilih file CSV/TXT.';
+    submitButton.disabled = true;
+    return plan;
+  }
+  if(plan.invalid.length){
+    status.className = 'text-sm text-rose-600';
+    status.textContent = `${plan.invalid.length} baris belum valid. Betulkan sesuai kolom Status, lalu periksa ulang.`;
+    submitButton.disabled = true;
+    return plan;
+  }
+  status.className = 'text-sm text-emerald-700';
+  status.textContent = `${plan.valid.length} baris siap disimpan.`;
+  submitButton.disabled = false;
+  submitButton.textContent = `Simpan ${plan.valid.length} Booking`;
+  return plan;
+}
+
+function invalidateBookingImportPreview(){
+  bookingImportPlan = null;
+  const submitButton = document.getElementById('importBookingSubmitButton');
+  if(submitButton){
+    submitButton.disabled = true;
+    submitButton.textContent = 'Simpan Semua Booking';
+  }
+  const preview = document.getElementById('importBookingPreview');
+  if(preview) preview.innerHTML = '';
+  const status = document.getElementById('importBookingStatusMessage');
+  if(status) status.textContent = '';
+}
+
+function handleBookingImportFile(event){
+  const file = event.target.files?.[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    document.getElementById('importBookingText').value = String(reader.result || '');
+    checkBookingImport();
+  };
+  reader.onerror = () => showToast('File tidak dapat dibaca.');
+  reader.readAsText(file);
+}
+
+async function submitBookingImport(){
+  const plan = bookingImportPlan || checkBookingImport();
+  if(!plan || !plan.valid.length) return;
+  if(!['Master', 'Admin'].includes(currentDashboardAccount?.role)){
+    showToast('Hanya Master atau Admin yang dapat mengimpor booking.');
+    return;
+  }
+  const status = document.getElementById('importBookingStatusMessage');
+  const submitButton = document.getElementById('importBookingSubmitButton');
+  const dateMode = document.getElementById('importBookingEntryDate').value;
+  const bookingStatus = document.getElementById('importBookingStatus').value;
+  const note = document.getElementById('importBookingNote').value.trim();
+  submitButton.disabled = true;
+  let saved = 0;
+  const failed = [];
+  for(const row of plan.valid){
+    status.className = 'text-sm text-slate-500';
+    status.textContent = `Menyimpan ${saved + 1}/${plan.valid.length}: ${row.guest}...`;
+    try {
+      await dashboardApi('/dashboard/bookings', {
+        method:'POST',
+        body:JSON.stringify({
+          propId:row.property.id,
+          propName:row.property.name,
+          propCode:row.property.code || row.property.id,
+          guest:row.guest,
+          platform:row.platform,
+          status:bookingStatus,
+          checkin:row.checkin,
+          checkout:row.checkout,
+          amount:row.amount,
+          extraBedQuantity:0,
+          extraBedPrice:0,
+          platformFeePct:0,
+          note,
+          ...(dateMode === 'checkin' ? { entry_date:row.checkin } : {}),
+        }),
+      });
+      saved += 1;
+    } catch(error) {
+      failed.push(`${row.guest} (baris ${row.lineNumber}): ${error.message || 'gagal'}`);
+    }
+  }
+  submitButton.disabled = false;
+  if(failed.length){
+    status.className = 'text-sm text-rose-600';
+    status.textContent = `${saved} booking tersimpan, ${failed.length} gagal. ${failed.join(' | ')}`;
+  } else {
+    status.className = 'text-sm text-emerald-700';
+    status.textContent = `${saved} booking berhasil disimpan beserta pemasukan Booking-nya.`;
+    showToast(`${saved} booking berhasil diimpor.`);
+    document.getElementById('importBookingText').value = '';
+    document.getElementById('importBookingFile').value = '';
+  }
+  bookingImportPlan = null;
+  try {
+    await Promise.all([loadBookingData(currentDashboardAccount), loadFinanceData()]);
+  } catch(error) {
+    showToast(`Data tersimpan, tetapi muat ulang data gagal: ${error.message}`);
+  }
+  const importedMonths = Array.from(new Set(plan.valid.map(row => row.checkin.slice(0, 7))));
+  const periodLabel = { '2026-08':'Agustus 2026', '2026-09':'September 2026' }[importedMonths[0]];
+  if(importedMonths.length === 1 && periodLabel) setPeriod(periodLabel);
+  renderCalendar();
+  renderBookingsTable();
+  renderDashboard();
+  renderExpenseTable();
+  renderExpenseSummary();
+  renderIncomeTable();
+  renderIncomeSummary();
+  if(currentView === 'owner') renderOwners();
+  if(currentView === 'laporan') renderReport();
+  refreshGeneratedShareCalculation();
+}
+
+async function deleteBooking(bookingId){
+  const booking = BOOKINGS.find(item => item.id === bookingId);
+  if(!booking) return;
+  const label = `${bookingId} · ${booking.guest || 'Tamu'} · ${booking.propName || ''}`;
+  if(!confirm(`Hapus permanen booking ${label}? Tindakan ini tidak bisa dibatalkan.`)) return;
+  try {
+    await dashboardApi(`/dashboard/bookings/${encodeURIComponent(bookingId)}`, { method:'DELETE' });
+    await loadBookingData(currentDashboardAccount);
+    await loadFinanceData();
+    renderCalendar();
+    renderBookingsTable();
+    renderDashboard();
+    if(currentView === 'owner') renderOwners();
+    if(currentView === 'laporan') renderReport();
+    showToast(`Booking ${bookingId} dihapus permanen.`);
+  } catch(error) {
+    alert(`Gagal menghapus booking. ${error.message || 'Periksa koneksi lalu coba lagi.'}`);
+  }
+}
 async function submitBookingCancellation(event){
   event.preventDefault();
   const id = document.getElementById('cancelBookingId').value;
@@ -5405,18 +6885,39 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('newExpProof').addEventListener('change', handleExpenseProofSelection);
   document.getElementById('newBookingExtraBedQuantity').addEventListener('input', updateBookingExtraBedTotal);
   document.getElementById('newBookingExtraBedPrice').addEventListener('input', updateBookingExtraBedTotal);
+  document.getElementById('newBookingAmount').addEventListener('input', () => syncBookingCancelAmounts('amount'));
+  document.getElementById('bookingRefundAmount').addEventListener('input', () => syncBookingCancelAmounts('refund'));
+  document.getElementById('bookingNetAmount').addEventListener('input', () => syncBookingCancelAmounts('net'));
   document.getElementById('deleteFinanceForm').addEventListener('submit', submitFinanceDelete);
   document.getElementById('deleteCrewForm').addEventListener('submit', submitCrewDelete);
   document.getElementById('deleteOwnerShareFinalForm').addEventListener('submit', deleteReportOwnerShareFinal);
   document.getElementById('deletePropertyForm').addEventListener('submit', submitPropertyDelete);
+  document.getElementById('purgePropertyForm').addEventListener('submit', submitPropertyPurge);
+  renderPeriodMenu();
   document.getElementById('shareCalcPropertyInputs').addEventListener('input', handleShareCalculationInputChange);
   document.getElementById('shareCalcTaxMode').addEventListener('change', () => { renderShareCalcTaxInput(); handleShareCalculationInputChange(); });
   document.getElementById('shareCalcTaxPercent').addEventListener('input', handleShareCalculationInputChange);
   document.getElementById('shareCalcTaxAmount').addEventListener('input', handleShareCalculationInputChange);
   renderShareCalcTaxInput();
+  /* Generator Nota Lunas: murni di browser, tidak menyimpan data ke sistem */
+  const notaItemsContainer = document.getElementById('notaItems');
+  notaItemsContainer.addEventListener('input', handleNotaItemInput);
+  notaItemsContainer.addEventListener('click', handleNotaItemAction);
+  document.getElementById('notaDiscount').addEventListener('input', refreshNotaSummary);
+  ['notaGuestName','notaGuestPhone','notaNumber','notaDate','notaPaymentMethod','notaNote'].forEach(id => {
+    const field = document.getElementById(id);
+    field.addEventListener('input', refreshNotaSummary);
+    field.addEventListener('change', refreshNotaSummary);
+  });
+  document.getElementById('notaProperty').addEventListener('change', () => syncNotaAutoFirstRow('force'));
+  document.getElementById('notaCheckin').addEventListener('change', () => syncNotaAutoFirstRow('auto'));
+  document.getElementById('notaCheckout').addEventListener('change', () => syncNotaAutoFirstRow('auto'));
+  prepareNotaForm();
   document.getElementById('editFinanceForm').addEventListener('submit', submitExpenseEdit);
   document.getElementById('editExpProof').addEventListener('change', handleEditExpenseProofSelection);
   document.getElementById('cancelBookingForm').addEventListener('submit', submitBookingCancellation);
+  document.getElementById('importBookingFile').addEventListener('change', handleBookingImportFile);
+  document.getElementById('importBookingText').addEventListener('input', invalidateBookingImportPreview);
   setupPasswordToggles();
   setupCurrencyInputs();
   document.getElementById('contactItForm').addEventListener('submit', submitContactMessage);
@@ -5436,6 +6937,9 @@ document.addEventListener('DOMContentLoaded', () => {
       if(payload.ok){
         const dashboardLogo = payload.data?.dashboard_logo || payload.data?.header_logo || payload.data?.footer_logo;
         const loginLogo = payload.data?.header_logo;
+        notaLogoSettingsUrl = payload.data?.header_logo || payload.data?.footer_logo || payload.data?.dashboard_logo || '';
+        notaContactPhone = payload.data?.footer_phone || DEFAULT_NOTA_PHONE;
+        loadNotaLogo(notaLogoSettingsUrl || DEFAULT_NOTA_LOGO_URL);
         if(dashboardLogo){
           const logo = document.getElementById('dashboardHeaderLogo');
           logo.src = dashboardLogo;
@@ -5449,7 +6953,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       }
     })
-    .catch(() => {});
+    .catch(() => { setNotaLogoStatus('Logo belum dapat dimuat. Nota memakai teks YOUR HOME.', true); });
 
   /* Set default dates in forms */
   const today = new Date().toISOString().slice(0,10);
