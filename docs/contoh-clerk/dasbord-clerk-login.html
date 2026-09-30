@@ -1,0 +1,270 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Contoh Login Clerk · Dasbord YOUR HOME</title>
+<!--
+  FILE CONTOH — tidak dipublikasikan ke Cloudflare Pages.
+  Pages hanya mempublikasikan folder yourhome/, admin_yourhome/, dan owner_yourhome/.
+
+  Sebelum dipakai, ganti dua placeholder di bawah:
+    1. <FRONTEND-API-URL>  contoh: clerk.yourhome.id
+    2. <PUBLISHABLE-KEY>   contoh: pk_test_xxxxxxxxxxxxxxxxxxxxxxxx
+-->
+<style>
+  :root { color-scheme: light; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; min-height: 100vh; display: grid; place-items: center; padding: 24px;
+    background: #f1f5f9; color: #1e293b;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  .card {
+    width: min(440px, 100%); padding: 28px; background: #fff;
+    border: 1px solid #e2e8f0; border-radius: 12px;
+  }
+  .eyebrow { margin: 0; font-size: .72rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: #0284c7; }
+  h1 { margin: 8px 0 0; font-size: 1.5rem; }
+  .sub { margin: 6px 0 0; font-size: .88rem; color: #64748b; }
+  #clerkSignIn { margin-top: 18px; }
+  .status { min-height: 1.2em; margin: 12px 0 0; font-size: .85rem; color: #64748b; }
+  .status.error { color: #b91c1c; }
+  .status.ok { color: #047857; }
+  .panel { width: min(720px, 100%); background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 24px; }
+  .row { display: grid; grid-template-columns: 140px 1fr; gap: 8px; padding: 8px 0; border-bottom: 1px solid #f1f5f9; font-size: .88rem; }
+  .row span:first-child { color: #64748b; font-weight: 600; }
+  .actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 20px; }
+  button {
+    padding: 9px 14px; border-radius: 8px; border: 1px solid #0284c7;
+    background: #0284c7; color: #fff; font: inherit; font-size: .85rem; font-weight: 600; cursor: pointer;
+  }
+  button.secondary { background: #fff; color: #0f172a; border-color: #cbd5e1; }
+  button:disabled { opacity: .6; cursor: not-allowed; }
+  pre { margin: 14px 0 0; padding: 12px; background: #0f172a; color: #e2e8f0; border-radius: 8px; font-size: .78rem; overflow: auto; max-height: 220px; }
+  code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+  #userButton { margin-top: 14px; display: flex; justify-content: center; }
+</style>
+</head>
+<body>
+
+<!-- ================= LAYAR LOGIN (Clerk) ================= -->
+<main id="loginScreen" class="card">
+  <p class="eyebrow">YOUR HOME · Dashboard</p>
+  <h1>Dasbord Management</h1>
+  <p class="sub">Masuk dengan akun staf Anda. Hanya role Master, Admin, dan IT yang diizinkan.</p>
+
+  <div id="clerkSignIn"></div>
+  <div id="userButton" hidden></div>
+
+  <p id="loginStatus" class="status" role="status" aria-live="polite"></p>
+</main>
+
+<!-- ================= APLIKASI (setelah login) ================= -->
+<main id="appShell" class="panel" hidden>
+  <p class="eyebrow">YOUR HOME · Dashboard</p>
+  <h1 style="margin-top:6px">Selamat datang</h1>
+  <p class="sub">Halaman ini hanya tampil setelah login Clerk berhasil dan role cocok.</p>
+
+  <div style="margin-top:18px">
+    <div class="row"><span>Nama</span><span id="infoName">-</span></div>
+    <div class="row"><span>Email</span><span id="infoEmail">-</span></div>
+    <div class="row"><span>User ID</span><span id="infoUserId">-</span></div>
+    <div class="row"><span>Role</span><span id="infoRole">-</span></div>
+    <div class="row"><span>ID Staf</span><span id="infoStaffId">-</span></div>
+    <div class="row"><span>Sesi</span><span id="infoSession">-</span></div>
+  </div>
+
+  <div class="actions">
+    <button id="callApiButton" type="button">Coba panggil API Worker</button>
+    <button id="refreshTokenButton" type="button" class="secondary">Lihat JWT Clerk</button>
+    <button id="logoutButton" type="button" class="secondary">Logout</button>
+  </div>
+
+  <pre id="output" hidden></pre>
+</main>
+
+<!--
+  ================== CLERK ==================
+  1. Bundle UI  2. SDK (global `Clerk`)
+  Keduanya harus dimuat SEBELUM script di bawah.
+-->
+<script
+  defer
+  crossorigin="anonymous"
+  src="https://<FRONTEND-API-URL>/npm/@clerk/ui@1/dist/ui.browser.js"
+  type="text/javascript"
+></script>
+
+<script
+  defer
+  crossorigin="anonymous"
+  data-clerk-publishable-key="<PUBLISHABLE-KEY>"
+  src="https://<FRONTEND-API-URL>/npm/@clerk/clerk-js@6/dist/clerk.browser.js"
+  type="text/javascript"
+></script>
+
+<script>
+// ================== KONFIGURASI ==================
+const API_BASE = 'https://your-home-checkin-api.saerobotic.workers.dev';
+
+// Role yang boleh membuka dashboard. Ini HANYA untuk UX.
+// Pemeriksaan sebenarnya tetap dilakukan Worker dari JWT Clerk.
+const ALLOWED_ROLES = ['Master', 'Admin', 'IT'];
+
+// ================== ELEMEN ==================
+const loginScreen   = document.getElementById('loginScreen');
+const appShell      = document.getElementById('appShell');
+const clerkSignIn   = document.getElementById('clerkSignIn');
+const userButtonEl  = document.getElementById('userButton');
+const loginStatus   = document.getElementById('loginStatus');
+const outputEl      = document.getElementById('output');
+
+function setStatus(message, kind) {
+  loginStatus.className = 'status' + (kind ? ' ' + kind : '');
+  loginStatus.textContent = message || '';
+}
+
+function showOutput(value) {
+  outputEl.hidden = false;
+  outputEl.textContent = typeof value === 'string' ? value : JSON.stringify(value, null, 2);
+}
+
+// ================== SESI ==================
+function currentRole() {
+  return String(window.Clerk?.user?.publicMetadata?.role || '');
+}
+
+// JWT Clerk selalu diambil segar. Masa berlakunya pendek (default ±60 detik),
+// jadi jangan disimpan jangka panjang di localStorage seperti token lama.
+async function getToken() {
+  if (!window.Clerk?.session) return '';
+  return await Clerk.session.getToken();
+}
+
+async function authFetch(path, options = {}) {
+  const token = await getToken();
+  const response = await fetch(API_BASE + path, {
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: 'Bearer ' + token,
+      ...(options.headers || {}),
+    },
+  });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new Error(data.error || data.message || ('HTTP ' + response.status));
+  }
+  return data;
+}
+
+// ================== MASUK KE APLIKASI ==================
+async function enterApp() {
+  const user = Clerk.user;
+  const role = currentRole();
+
+  if (!ALLOWED_ROLES.includes(role)) {
+    await Clerk.signOut();
+    setStatus('Akun ini tidak memiliki akses dashboard.', 'error');
+    return;
+  }
+
+  document.getElementById('infoName').textContent    = user.fullName || user.username || '-';
+  document.getElementById('infoEmail').textContent   = (user.primaryEmailAddress?.emailAddress) || '-';
+  document.getElementById('infoUserId').textContent  = user.id;
+  document.getElementById('infoRole').textContent    = role;
+  document.getElementById('infoStaffId').textContent = user.publicMetadata?.staff_id || '-';
+  document.getElementById('infoSession').textContent = Clerk.session?.id || '-';
+
+  loginScreen.hidden = true;
+  appShell.hidden = false;
+
+  userButtonEl.hidden = false;
+  if (!userButtonEl.dataset.mounted) {
+    Clerk.mountUserButton(userButtonEl);
+    userButtonEl.dataset.mounted = '1';
+  }
+}
+
+async function showLogin(message, kind) {
+  appShell.hidden = true;
+  loginScreen.hidden = false;
+  setStatus(message, kind);
+  if (!Clerk.isSignedIn && !clerkSignIn.dataset.mounted) {
+    Clerk.mountSignIn(clerkSignIn);
+    clerkSignIn.dataset.mounted = '1';
+  }
+}
+
+// ================== AKSI ==================
+document.getElementById('callApiButton').addEventListener('click', async (event) => {
+  const button = event.currentTarget;
+  button.disabled = true;
+  showOutput('Memanggil ' + API_BASE + '/dashboard/profile ...');
+  try {
+    const result = await authFetch('/dashboard/profile');
+    showOutput(result);
+  } catch (error) {
+    showOutput('Gagal: ' + error.message +
+      '\n\nCatatan: ini normal sebelum Worker bisa memverifikasi JWT Clerk (lihat Langkah 2.5 di panduan).');
+  } finally {
+    button.disabled = false;
+  }
+});
+
+document.getElementById('refreshTokenButton').addEventListener('click', async (event) => {
+  const button = event.currentTarget;
+  button.disabled = true;
+  try {
+    const token = await getToken();
+    const payload = token ? JSON.parse(atob(token.split('.')[1].replace(/-/g,'+').replace(/_/g,'/'))) : null;
+    showOutput(payload || 'Tidak ada sesi aktif.');
+  } finally {
+    button.disabled = false;
+  }
+});
+
+document.getElementById('logoutButton').addEventListener('click', async () => {
+  await Clerk.signOut();
+  clerkSignIn.dataset.mounted = '';
+  userButtonEl.dataset.mounted = '';
+  userButtonEl.replaceChildren();
+  outputEl.hidden = true;
+  await showLogin('Anda sudah logout.', 'ok');
+});
+
+// ================== INISIALISASI ==================
+window.addEventListener('load', async function () {
+  if (!window.Clerk) {
+    setStatus('Clerk gagal dimuat. Periksa <FRONTEND-API-URL>, <PUBLISHABLE-KEY>, dan domain yang terdaftar di Clerk.', 'error');
+    return;
+  }
+
+  try {
+    // `ClerkUI` berasal dari bundle @clerk/ui yang dimuat lewat script tag.
+    await Clerk.load({ ui: { ClerkUI: window.__internal_ClerkUICtor } });
+  } catch (error) {
+    setStatus('Clerk.load() gagal: ' + error.message, 'error');
+    return;
+  }
+
+  // Bereaksi terhadap login/logout dari mana pun (termasuk komponen Clerk).
+  Clerk.addListener(async ({ user, session }) => {
+    if (user && session) {
+      await enterApp();
+    } else {
+      clerkSignIn.dataset.mounted = '';
+      await showLogin();
+    }
+  });
+
+  if (Clerk.isSignedIn) {
+    await enterApp();
+  } else {
+    await showLogin();
+  }
+});
+</script>
+</body>
+</html>

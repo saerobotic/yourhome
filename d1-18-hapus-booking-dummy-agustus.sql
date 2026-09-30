@@ -1,0 +1,1 @@
+DELETE FROM dashboard_bookings WHERE id IN ('BK5e503fdd300e', 'BK8401937b508e', 'BK831a160e7812', 'BK291507d801b', 'BK38c82f82c30e');

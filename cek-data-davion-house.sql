@@ -1,0 +1,4 @@
+SELECT property_code, name, dashboard_id, id, active, publication_status FROM properties WHERE UPPER(property_code) IN ('DVH', 'GH-KBP') OR UPPER(name) LIKE '%DAVION%' OR UPPER(name) LIKE '%KOTA BARU PARAHYANGAN%';
+SELECT property_code, property_name, COUNT(*) AS jumlah, COALESCE(SUM(amount), 0) AS total FROM dashboard_bookings GROUP BY property_code, property_name ORDER BY total DESC;
+SELECT property_id, property_name, kind, COUNT(*) AS jumlah, COALESCE(SUM(amount), 0) AS total FROM finance_entries GROUP BY property_id, property_name, kind ORDER BY total DESC;
+SELECT json_extract(value, '$.code') AS kode, json_extract(value, '$.name') AS nama, json_extract(value, '$.active') AS aktif FROM dashboard_management_data, json_each(dashboard_management_data.data_json, '$.properties') WHERE UPPER(COALESCE(json_extract(value, '$.name'), '')) LIKE '%DAVION%' OR UPPER(COALESCE(json_extract(value, '$.code'), '')) IN ('DVH', 'GH-KBP');

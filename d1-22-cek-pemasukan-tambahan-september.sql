@@ -1,0 +1,1 @@
+SELECT category_id, category_name, created_by, COUNT(*) AS jumlah, COALESCE(SUM(amount), 0) AS nilai FROM finance_entries WHERE kind = 'income' AND entry_date >= '2026-09-01' AND entry_date < '2026-10-01' AND category_id NOT IN ('income-booking', 'income-opening-balance') GROUP BY category_id, category_name, created_by ORDER BY category_id, created_by;

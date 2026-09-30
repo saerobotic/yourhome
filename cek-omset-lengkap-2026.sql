@@ -1,0 +1,2 @@
+SELECT substr(checkin, 1, 7) AS bulan, COUNT(*) AS booking, COALESCE(SUM(amount - refund_amount + extra_bed_quantity * extra_bed_price), 0) AS omzet_booking FROM dashboard_bookings WHERE checkin >= '2026-01-01' AND checkin < '2027-01-01' AND status <> 'Cancelled' GROUP BY bulan ORDER BY bulan;
+SELECT substr(entry_date, 1, 7) AS bulan, category_id, COUNT(*) AS transaksi, COALESCE(SUM(amount), 0) AS total FROM finance_entries WHERE kind = 'income' AND entry_date >= '2026-01-01' AND entry_date < '2027-01-01' GROUP BY bulan, category_id ORDER BY bulan, category_id;

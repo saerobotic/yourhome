@@ -1,0 +1,1 @@
+SELECT id, entry_date, category_id, category_name, amount, description, created_by FROM finance_entries WHERE kind = 'income' AND entry_date >= '2026-09-01' AND entry_date < '2026-10-01' AND category_id NOT IN ('income-booking', 'income-opening-balance') ORDER BY entry_date, id;

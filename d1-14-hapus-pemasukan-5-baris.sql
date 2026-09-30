@@ -1,0 +1,1 @@
+DELETE FROM finance_entries WHERE description LIKE '%BK5e503fdd300e%' OR description LIKE '%BK8401937b508e%' OR description LIKE '%BK831a160e7812%' OR description LIKE '%BK291507d801b%' OR description LIKE '%BK38c82f82c30e%';

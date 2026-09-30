@@ -1,0 +1,1319 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="description" content="V-Tech Indonesia — Spesialis peredam suara & panas mobil, kaca film, kamera 360, dashcam, central lock, dan roll bar. Berkualitas, terpercaya, dan dilengkapi pemasangan profesional di Bandung." />
+<meta name="keywords" content="V-Tech Indonesia, Peredam V-Tech, peredam suara mobil, peredam panas mobil, kaca film, kamera 360, dashcam, central lock, roll bar, Bandung" />
+<meta name="author" content="V-Tech Indonesia" />
+<meta property="og:title" content="V-Tech Indonesia — Premium Car Customization & Insulation Specialist" />
+<meta property="og:description" content="Spesialis peredam suara & panas, kaca film, kamera 360, dashcam, central lock & roll bar. Pemasangan profesional di Bandung." />
+<meta property="og:type" content="website" />
+<title>V-Tech Indonesia — Premium Car Customization & Insulation Specialist</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Sora:wght@600;700;800&display=swap" rel="stylesheet">
+
+<style>
+  /* ============================
+     DESIGN TOKENS
+     ============================ */
+  :root {
+    --bg: #0a0a0b;
+    --bg-2: #111114;
+    --bg-3: #17171c;
+    --surface: #1c1c22;
+    --surface-2: #232329;
+    --border: rgba(255,255,255,0.08);
+    --border-strong: rgba(255,255,255,0.14);
+    --text: #f4f4f5;
+    --text-muted: #a1a1aa;
+    --text-soft: #71717a;
+    --gold: #fdc606;
+    --gold-2: #f5b800;
+    --gold-soft: rgba(253,198,6,0.12);
+    --gold-line: rgba(253,198,6,0.35);
+    --red: #e63946;
+    --shadow-lg: 0 30px 80px -20px rgba(0,0,0,0.7);
+    --shadow-gold: 0 20px 60px -15px rgba(253,198,6,0.25);
+    --radius: 16px;
+    --radius-sm: 10px;
+    --radius-lg: 24px;
+    --container: 1200px;
+    --ease: cubic-bezier(.4, 0, .2, 1);
+  }
+
+  /* ============================
+     RESET
+     ============================ */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
+  body {
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+  img { max-width: 100%; display: block; }
+  a { color: inherit; text-decoration: none; }
+  button { font-family: inherit; cursor: pointer; border: none; background: none; }
+  ul { list-style: none; }
+  h1, h2, h3, h4 { font-family: 'Sora', sans-serif; line-height: 1.15; letter-spacing: -0.02em; }
+
+  /* ============================
+     UTILITIES
+     ============================ */
+  .container { max-width: var(--container); margin: 0 auto; padding: 0 24px; }
+  .section { padding: 100px 0; position: relative; }
+  .eyebrow {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-size: 12px; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase;
+    color: var(--gold); padding: 7px 14px;
+    background: var(--gold-soft); border: 1px solid var(--gold-line);
+    border-radius: 100px; margin-bottom: 18px;
+  }
+  .eyebrow::before {
+    content: ''; width: 6px; height: 6px; background: var(--gold); border-radius: 50%;
+    box-shadow: 0 0 12px var(--gold);
+  }
+  .section-title { font-size: clamp(28px, 4vw, 44px); font-weight: 800; margin-bottom: 16px; }
+  .section-subtitle { font-size: 16px; color: var(--text-muted); max-width: 640px; }
+  .text-gold { color: var(--gold); }
+  .gradient-text {
+    background: linear-gradient(120deg, #fff 0%, #fdc606 60%, #f5b800 100%);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+
+  /* ============================
+     BUTTONS
+     ============================ */
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+    padding: 14px 26px; border-radius: 100px; font-weight: 700; font-size: 15px;
+    transition: all .3s var(--ease); cursor: pointer; white-space: nowrap;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+  }
+  .btn-primary {
+    background: linear-gradient(135deg, var(--gold) 0%, var(--gold-2) 100%);
+    color: #0a0a0b; box-shadow: var(--shadow-gold);
+  }
+  .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 25px 70px -10px rgba(253,198,6,0.45); }
+  .btn-ghost {
+    background: rgba(255,255,255,0.04); color: var(--text);
+    border: 1px solid var(--border-strong); backdrop-filter: blur(10px);
+  }
+  .btn-ghost:hover { background: rgba(255,255,255,0.08); border-color: var(--gold-line); }
+  .btn-light { background: #fff; color: #0a0a0b; }
+  .btn-light:hover { transform: translateY(-2px); box-shadow: 0 20px 50px -10px rgba(255,255,255,0.3); }
+
+  /* ============================
+     NAVBAR
+     ============================ */
+  .navbar {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    padding: 18px 0; transition: all .4s var(--ease);
+  }
+  .navbar.scrolled {
+    padding: 12px 0; background: rgba(10,10,11,0.85);
+    backdrop-filter: blur(18px) saturate(180%);
+    border-bottom: 1px solid var(--border);
+  }
+  .nav-inner { display: flex; align-items: center; justify-content: space-between; }
+  .logo { display: flex; align-items: center; gap: 12px; font-family: 'Sora', sans-serif; font-weight: 800; font-size: 20px; letter-spacing: -0.02em; }
+  .logo-mark {
+    width: 40px; height: 40px; border-radius: 10px;
+    background: linear-gradient(135deg, var(--gold) 0%, var(--gold-2) 100%);
+    display: flex; align-items: center; justify-content: center;
+    color: #0a0a0b; font-weight: 800; font-size: 18px;
+    box-shadow: 0 8px 24px -8px rgba(253,198,6,0.6);
+  }
+  .logo-text { display: flex; flex-direction: column; line-height: 1; }
+  .logo-text small { font-size: 9px; letter-spacing: 0.3em; color: var(--text-muted); font-weight: 600; margin-top: 4px; }
+
+  .nav-links { display: flex; align-items: center; gap: 36px; }
+  .nav-links a {
+    font-size: 14px; font-weight: 600; color: var(--text-muted);
+    transition: color .25s; position: relative;
+  }
+  .nav-links a:hover { color: var(--text); }
+  .nav-links a::after {
+    content: ''; position: absolute; left: 0; bottom: -6px; width: 0; height: 2px;
+    background: var(--gold); transition: width .3s var(--ease);
+  }
+  .nav-links a:hover::after { width: 100%; }
+  .nav-cta { display: flex; align-items: center; gap: 14px; }
+  .nav-cta .btn { padding: 11px 22px; font-size: 14px; }
+
+  .menu-toggle { display: none; width: 44px; height: 44px; border-radius: 10px; background: var(--surface); border: 1px solid var(--border); align-items: center; justify-content: center; flex-direction: column; gap: 4px; }
+  .menu-toggle span { width: 18px; height: 2px; background: var(--text); transition: all .3s; }
+  .menu-toggle.active span:nth-child(1) { transform: translateY(6px) rotate(45deg); }
+  .menu-toggle.active span:nth-child(2) { opacity: 0; }
+  .menu-toggle.active span:nth-child(3) { transform: translateY(-6px) rotate(-45deg); }
+
+  /* ============================
+     HERO
+     ============================ */
+  .hero {
+    position: relative; min-height: 100vh; display: flex; align-items: center;
+    padding: 120px 0 60px; overflow: hidden;
+  }
+  .hero-bg {
+    position: absolute; inset: 0; z-index: 0;
+    background-image: url('assets/hero.jpg');
+    background-size: cover; background-position: center;
+    filter: brightness(0.45) saturate(1.1);
+  }
+  .hero-bg::after {
+    content: ''; position: absolute; inset: 0;
+    background:
+      radial-gradient(ellipse 80% 60% at 70% 30%, rgba(253,198,6,0.18) 0%, transparent 60%),
+      linear-gradient(180deg, rgba(10,10,11,0.5) 0%, rgba(10,10,11,0.85) 60%, var(--bg) 100%),
+      linear-gradient(90deg, rgba(10,10,11,0.95) 0%, rgba(10,10,11,0.4) 50%, transparent 100%);
+  }
+  .hero-grid-overlay {
+    position: absolute; inset: 0; z-index: 1; pointer-events: none;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
+    background-size: 60px 60px;
+    mask-image: radial-gradient(ellipse at center, black 30%, transparent 80%);
+  }
+  .hero-content { position: relative; z-index: 2; max-width: 760px; }
+  .hero-eyebrow {
+    display: inline-flex; align-items: center; gap: 10px;
+    padding: 8px 16px; border-radius: 100px;
+    background: rgba(253,198,6,0.1); border: 1px solid var(--gold-line);
+    font-size: 12px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase;
+    color: var(--gold); margin-bottom: 28px;
+    animation: fadeUp .8s var(--ease) both;
+  }
+  .hero-eyebrow .dot { width: 6px; height: 6px; background: var(--gold); border-radius: 50%; box-shadow: 0 0 14px var(--gold); animation: pulse 2s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+  .hero h1 {
+    font-size: clamp(40px, 6.5vw, 78px); font-weight: 800; line-height: 1.04;
+    margin-bottom: 24px; animation: fadeUp .8s var(--ease) .1s both;
+  }
+  .hero h1 .line { display: block; }
+  .hero-tagline {
+    font-size: clamp(16px, 1.6vw, 19px); color: #d4d4d8; max-width: 580px;
+    margin-bottom: 38px; animation: fadeUp .8s var(--ease) .2s both;
+  }
+  .hero-tagline strong { color: var(--gold); font-weight: 600; }
+  .hero-actions { display: flex; gap: 14px; flex-wrap: wrap; animation: fadeUp .8s var(--ease) .3s both; }
+  .hero-stats {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 30px;
+    margin-top: 70px; padding-top: 36px; border-top: 1px solid var(--border);
+    animation: fadeUp .8s var(--ease) .4s both; max-width: 760px;
+  }
+  .stat-num { font-family: 'Sora', sans-serif; font-size: clamp(24px, 3vw, 34px); font-weight: 800; color: var(--gold); line-height: 1; }
+  .stat-label { font-size: 13px; color: var(--text-muted); margin-top: 8px; }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
+
+  .scroll-cue {
+    position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%);
+    z-index: 3; display: flex; flex-direction: column; align-items: center; gap: 8px;
+    color: var(--text-soft); font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase;
+  }
+  .scroll-cue .mouse { width: 22px; height: 36px; border: 2px solid var(--text-soft); border-radius: 12px; position: relative; }
+  .scroll-cue .mouse::after { content: ''; position: absolute; top: 6px; left: 50%; transform: translateX(-50%); width: 4px; height: 6px; background: var(--gold); border-radius: 2px; animation: scrollWheel 1.8s infinite; }
+  @keyframes scrollWheel { 0% { opacity: 1; top: 6px; } 100% { opacity: 0; top: 18px; } }
+
+  /* ============================
+     MARQUEE / TRUST BAR
+     ============================ */
+  .trust-bar {
+    background: var(--bg-2); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
+    padding: 22px 0; overflow: hidden;
+  }
+  .marquee { display: flex; gap: 60px; animation: marquee 30s linear infinite; white-space: nowrap; }
+  .marquee-item { display: inline-flex; align-items: center; gap: 12px; color: var(--text-muted); font-weight: 600; font-size: 14px; letter-spacing: 0.04em; }
+  .marquee-item svg { width: 18px; height: 18px; color: var(--gold); }
+  @keyframes marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+
+  /* ============================
+     ABOUT
+     ============================ */
+  .about { background: var(--bg); }
+  .about-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 70px; align-items: center; }
+  .about-visual { position: relative; }
+  .about-visual img { border-radius: var(--radius-lg); width: 100%; height: 520px; object-fit: cover; box-shadow: var(--shadow-lg); }
+  .about-visual::before {
+    content: ''; position: absolute; top: -20px; left: -20px; right: 30px; bottom: 30px;
+    border: 1px solid var(--gold-line); border-radius: var(--radius-lg); z-index: -1;
+  }
+  .about-badge {
+    position: absolute; bottom: 30px; right: -30px;
+    background: linear-gradient(135deg, var(--gold) 0%, var(--gold-2) 100%);
+    color: #0a0a0b; padding: 24px 28px; border-radius: var(--radius);
+    box-shadow: var(--shadow-gold); max-width: 220px;
+  }
+  .about-badge .num { font-family: 'Sora', sans-serif; font-size: 38px; font-weight: 800; line-height: 1; }
+  .about-badge .lbl { font-size: 13px; font-weight: 600; margin-top: 6px; opacity: 0.85; }
+  .about-text h2 { margin-bottom: 22px; }
+  .about-text p { color: var(--text-muted); margin-bottom: 18px; font-size: 16px; }
+  .about-text p strong { color: var(--text); font-weight: 600; }
+  .about-features { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-top: 30px; }
+  .about-feature { display: flex; gap: 14px; align-items: flex-start; }
+  .about-feature .ic { width: 40px; height: 40px; border-radius: 10px; background: var(--gold-soft); color: var(--gold); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .about-feature .ic svg { width: 20px; height: 20px; }
+  .about-feature .tx h4 { font-size: 15px; font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 700; margin-bottom: 4px; }
+  .about-feature .tx p { font-size: 13px; color: var(--text-soft); margin: 0; }
+
+  /* ============================
+     SERVICES
+     ============================ */
+  .services { background: var(--bg-2); }
+  .services-header { text-align: center; max-width: 720px; margin: 0 auto 60px; }
+  .services-header .section-subtitle { margin: 0 auto; }
+  .services-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+  .service-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg);
+    overflow: hidden; transition: all .4s var(--ease); position: relative;
+  }
+  .service-card:hover { transform: translateY(-6px); border-color: var(--gold-line); box-shadow: var(--shadow-lg); }
+  .service-card-img { height: 220px; overflow: hidden; position: relative; }
+  .service-card-img img { width: 100%; height: 100%; object-fit: cover; transition: transform .6s var(--ease); }
+  .service-card:hover .service-card-img img { transform: scale(1.08); }
+  .service-card-img::after { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, transparent 40%, rgba(28,28,34,0.95) 100%); }
+  .service-card-num {
+    position: absolute; top: 16px; left: 16px; z-index: 2;
+    background: rgba(0,0,0,0.6); backdrop-filter: blur(8px);
+    color: var(--gold); font-family: 'Sora', sans-serif; font-weight: 700; font-size: 12px;
+    padding: 6px 12px; border-radius: 100px; border: 1px solid var(--gold-line);
+  }
+  .service-card-body { padding: 28px; }
+  .service-card-icon {
+    width: 48px; height: 48px; border-radius: 12px;
+    background: linear-gradient(135deg, var(--gold-soft), transparent);
+    border: 1px solid var(--gold-line); color: var(--gold);
+    display: flex; align-items: center; justify-content: center; margin-bottom: 18px;
+  }
+  .service-card-icon svg { width: 24px; height: 24px; }
+  .service-card h3 { font-size: 20px; margin-bottom: 10px; }
+  .service-card p { color: var(--text-muted); font-size: 14px; margin-bottom: 18px; }
+  .service-card-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+  .service-tag { font-size: 11px; font-weight: 600; padding: 5px 10px; border-radius: 100px; background: rgba(255,255,255,0.04); color: var(--text-muted); border: 1px solid var(--border); }
+
+  /* ============================
+     WHY CHOOSE US
+     ============================ */
+  .why { background: var(--bg); }
+  .why-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 70px; align-items: center; }
+  .why-content h2 { margin-bottom: 22px; }
+  .why-content > p { color: var(--text-muted); margin-bottom: 36px; }
+  .why-list { display: flex; flex-direction: column; gap: 20px; }
+  .why-item { display: flex; gap: 18px; padding: 22px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); transition: all .3s var(--ease); }
+  .why-item:hover { border-color: var(--gold-line); transform: translateX(6px); }
+  .why-item .num { font-family: 'Sora', sans-serif; font-size: 22px; font-weight: 800; color: var(--gold); flex-shrink: 0; line-height: 1; min-width: 32px; }
+  .why-item h4 { font-size: 16px; font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 700; margin-bottom: 6px; }
+  .why-item p { font-size: 14px; color: var(--text-muted); margin: 0; }
+  .why-visual { position: relative; }
+  .why-visual-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .why-visual-grid img { border-radius: var(--radius); height: 240px; width: 100%; object-fit: cover; transition: transform .5s var(--ease); }
+  .why-visual-grid img:hover { transform: scale(1.04); }
+  .why-visual-grid img:nth-child(2) { margin-top: 40px; }
+
+  /* ============================
+     GALLERY
+     ============================ */
+  .gallery { background: var(--bg-2); }
+  .gallery-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 50px; gap: 30px; flex-wrap: wrap; }
+  .gallery-grid { display: grid; grid-template-columns: repeat(4, 1fr); grid-auto-rows: 220px; gap: 16px; }
+  .gallery-item { position: relative; overflow: hidden; border-radius: var(--radius); cursor: pointer; }
+  .gallery-item img { width: 100%; height: 100%; object-fit: cover; transition: transform .6s var(--ease); }
+  .gallery-item::after {
+    content: ''; position: absolute; inset: 0;
+    background: linear-gradient(180deg, transparent 50%, rgba(10,10,11,0.85) 100%);
+    opacity: 0; transition: opacity .4s var(--ease);
+  }
+  .gallery-item .caption {
+    position: absolute; left: 18px; bottom: 18px; right: 18px; z-index: 2;
+    color: #fff; font-weight: 700; font-size: 15px;
+    opacity: 0; transform: translateY(10px); transition: all .4s var(--ease);
+  }
+  .gallery-item .caption small { display: block; font-weight: 500; color: var(--gold); font-size: 11px; letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 4px; }
+  .gallery-item:hover img { transform: scale(1.1); }
+  .gallery-item:hover::after { opacity: 1; }
+  .gallery-item:hover .caption { opacity: 1; transform: translateY(0); }
+  .gallery-item.tall { grid-row: span 2; }
+  .gallery-item.wide { grid-column: span 2; }
+
+  /* ============================
+     CATALOGS
+     ============================ */
+  .catalogs { background: var(--bg); }
+  .catalogs-header { text-align: center; max-width: 720px; margin: 0 auto 60px; }
+  .catalogs-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+  .catalog-card {
+    position: relative; padding: 36px 30px; border-radius: var(--radius-lg);
+    background: linear-gradient(180deg, var(--surface) 0%, var(--bg-3) 100%);
+    border: 1px solid var(--border); overflow: hidden;
+    transition: all .4s var(--ease);
+  }
+  .catalog-card::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+    opacity: 0; transition: opacity .4s var(--ease);
+  }
+  .catalog-card:hover { transform: translateY(-6px); border-color: var(--gold-line); box-shadow: var(--shadow-lg); }
+  .catalog-card:hover::before { opacity: 1; }
+  .catalog-card .ic {
+    width: 60px; height: 60px; border-radius: 14px;
+    background: var(--gold-soft); border: 1px solid var(--gold-line);
+    color: var(--gold); display: flex; align-items: center; justify-content: center;
+    margin-bottom: 24px;
+  }
+  .catalog-card .ic svg { width: 28px; height: 28px; }
+  .catalog-card h3 { font-size: 20px; margin-bottom: 10px; }
+  .catalog-card p { color: var(--text-muted); font-size: 14px; margin-bottom: 22px; min-height: 60px; }
+  .catalog-link { display: inline-flex; align-items: center; gap: 8px; color: var(--gold); font-weight: 700; font-size: 14px; }
+  .catalog-link svg { width: 16px; height: 16px; transition: transform .3s; }
+  .catalog-link:hover svg { transform: translateX(4px); }
+
+  /* ============================
+     FAQ
+     ============================ */
+  .faq { background: var(--bg-2); }
+  .faq-grid { display: grid; grid-template-columns: 1fr 1.4fr; gap: 70px; align-items: flex-start; }
+  .faq-sidebar h2 { margin-bottom: 18px; }
+  .faq-sidebar p { color: var(--text-muted); margin-bottom: 30px; }
+  .faq-help-card {
+    margin-top: 30px; padding: 28px; border-radius: var(--radius);
+    background: linear-gradient(135deg, var(--gold-soft), transparent);
+    border: 1px solid var(--gold-line);
+  }
+  .faq-help-card h4 { font-size: 16px; margin-bottom: 8px; font-family: 'Plus Jakarta Sans', sans-serif; }
+  .faq-help-card p { font-size: 14px; color: var(--text-muted); margin-bottom: 18px; }
+  .faq-list { display: flex; flex-direction: column; gap: 14px; }
+  .faq-item {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); overflow: hidden; transition: all .3s var(--ease);
+  }
+  .faq-item.active { border-color: var(--gold-line); background: var(--surface-2); }
+  .faq-q {
+    width: 100%; padding: 22px 26px; display: flex; justify-content: space-between; align-items: center;
+    text-align: left; font-weight: 700; font-size: 15px; font-family: 'Plus Jakarta Sans', sans-serif;
+    color: var(--text);
+  }
+  .faq-q .plus {
+    width: 24px; height: 24px; flex-shrink: 0; margin-left: 16px;
+    position: relative; transition: transform .3s var(--ease);
+  }
+  .faq-q .plus::before, .faq-q .plus::after {
+    content: ''; position: absolute; background: var(--gold); transition: transform .3s var(--ease);
+  }
+  .faq-q .plus::before { top: 50%; left: 0; right: 0; height: 2px; transform: translateY(-50%); }
+  .faq-q .plus::after { left: 50%; top: 0; bottom: 0; width: 2px; transform: translateX(-50%); }
+  .faq-item.active .faq-q .plus::after { transform: translateX(-50%) rotate(90deg); }
+  .faq-a {
+    max-height: 0; overflow: hidden; transition: max-height .4s var(--ease);
+    padding: 0 26px;
+  }
+  .faq-item.active .faq-a { max-height: 400px; padding-bottom: 24px; }
+  .faq-a p { color: var(--text-muted); font-size: 14px; line-height: 1.7; }
+
+  /* ============================
+     LOCATION / CONTACT
+     ============================ */
+  .location { background: var(--bg); }
+  .location-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 50px; align-items: stretch; }
+  .location-info { display: flex; flex-direction: column; justify-content: center; }
+  .location-info h2 { margin-bottom: 18px; }
+  .location-info > p { color: var(--text-muted); margin-bottom: 30px; }
+  .location-details { display: flex; flex-direction: column; gap: 20px; margin-bottom: 30px; }
+  .loc-item { display: flex; gap: 16px; align-items: flex-start; }
+  .loc-item .ic {
+    width: 48px; height: 48px; border-radius: 12px;
+    background: var(--gold-soft); border: 1px solid var(--gold-line);
+    color: var(--gold); display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .loc-item .ic svg { width: 22px; height: 22px; }
+  .loc-item h4 { font-size: 14px; color: var(--text-soft); font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px; font-family: 'Plus Jakarta Sans', sans-serif; }
+  .loc-item p { font-size: 15px; color: var(--text); font-weight: 500; }
+  .loc-item a { color: var(--text); transition: color .25s; }
+  .loc-item a:hover { color: var(--gold); }
+  .location-actions { display: flex; gap: 12px; flex-wrap: wrap; }
+  .location-map {
+    border-radius: var(--radius-lg); overflow: hidden; border: 1px solid var(--border);
+    min-height: 480px; box-shadow: var(--shadow-lg);
+  }
+  .location-map iframe { width: 100%; height: 100%; min-height: 480px; border: 0; display: block; filter: invert(0.92) hue-rotate(180deg) saturate(0.8); }
+
+  /* ============================
+     CTA SECTION
+     ============================ */
+  .cta-section { padding: 100px 0; position: relative; overflow: hidden; }
+  .cta-bg { position: absolute; inset: 0; z-index: 0; }
+  .cta-bg img { width: 100%; height: 100%; object-fit: cover; filter: brightness(0.3) saturate(1.1); }
+  .cta-bg::after { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(10,10,11,0.85) 0%, rgba(10,10,11,0.7) 100%); }
+  .cta-content { position: relative; z-index: 2; text-align: center; max-width: 760px; margin: 0 auto; }
+  .cta-content h2 { font-size: clamp(32px, 5vw, 56px); margin-bottom: 22px; }
+  .cta-content p { font-size: 17px; color: #d4d4d8; margin-bottom: 36px; }
+  .cta-actions { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
+
+  /* ============================
+     FOOTER
+     ============================ */
+  .footer { background: var(--bg-2); border-top: 1px solid var(--border); padding: 70px 0 30px; }
+  .footer-grid { display: grid; grid-template-columns: 1.5fr 1fr 1fr 1fr; gap: 50px; margin-bottom: 50px; }
+  .footer-brand p { color: var(--text-muted); font-size: 14px; margin: 18px 0 22px; max-width: 320px; }
+  .footer-socials { display: flex; gap: 10px; }
+  .footer-socials a {
+    width: 40px; height: 40px; border-radius: 10px;
+    background: var(--surface); border: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--text-muted); transition: all .3s var(--ease);
+  }
+  .footer-socials a:hover { color: var(--gold); border-color: var(--gold-line); transform: translateY(-3px); }
+  .footer-socials svg { width: 18px; height: 18px; }
+  .footer-col h4 { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em; color: var(--text-soft); margin-bottom: 18px; font-family: 'Plus Jakarta Sans', sans-serif; }
+  .footer-col ul { display: flex; flex-direction: column; gap: 10px; }
+  .footer-col a { color: var(--text-muted); font-size: 14px; transition: color .25s; }
+  .footer-col a:hover { color: var(--gold); }
+  .footer-bottom { padding-top: 30px; border-top: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px; }
+  .footer-bottom p { font-size: 13px; color: var(--text-soft); }
+  .footer-bottom .credits { font-size: 13px; color: var(--text-soft); }
+  .footer-bottom .credits a { color: var(--gold); }
+
+  /* ============================
+     SCROLL REVEAL
+     ============================ */
+  .reveal { opacity: 0; transform: translateY(30px); transition: opacity .8s var(--ease), transform .8s var(--ease); }
+  .reveal.in { opacity: 1; transform: translateY(0); }
+  .reveal-delay-1 { transition-delay: .1s; }
+  .reveal-delay-2 { transition-delay: .2s; }
+  .reveal-delay-3 { transition-delay: .3s; }
+
+  /* ============================
+     FLOATING WHATSAPP
+     ============================ */
+  .float-wa {
+    position: fixed; bottom: 24px; right: 24px; z-index: 90;
+    width: 60px; height: 60px; border-radius: 50%;
+    background: #25d366; color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 12px 30px -8px rgba(37,211,102,0.6);
+    transition: all .3s var(--ease);
+  }
+  .float-wa:hover { transform: scale(1.1) rotate(8deg); }
+  .float-wa svg { width: 30px; height: 30px; }
+  .float-wa::before {
+    content: ''; position: absolute; inset: -4px; border-radius: 50%;
+    border: 2px solid #25d366; opacity: 0.5; animation: waRing 2s infinite;
+  }
+  @keyframes waRing { 0% { transform: scale(1); opacity: 0.5; } 100% { transform: scale(1.4); opacity: 0; } }
+
+  /* ============================
+     RESPONSIVE
+     ============================ */
+  @media (max-width: 1024px) {
+    .about-grid, .why-grid, .faq-grid, .location-grid { grid-template-columns: 1fr; gap: 50px; }
+    .services-grid, .catalogs-grid { grid-template-columns: repeat(2, 1fr); }
+    .gallery-grid { grid-template-columns: repeat(3, 1fr); }
+    .footer-grid { grid-template-columns: 1fr 1fr; gap: 36px; }
+    .about-visual img { height: 440px; }
+  }
+  @media (max-width: 768px) {
+    .section { padding: 70px 0; }
+    .nav-links { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: var(--bg-2); flex-direction: column; justify-content: center; gap: 30px; z-index: 99; }
+    .nav-links.open { display: flex; }
+    .nav-links.open a { font-size: 24px; }
+    .nav-cta .btn:not(.menu-toggle) { display: none; }
+    .menu-toggle { display: flex; z-index: 101; }
+    .hero { padding-top: 100px; }
+    .hero-stats { grid-template-columns: repeat(2, 1fr); gap: 22px; margin-top: 50px; }
+    .services-grid, .catalogs-grid, .gallery-grid { grid-template-columns: 1fr; }
+    .gallery-grid { grid-auto-rows: 200px; }
+    .gallery-item.wide, .gallery-item.tall { grid-column: span 1; grid-row: span 1; }
+    .about-features { grid-template-columns: 1fr; }
+    .about-visual img { height: 320px; }
+    .about-badge { right: 10px; bottom: 10px; padding: 18px 20px; }
+    .footer-grid { grid-template-columns: 1fr; gap: 36px; }
+    .footer-bottom { flex-direction: column; text-align: center; }
+    .why-visual-grid img { height: 180px; }
+    .why-visual-grid img:nth-child(2) { margin-top: 0; }
+    .cta-section { padding: 70px 0; }
+    .location-map, .location-map iframe { min-height: 360px; }
+    .float-wa { width: 54px; height: 54px; bottom: 18px; right: 18px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- =========================
+     NAVBAR
+     ========================= -->
+<nav class="navbar" id="navbar">
+  <div class="container nav-inner">
+    <a href="#home" class="logo">
+      <div class="logo-mark">V</div>
+      <div class="logo-text">
+        <span>V-TECH</span>
+        <small>INDONESIA</small>
+      </div>
+    </a>
+    <ul class="nav-links" id="navLinks">
+      <li><a href="#about">Tentang</a></li>
+      <li><a href="#services">Layanan</a></li>
+      <li><a href="#why">Keunggulan</a></li>
+      <li><a href="#gallery">Galeri</a></li>
+      <li><a href="#catalogs">Katalog</a></li>
+      <li><a href="#faq">FAQ</a></li>
+      <li><a href="#location">Lokasi</a></li>
+    </ul>
+    <div class="nav-cta">
+      <a href="https://wa.me/6281212345678" class="btn btn-primary" target="_blank" rel="noopener">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/></svg>
+        Hubungi Kami
+      </a>
+      <button class="menu-toggle" id="menuToggle" aria-label="Menu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </div>
+</nav>
+
+<!-- =========================
+     HERO
+     ========================= -->
+<section class="hero" id="home">
+  <div class="hero-bg"></div>
+  <div class="hero-grid-overlay"></div>
+  <div class="container hero-content">
+    <div class="hero-eyebrow">
+      <span class="dot"></span>
+      Spesialis Customisasi & Insulasi Mobil Premium
+    </div>
+    <h1>
+      <span class="line">Blokir Suara &</span>
+      <span class="line">Panas, <span class="gradient-text">Rasakan</span></span>
+      <span class="line">Kenyamanan Maksimal.</span>
+    </h1>
+    <p class="hero-tagline">
+      <strong>V-Tech Indonesia</strong> — spesialis peredam suara & panas, kaca film, kamera 360, dashcam, central lock, dan roll bar. Pemasangan profesional dengan material premium untuk mobil kesayangan Anda di Bandung.
+    </p>
+    <div class="hero-actions">
+      <a href="#services" class="btn btn-primary">
+        Lihat Layanan
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+      </a>
+      <a href="https://www.instagram.com/vtechind/" target="_blank" rel="noopener" class="btn btn-ghost">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
+        @vtechind
+      </a>
+    </div>
+    <div class="hero-stats">
+      <div>
+        <div class="stat-num" data-count="10">10+</div>
+        <div class="stat-label">Tahun Pengalaman</div>
+      </div>
+      <div>
+        <div class="stat-num" data-count="5000">5.000+</div>
+        <div class="stat-label">Mobil Ditangani</div>
+      </div>
+      <div>
+        <div class="stat-num" data-count="7">7</div>
+        <div class="stat-label">Layanan Utama</div>
+      </div>
+      <div>
+        <div class="stat-num" data-count="100">100%</div>
+        <div class="stat-label">Kepuasan Pelanggan</div>
+      </div>
+    </div>
+  </div>
+  <div class="scroll-cue">
+    <div class="mouse"></div>
+    Scroll
+  </div>
+</section>
+
+<!-- =========================
+     TRUST BAR / MARQUEE
+     ========================= -->
+<div class="trust-bar">
+  <div class="marquee">
+    <span class="marquee-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2L4 7v6c0 5 3.5 9 8 10 4.5-1 8-5 8-10V7l-8-5z"/></svg> Garansi Resmi</span>
+    <span class="marquee-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M9 12l2 2 4-4"/></svg> Material Premium</span>
+    <span class="marquee-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></svg> Teknisi Bersertifikat</span>
+    <span class="marquee-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg> Lokasi Strategis di Bandung</span>
+    <span class="marquee-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg> Pengerjaan Cepat & Rapi</span>
+    <!-- duplicate for seamless loop -->
+    <span class="marquee-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2L4 7v6c0 5 3.5 9 8 10 4.5-1 8-5 8-10V7l-8-5z"/></svg> Garansi Resmi</span>
+    <span class="marquee-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M9 12l2 2 4-4"/></svg> Material Premium</span>
+    <span class="marquee-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></svg> Teknisi Bersertifikat</span>
+    <span class="marquee-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg> Lokasi Strategis di Bandung</span>
+    <span class="marquee-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg> Pengerjaan Cepat & Rapi</span>
+  </div>
+</div>
+
+<!-- =========================
+     ABOUT
+     ========================= -->
+<section class="section about" id="about">
+  <div class="container about-grid">
+    <div class="about-visual reveal">
+      <img src="assets/gallery-1.jpg" alt="Interior mobil premium hasil pengerjaan V-Tech Indonesia" loading="lazy" />
+      <div class="about-badge">
+        <div class="num">10+</div>
+        <div class="lbl">Tahun Melayani Pelanggan Indonesia</div>
+      </div>
+    </div>
+    <div class="about-text reveal reveal-delay-1">
+      <span class="eyebrow">Tentang Kami</span>
+      <h2 class="section-title">Mitra Terpercaya untuk<br/>Kenyamanan Mobil Anda</h2>
+      <p>
+        <strong>V-Tech Indonesia</strong> hadir sebagai spesialis modifikasi dan insulasi mobil yang berlokasi di Bandung. Dengan pengalaman lebih dari satu dekade, kami berkomitmen menghadirkan kabin mobil yang lebih tenang, sejuk, dan aman bagi para pengguna setia kami.
+      </p>
+      <p>
+        Filosofi kami sederhana: <strong>"Memblocking suara &amp; matahari agar tidak masuk"</strong>. Setiap pemasangan peredam suara, peredam panas, kaca film, hingga aksesori keamanan seperti dashcam dan roll bar dikerjakan oleh teknisi berpengalaman dengan material berkualitas tinggi.
+      </p>
+      <div class="about-features">
+        <div class="about-feature">
+          <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2L4 7v6c0 5 3.5 9 8 10 4.5-1 8-5 8-10V7l-8-5z"/></svg></div>
+          <div class="tx">
+            <h4>Garansi Pemasangan</h4>
+            <p>Setiap pekerjaan dilindungi garansi pemasangan resmi.</p>
+          </div>
+        </div>
+        <div class="about-feature">
+          <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 7h2a4 4 0 010 8h-2M10 17H8a4 4 0 010-8h2M8 12h8"/></svg></div>
+          <div class="tx">
+            <h4>Material Original</h4>
+            <p>Hanya menggunakan material premium dari brand terpercaya.</p>
+          </div>
+        </div>
+        <div class="about-feature">
+          <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></div>
+          <div class="tx">
+            <h4>Pengerjaan Cepat</h4>
+            <p>Estimasi pengerjaan transparan sesuai jenis layanan.</p>
+          </div>
+        </div>
+        <div class="about-feature">
+          <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg></div>
+          <div class="tx">
+            <h4>Tim Profesional</h4>
+            <p>Teknisi terlatih dan berpengalaman di bidangnya.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- =========================
+     SERVICES
+     ========================= -->
+<section class="section services" id="services">
+  <div class="container">
+    <div class="services-header reveal">
+      <span class="eyebrow">Layanan Kami</span>
+      <h2 class="section-title">Solusi Lengkap untuk Mobil Idaman Anda</h2>
+      <p class="section-subtitle">Dari peredam suara hingga aksesori keamanan, V-Tech Indonesia menyediakan beragam layanan modifikasi dan perlindungan mobil dengan kualitas premium.</p>
+    </div>
+    <div class="services-grid">
+      <!-- Service 1: Peredam Suara -->
+      <article class="service-card reveal">
+        <div class="service-card-img">
+          <span class="service-card-num">01</span>
+          <img src="assets/peredam-suara.jpg" alt="Pemasangan peredam suara mobil" loading="lazy" />
+        </div>
+        <div class="service-card-body">
+          <div class="service-card-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M19.07 4.93a10 10 0 010 14.14M15.54 8.46a5 5 0 010 7.07"/></svg>
+          </div>
+          <h3>Peredam Suara</h3>
+          <p>Pemasangan material peredam pada pintu, lantai, dan atap mobil untuk meredam kebisingan dari jalan, mesin, dan getaran. Kabin jadi lebih hening dan musik terdengar jernih.</p>
+          <div class="service-card-tags">
+            <span class="service-tag">Pintu</span>
+            <span class="service-tag">Lantai</span>
+            <span class="service-tag">Atap</span>
+            <span class="service-tag">Bagasi</span>
+          </div>
+        </div>
+      </article>
+      <!-- Service 2: Peredam Panas -->
+      <article class="service-card reveal reveal-delay-1">
+        <div class="service-card-img">
+          <span class="service-card-num">02</span>
+          <img src="assets/gallery-2.jpg" alt="Pemasangan peredam panas dashboard mobil" loading="lazy" />
+        </div>
+        <div class="service-card-body">
+          <div class="service-card-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+          </div>
+          <h3>Peredam Panas</h3>
+          <p>Lapisan peredam panas pada dashboard, lantai, dan atap untuk menahan panas matahari. Kabin tetap sejuk meski parkir di bawah terik matahari, AC lebih optimal.</p>
+          <div class="service-card-tags">
+            <span class="service-tag">Dashboard</span>
+            <span class="service-tag">Lantai</span>
+            <span class="service-tag">Atap</span>
+            <span class="service-tag">Kap Mesin</span>
+          </div>
+        </div>
+      </article>
+      <!-- Service 3: Kaca Film -->
+      <article class="service-card reveal reveal-delay-2">
+        <div class="service-card-img">
+          <span class="service-card-num">03</span>
+          <img src="assets/kaca-film.jpg" alt="Pemasangan kaca film mobil" loading="lazy" />
+        </div>
+        <div class="service-card-body">
+          <div class="service-card-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 3v18"/></svg>
+          </div>
+          <h3>Kaca Film</h3>
+          <p>Beragam pilihan kaca film dengan tingkat perlindungan UV dan IR tinggi. Menjaga privasi, menahan panas, melindungi interior dari fading, serta meningkatkan estetika mobil.</p>
+          <div class="service-card-tags">
+            <span class="service-tag">Anti UV</span>
+            <span class="service-tag">Anti Panas</span>
+            <span class="service-tag">Privacy</span>
+            <span class="service-tag">Garansi</span>
+          </div>
+        </div>
+      </article>
+      <!-- Service 4: Kamera 360 -->
+      <article class="service-card reveal">
+        <div class="service-card-img">
+          <span class="service-card-num">04</span>
+          <img src="assets/dashcam.jpg" alt="Pemasangan kamera 360 mobil" loading="lazy" />
+        </div>
+        <div class="service-card-body">
+          <div class="service-card-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
+          </div>
+          <h3>Kamera 360°</h3>
+          <p>Sistem kamera 360 derajat untuk membantu parkir dan manuver sempit. Tampilan bird's eye view yang jernih membuat berkontaan dengan benda di sekitar mobil jadi lebih mudah.</p>
+          <div class="service-card-tags">
+            <span class="service-tag">Bird's Eye</span>
+            <span class="service-tag">Parkir Aman</span>
+            <span class="service-tag">HD Quality</span>
+          </div>
+        </div>
+      </article>
+      <!-- Service 5: Dashcam -->
+      <article class="service-card reveal reveal-delay-1">
+        <div class="service-card-img">
+          <span class="service-card-num">05</span>
+          <img src="assets/cta-bg.jpg" alt="Pemasangan dashcam mobil" loading="lazy" />
+        </div>
+        <div class="service-card-body">
+          <div class="service-card-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
+          </div>
+          <h3>Dashcam</h3>
+          <p>Pemasangan dashcam berkualitas untuk merekam perjalanan sebagai bukti jika terjadi kejadian di jalan. Pilihan resolusi HD hingga 4K dengan fitur loop recording dan G-sensor.</p>
+          <div class="service-card-tags">
+            <span class="service-tag">HD/4K</span>
+            <span class="service-tag">Loop Record</span>
+            <span class="service-tag">G-Sensor</span>
+            <span class="service-tag">Night Vision</span>
+          </div>
+        </div>
+      </article>
+      <!-- Service 6: Central Lock -->
+      <article class="service-card reveal reveal-delay-2">
+        <div class="service-card-img">
+          <span class="service-card-num">06</span>
+          <img src="assets/central-lock.jpg" alt="Pemasangan central lock mobil" loading="lazy" />
+        </div>
+        <div class="service-card-body">
+          <div class="service-card-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+          </div>
+          <h3>Central Lock</h3>
+          <p>Pemasangan sistem central lock dan alarm untuk keamanan kendaraan. Kunci semua pintu dengan satu sentuhan, lengkap dengan remote keyless entry untuk kemudahan akses.</p>
+          <div class="service-card-tags">
+            <span class="service-tag">Keyless</span>
+            <span class="service-tag">Alarm</span>
+            <span class="service-tag">Remote</span>
+          </div>
+        </div>
+      </article>
+      <!-- Service 7: Roll Bar -->
+      <article class="service-card reveal">
+        <div class="service-card-img">
+          <span class="service-card-num">07</span>
+          <img src="assets/roll-bar.jpg" alt="Pemasangan roll bar mobil" loading="lazy" />
+        </div>
+        <div class="service-card-body">
+          <div class="service-card-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 3v18M21 3v18M3 8h18M3 16h18M3 12h18"/></svg>
+          </div>
+          <h3>Roll Bar</h3>
+          <p>Pemasangan roll bar / roll cage custom untuk perlindungan ekstra pada kendaraan off-road atau competition. Material baja berkualitas dengan desain presisi mengikuti dimensi kabin.</p>
+          <div class="service-card-tags">
+            <span class="service-tag">Off-Road</span>
+            <span class="service-tag">Custom</span>
+            <span class="service-tag">Baja Premium</span>
+          </div>
+        </div>
+      </article>
+      <!-- Service 8: Konsultasi -->
+      <article class="service-card reveal reveal-delay-1" style="background: linear-gradient(180deg, var(--surface) 0%, rgba(253,198,6,0.05) 100%); border-color: var(--gold-line);">
+        <div class="service-card-body" style="padding: 36px;">
+          <div class="service-card-icon" style="background: linear-gradient(135deg, var(--gold) 0%, var(--gold-2) 100%); color: #0a0a0b; border: none;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+          </div>
+          <h3>Butuh Konsultasi?</h3>
+          <p>Setiap mobil memiliki kebutuhan berbeda. Tim kami siap memberikan rekomendasi terbaik sesuai tipe kendaraan dan budget Anda. Konsultasi gratis, tanpa komitmen.</p>
+          <a href="https://wa.me/6281212345678" target="_blank" rel="noopener" class="btn btn-primary" style="margin-top: 8px; padding: 12px 22px; font-size: 14px;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981z"/></svg>
+            Chat via WhatsApp
+          </a>
+        </div>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- =========================
+     WHY CHOOSE US
+     ========================= -->
+<section class="section why" id="why">
+  <div class="container why-grid">
+    <div class="why-content reveal">
+      <span class="eyebrow">Kenapa V-Tech?</span>
+      <h2 class="section-title">Alasan Pelanggan Memilih Kami</h2>
+      <p>Kami memahami bahwa mobil bukan sekadar alat transportasi — ia adalah investasi dan tempat Anda menghabiskan waktu berjam-jam setiap hari. Itulah mengapa setiap detail pengerjaan kami jalankan dengan standar tinggi.</p>
+      <div class="why-list">
+        <div class="why-item">
+          <div class="num">01</div>
+          <div>
+            <h4>Material Berkualitas Tinggi</h4>
+            <p>Kami hanya menggunakan material peredam, kaca film, dan aksesori dari brand terpercaya yang sudah teruji ketahanan dan performanya.</p>
+          </div>
+        </div>
+        <div class="why-item">
+          <div class="num">02</div>
+          <div>
+            <h4>Teknisi Berpengalaman</h4>
+            <p>Tim teknisi kami telah menangani ribuan unit mobil dari berbagai merek dan tipe, sehingga setiap pemasangan rapi, presisi, dan aman.</p>
+          </div>
+        </div>
+        <div class="why-item">
+          <div class="num">03</div>
+          <div>
+            <h4>Garansi Pengerjaan</h4>
+            <p>Setiap layanan dilindungi garansi pemasangan. Jika ada masalah akibat proses pemasangan, kami perbaiki tanpa biaya tambahan.</p>
+          </div>
+        </div>
+        <div class="why-item">
+          <div class="num">04</div>
+          <div>
+            <h4>Harga Transparan</h4>
+            <p>Estimasi harga diberikan di awal tanpa biaya tersembunyi. Anda bisa menyesuaikan paket layanan dengan budget yang dimiliki.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="why-visual reveal reveal-delay-1">
+      <div class="why-visual-grid">
+        <img src="assets/gallery-2.jpg" alt="Detail pengerjaan peredam V-Tech Indonesia" loading="lazy" />
+        <img src="assets/gallery-3.jpg" alt="Hasil modifikasi mobil V-Tech Indonesia" loading="lazy" />
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- =========================
+     GALLERY
+     ========================= -->
+<section class="section gallery" id="gallery">
+  <div class="container">
+    <div class="gallery-header reveal">
+      <div>
+        <span class="eyebrow">Galeri</span>
+        <h2 class="section-title">Hasil Karya Kami</h2>
+      </div>
+      <p class="section-subtitle">Beberapa cuplikan dari pengerjaan kami — dari pemasangan peredam suara, kaca film, hingga aksesori keamanan pada berbagai tipe mobil.</p>
+    </div>
+    <div class="gallery-grid">
+      <div class="gallery-item wide tall reveal">
+        <img src="assets/hero.jpg" alt="Workshop V-Tech Indonesia" loading="lazy" />
+        <div class="caption"><small>Workshop</small>Area Pemasangan Profesional</div>
+      </div>
+      <div class="gallery-item reveal reveal-delay-1">
+        <img src="assets/peredam-suara.jpg" alt="Pemasangan peredam suara" loading="lazy" />
+        <div class="caption"><small>Peredam Suara</small>Material Premium</div>
+      </div>
+      <div class="gallery-item reveal reveal-delay-2">
+        <img src="assets/kaca-film.jpg" alt="Pemasangan kaca film" loading="lazy" />
+        <div class="caption"><small>Kaca Film</small>Instalasi Rapi</div>
+      </div>
+      <div class="gallery-item reveal">
+        <img src="assets/central-lock.jpg" alt="Central lock" loading="lazy" />
+        <div class="caption"><small>Central Lock</small>Akses Praktis</div>
+      </div>
+      <div class="gallery-item reveal reveal-delay-1">
+        <img src="assets/dashcam.jpg" alt="Dashcam & kamera 360" loading="lazy" />
+        <div class="caption"><small>Dashcam & 360</small>Pengaman Berkendara</div>
+      </div>
+      <div class="gallery-item wide reveal reveal-delay-2">
+        <img src="assets/gallery-1.jpg" alt="Interior mobil premium" loading="lazy" />
+        <div class="caption"><small>Interior Detailing</small>Hasil Akhir Rapi & Elegan</div>
+      </div>
+      <div class="gallery-item reveal">
+        <img src="assets/roll-bar.jpg" alt="Roll bar custom" loading="lazy" />
+        <div class="caption"><small>Roll Bar</small>Custom Presisi</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- =========================
+     CATALOGS
+     ========================= -->
+<section class="section catalogs" id="catalogs">
+  <div class="container">
+    <div class="catalogs-header reveal">
+      <span class="eyebrow">Katalog Digital</span>
+      <h2 class="section-title">Jelajahi Katalog Interaktif Kami</h2>
+      <p class="section-subtitle">Lihat koleksi produk, galeri foto hasil pengerjaan, dan jawaban pertanyaan yang sering diajukan dalam format flipbook digital yang interaktif.</p>
+    </div>
+    <div class="catalogs-grid">
+      <a href="https://online.fliphtml5.com/iclvy/qgog/" target="_blank" rel="noopener" class="catalog-card reveal">
+        <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg></div>
+        <h3>Katalog Produk &amp; Pemasangan</h3>
+        <p>Daftar lengkap produk dan layanan pemasangan V-Tech Indonesia beserta spesifikasi dan estimasi harga.</p>
+        <span class="catalog-link">Buka Katalog
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </span>
+      </a>
+      <a href="https://online.fliphtml5.com/iclvy/vcie/" target="_blank" rel="noopener" class="catalog-card reveal reveal-delay-1">
+        <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg></div>
+        <h3>Katalog Foto</h3>
+        <p>Dokumentasi foto hasil pengerjaan kami pada berbagai tipe mobil — sebelum dan sesudah pemasangan.</p>
+        <span class="catalog-link">Buka Galeri
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </span>
+      </a>
+      <a href="https://online.fliphtml5.com/iclvy/uwxu/" target="_blank" rel="noopener" class="catalog-card reveal reveal-delay-2">
+        <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3M12 17h.01"/><circle cx="12" cy="12" r="10"/></svg></div>
+        <h3>FAQ</h3>
+        <p>Kumpulan pertanyaan yang sering diajukan pelanggan mengenai layanan, garansi, dan proses pengerjaan.</p>
+        <span class="catalog-link">Buka FAQ
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </span>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- =========================
+     FAQ
+     ========================= -->
+<section class="section faq" id="faq">
+  <div class="container faq-grid">
+    <div class="faq-sidebar reveal">
+      <span class="eyebrow">FAQ</span>
+      <h2 class="section-title">Pertanyaan yang Sering Diajukan</h2>
+      <p>Belum menemukan jawaban yang Anda cari? Tim kami siap membantu menjelaskan setiap detail layanan agar Anda bisa memutuskan dengan tenang.</p>
+      <div class="faq-help-card">
+        <h4>Masih ada pertanyaan?</h4>
+        <p>Hubungi kami langsung via WhatsApp atau Instagram. Kami akan dengan senang hati membantu Anda.</p>
+        <a href="https://wa.me/6281212345678" target="_blank" rel="noopener" class="btn btn-primary" style="width: 100%;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981z"/></svg>
+          Tanya via WhatsApp
+        </a>
+      </div>
+    </div>
+    <div class="faq-list reveal reveal-delay-1">
+      <div class="faq-item">
+        <button class="faq-q">Berapa lama waktu pemasangan peredam suara satu mobil?
+          <span class="plus"></span>
+        </button>
+        <div class="faq-a"><p>Untuk pemasangan peredam suara full (pintu, lantai, atap, dan bagasi), rata-rata membutuhkan waktu 1–2 hari kerja tergantung tipe mobil dan tingkat kerumitan. Untuk pemasangan partial (hanya pintu misalnya), biasanya selesai dalam 3–5 jam. Tim kami akan memberikan estimasi waktu yang lebih akurat setelah inspeksi unit.</p></div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q">Apakah pemasangan peredam bisa mengganggu komponen interior mobil?
+          <span class="plus"></span>
+        </button>
+        <div class="faq-a"><p>Tidak. Teknisi kami terlatih untuk membongkar dan memasang kembali panel interior dengan hati-hati menggunakan tool khusus agar tidak meninggalkan goresan. Semua klip dan baut dipasang kembali sesuai standar pabrik. Kami juga memberikan garansi pemasangan untuk ketenangan Anda.</p></div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q">Apakah kaca film yang dipasang bergaransi?
+          <span class="plus"></span>
+        </button>
+        <div class="faq-a"><p>Ya, semua kaca film yang kami pasang dilengkapi dengan garansi resmi dari brand. Masa garansi bervariasi tergantung jenis kaca film yang dipilih — mulai dari 3 tahun hingga 7 tahun. Garansi mencakup pengelupasan, gelembung, dan pemudaran warna.</p></div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q">Apakah dashcam dan kamera 360 bisa dipasang di semua tipe mobil?
+          <span class="plus"></span>
+        </button>
+        <div class="faq-a"><p>Sebagian besar tipe mobil bisa dipasang dashcam standar. Untuk kamera 360, dibutuhkan instalasi yang lebih kompleks dan ada beberapa tipe mobil yang membutuhkan adapter khusus. Tim kami akan melakukan survei unit terlebih dahulu untuk memastikan kompatibilitas sebelum memberikan rekomendasi produk yang sesuai.</p></div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q">Bagaimana sistem pembayaran di V-Tech Indonesia?
+          <span class="plus"></span>
+        </button>
+        <div class="faq-a"><p>Kami menerima pembayaran tunai, transfer bank, QRIS, serta cicilan 0% melalui mitra pembiayaan (syarat dan ketentuan berlaku). Untuk pekerjaan besar, kami menerima sistem DP dengan pelunasan setelah pekerjaan selesai. Detail lengkap akan dijelaskan oleh tim customer service kami.</p></div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q">Apakah perlu booking sebelum datang ke workshop?
+          <span class="plus"></span>
+        </button>
+        <div class="faq-a"><p>Sangat disarankan untuk booking terlebih dahulu via WhatsApp atau Instagram agar kami bisa menyiapkan teknisi dan material. Walk-in juga diterima, namun antrian bisa lebih lama terutama pada akhir pekan. Booking juga memungkinkan Anda mendapatkan estimasi harga di awal sebelum datang.</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- =========================
+     LOCATION
+     ========================= -->
+<section class="section location" id="location">
+  <div class="container location-grid">
+    <div class="location-info reveal">
+      <span class="eyebrow">Lokasi & Kontak</span>
+      <h2 class="section-title">Kunjungi Workshop Kami</h2>
+      <p>Workshop V-Tech Indonesia berlokasi strategis di Bandung. Datang langsung untuk konsultasi gratis atau lihat demonstrasi material peredam dan kaca film secara langsung.</p>
+      <div class="location-details">
+        <div class="loc-item">
+          <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg></div>
+          <div>
+            <h4>Alamat Workshop</h4>
+            <p>Bandung, Jawa Barat, Indonesia</p>
+          </div>
+        </div>
+        <div class="loc-item">
+          <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg></div>
+          <div>
+            <h4>Telepon / WhatsApp</h4>
+            <p><a href="https://wa.me/6281212345678" target="_blank" rel="noopener">+62 812-1234-5678</a></p>
+          </div>
+        </div>
+        <div class="loc-item">
+          <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></div>
+          <div>
+            <h4>Jam Operasional</h4>
+            <p>Senin – Sabtu: 09.00 – 18.00 WIB<br/>Minggu: By Appointment</p>
+          </div>
+        </div>
+        <div class="loc-item">
+          <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><path d="M22 6l-10 7L2 6"/></svg></div>
+          <div>
+            <h4>Email</h4>
+            <p><a href="mailto:info@vtechindonesia.com">info@vtechindonesia.com</a></p>
+          </div>
+        </div>
+      </div>
+      <div class="location-actions">
+        <a href="https://maps.app.goo.gl/FvnZUjdZ6N2V9e477" target="_blank" rel="noopener" class="btn btn-primary">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          Buka di Google Maps
+        </a>
+        <a href="https://wa.me/6281212345678" target="_blank" rel="noopener" class="btn btn-ghost">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654z"/></svg>
+          Chat WhatsApp
+        </a>
+      </div>
+    </div>
+    <div class="location-map reveal reveal-delay-1">
+      <iframe
+        src="https://www.google.com/maps?q=-6.9413274,107.5922202&z=15&output=embed"
+        title="Lokasi V-Tech Indonesia di Google Maps"
+        loading="lazy"
+        referrerpolicy="no-referrer-when-downgrade"
+      ></iframe>
+    </div>
+  </div>
+</section>
+
+<!-- =========================
+     CTA SECTION
+     ========================= -->
+<section class="cta-section">
+  <div class="cta-bg">
+    <img src="assets/cta-bg.jpg" alt="Interior mobil premium" loading="lazy" />
+  </div>
+  <div class="container cta-content reveal">
+    <span class="eyebrow">Siap Meningkatkan Kenyamanan Mobil Anda?</span>
+    <h2 class="gradient-text">Wujudkan Mobil Impian Anda Bersama V-Tech Indonesia</h2>
+    <p>Dari peredam suara hingga aksesori keamanan — semua kebutuhan modifikasi mobil Anda bisa kami tangani dengan kualitas premium dan pengerjaan profesional. Konsultasi gratis sekarang!</p>
+    <div class="cta-actions">
+      <a href="https://wa.me/6281212345678" target="_blank" rel="noopener" class="btn btn-primary">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654z"/></svg>
+        Konsultasi Gratis via WhatsApp
+      </a>
+      <a href="https://www.instagram.com/vtechind/" target="_blank" rel="noopener" class="btn btn-light">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
+        Ikuti @vtechind
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- =========================
+     FOOTER
+     ========================= -->
+<footer class="footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <a href="#home" class="logo">
+          <div class="logo-mark">V</div>
+          <div class="logo-text">
+            <span>V-TECH</span>
+            <small>INDONESIA</small>
+          </div>
+        </a>
+        <p>Spesialis peredam suara & panas, kaca film, dan aksesori keamanan mobil. Melayani pelanggan di Bandung dan sekitarnya dengan kualitas premium dan pengerjaan profesional.</p>
+        <div class="footer-socials">
+          <a href="https://www.instagram.com/vtechind/" target="_blank" rel="noopener" aria-label="Instagram">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
+          </a>
+          <a href="https://www.tiktok.com/@vtech.official" target="_blank" rel="noopener" aria-label="TikTok">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-5.2 1.74 2.89 2.89 0 012.31-4.64 2.93 2.93 0 01.88.13V9.4a6.84 6.84 0 00-1-.05A6.33 6.33 0 005.2 20.1a6.34 6.34 0 0010.86-4.43v-7a8.16 8.16 0 004.77 1.52v-3.4a4.85 4.85 0 01-1.24-.1z"/></svg>
+          </a>
+          <a href="https://www.youtube.com/channel/UC1KwrHnJe3Wnnzhqzgv7D6Q" target="_blank" rel="noopener" aria-label="YouTube">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+          </a>
+          <a href="https://wa.me/6281212345678" target="_blank" rel="noopener" aria-label="WhatsApp">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/></svg>
+          </a>
+        </div>
+      </div>
+      <div class="footer-col">
+        <h4>Layanan</h4>
+        <ul>
+          <li><a href="#services">Peredam Suara</a></li>
+          <li><a href="#services">Peredam Panas</a></li>
+          <li><a href="#services">Kaca Film</a></li>
+          <li><a href="#services">Kamera 360°</a></li>
+          <li><a href="#services">Dashcam</a></li>
+          <li><a href="#services">Central Lock</a></li>
+          <li><a href="#services">Roll Bar</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Perusahaan</h4>
+        <ul>
+          <li><a href="#about">Tentang Kami</a></li>
+          <li><a href="#why">Keunggulan</a></li>
+          <li><a href="#gallery">Galeri</a></li>
+          <li><a href="#catalogs">Katalog</a></li>
+          <li><a href="#faq">FAQ</a></li>
+          <li><a href="#location">Lokasi</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Hubungi Kami</h4>
+        <ul>
+          <li><a href="https://wa.me/6281212345678" target="_blank" rel="noopener">WhatsApp</a></li>
+          <li><a href="https://www.instagram.com/vtechind/" target="_blank" rel="noopener">Instagram</a></li>
+          <li><a href="https://www.tiktok.com/@vtech.official" target="_blank" rel="noopener">TikTok</a></li>
+          <li><a href="https://www.youtube.com/channel/UC1KwrHnJe3Wnnzhqzgv7D6Q" target="_blank" rel="noopener">YouTube</a></li>
+          <li><a href="https://maps.app.goo.gl/FvnZUjdZ6N2V9e477" target="_blank" rel="noopener">Google Maps</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>&copy; <span id="year">2026</span> V-Tech Indonesia. All rights reserved.</p>
+      <p class="credits">Dibuat dengan <span style="color: var(--gold);">♥</span> untuk para pecinta otomotif Indonesia.</p>
+    </div>
+  </div>
+</footer>
+
+<!-- =========================
+     FLOATING WHATSAPP
+     ========================= -->
+<a href="https://wa.me/6281212345678" target="_blank" rel="noopener" class="float-wa" aria-label="Chat WhatsApp">
+  <svg viewBox="0 0 24 24" fill="currentColor"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/></svg>
+</a>
+
+<script>
+  // ============================
+  // NAVBAR SCROLL EFFECT
+  // ============================
+  const navbar = document.getElementById('navbar');
+  window.addEventListener('scroll', () => {
+    if (window.scrollY > 50) navbar.classList.add('scrolled');
+    else navbar.classList.remove('scrolled');
+  });
+
+  // ============================
+  // MOBILE MENU
+  // ============================
+  const menuToggle = document.getElementById('menuToggle');
+  const navLinks = document.getElementById('navLinks');
+  menuToggle.addEventListener('click', () => {
+    menuToggle.classList.toggle('active');
+    navLinks.classList.toggle('open');
+    document.body.style.overflow = navLinks.classList.contains('open') ? 'hidden' : '';
+  });
+  navLinks.querySelectorAll('a').forEach(link => {
+    link.addEventListener('click', () => {
+      menuToggle.classList.remove('active');
+      navLinks.classList.remove('open');
+      document.body.style.overflow = '';
+    });
+  });
+
+  // ============================
+  // FAQ ACCORDION
+  // ============================
+  const faqItems = document.querySelectorAll('.faq-item');
+  faqItems.forEach((item, idx) => {
+    const q = item.querySelector('.faq-q');
+    q.addEventListener('click', () => {
+      const isActive = item.classList.contains('active');
+      faqItems.forEach(i => i.classList.remove('active'));
+      if (!isActive) item.classList.add('active');
+    });
+    // Open first item by default
+    if (idx === 0) item.classList.add('active');
+  });
+
+  // ============================
+  // SCROLL REVEAL
+  // ============================
+  const revealObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('in');
+        revealObserver.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.12, rootMargin: '0px 0px -50px 0px' });
+  document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));
+
+  // ============================
+  // STAT COUNTERS (subtle pulse on view)
+  // ============================
+  const statObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.style.opacity = '1';
+        statObserver.unobserve(entry.target);
+      }
+    });
+  });
+  document.querySelectorAll('.stat-num').forEach(s => statObserver.observe(s));
+
+  // ============================
+  // CURRENT YEAR
+  // ============================
+  document.getElementById('year').textContent = new Date().getFullYear();
+
+  // ============================
+  // SMOOTH SCROLL OFFSET (for fixed navbar)
+  // ============================
+  document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+    anchor.addEventListener('click', function(e) {
+      const target = document.querySelector(this.getAttribute('href'));
+      if (target) {
+        e.preventDefault();
+        const offset = 80;
+        const top = target.getBoundingClientRect().top + window.pageYOffset - offset;
+        window.scrollTo({ top, behavior: 'smooth' });
+      }
+    });
+  });
+</script>
+
+</body>
+</html>

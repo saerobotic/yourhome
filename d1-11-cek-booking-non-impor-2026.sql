@@ -1,0 +1,1 @@
+SELECT id, guest, property_code, checkin, amount, created_by, created_at FROM dashboard_bookings WHERE checkin >= '2026-01-01' AND checkin < '2027-01-01' AND created_by NOT LIKE 'import-excel%' ORDER BY checkin, id;

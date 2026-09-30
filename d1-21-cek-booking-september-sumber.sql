@@ -1,0 +1,1 @@
+SELECT created_by, status, COUNT(*) AS jumlah_booking, COALESCE(SUM(amount), 0) AS nilai_booking, COALESCE(SUM(refund_amount), 0) AS refund FROM dashboard_bookings WHERE checkin >= '2026-09-01' AND checkin < '2026-10-01' GROUP BY created_by, status ORDER BY created_by, status;

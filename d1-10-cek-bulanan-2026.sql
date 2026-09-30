@@ -1,0 +1,1 @@
+SELECT substr(checkin, 1, 7) AS bulan, COUNT(*) AS jumlah, COALESCE(SUM(amount), 0) AS nilai FROM dashboard_bookings WHERE checkin >= '2026-01-01' AND checkin < '2027-01-01' GROUP BY bulan ORDER BY bulan;

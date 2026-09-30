@@ -1,0 +1,3 @@
+SELECT guest, property_code, checkin, COUNT(*) AS jumlah_baris, COALESCE(SUM(amount), 0) AS total FROM dashboard_bookings WHERE created_by LIKE 'import-excel-2026%' AND checkin >= '2026-09-01' AND checkin < '2026-10-01' GROUP BY guest, property_code, checkin HAVING COUNT(*) > 1 ORDER BY total DESC;
+SELECT id, checkin, guest, property_code, amount FROM dashboard_bookings WHERE created_by LIKE 'import-excel-2026%' AND substr(id, 4, 8) <> replace(checkin, '-', '') ORDER BY checkin;
+SELECT checkin, COUNT(*) AS jumlah, COALESCE(SUM(amount), 0) AS total FROM dashboard_bookings WHERE created_by LIKE 'import-excel-2026%' AND checkin >= '2026-09-01' AND checkin < '2026-10-01' GROUP BY checkin ORDER BY checkin;

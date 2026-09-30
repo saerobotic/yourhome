@@ -1,0 +1,4 @@
+SELECT substr(entry_date, 1, 7) AS bulan, COUNT(*) AS jumlah, COALESCE(SUM(amount), 0) AS total FROM finance_entries WHERE kind = 'income' GROUP BY bulan ORDER BY bulan;
+SELECT category_id, created_by, COUNT(*) AS jumlah, COALESCE(SUM(amount), 0) AS total FROM finance_entries WHERE kind = 'income' AND entry_date >= '2026-09-01' AND entry_date < '2026-10-01' GROUP BY category_id, created_by ORDER BY total DESC;
+SELECT id, entry_date, category_id, description, property_name, amount, created_by FROM finance_entries WHERE kind = 'income' AND entry_date >= '2026-09-01' AND entry_date < '2026-10-01' ORDER BY amount DESC;
+SELECT id, entry_date, description, property_name, amount, created_by FROM finance_entries WHERE kind = 'income' AND id LIKE 'booking-income-%' AND COALESCE(created_by, '') NOT LIKE 'import-excel-2026%' AND entry_date >= '2026-09-01' AND entry_date < '2026-10-01' ORDER BY amount DESC;

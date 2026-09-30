@@ -1,0 +1,1 @@
+SELECT id, entry_date, amount, description, created_by FROM finance_entries WHERE entry_date >= '2026-08-01' AND entry_date < '2026-09-01' AND amount IN (4500000, 3999999, 4999996, 600000, 3400000) ORDER BY entry_date;

@@ -1,0 +1,1 @@
+SELECT COUNT(*) AS jumlah_pemasukan_booking_september, COALESCE(SUM(amount), 0) AS nilai_pemasukan_booking_september FROM finance_entries WHERE kind = 'income' AND category_id = 'income-booking' AND entry_date >= '2026-09-01' AND entry_date < '2026-10-01';

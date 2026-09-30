@@ -1,0 +1,1 @@
+DELETE FROM finance_entries WHERE category_id = 'income-booking' AND id IN ('booking-income-BKE20260725-0001', 'booking-income-BKE20260725-0002', 'booking-income-BKE20260725-0003') AND NOT EXISTS (SELECT 1 FROM dashboard_bookings b WHERE b.income_entry_id = finance_entries.id);
