@@ -3,195 +3,462 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="theme-color" content="#3e2723" />
+  <meta name="theme-color" content="#241915" />
   <title>Check In Crew Dashboard | YOUR HOME</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <style>
-    :root{--coffee:#3e2723;--coffee-soft:#5d4037;--terracotta:#a0522d;--cream:#faf7f2;--paper:#fff;--line:#e2dbd0;--muted:#776f66;--green:#3f5a3a;--danger:#b42318;--gold:#8a6d1f;--shadow:0 12px 30px rgba(62,39,35,.1)}
+    :root{
+      --ink:#241915;--ink-2:#3d2c25;--bg:#f1f0ed;--paper:#ffffff;--sunken:#f7f6f3;--sunken-2:#efede9;
+      --line:#e4e0da;--line-strong:#d2cbc2;--muted:#6f675f;
+      --accent:#6b3f2a;--accent-hover:#56321f;--accent-soft:#f3ebe5;--brass:#b5832f;
+      --success:#2e6a4c;--success-soft:#e6f1ea;--success-line:#c6ddcf;
+      --danger:#b3261e;--danger-soft:#fbeae8;--danger-line:#f1cdc8;
+      --warn:#8a5d0f;--warn-soft:#fbf1dc;--warn-line:#ecd29c;
+      --info:#2f5bd3;--info-deep:#2448ad;--info-soft:#eaf0fd;--info-line:#c7d5f7;
+      --ring:0 0 0 3px rgba(181,131,47,.32);
+      --shadow:0 1px 2px rgba(36,25,21,.05),0 10px 28px -16px rgba(36,25,21,.22);
+      --r-sm:6px;--r:9px;--r-lg:14px;--r-xl:18px;
+      /* alias lama agar gaya inline tetap berfungsi */
+      --coffee:var(--ink);--coffee-soft:var(--ink-2);--terracotta:var(--accent);--cream:var(--sunken);--green:var(--success);--gold:var(--warn);
+    }
     *{box-sizing:border-box}
-    body{margin:0;background:var(--cream);color:var(--coffee);font-family:Inter,Arial,sans-serif}
+    html{-webkit-text-size-adjust:100%}
+    body{margin:0;background:var(--bg);color:var(--ink);font-family:'Plus Jakarta Sans',system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
     button,input,select{font:inherit}
     button{cursor:pointer}
-    .page{max-width:1280px;margin:0 auto;padding:28px 20px 56px}
-    .topbar{display:flex;justify-content:space-between;align-items:center;gap:18px;margin-bottom:28px}
-    .brand{display:flex;align-items:center;gap:14px;min-width:0}
-    .brand-mark{width:192px;height:192px;flex:0 0 auto;border:0;background:transparent;display:block;object-fit:contain;padding:0}
     h1,h2,h3,p{margin:0}
-    h1{font:600 1.65rem/1.1 Georgia,serif;color:var(--coffee)}
-    .subtitle{color:var(--muted);font-size:.86rem;margin-top:5px}
-    .top-actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
-    .button{border:1px solid var(--line);background:var(--paper);color:var(--coffee);padding:10px 14px;border-radius:9px;font-weight:700;font-size:.82rem;text-decoration:none}
-    .button.primary{background:var(--terracotta);border-color:var(--terracotta);color:#fff}
-    .button.danger{background:var(--danger);color:#fff;border-color:var(--danger)}
-    .button:hover{filter:brightness(.97);transform:translateY(-1px)}
-    .summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-bottom:16px}
-    .stat,.panel{background:var(--paper);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow)}
-    .stat{padding:18px}
-    .stat-label{font-size:.73rem;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
-    .stat-value{display:block;font:700 1.8rem Georgia,serif;color:var(--terracotta);margin-top:7px}
-    .stat-value.small{font-size:1.35rem}
-    .filters{display:grid;grid-template-columns:1fr 1fr 1fr 1fr 1fr auto;gap:10px;padding:14px;margin-bottom:16px}
-    .field{display:flex;flex-direction:column;gap:5px}
-    .field label{font-size:.7rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em}
-    .field input,.field select{width:100%;border:1px solid var(--line);border-radius:8px;background:#fff;padding:10px 11px;color:var(--coffee);outline:none}
-    .field input:focus,.field select:focus{border-color:var(--terracotta);box-shadow:0 0 0 3px rgba(160,82,45,.12)}
+    h1,h2,h3{font-family:inherit;letter-spacing:-.015em}
+    :focus-visible{outline:none;box-shadow:var(--ring)}
+    .hidden{display:none!important}
+    .subtitle{color:var(--muted);font-size:.84rem;margin-top:4px}
+    .muted{font-size:.76rem;color:var(--muted);margin-top:2px}
+    .hint{color:var(--muted);font-size:.8rem;margin-top:12px;line-height:1.55}
+
+    /* ===== Tombol ===== */
+    .button{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:40px;border:1px solid var(--line-strong);background:var(--paper);color:var(--ink);padding:9px 15px;border-radius:var(--r);font-weight:600;font-size:.84rem;text-decoration:none;white-space:nowrap;transition:background .15s,border-color .15s,color .15s}
+    .button:hover{background:var(--sunken);border-color:var(--ink-2)}
+    .button.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+    .button.primary:hover{background:var(--accent-hover);border-color:var(--accent-hover)}
+    .button.danger{background:var(--paper);border-color:#e6b4ae;color:var(--danger)}
+    .button.danger:hover{background:var(--danger);border-color:var(--danger);color:#fff}
+    .button:disabled{opacity:.5;cursor:not-allowed}
+    .actions,.admin-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+    .detail-btn{border:0;background:none;color:var(--accent);font-size:.8rem;font-weight:700;padding:5px 2px;border-radius:5px}
+    .detail-btn:hover{color:var(--accent-hover);text-decoration:underline;text-underline-offset:3px}
+
+    /* ===== Halaman & bilah atas ===== */
+    .page{max-width:1320px;margin:0 auto;padding:20px 20px 56px}
+    .topbar{display:flex;justify-content:space-between;align-items:center;gap:14px;margin-bottom:14px;padding:14px 16px 14px 14px;background:var(--ink);color:#fff;border-radius:var(--r-xl);position:relative;overflow:hidden}
+    .topbar::after{content:"";position:absolute;right:40px;top:-110px;width:240px;height:240px;border-radius:50%;border:34px solid rgba(181,131,47,.13);pointer-events:none}
+    .topbar>*{position:relative;z-index:1}
+    .brand{display:flex;align-items:center;gap:16px;min-width:0}
+    .brand-mark{height:56px;width:auto;max-width:170px;flex:0 0 auto;display:block;object-fit:contain;background:#fff;border-radius:11px;padding:6px 10px}
+    .topbar h1{font-size:1.35rem;font-weight:800;line-height:1.2;color:#fff}
+    .topbar .subtitle{color:#cdbfb6;margin-top:3px}
+    .signout-btn{flex:0 0 auto;width:42px;height:42px;display:grid;place-items:center;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.07);color:#fff;border-radius:11px;transition:background .15s,border-color .15s}
+    .signout-btn:hover{background:var(--danger);border-color:var(--danger)}
+    .top-actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;margin-bottom:14px}
+
+    /* ===== Tab tampilan ===== */
+    .view-switch{display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:16px;padding:4px;background:var(--sunken-2);border:1px solid var(--line);border-radius:12px}
+    .view-btn{display:flex;align-items:center;justify-content:center;gap:8px;border:0;background:transparent;color:var(--muted);padding:11px 14px;border-radius:9px;font-weight:700;font-size:.86rem;line-height:1.2;transition:background .15s,color .15s}
+    .view-btn svg{flex:0 0 auto}
+    .view-btn:hover{color:var(--ink)}
+    .view-btn.active{background:var(--danger-soft);color:var(--danger);box-shadow:0 1px 2px rgba(36,25,21,.08),0 4px 12px -6px rgba(36,25,21,.25)}
+    .view-btn.active svg{color:var(--danger)}
+    .dashboard-view{min-width:0}
+    .dashboard-view.hidden{display:none}
+    .dashboard-column{display:flex;flex-direction:column;gap:16px;min-width:0}
+
+    /* ===== Ringkasan ===== */
+    .summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px}
+    .stat,.panel{background:var(--paper);border:1px solid var(--line);border-radius:var(--r-lg);box-shadow:var(--shadow)}
+    .stat{padding:16px 18px}
+    .stat-label{display:block;font-size:.8rem;font-weight:600;color:var(--muted)}
+    .stat-value{display:block;font-size:1.75rem;font-weight:800;letter-spacing:-.02em;line-height:1.15;color:var(--ink);margin-top:6px;font-variant-numeric:tabular-nums}
+    .stat-value.small{font-size:1.4rem}
+    .stat.stat-wide{background:var(--ink);border-color:var(--ink)}
+    .stat.stat-wide .stat-label{color:#cdbfb6}
+    .stat.stat-wide .stat-value{color:#f3d9a8}
+
+    /* ===== Filter & form ===== */
+    .filters{display:grid;grid-template-columns:repeat(5,minmax(0,1fr)) auto;gap:12px;padding:16px}
+    .filters.filters-assign{grid-template-columns:repeat(3,minmax(0,1fr)) auto}
+    .records .filters{border:0;border-bottom:1px solid var(--line);border-radius:0;box-shadow:none;background:var(--sunken)}
+    .field{display:flex;flex-direction:column;gap:6px;min-width:0}
+    .field label,.field .meta-label{font-size:.8rem;font-weight:600;color:var(--ink-2);letter-spacing:0;text-transform:none}
+    .field input,.field select{width:100%;min-height:40px;border:1px solid var(--line-strong);border-radius:var(--r);background:var(--paper);padding:9px 12px;color:var(--ink);font-size:.9rem;outline:none;transition:border-color .15s,box-shadow .15s}
+    .field input:hover,.field select:hover{border-color:var(--ink-2)}
+    .field input:focus,.field select:focus{border-color:var(--brass);box-shadow:var(--ring)}
+    .field input[readonly]{background:var(--sunken);color:var(--muted);border-color:var(--line)}
+    select{appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5l5 5 5-5' fill='none' stroke='%236f675f' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")!important;background-repeat:no-repeat!important;background-position:right 12px center!important;padding-right:34px!important;cursor:pointer}
     .filter-actions{display:flex;align-items:flex-end}
-    .records{overflow:hidden;margin-bottom:16px}
-    .records-head{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:18px 20px;border-bottom:1px solid var(--line)}
-    .records-head h2{font:700 1.05rem Georgia,serif}
-    .records-count{font-size:.78rem;color:var(--muted)}
+    .filter-actions .button{width:100%}
+
+    /* ===== Tabel ===== */
+    .records{overflow:hidden}
+    .records-head{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:16px 20px;border-bottom:1px solid var(--line)}
+    .records-head h2{font-size:1.05rem;font-weight:700}
+    .records-count,.slip-period{display:inline-flex;align-items:center;padding:4px 11px;border-radius:999px;background:var(--sunken-2);color:var(--ink-2);font-size:.76rem;font-weight:600;white-space:nowrap}
     .table-wrap{overflow:auto}
     table{width:100%;border-collapse:collapse;min-width:960px}
-    th,td{text-align:left;padding:13px 16px;border-bottom:1px solid var(--line);vertical-align:middle}
-    th{background:#f1ece2;color:#665c52;font-size:.7rem;text-transform:uppercase;letter-spacing:.08em;white-space:nowrap}
-    td{font-size:.84rem}
-    tbody tr:hover{background:#fffaf6}
-    .crew{font-weight:700;color:var(--coffee)}
-    .unit{font-weight:700;color:var(--coffee)}
-    .muted{font-size:.75rem;color:var(--muted);margin-top:3px}
-    .job{display:inline-flex;padding:5px 8px;border-radius:999px;background:#f8eee8;color:var(--terracotta);font-size:.7rem;font-weight:700;white-space:nowrap}
-    .photo-count{color:var(--green);font-weight:700;white-space:nowrap}
-    .source-badge{display:inline-flex;padding:5px 8px;border-radius:999px;font-size:.7rem;font-weight:700;white-space:nowrap}
-    .source-badge.admin{background:#e9eef8;color:#31598c}
-    .source-badge.crew{background:#e9f3e2;color:var(--green)}
-    .gps-link{color:var(--terracotta);font-size:.75rem;font-weight:700;text-decoration:none;white-space:nowrap}
-    .gps-link:hover{text-decoration:underline}
-    .detail-btn{border:0;background:none;color:var(--terracotta);font-size:.78rem;font-weight:700;padding:5px 0}
-    .admin-actions{display:flex;gap:8px;flex-wrap:wrap}
-    .pagination{display:flex;justify-content:center;align-items:center;gap:10px;padding:14px 16px;border-top:1px solid var(--line)}
-    .pagination button{border:1px solid var(--line);background:var(--paper);color:var(--coffee);padding:7px 11px;border-radius:8px;font-size:.78rem;font-weight:700}
-    .pagination button:hover:not(:disabled){border-color:var(--terracotta);color:var(--terracotta)}
+    th,td{text-align:left;padding:12px 16px;border-bottom:1px solid var(--line);vertical-align:middle}
+    th{background:var(--sunken);color:var(--muted);font-size:.76rem;font-weight:600;white-space:nowrap}
+    td{font-size:.86rem}
+    tbody tr:last-child td{border-bottom:0}
+    tbody tr:hover{background:#faf9f7}
+    .crew,.unit{font-weight:700;color:var(--ink)}
+    .job{display:inline-flex;padding:4px 10px;border-radius:999px;background:var(--accent-soft);color:var(--accent);font-size:.74rem;font-weight:700;white-space:nowrap}
+    .photo-count{color:var(--success);font-weight:700;white-space:nowrap}
+    .source-badge{display:inline-flex;padding:4px 10px;border-radius:999px;font-size:.74rem;font-weight:700;white-space:nowrap}
+    .source-badge.admin{background:var(--info-soft);color:var(--info-deep)}
+    .source-badge.crew{background:var(--success-soft);color:var(--success)}
+    .gps-link{color:var(--accent);font-size:.78rem;font-weight:700;text-decoration:none;white-space:nowrap}
+    .gps-link:hover{text-decoration:underline;text-underline-offset:3px}
+    .honor,.honor-chip{font-weight:700;color:var(--warn);white-space:nowrap}
+    .honor-chip{display:inline-flex;padding:4px 10px;border-radius:999px;background:var(--warn-soft);font-size:.76rem}
+    .honor-total{font-weight:700;color:var(--accent);white-space:nowrap}
+    .hadir{color:var(--success);font-weight:700;white-space:nowrap}
+    .absen,.potongan{color:var(--danger);font-weight:700;white-space:nowrap}
+    .bayar{font-weight:800;color:var(--ink);white-space:nowrap;font-variant-numeric:tabular-nums}
+    .empty{padding:48px 20px;text-align:center;color:var(--muted);display:none;font-size:.88rem}
+    .empty strong{display:block;color:var(--ink);font-size:1.02rem;font-weight:700;margin-bottom:4px}
+    .empty-cell{text-align:center;color:var(--muted);padding:28px 16px!important}
+    .pagination{display:flex;justify-content:center;align-items:center;gap:10px;padding:12px 16px;border-top:1px solid var(--line)}
+    .pagination:empty{display:none}
+    .pagination button{min-height:36px;border:1px solid var(--line-strong);background:var(--paper);color:var(--ink);padding:6px 12px;border-radius:8px;font-size:.8rem;font-weight:600}
+    .pagination button:hover:not(:disabled){border-color:var(--ink-2);background:var(--sunken)}
     .pagination button:disabled{cursor:not-allowed;opacity:.45}
-    .pagination span{color:var(--muted);font-size:.78rem;font-weight:700}
+    .pagination span{color:var(--muted);font-size:.8rem;font-weight:600}
+
+    /* ===== Rekap matriks ===== */
     .matrix-table{min-width:760px}
-    .matrix-table th:first-child,.matrix-table td:first-child{position:sticky;left:0;z-index:1;background:var(--paper)}
-    .matrix-table th:first-child{background:#f1ece2}
-    .matrix-table .matrix-label{font-weight:700;color:var(--coffee);white-space:nowrap}
-    .matrix-table .matrix-number{text-align:right;font-weight:700;color:#173b67;white-space:nowrap}
-    .matrix-table .matrix-total td{background:#cfe3bc;font-weight:700}
-    .matrix-table .matrix-total td:first-child{background:#cfe3bc}
-    .matrix-table .matrix-absence td{background:#fffca3}
-    .matrix-table .matrix-absence td:first-child{background:#fffca3}
-    .matrix-table .matrix-paid td{background:#cfe3bc}
-    .matrix-table .matrix-paid td:first-child{background:#cfe3bc}
-    .honor{font-weight:700;color:var(--gold);white-space:nowrap}
-    .honor-chip{display:inline-flex;padding:5px 9px;border-radius:8px;background:#fbf4e0;color:var(--gold);font-size:.74rem;font-weight:700;white-space:nowrap}
-    .honor-total{font-weight:700;color:var(--terracotta);white-space:nowrap}
-    .empty{padding:48px 20px;text-align:center;color:var(--muted);display:none}
-    .empty strong{display:block;color:var(--coffee);font:600 1.15rem Georgia,serif;margin-bottom:6px}
-    .modal{position:fixed;inset:0;background:rgba(34,22,18,.66);display:none;align-items:center;justify-content:center;padding:18px;z-index:10}
+    .matrix-table th:first-child,.matrix-table td:first-child{position:sticky;left:0;z-index:1;background:var(--paper);box-shadow:1px 0 0 var(--line)}
+    .matrix-table th:first-child{background:var(--sunken)}
+    .matrix-table th:not(:first-child){text-align:right}
+    .matrix-table .matrix-label{font-weight:700;color:var(--ink);white-space:nowrap}
+    .matrix-table .matrix-number{text-align:right;font-weight:600;color:var(--ink-2);white-space:nowrap;font-variant-numeric:tabular-nums}
+    .matrix-table .matrix-total td,.matrix-table .matrix-total td:first-child{background:var(--success-soft);font-weight:800;color:var(--success);border-top:2px solid var(--success-line)}
+    .matrix-table .matrix-absence td,.matrix-table .matrix-absence td:first-child{background:var(--warn-soft);color:var(--warn)}
+    .matrix-table .matrix-paid td,.matrix-table .matrix-paid td:first-child{background:var(--success-soft);color:var(--success);font-weight:800}
+
+    /* ===== Modal ===== */
+    .modal{position:fixed;inset:0;background:rgba(36,25,21,.55);backdrop-filter:blur(2px);display:none;align-items:center;justify-content:center;padding:18px;z-index:10}
     .modal.open{display:flex}
-    .modal-card{background:var(--paper);border-radius:14px;width:min(900px,100%);max-height:92vh;overflow:auto;box-shadow:0 24px 70px rgba(0,0,0,.25)}
-    .modal-head{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;padding:20px;border-bottom:1px solid var(--line);position:sticky;top:0;background:rgba(255,255,255,.96);z-index:1}
-    .modal-head h2{font:600 1.45rem Georgia,serif}
-    .close{border:0;background:#f1ece2;color:var(--coffee);width:34px;height:34px;border-radius:50%;font-size:1.25rem;line-height:1}
+    .modal-card{background:var(--paper);border-radius:var(--r-xl);width:min(900px,100%);max-height:92vh;overflow:auto;box-shadow:0 30px 70px -20px rgba(36,25,21,.5)}
+    .modal-head{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;padding:18px 20px;border-bottom:1px solid var(--line);position:sticky;top:0;background:rgba(255,255,255,.96);backdrop-filter:blur(6px);z-index:2}
+    .modal-head h2{font-size:1.25rem;font-weight:800}
+    .close,.task-modal-close{flex:0 0 auto;border:0;background:var(--sunken-2);color:var(--ink);width:36px;height:36px;border-radius:50%;font-size:1.25rem;line-height:1;transition:background .15s}
+    .close:hover,.task-modal-close:hover{background:var(--line)}
     .detail-meta{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:18px 20px 4px}
-    .edit-form{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;padding:20px}
+    .meta-item{background:var(--sunken);border:1px solid var(--line);border-radius:10px;padding:11px 13px}
+    .meta-item.gold{background:var(--warn-soft);border-color:var(--warn-line)}
+    .meta-item input{width:100%;margin-top:6px;border:1px solid var(--line-strong);border-radius:7px;background:var(--paper);color:var(--ink);padding:7px 9px;font:inherit;font-size:.88rem;outline:none;transition:border-color .15s,box-shadow .15s}
+    .meta-item input:hover{border-color:var(--ink-2)}
+    .meta-item input:focus{border-color:var(--brass);box-shadow:var(--ring)}
+    .meta-label{display:block;font-size:.76rem;font-weight:600;color:var(--muted)}
+    .meta-value{display:block;font-weight:700;font-size:.9rem;margin-top:3px}
+    .meta-value.gold{color:var(--warn)}
+    .edit-form{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;padding:20px}
     .edit-form .field{min-width:0}
-    .edit-form .edit-actions{grid-column:1 / -1;display:flex;justify-content:flex-end;gap:8px;padding-top:4px}
-    .meta-item{background:#faf7f2;border-radius:9px;padding:11px}
-    .meta-item.gold{background:#fbf4e0}
-    .meta-label{display:block;font-size:.68rem;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
-    .meta-value{display:block;font-weight:700;font-size:.86rem;margin-top:4px}
-    .meta-value.gold{color:var(--gold)}
-    .photo-section{padding:16px 20px 22px}
-    .photo-section h3{font:700 1rem Georgia,serif;margin-bottom:10px}
+    .edit-form .edit-actions{grid-column:1 / -1;display:flex;justify-content:flex-end;gap:8px;padding-top:12px;border-top:1px solid var(--line)}
+    .photo-section{padding:16px 20px 20px}
+    .photo-section h3{font-size:.95rem;font-weight:700;margin-bottom:10px}
+    .photo-section .field{margin-bottom:4px}
+    .photo-section .admin-actions{margin-top:12px}
     .photo-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:9px}
-    .photo-grid button{border:0;background:none;padding:0;aspect-ratio:1;overflow:hidden;border-radius:9px}
-    .photo-grid img{width:100%;height:100%;object-fit:cover;display:block}
+    .photo-grid button{border:1px solid var(--line);background:var(--sunken);padding:0;aspect-ratio:1;overflow:hidden;border-radius:10px}
+    .photo-grid img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .2s}
     .photo-grid button:hover img{transform:scale(1.04)}
-    .no-photo{color:var(--muted);font-size:.82rem;padding:18px;background:#faf7f2;border-radius:9px}
-    .lightbox{position:fixed;inset:0;background:rgba(0,0,0,.88);display:none;place-items:center;z-index:20;padding:18px}
+    .no-photo,.no-recap{color:var(--muted);font-size:.84rem;padding:18px;background:var(--sunken);border:1px dashed var(--line-strong);border-radius:10px;text-align:center;grid-column:1/-1}
+    .lightbox{position:fixed;inset:0;background:rgba(20,14,12,.9);display:none;place-items:center;z-index:20;padding:18px}
     .lightbox.open{display:grid}
-    .lightbox img{max-width:94vw;max-height:88vh;object-fit:contain;border-radius:8px}
-    .lightbox button{position:absolute;top:20px;right:22px;border:0;background:#fff;color:#222;width:38px;height:38px;border-radius:50%;font-size:1.4rem}
-    .hint{color:var(--muted);font-size:.76rem;margin-top:10px}
-    .hadir{color:var(--green);font-weight:700;white-space:nowrap}
-    .absen{color:var(--danger);font-weight:700;white-space:nowrap}
-    .potongan{color:var(--danger);font-weight:700;white-space:nowrap}
-    .bayar{font-weight:700;color:var(--terracotta);white-space:nowrap}
-    .slip-period{font-weight:700;color:var(--coffee);font-size:.86rem}
+    .lightbox img{max-width:94vw;max-height:88vh;object-fit:contain;border-radius:10px}
+    .lightbox button{position:absolute;top:20px;right:22px;border:0;background:#fff;color:var(--ink);width:40px;height:40px;border-radius:50%;font-size:1.4rem}
+
+    /* ===== Slip gaji ===== */
     .slip-calendar{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;padding:18px 20px 4px}
-    .cal-day{aspect-ratio:1;border-radius:9px;display:flex;flex-direction:column;justify-content:center;align-items:center;font-size:.7rem;border:1px solid var(--line);min-height:62px}
-    .cal-day.worked{background:#e9f3e2;color:var(--green);border-color:#cfe2c4}
-    .cal-day.absent{background:#fbeae8;color:var(--danger);border-color:#f3d4cf}
-    .cal-day.future{background:#f5f1e9;color:var(--muted);border-color:var(--line);opacity:.6}
-    .cal-num{font-weight:700;font-size:.95rem}
-    .cal-label{font-size:.62rem;margin-top:3px;text-transform:uppercase;letter-spacing:.04em}
-    .legend{display:flex;gap:14px;flex-wrap:wrap;padding:0 20px 18px;font-size:.74rem;color:var(--muted)}
+    .photo-section .slip-calendar{padding:0}
+    .slip-calendar .cal-day{aspect-ratio:1;border-radius:9px;display:flex;flex-direction:column;justify-content:center;align-items:center;font-size:.7rem;border:1px solid var(--line);min-height:58px;background:var(--paper)}
+    .slip-calendar .cal-day.worked{background:var(--success-soft);color:var(--success);border-color:var(--success-line)}
+    .slip-calendar .cal-day.absent{background:var(--danger-soft);color:var(--danger);border-color:var(--danger-line)}
+    .slip-calendar .cal-day.future{background:var(--sunken);color:var(--muted);border-color:var(--line);opacity:.6}
+    .cal-num{font-weight:800;font-size:.95rem}
+    .cal-label{font-size:.62rem;margin-top:2px;font-weight:600;text-align:center;line-height:1.2}
+    .legend{display:flex;gap:16px;flex-wrap:wrap;padding:0 20px 18px;font-size:.76rem;color:var(--muted)}
     .legend span{display:inline-flex;align-items:center;gap:6px}
-    .legend i{width:11px;height:11px;border-radius:3px;display:inline-block}
+    .legend i,.cal-legend i{width:11px;height:11px;border-radius:3px;display:inline-block;flex:0 0 auto}
     .recap-section{padding:8px 20px 8px}
     .recap-head{display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin-bottom:10px;flex-wrap:wrap}
-    .recap-head h3{font:700 1rem Georgia,serif}
-    .recap-summary{font-size:.78rem;color:var(--muted)}
-    .recap-summary strong{color:var(--terracotta)}
+    .recap-head h3{font-size:.95rem;font-weight:700}
+    .recap-summary{font-size:.8rem;color:var(--muted)}
+    .recap-summary strong{color:var(--ink)}
     .recap-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px}
-    .recap-item{background:#faf7f2;border:1px solid var(--line);border-radius:9px;padding:12px;display:flex;flex-direction:column;gap:4px}
-    .recap-name{font-weight:700;color:var(--coffee);font-size:.86rem;line-height:1.3}
+    .recap-item{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:12px 14px;display:flex;flex-direction:column;gap:5px}
+    .recap-name{font-weight:700;color:var(--ink);font-size:.88rem;line-height:1.3}
     .recap-stats{font-size:.74rem;color:var(--muted)}
-    .recap-stats .chip{display:inline-flex;padding:2px 7px;border-radius:999px;background:#fff;margin-right:4px;font-weight:700}
-    .recap-stats .chip.days{background:#e9f3e2;color:var(--green)}
-    .recap-stats .chip.visits{background:#f8eee8;color:var(--terracotta)}
-    .recap-honor{font-weight:700;color:var(--gold);font-size:.95rem;margin-top:6px;font-family:Georgia,serif}
-    .recap-total{grid-column:1 / -1;background:#fbf4e0;border-color:#ecdfb8;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-top:6px}
-    .recap-total-label{font-size:.74rem;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;font-weight:700}
-    .recap-total-value{font-weight:700;color:var(--terracotta);font-size:1.45rem;font-family:Georgia,serif}
-    .no-recap{color:var(--muted);font-size:.82rem;padding:18px;background:#faf7f2;border-radius:9px;text-align:center}
+    .recap-stats .chip{display:inline-flex;padding:2px 8px;border-radius:999px;background:var(--sunken);margin-right:4px;font-weight:700}
+    .recap-stats .chip.days{background:var(--success-soft);color:var(--success)}
+    .recap-stats .chip.visits{background:var(--accent-soft);color:var(--accent)}
+    .recap-honor{font-weight:800;color:var(--warn);font-size:1rem;margin-top:4px;font-variant-numeric:tabular-nums}
+    .recap-total{grid-column:1 / -1;background:var(--ink);border:1px solid var(--ink);border-radius:12px;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-top:4px}
+    .recap-total-label{font-size:.8rem;color:#cdbfb6;font-weight:600}
+    .recap-total-value{font-weight:800;color:#f3d9a8;font-size:1.45rem;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+
+    /* ===== Kelola crew ===== */
     .pin-panel-body{padding:18px 20px 20px}
+    .pin-panel-body .hint{margin:0 0 14px}
+    .pin-panel-body .table-wrap{margin-top:14px;border:1px solid var(--line);border-radius:10px}
     .pin-form{display:grid;grid-template-columns:1.2fr 1fr 1fr auto;gap:10px;align-items:end}
-    .crew-management-form{display:grid;grid-template-columns:1.2fr 1fr 1fr auto auto;gap:10px;align-items:end}
-    .crew-status{display:inline-flex;padding:4px 9px;border-radius:999px;font-size:.72rem;font-weight:700}
-    .crew-status.active{background:#e9f3e2;color:var(--green)}
-    .crew-status.inactive{background:#f3eee8;color:var(--muted)}
-    .pin-message{min-height:1.2em;margin-top:12px;font-size:.8rem;font-weight:700}
-    .pin-message.success{color:var(--green)}
-    .pin-message.error{color:var(--danger)}
-    .hidden{display:none!important}
-    .admin-gate{min-height:100vh;display:grid;place-items:center;padding:24px;background:var(--cream)}
-    .admin-gate-card{width:min(420px,100%);background:var(--paper);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:24px;text-align:center}.admin-gate-logo{display:block;width:min(240px,100%);height:72px;object-fit:contain;margin:0 auto 14px}
-    .admin-gate-card h1{margin-bottom:8px}
-    .admin-gate-form{display:grid;gap:12px;margin-top:20px}
-    .admin-gate-message{min-height:1.2em;font-size:.8rem;font-weight:700;color:var(--danger)}
+    .crew-management-form{display:grid;grid-template-columns:1.2fr 1fr 1fr auto auto;gap:12px;align-items:end}
+    .crew-status{display:inline-flex;padding:4px 10px;border-radius:999px;font-size:.74rem;font-weight:700}
+    .crew-status.active{background:var(--success-soft);color:var(--success)}
+    .crew-status.inactive{background:var(--sunken-2);color:var(--muted)}
+    .pin-message{min-height:1.2em;margin-top:12px;font-size:.82rem;font-weight:600}
+    .pin-message:empty{display:none}
+    .pin-message:not(:empty){padding:9px 12px;border-radius:var(--r);background:var(--sunken)}
+    .pin-message.success{color:var(--success);background:var(--success-soft)}
+    .pin-message.error{color:var(--danger);background:var(--danger-soft)}
+
+    /* ===== Login ===== */
+    .admin-gate{min-height:100vh;display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);background:var(--bg)}
+    .gate-aside{position:relative;overflow:hidden;background:var(--ink);color:#fff;padding:48px 56px;display:flex;flex-direction:column;justify-content:space-between}
+    .gate-aside::before{content:"";position:absolute;left:-120px;bottom:-140px;width:460px;height:460px;border-radius:50%;border:64px solid rgba(181,131,47,.14)}
+    .gate-aside::after{content:"";position:absolute;right:48px;top:48px;width:120px;height:120px;border-radius:50%;border:1px solid rgba(255,255,255,.12)}
+    .gate-aside>*{position:relative;z-index:1}
+    .gate-aside-brand{font-weight:800;letter-spacing:.02em}
+    .gate-aside h2{font-size:clamp(1.7rem,2.6vw,2.4rem);font-weight:800;line-height:1.15;letter-spacing:-.025em;max-width:16ch}
+    .gate-aside p{color:#cdbfb6;max-width:42ch;margin-top:14px;font-size:.95rem}
+    .gate-aside small{color:#9d8e85;font-size:.78rem}
+    .gate-main{display:grid;place-items:center;padding:32px 20px}
+    .admin-gate-card{width:min(410px,100%);background:var(--paper);border:1px solid var(--line);border-radius:var(--r-xl);box-shadow:var(--shadow);padding:30px}
+    .admin-gate-logo{display:block;width:min(200px,100%);height:60px;object-fit:contain;object-position:left center;margin:0 0 22px}
+    .admin-gate-card h1{font-size:1.45rem;font-weight:800;color:var(--ink)}
+    .admin-gate-sub{margin:6px 0 24px;color:var(--muted);font-size:.86rem}
+    .admin-gate-form{display:grid;gap:16px}
+    .admin-gate-form label{display:flex;flex-direction:column;gap:6px}
+    .admin-gate-form .meta-label{color:var(--ink-2);font-size:.8rem;font-weight:600}
+    .admin-gate-form input,.admin-gate-form select{width:100%;min-height:42px;border:1px solid var(--line-strong);border-radius:var(--r);padding:10px 12px;font-size:.9rem;color:var(--ink);background-color:#fff;outline:none}
+    .admin-gate-form input:focus,.admin-gate-form select:focus{border-color:var(--brass);box-shadow:var(--ring)}
+    .admin-gate-submit{width:100%;min-height:44px;margin-top:4px;border:1px solid var(--accent);background:var(--accent);color:#fff;border-radius:var(--r);padding:11px;font-weight:700;font-size:.9rem}
+    .admin-gate-submit:hover{background:var(--accent-hover);border-color:var(--accent-hover)}
+    .admin-gate-submit:disabled{opacity:.6;cursor:wait}
+    .admin-gate-message{min-height:0;font-size:.82rem;font-weight:600;color:var(--danger)}
+    .admin-gate-message:not(:empty){padding:9px 12px;border-radius:var(--r);background:var(--danger-soft)}
+    .admin-gate-note{text-align:center;color:var(--muted);font-size:.76rem}
     .password-input-wrap{position:relative;display:block}
     .password-input-wrap input{padding-right:46px}
-    .password-toggle{position:absolute;right:8px;top:50%;transform:translateY(-50%);border:0;background:transparent;color:var(--muted);padding:6px;font-size:1rem;line-height:1}
-    .site-footer{border-top:1px solid var(--line);margin-top:28px;padding:18px 4px 0;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;color:var(--muted);font-size:.74rem}
-    .site-footer strong{color:var(--coffee);font-family:Georgia,serif;font-size:.86rem}
-    .site-footer-meta{display:flex;gap:10px;flex-wrap:wrap}
-    @media(max-width:520px){.site-footer{align-items:flex-start;flex-direction:column;gap:6px}.crew-management-form{grid-template-columns:1fr 1fr}.crew-management-form .field:first-of-type{grid-column:1/-1}}
-    @media(max-width:850px){.brand-mark{width:150px;height:150px}h1{font-size:1.45rem}.summary{grid-template-columns:repeat(2,1fr)}.filters{grid-template-columns:repeat(2,1fr)}.filter-actions{align-items:stretch}.filter-actions .button{width:100%}.detail-meta{grid-template-columns:1fr 1fr}.photo-grid{grid-template-columns:repeat(3,1fr)}}
-    @media(max-width:520px){.page{padding:20px 12px 40px}.topbar{align-items:flex-start;flex-direction:column}.brand{align-items:center;gap:10px}.brand-mark{width:96px;height:96px}h1{font-size:1.2rem}.subtitle{font-size:.78rem}.top-actions{justify-content:flex-start}.summary{gap:8px}.stat{padding:13px}.stat-value{font-size:1.45rem}.filters{grid-template-columns:1fr}.records-head{padding:15px}.detail-meta{grid-template-columns:1fr}.edit-form{grid-template-columns:1fr}.edit-form .edit-actions{grid-column:auto}.photo-grid{grid-template-columns:repeat(2,1fr)}.recap-grid{grid-template-columns:1fr}.pin-form{grid-template-columns:1fr}.pin-form .button{width:100%}}
-    /* Pintu login — nuansa cokelat YOUR HOME */
-    .admin-gate{background:var(--cream)}
-    .admin-gate-card{width:min(440px,100%);background:var(--paper);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);padding:28px;text-align:left}
-    .admin-gate-logo{width:min(200px,100%);height:64px;margin:0 auto 18px}
-    .admin-gate-eyebrow{margin:0;color:var(--terracotta);font-size:.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase}
-    .admin-gate-card h1{margin:8px 0 4px;font:800 1.5rem Arial,sans-serif;color:var(--coffee)}
-    .admin-gate-sub{margin:0 0 20px;color:var(--muted);font-size:.85rem}
-    .admin-gate-form{display:grid;gap:14px}
-    .admin-gate-form .meta-label{display:block;margin-bottom:6px;color:var(--coffee-soft);font-size:.78rem;font-weight:600;text-transform:none;letter-spacing:0}
-    .admin-gate-form input,.admin-gate-form select{width:100%;border:1px solid var(--line);border-radius:8px;padding:10px 12px;font-size:.875rem;color:var(--coffee);background:#fff}
-    .admin-gate-form input:focus,.admin-gate-form select:focus{border-color:var(--terracotta);box-shadow:0 0 0 3px rgba(160,82,45,.15)}
-    .admin-gate-submit{width:100%;border:1px solid var(--terracotta);background:var(--terracotta);color:#fff;border-radius:8px;padding:11px;font-weight:700;font-size:.875rem;cursor:pointer}
-    .admin-gate-submit:hover{background:var(--coffee-soft);border-color:var(--coffee-soft)}
-    .admin-gate-submit:disabled{opacity:.6;cursor:wait}
-    .admin-gate-note{margin:0;text-align:center;color:var(--muted);font-size:.72rem}
+    .password-toggle{position:absolute;right:6px;top:50%;transform:translateY(-50%);border:0;background:transparent;color:var(--muted);padding:6px 8px;border-radius:6px;font-size:1rem;line-height:1}
+    .password-toggle:hover{background:var(--sunken);color:var(--ink)}
+
+    /* ===== Penugasan: kalender tugas ===== */
+    .cal-head{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:16px 20px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+    .cal-title{font-size:1.05rem;font-weight:700}
+    .cal-nav{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+    .cal-nav .button{min-height:36px;padding:6px 12px}
+    .cal-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px;padding:14px 20px 6px}
+    .cal-dow{text-align:center;font-size:.74rem;font-weight:600;color:var(--muted);padding:3px 0}
+    .cal-grid .cal-day{min-height:70px;border:1px solid var(--line);border-radius:9px;background:var(--paper);padding:7px;display:flex;flex-direction:column;gap:3px;align-items:flex-start;text-align:left;transition:border-color .15s,background .15s}
+    .cal-grid .cal-day:hover{border-color:var(--ink-2)}
+    .cal-grid .cal-day.is-empty{visibility:hidden}
+    .cal-grid .cal-day.is-today{border-color:var(--brass);box-shadow:inset 0 0 0 1px var(--brass)}
+    .cal-grid .cal-day.is-today .cal-day-num{background:var(--ink);color:#fff;border-radius:999px;padding:0 7px}
+    .cal-grid .cal-day.is-selected{background:var(--accent-soft);border-color:var(--accent)}
+    .cal-day-num{font-weight:700;font-size:.8rem;color:var(--ink)}
+    .cal-badge{font-size:.64rem;font-weight:700;border-radius:999px;padding:2px 7px}
+    .cal-badge.pending{background:var(--warn-soft);color:var(--warn)}
+    .cal-badge.done{background:var(--success-soft);color:var(--success)}
+    .cal-crews{font-size:.62rem;color:var(--muted);line-height:1.25;word-break:break-word}
+    .cal-chips{display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding:4px 20px 10px;font-size:.76rem;color:var(--muted)}
+    .cal-chips:empty{display:none}
+    .cal-chips strong{color:var(--ink-2);margin-right:2px}
+    .booking-summary{width:100%;border:1px solid var(--info-line);border-radius:10px;background:var(--info-soft)}
+    .booking-summary summary{display:flex;align-items:center;gap:8px;padding:9px 12px;color:var(--info-deep);font-weight:700;cursor:pointer;list-style:none}
+    .booking-summary summary::-webkit-details-marker{display:none}
+    .booking-summary summary::before{content:'+';display:grid;place-items:center;width:18px;height:18px;border-radius:50%;background:var(--info);color:#fff;font-size:.85rem;line-height:1}
+    .booking-summary[open] summary::before{content:'−'}
+    .booking-list{display:flex;flex-wrap:wrap;gap:7px;padding:0 12px 12px}
+    .chip-crew{display:inline-flex;gap:6px;align-items:center;background:var(--sunken-2);color:var(--ink);border-radius:999px;padding:5px 10px;font-size:.74rem;font-weight:700}
+    .chip-crew span{font-weight:500;color:var(--muted)}
+    .chip-booking{display:inline-flex;gap:6px;align-items:center;background:#fff;border:1px solid var(--info-line);color:var(--info-deep);border-radius:999px;padding:5px 10px;font-size:.74rem;font-weight:700}
+    .chip-booking span{font-weight:500;color:#4a63a8}
+    .cal-legend{display:flex;gap:6px 16px;flex-wrap:wrap;padding:10px 20px 16px;font-size:.76rem;color:var(--muted);border-top:1px solid var(--line)}
+    .cal-legend span{display:inline-flex;align-items:center;gap:6px}
+    .cal-legend i{margin-right:0}
+
+    /* ===== Kalender properti ===== */
+    .prop-wrap{overflow:auto;max-height:420px;padding:10px 20px 10px}
+    table.prop-table{border-collapse:separate;border-spacing:3px;min-width:100%}
+    .prop-table th{position:sticky;top:0;background:var(--paper);z-index:1;font-size:.68rem;font-weight:600;color:var(--muted);text-align:center;padding:4px 2px;white-space:nowrap;border:0}
+    .prop-table th.is-weekend{color:var(--accent);font-weight:800}
+    .prop-table td{padding:0;border:0}
+    .prop-table tbody tr:hover{background:transparent}
+    .prop-table td.prop-name{position:sticky;left:0;background:var(--paper);z-index:2;text-align:left;font-size:.76rem;font-weight:700;color:var(--ink);white-space:nowrap;max-width:190px;overflow:hidden;text-overflow:ellipsis;padding:0 10px 0 0}
+    .prop-name-short{display:none}
+    .prop-cell{width:27px;height:27px;border:1px solid var(--line);border-radius:6px;background:var(--paper);color:var(--muted);font-size:.62rem;font-weight:700;padding:0;transition:border-color .12s}
+    .prop-cell:hover{border-color:var(--ink-2)}
+    .prop-cell.has-task{background:var(--warn-soft);border-color:var(--warn-line);color:var(--warn)}
+    .prop-cell.all-done{background:var(--success-soft);border-color:var(--success-line);color:var(--success)}
+    .prop-cell.has-booking{background:var(--info);border-color:var(--info-deep);color:#fff}
+    .prop-cell.has-booking.has-task,.prop-cell.has-booking.all-done{background:var(--info);border-color:var(--info-deep);color:#fff;background-image:linear-gradient(90deg,#f0b43c 0 4px,transparent 4px)}
+    .prop-cell.is-today{box-shadow:0 0 0 2px var(--brass)}
+    .prop-cell.is-selected{outline:2px solid var(--ink);outline-offset:-1px}
+
+    /* ===== Modal tugas ===== */
+    .task-modal{position:fixed;inset:0;background:rgba(36,25,21,.55);backdrop-filter:blur(2px);display:grid;place-items:center;padding:20px;z-index:60;overflow:auto}
+    .task-modal.hidden{display:none}
+    .task-modal-card{width:min(760px,100%);max-height:92vh;overflow:auto;background:var(--paper);border-radius:var(--r-xl);box-shadow:0 30px 70px -20px rgba(36,25,21,.5)}
+    .task-modal-head{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;padding:18px 20px;border-bottom:1px solid var(--line);position:sticky;top:0;background:rgba(255,255,255,.96);backdrop-filter:blur(6px);z-index:2}
+    .task-modal-head h2{font-size:1.2rem;font-weight:800}
+    .task-modal-body{padding:20px}
+    .task-form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+    .task-form fieldset{border:0;margin:0;padding:0}
+    .task-form legend{padding:0;margin-bottom:6px}
+    .task-form .meta-label{font-size:.8rem;font-weight:600;color:var(--ink-2)}
+    .task-form .field.wide{grid-column:1/-1}
+    .crew-checklist{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;border:1px solid var(--line);border-radius:10px;padding:10px;background:var(--sunken);max-height:190px;overflow:auto}
+    .crew-choice{display:flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--paper);font-size:.82rem;font-weight:600;color:var(--ink);cursor:pointer;transition:border-color .12s,background .12s}
+    .crew-choice:hover{border-color:var(--ink-2)}
+    .crew-choice:has(input:checked){border-color:var(--accent);background:var(--accent-soft)}
+    .crew-choice:has(input:disabled){opacity:.5;cursor:not-allowed}
+    .crew-choice input{width:16px;height:16px;accent-color:var(--accent);margin:0}
+    .task-actions{grid-column:1/-1;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;border-top:1px solid var(--line);padding-top:14px}
+    .task-actions>div{display:flex;gap:8px}
+    .task-message{min-height:1.1em;font-size:.82rem;font-weight:600;color:var(--warn)}
+    .task-message.error{color:var(--danger)}
+    .task-message.success{color:var(--success)}
+    .task-notice:empty{display:none}
+    .task-notice:not(:empty){padding:10px 14px;border-radius:var(--r);background:var(--warn-soft)}
+    .task-notice.success{background:var(--success-soft)}
+    .task-notice.error{background:var(--danger-soft)}
+
+    /* ===== Footer ===== */
+    .site-footer{border-top:1px solid var(--line);margin-top:28px;padding:18px 4px 0;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;color:var(--muted);font-size:.78rem}
+    .site-footer strong{color:var(--ink);font-size:.86rem;font-weight:700}
+    .site-footer-meta{display:flex;gap:14px;flex-wrap:wrap}
+
+    /* ===== Responsif ===== */
+    @media(max-width:1100px){.filters{grid-template-columns:repeat(3,minmax(0,1fr))}.crew-management-form{grid-template-columns:1fr 1fr 1fr}.crew-management-form .button{width:100%}}
+    @media(max-width:900px){.admin-gate{grid-template-columns:1fr}.gate-aside{display:none}.detail-meta{grid-template-columns:1fr 1fr}.photo-grid{grid-template-columns:repeat(3,1fr)}}
+    @media(max-width:760px){
+      .page{padding:12px 12px 40px}
+      .topbar{padding:12px;border-radius:var(--r-lg)}
+      .topbar::after{display:none}
+      .brand{gap:12px}
+      .brand-mark{height:44px;max-width:110px;padding:5px 8px}
+      .topbar h1{font-size:1.08rem}
+      .topbar .subtitle{display:none}
+      .top-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
+      .top-actions .button{width:100%;padding:10px 8px;white-space:normal}
+      .view-btn{padding:10px 8px;font-size:.8rem}
+      .summary{grid-template-columns:repeat(2,1fr);gap:9px}
+      .summary .stat-wide{grid-column:1/-1}
+      .stat{padding:13px 14px}
+      .stat-value{font-size:1.4rem}
+      .stat-value.small{font-size:1.15rem}
+      .filters,.filters.filters-assign{grid-template-columns:1fr 1fr;padding:12px}
+      .filters .field:first-of-type,.filters .filter-actions{grid-column:1/-1}
+      .records-head{padding:14px;flex-wrap:wrap}
+      .table-wrap{overflow:visible}
+      table.mobile-cards{min-width:0}
+      table.mobile-cards thead{display:none}
+      table.mobile-cards tbody tr{display:grid;grid-template-columns:1fr 1fr;border:1px solid var(--line);border-radius:12px;margin:10px 12px;padding:6px 0;background:var(--paper);box-shadow:0 1px 2px rgba(36,25,21,.05);overflow:hidden}
+      table.mobile-cards tbody tr:hover{background:var(--paper)}
+      table.mobile-cards tbody tr:last-child td{border-bottom:0}
+      table.mobile-cards tbody td{display:block;min-width:0;padding:8px 12px;border-bottom:0;font-size:.84rem;text-align:left;word-break:break-word}
+      table.mobile-cards tbody td::before{content:attr(data-label);display:block;margin-bottom:2px;font-size:.7rem;font-weight:600;color:var(--muted)}
+      table.mobile-cards tbody td[data-label="Aksi"],table.mobile-cards tbody td[data-label="Catatan"]{grid-column:1/-1;margin-top:2px;border-top:1px dashed var(--line)}
+      table.mobile-cards tbody td>div{min-width:0}
+      table.mobile-cards tbody td>.actions,table.mobile-cards tbody td>.admin-actions{flex-wrap:wrap}
+      table.mobile-cards tbody tr.empty-row,table.mobile-cards tbody td.empty-cell{display:block}
+      table.mobile-cards tbody td.empty-cell{grid-column:1/-1;text-align:center;padding:18px 12px}
+      table.mobile-cards tbody td.empty-cell::before{content:none}
+      .matrix-table{min-width:620px}
+      .matrix-table th,.matrix-table td{padding:8px 10px;font-size:.76rem}
+      #monthlyMatrixPanel .table-wrap{overflow:auto}
+      .prop-wrap{max-height:none;padding:10px 12px}
+      table.prop-table td.prop-name{max-width:56px;font-size:.72rem;text-align:center;padding:0}
+      .prop-name-full{display:none}
+      .prop-name-short{display:inline}
+      .prop-table th{font-size:.62rem}
+      .prop-cell{width:25px;height:25px;font-size:.58rem}
+      .cal-head{padding:14px;gap:8px}
+      .cal-grid{padding:10px 12px 4px;gap:4px}
+      .cal-grid .cal-day{min-height:54px;padding:4px;border-radius:7px;gap:2px}
+      .cal-day-num{font-size:.74rem}
+      .cal-badge{font-size:.56rem;padding:1px 5px}
+      .cal-crews{font-size:.56rem}
+      .cal-chips{padding:4px 12px 8px}
+      .cal-legend{padding:10px 12px 14px}
+      .slip-calendar{gap:4px}
+      .slip-calendar .cal-day{min-height:44px}
+      .cal-label{font-size:.54rem}
+      .recap-section{padding:6px 14px}
+      .recap-total{padding:12px}
+      .recap-total-value{font-size:1.2rem}
+      .pin-panel-body{padding:14px}
+      .pin-panel-body .table-wrap{border:0}
+      .crew-management-form{grid-template-columns:1fr 1fr}
+      .crew-management-form .field:first-of-type{grid-column:1/-1}
+      .crew-management-form .button{width:100%}
+      #pinManagementPanel .table-wrap{padding:0}
+      #pinManagementPanel table.mobile-cards tbody{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+      #pinManagementPanel table.mobile-cards tbody tr{margin:0;grid-template-columns:1fr;padding:6px 2px}
+      #pinManagementPanel table.mobile-cards tbody tr.empty-row{grid-column:1/-1}
+      #pinManagementPanel table.mobile-cards tbody td{grid-column:1/-1;padding:6px 10px}
+      #pinManagementPanel table.mobile-cards tbody td>.actions{display:flex;gap:6px;flex-wrap:wrap}
+      #pinManagementPanel table.mobile-cards tbody td>.actions .button{flex:1 1 auto;min-height:34px;padding:6px 9px;font-size:.74rem}
+      .modal,.task-modal{padding:10px}
+      .modal-card{max-height:94vh}
+      .modal-head,.task-modal-head{padding:14px;flex-wrap:wrap}
+      .modal-head h2{font-size:1.1rem}
+      .detail-meta{padding:14px 14px 0;gap:8px}
+      .photo-section{padding:14px}
+      .legend{padding:0 14px 14px}
+      .edit-form{grid-template-columns:1fr;padding:14px}
+      .task-modal-body{padding:14px}
+      .task-form{grid-template-columns:1fr}
+      .task-form .crew-checklist{max-height:220px;gap:6px;padding:8px}
+      .task-form .crew-choice{padding:7px 8px;font-size:.78rem}
+    }
+    @media(max-width:520px){
+      .detail-meta{grid-template-columns:1fr}
+      .photo-grid{grid-template-columns:repeat(2,1fr)}
+      .recap-grid{grid-template-columns:1fr}
+      .task-form .crew-checklist{grid-template-columns:1fr}
+      #pinManagementPanel table.mobile-cards tbody td{font-size:.78rem;padding:5px 8px}
+      table.mobile-cards tbody td{padding:7px 11px;font-size:.8rem}
+      .cal-crews{display:none}
+      .site-footer{align-items:flex-start;flex-direction:column;gap:6px}
+    }
+    @media(prefers-reduced-motion:reduce){*{transition:none!important}}
   </style>
 </head>
 <body>
   <section id="adminLoginScreen" class="admin-gate">
-    <div class="admin-gate-card">
-      <img id="dashboardLoginLogo" class="admin-gate-logo" src="https://ik.imagekit.io/o1hnx31yy/yh%20(2).png?tr=f-jpg" alt="YOUR HOME" />
-      <p class="admin-gate-eyebrow">YOUR HOME · CHECK IN CREW</p>
-      <h1>Check In Crew Dashboard</h1>
-      <p class="admin-gate-sub">Pilih akun dan masukkan password untuk membuka dashboard.</p>
-      <form id="adminLoginForm" class="admin-gate-form">
-        <label for="adminAccountSelect"><span class="meta-label">ID Akun</span><select id="adminAccountSelect" autocomplete="username" required><option value="">Pilih akun</option></select></label>
-        <label for="adminPasswordInput"><span class="meta-label">Password</span><span class="password-input-wrap"><input id="adminPasswordInput" type="password" autocomplete="current-password" required /><button id="toggleAdminPassword" class="password-toggle" type="button" aria-label="Tampilkan password" title="Tampilkan password">&#128065;</button></span></label>
-        <button class="admin-gate-submit" type="submit">Masuk</button>
-        <p id="adminLoginMessage" class="admin-gate-message" role="alert" aria-live="polite"></p>
-        <p class="admin-gate-note">Sesi berlaku 1 hari atau sampai logout.</p>
-      </form>
+    <aside class="gate-aside" aria-hidden="true">
+      <div class="gate-aside-brand">YOUR HOME</div>
+      <div>
+        <h2>Absensi, honor, dan tugas crew dalam satu layar.</h2>
+        <p>Pantau check-in lapangan, hitung honor bulanan, dan bagi tugas ke crew berdasarkan kalender properti.</p>
+      </div>
+      <small>Panel khusus staf YOUR HOME</small>
+    </aside>
+    <div class="gate-main">
+      <div class="admin-gate-card">
+        <img id="dashboardLoginLogo" class="admin-gate-logo" src="https://ik.imagekit.io/o1hnx31yy/yh%20(2).png?tr=f-jpg" alt="YOUR HOME" />
+        <h1>Check In Crew Dashboard</h1>
+        <p class="admin-gate-sub">Pilih akun dan masukkan password untuk membuka dashboard.</p>
+        <form id="adminLoginForm" class="admin-gate-form">
+          <label for="adminAccountSelect"><span class="meta-label">ID Akun</span><select id="adminAccountSelect" autocomplete="username" required><option value="">Pilih akun</option></select></label>
+          <label for="adminPasswordInput"><span class="meta-label">Password</span><span class="password-input-wrap"><input id="adminPasswordInput" type="password" autocomplete="current-password" required /><button id="toggleAdminPassword" class="password-toggle" type="button" aria-label="Tampilkan password" title="Tampilkan password">&#128065;</button></span></label>
+          <button class="admin-gate-submit" type="submit">Masuk</button>
+          <p id="adminLoginMessage" class="admin-gate-message" role="alert" aria-live="polite"></p>
+          <p class="admin-gate-note">Sesi berlaku 1 hari atau sampai logout.</p>
+        </form>
+      </div>
     </div>
   </section>
 
@@ -199,24 +466,35 @@
     <header class="topbar">
       <div class="brand">
         <img id="dashboardHeaderLogo" class="brand-mark" src="https://ik.imagekit.io/o1hnx31yy/yh%20(2).png?updatedAt=1790230701085" alt="YOUR HOME" />
-        <div><h1>Check In Crew Dashboard</h1></div>
+        <div><h1>Check In Crew Dashboard</h1><p class="subtitle">Absensi, honor, dan penugasan crew lapangan</p></div>
       </div>
-      <div class="top-actions">
-        <a class="button" href="check-in-crew.html">Lihat ke Check In Crew</a>
-        <button class="button" id="exportPdfBtn" type="button">Download PDF</button>
-        <button class="button primary" id="exportExcelBtn" type="button">Download Excel</button>
-        <button class="button" id="manualEntryBtn" type="button">Tambah Data Manual</button>
-        <button class="button danger" id="adminLogoutBtn" type="button">Logout</button>
-        <button class="button" id="deleteAllBtn" type="button">Hapus Semua Data</button>
-      </div>
+      <button class="signout-btn" id="adminLogoutBtn" type="button" aria-label="Sign out" title="Sign out">
+        <svg width="19" height="19" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><path d="M10 17l5-5-5-5"/><path d="M15 12H3"/></svg>
+      </button>
     </header>
+
+    <div class="top-actions">
+      <button class="button" id="exportPdfBtn" type="button">Download PDF</button>
+      <button class="button" id="exportExcelBtn" type="button">Download Excel</button>
+      <button class="button primary" id="manualEntryBtn" type="button">+ Tambah Data Manual</button>
+      <button class="button danger" id="deleteAllBtn" type="button">Hapus Semua Data</button>
+    </div>
+
+    <nav class="view-switch" role="tablist" aria-label="Pilih tampilan dashboard">
+      <button class="view-btn active" id="viewAbsensiBtn" type="button" role="tab" aria-selected="true" aria-controls="viewAbsensi"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><path d="M9 5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v1H9z"/><path d="m9 14 2 2 4-4"/></svg><span>Absensi &amp; Honor Crew</span></button>
+      <button class="view-btn" id="viewPenugasanBtn" type="button" role="tab" aria-selected="false" aria-controls="viewPenugasan"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3v4m8-4v4M4 9h16"/><rect x="4" y="5" width="16" height="16" rx="2"/><path d="M9 14h2m3 0h1M9 17h1m3 0h2"/></svg><span>Penugasan &amp; Kalender</span></button>
+      <button class="view-btn" id="viewLaporBugBtn" type="button" role="tab" aria-selected="false" aria-controls="viewLaporBug"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="6" width="8" height="14" rx="4"/><path d="M9 12H4M20 12h-5M12 6V3M9 3l1.5 3M15 3l-1.5 3M5 15l3-1M19 15l-3-1M5 9l3 1M19 9l-3 1"/></svg><span>Lapor Bug</span></button>
+    </nav>
+
+    <div class="dashboard-view" id="viewAbsensi">
+    <div class="dashboard-column">
 
     <section class="summary" aria-label="Ringkasan absensi">
       <div class="stat"><span class="stat-label">Total check-in</span><strong class="stat-value" id="totalRecords">0</strong></div>
       <div class="stat"><span class="stat-label">Crew aktif</span><strong class="stat-value" id="totalCrew">0</strong></div>
       <div class="stat"><span class="stat-label">Unit dikerjakan</span><strong class="stat-value" id="totalUnits">0</strong></div>
       <div class="stat"><span class="stat-label">Foto kerja</span><strong class="stat-value" id="totalPhotos">0</strong></div>
-      <div class="stat"><span class="stat-label">Total Honor</span><strong class="stat-value small" id="totalHonor">Rp 0</strong></div>
+      <div class="stat stat-wide"><span class="stat-label">Total honor</span><strong class="stat-value small" id="totalHonor">Rp 0</strong></div>
     </section>
 
     <section class="panel filters" aria-label="Filter Check In Crew">
@@ -231,7 +509,7 @@
     <section class="panel records">
       <div class="records-head"><h2>Riwayat Pekerjaan</h2><span class="records-count" id="recordsCount">0 data</span></div>
       <div class="table-wrap">
-        <table>
+        <table class="mobile-cards">
           <thead><tr><th>Waktu</th><th>Crew</th><th>Properti</th><th>Pekerjaan</th><th>Honor/Properti</th><th>GPS</th><th>Bukti Foto</th><th>Sumber</th><th>Aksi</th></tr></thead>
           <tbody id="recordsBody"></tbody>
         </table>
@@ -243,13 +521,13 @@
     <section class="panel records" id="slipPanel">
       <div class="records-head"><h2>Slip Gaji Bulanan</h2><span class="slip-period" id="slipPeriod">-</span></div>
       <div class="table-wrap">
-        <table>
+        <table class="mobile-cards">
           <thead><tr><th>Crew</th><th>Hari di Bulan</th><th>Hari Check In</th><th>Tidak Check In</th><th>Potongan</th><th>Gaji Dibayar</th><th>Properti Dikerjakan</th><th>Aksi</th></tr></thead>
           <tbody id="slipBody"></tbody>
         </table>
         <div class="empty" id="slipEmpty" style="display:none"><strong>Belum ada data</strong><span>Pilih bulan di filter atas untuk melihat slip gaji crew.</span></div>
       </div>
-      <p class="hint">Potongan = (Tidak Check In × Rp 100.000). Gaji Dibayar = (Hari Check In × Rp 100.000). Tidak Check In = Hari di Bulan dikurangi Hari Check In (jumlah tanggal unik crew check-in di bulan itu).</p>
+      <p class="hint" style="padding:0 20px 16px">Potongan = (Tidak Check In × Rp 100.000). Gaji Dibayar = (Hari Check In × Rp 100.000). Tidak Check In = Hari di Bulan dikurangi Hari Check In (jumlah tanggal unik crew check-in di bulan itu).</p>
     </section>
 
     <section class="panel records" id="monthlyMatrixPanel">
@@ -277,13 +555,101 @@
         </form>
         <p id="crewManagementMessage" class="pin-message" role="status" aria-live="polite"></p>
         <div class="table-wrap">
-          <table><thead><tr><th>Nama Crew</th><th>ID Crew</th><th>Status</th><th>Aksi</th></tr></thead><tbody id="crewManagementRows"></tbody></table>
+          <table class="mobile-cards"><thead><tr><th>Nama Crew</th><th>ID Crew</th><th>Status</th><th>Aksi</th></tr></thead><tbody id="crewManagementRows"></tbody></table>
         </div>
       </div>
     </section>
 
+    </div><!-- /stack absensi -->
+    </div><!-- /viewAbsensi -->
+
+    <div class="dashboard-view hidden" id="viewPenugasan">
+    <div class="dashboard-column">
+
+      <p id="taskNotice" class="task-message task-notice" role="status" aria-live="polite"></p>
+
+      <section class="summary" aria-label="Ringkasan tugas">
+        <div class="stat"><span class="stat-label">Total tugas</span><strong class="stat-value" id="assignStatTotal">0</strong></div>
+        <div class="stat"><span class="stat-label">Belum dikerjakan</span><strong class="stat-value" id="assignStatPending">0</strong></div>
+        <div class="stat"><span class="stat-label">Sudah dikerjakan</span><strong class="stat-value" id="assignStatDone">0</strong></div>
+        <div class="stat"><span class="stat-label">Tugas hari ini</span><strong class="stat-value" id="assignStatToday">0</strong></div>
+      </section>
+
+      <section class="panel">
+        <div class="cal-head">
+          <div><h2 class="cal-title" id="taskCalendarTitle">Kalender Tugas Berjalan</h2><p class="subtitle" id="taskCalendarSummary">-</p></div>
+          <div class="cal-nav">
+            <button class="button" id="taskCalPrevBtn" type="button" aria-label="Bulan sebelumnya">&laquo;</button>
+            <button class="button" id="taskCalTodayBtn" type="button">Bulan ini</button>
+            <button class="button" id="taskCalNextBtn" type="button" aria-label="Bulan berikutnya">&raquo;</button>
+          </div>
+        </div>
+        <div class="cal-grid" id="taskCalendarGrid"></div>
+        <div class="cal-chips" id="taskCrewChips"></div>
+        <div class="cal-legend">
+          <span><i style="background:#fbf1dc;border:1px solid #ecd29c"></i>Masih ada tugas belum dikerjakan</span>
+          <span><i style="background:#e6f1ea;border:1px solid #c6ddcf"></i>Semua tugas tanggal itu selesai</span>
+          <span>Klik tanggal untuk menyaring daftar tugas.</span>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="cal-head">
+          <div><h2 class="cal-title" id="propertyCalendarTitle">Kalender Properti</h2><p class="subtitle" id="propertyCalendarSummary">-</p></div>
+          <div class="cal-nav">
+            <button class="button" id="propertyCalPrevBtn" type="button" aria-label="Bulan sebelumnya">&laquo;</button>
+            <button class="button" id="propertyCalTodayBtn" type="button">Bulan ini</button>
+            <button class="button" id="propertyCalNextBtn" type="button" aria-label="Bulan berikutnya">&raquo;</button>
+          </div>
+        </div>
+        <div class="prop-wrap">
+          <table class="prop-table"><thead id="propertyCalendarHead"></thead><tbody id="propertyCalendarBody"></tbody></table>
+        </div>
+        <div class="cal-chips" id="bookingChips"></div>
+        <div class="cal-legend">
+          <span><i style="background:#fff;border:1px solid #e4e0da"></i>Belum ada tugas</span>
+          <span><i style="background:#fbf1dc;border:1px solid #ecd29c"></i>Ada tugas, belum selesai</span>
+          <span><i style="background:#e6f1ea;border:1px solid #c6ddcf"></i>Semua tugas selesai</span>
+          <span><i style="background:#2f5bd3;border:1px solid #2448ad"></i>Sudah dibooking (garis kuning = ada tugas)</span>
+          <span>Klik kotak properti + tanggal untuk memberi tugas.</span>
+        </div>
+      </section>
+
+      <section class="panel records">
+        <div class="records-head"><h2>Daftar Tugas</h2><span class="records-count" id="assignTaskCount">0 tugas</span></div>
+        <div class="filters filters-assign">
+          <div class="field"><label for="assignFilterDate">Tanggal</label><input id="assignFilterDate" type="date" /></div>
+          <div class="field"><label for="assignFilterCrew">Crew</label><select id="assignFilterCrew"><option value="">Semua crew</option></select></div>
+          <div class="field"><label for="assignFilterStatus">Status</label><select id="assignFilterStatus"><option value="">Semua status</option><option value="assigned">Belum dikerjakan</option><option value="completed">Sudah dikerjakan</option></select></div>
+          <div class="filter-actions"><button class="button" id="assignResetFilterBtn" type="button">Reset</button></div>
+        </div>
+        <div class="table-wrap">
+          <table class="mobile-cards">
+            <thead><tr><th>Tanggal / Jam</th><th>Crew</th><th>Properti</th><th>Tugas</th><th>Catatan</th><th>Status</th><th>Aksi</th></tr></thead>
+            <tbody id="assignTaskRows"></tbody>
+          </table>
+        </div>
+      </section>
+    </div><!-- /stack penugasan -->
+    </div><!-- /viewPenugasan -->
+
+    <div class="dashboard-view hidden" id="viewLaporBug">
+    <div class="dashboard-column">
+      <section class="panel" style="max-width:560px">
+        <div><h2 class="cal-title">Lapor Bug</h2><p class="subtitle">Laporkan bug atau kendala teknis kepada tim IT.</p></div>
+        <label class="field" style="margin-top:16px"><span class="meta-label">Pesan</span>
+          <textarea id="bugMessage" maxlength="2000" placeholder="Tulis kendala atau pesan untuk tim IT..." style="min-height:120px;resize:vertical;width:100%;border:1px solid var(--line-strong);border-radius:var(--r);background:var(--paper);padding:9px 12px;color:var(--ink);font:inherit;font-size:.9rem;outline:none"></textarea>
+        </label>
+        <div class="admin-actions" style="margin-top:14px">
+          <button class="button primary" id="submitBugBtn" type="button">Kirim Pesan</button>
+        </div>
+        <p id="bugStatus" class="pin-message" role="status" aria-live="polite"></p>
+      </section>
+    </div>
+    </div><!-- /viewLaporBug -->
+
     <footer class="site-footer">
-      <strong>YOUR HOME · Check In Crew Dashboard</strong>
+      <strong>YOUR HOME, Check In Crew Dashboard</strong>
       <div class="site-footer-meta">
         <span>Data absensi dan honor crew</span>
         <span>Terakhir diperbarui: <time id="footerUpdatedAt">-</time></span>
@@ -306,9 +672,9 @@
       <div class="detail-meta" id="slipMeta"></div>
       <div class="photo-section"><h3>Kalender Kehadiran</h3><div class="slip-calendar" id="slipCalendar"></div></div>
       <div class="legend">
-        <span><i style="background:#e9f3e2;border:1px solid #cfe2c4"></i> Check In</span>
-        <span><i style="background:#fbeae8;border:1px solid #f3d4cf"></i> Tidak Check In</span>
-        <span><i style="background:#f5f1e9;border:1px solid var(--line)"></i> Tanggal Berikutnya</span>
+        <span><i style="background:#e6f1ea;border:1px solid #c6ddcf"></i> Check In</span>
+        <span><i style="background:#fbeae8;border:1px solid #f1cdc8"></i> Tidak Check In</span>
+        <span><i style="background:#f7f6f3;border:1px solid #e4e0da"></i> Tanggal Berikutnya</span>
       </div>
       <div class="recap-section">
         <div class="recap-head">
@@ -316,6 +682,18 @@
           <span class="recap-summary" id="recapSummary"></span>
         </div>
         <div class="recap-grid" id="recapGrid"></div>
+      </div>
+      <div class="photo-section">
+        <h3>Gaji Tambahan</h3>
+        <p class="hint">Isi kalau ada tambahan bulan ini &mdash; otomatis masuk ke Total Gaji, PDF, dan pesan WhatsApp di bawah.</p>
+        <div class="detail-meta" id="extraPayGrid" style="padding:8px 0 0">
+          <div class="meta-item"><label class="meta-label" for="extraTunjangan">Tunjangan</label><input id="extraTunjangan" type="number" min="0" step="1000" placeholder="0"></div>
+          <div class="meta-item"><label class="meta-label" for="extraBonus">Bonus</label><input id="extraBonus" type="number" min="0" step="1000" placeholder="0"></div>
+          <div class="meta-item"><label class="meta-label" for="extraBensin">Uang Bensin</label><input id="extraBensin" type="number" min="0" step="1000" placeholder="0"></div>
+          <div class="meta-item"><label class="meta-label" for="extraReimburse">Reimburse (Penggantian Biaya)</label><input id="extraReimburse" type="number" min="0" step="1000" placeholder="0"></div>
+          <div class="meta-item"><label class="meta-label" for="extraPulsa">Pulsa / Komunikasi</label><input id="extraPulsa" type="number" min="0" step="1000" placeholder="0"></div>
+          <div class="meta-item gold"><span class="meta-label">Total Gaji</span><div class="meta-value gold" id="slipTotalGaji">Rp 0</div></div>
+        </div>
       </div>
       <div class="photo-section">
         <h3>Kirim Slip Gaji</h3>
@@ -387,9 +765,48 @@
     let refreshInProgress = false;
     let detailRecord = null;
     let currentSlip = null;
+    let slipLogoDataUrl = null;
     let manualEntryMode = false;
     const el = id => document.getElementById(id);
+    const FIELD_TASKS_KEY = 'yourhome_field_tasks_draft_v1';
+    const EXTRA_PAY_KEY = 'yourhome_extra_pay_v1';
+    const EXTRA_PAY_FIELDS = ['tunjangan', 'bonus', 'bensin', 'reimburse', 'pulsa'];
 
+    function loadExtraPayStore() {
+      try { return JSON.parse(localStorage.getItem(EXTRA_PAY_KEY) || '{}'); } catch { return {}; }
+    }
+    function saveExtraPayStore(store) {
+      try { localStorage.setItem(EXTRA_PAY_KEY, JSON.stringify(store)); } catch {}
+    }
+    function extraPayStoreKey(crew, month) { return `${crew}|${month}`; }
+    function getExtraPay(crew, month) {
+      const item = loadExtraPayStore()[extraPayStoreKey(crew, month)] || {};
+      const values = {};
+      EXTRA_PAY_FIELDS.forEach(field => { values[field] = Number(item[field]) || 0; });
+      return values;
+    }
+    function setExtraPay(crew, month, values) {
+      const store = loadExtraPayStore();
+      store[extraPayStoreKey(crew, month)] = values;
+      saveExtraPayStore(store);
+    }
+    function sumExtraPay(values) {
+      return EXTRA_PAY_FIELDS.reduce((total, field) => total + (Number(values[field]) || 0), 0);
+    }
+    const EXTRA_PAY_LABELS = { tunjangan: 'Tunjangan', bonus: 'Bonus', bensin: 'Uang Bensin', reimburse: 'Reimburse', pulsa: 'Pulsa/Komunikasi' };
+    function extraPayLines(values) {
+      return EXTRA_PAY_FIELDS.filter(field => values[field] > 0).map(field => [EXTRA_PAY_LABELS[field], formatRupiah(values[field])]);
+    }
+
+    function readFieldTasks() {
+      try {
+        const tasks = JSON.parse(localStorage.getItem(FIELD_TASKS_KEY) || '[]');
+        return Array.isArray(tasks) ? tasks : [];
+      } catch { return []; }
+    }
+    function writeFieldTasks(tasks) {
+      localStorage.setItem(FIELD_TASKS_KEY, JSON.stringify(tasks));
+    }
     function escapeHtml(value) {
       return String(value ?? '').replace(/[&<>'"]/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[char]));
     }
@@ -589,7 +1006,7 @@
         const gps = record.lat != null && record.lng != null ? `<a class="gps-link" href="https://www.google.com/maps?q=${Number(record.lat)},${Number(record.lng)}" target="_blank" rel="noopener">${Number(record.lat).toFixed(4)}, ${Number(record.lng).toFixed(4)} ↗</a>` : '-';
         const sourceLabel = record.source === 'admin' ? 'Admin' : 'Crew';
         const sourceClass = record.source === 'admin' ? 'admin' : 'crew';
-        return `<tr><td><strong>${formatDate(record.date)}</strong><div class="muted">${formatTime(record)}</div></td><td class="crew">${escapeHtml(record.crew || '-')}</td><td><div class="unit">${escapeHtml(record.unit || '-')}</div><div class="muted">${escapeHtml(record.jobType || '-')}</div></td><td><span class="job">${escapeHtml(record.jobType || '-')}</span></td><td><span class="honor-chip">${perProperti}</span><div class="muted">dari ${propCount} properti hari itu</div></td><td>${gps}</td><td class="photo-count">${photoCount} foto</td><td><span class="source-badge ${sourceClass}">${sourceLabel}</span></td><td><button class="detail-btn" type="button" data-detail="${index}">Lihat detail</button></td></tr>`;
+        return `<tr><td data-label="Waktu"><strong>${formatDate(record.date)}</strong><div class="muted">${formatTime(record)}</div></td><td data-label="Crew" class="crew">${escapeHtml(record.crew || '-')}</td><td data-label="Properti"><div class="unit">${escapeHtml(record.unit || '-')}</div><div class="muted">${escapeHtml(record.jobType || '-')}</div></td><td data-label="Pekerjaan"><span class="job">${escapeHtml(record.jobType || '-')}</span></td><td data-label="Honor/Properti"><span class="honor-chip">${perProperti}</span><div class="muted">dari ${propCount} properti hari itu</div></td><td data-label="GPS">${gps}</td><td data-label="Bukti Foto" class="photo-count">${photoCount} foto</td><td data-label="Sumber"><span class="source-badge ${sourceClass}">${sourceLabel}</span></td><td data-label="Aksi"><button class="detail-btn" type="button" data-detail="${index}">Lihat detail</button></td></tr>`;
       }).join('');
       body.querySelectorAll('[data-detail]').forEach(button => button.addEventListener('click', () => openDetail(state.filtered[pageStart + Number(button.dataset.detail)])));
       if (totalPages > 1) {
@@ -692,7 +1109,7 @@
         const propertiInfo = recap.totalProperties > 0
           ? `<span class="honor-chip">${recap.totalProperties} properti</span><div class="muted">${checkInDays} hari · ${recap.totalProperties > 1 ? 'multi-properti' : '1 properti'}</div>`
           : `<span class="muted">-</span>`;
-        return `<tr><td class="crew">${escapeHtml(crew)}</td><td>${totalDays} hari</td><td><span class="hadir">${checkInDays} hari</span></td><td><span class="absen">${tidakCheckIn} hari</span></td><td class="potongan">- ${formatRupiah(potongan)}</td><td class="bayar">${formatRupiah(dibayar)}</td><td>${propertiInfo}</td><td><button class="detail-btn" type="button" data-slip="${escapeHtml(crew)}">Lihat slip</button></td></tr>`;
+        return `<tr><td data-label="Crew" class="crew">${escapeHtml(crew)}</td><td data-label="Hari di Bulan">${totalDays} hari</td><td data-label="Hari Check In"><span class="hadir">${checkInDays} hari</span></td><td data-label="Tidak Check In"><span class="absen">${tidakCheckIn} hari</span></td><td data-label="Potongan" class="potongan">- ${formatRupiah(potongan)}</td><td data-label="Gaji Dibayar" class="bayar">${formatRupiah(dibayar)}</td><td data-label="Properti Dikerjakan">${propertiInfo}</td><td data-label="Aksi"><button class="detail-btn" type="button" data-slip="${escapeHtml(crew)}">Lihat slip</button></td></tr>`;
       }).join('');
       body.querySelectorAll('[data-slip]').forEach(btn => btn.addEventListener('click', () => openSlip(btn.dataset.slip, month)));
     }
@@ -764,8 +1181,27 @@
 
       el('slipModal').classList.add('open');
       // Simpan data slip aktif agar tombol Simpan PDF dan Kirim WhatsApp bisa memakainya.
-      currentSlip = { crew, month, totalDays, checkInDays, tidakCheckIn, potongan, dibayar, recap };
+      const extraPay = getExtraPay(crew, month);
+      currentSlip = { crew, month, totalDays, checkInDays, tidakCheckIn, potongan, dibayar, recap, extraPay, totalGaji: dibayar + sumExtraPay(extraPay) };
+      EXTRA_PAY_FIELDS.forEach(field => {
+        const input = el(`extra${field[0].toUpperCase()}${field.slice(1)}`);
+        if (input) input.value = extraPay[field] || '';
+      });
+      el('slipTotalGaji').textContent = formatRupiah(currentSlip.totalGaji);
       el('slipActionMessage').textContent = '';
+    }
+    // Baca input Gaji Tambahan yang sedang tampil, simpan ke localStorage, dan perbarui total slip aktif.
+    function refreshSlipExtraPay() {
+      if (!currentSlip) return;
+      const values = {};
+      EXTRA_PAY_FIELDS.forEach(field => {
+        const input = el(`extra${field[0].toUpperCase()}${field.slice(1)}`);
+        values[field] = Math.max(0, Number(input?.value) || 0);
+      });
+      setExtraPay(currentSlip.crew, currentSlip.month, values);
+      currentSlip.extraPay = values;
+      currentSlip.totalGaji = currentSlip.dibayar + sumExtraPay(values);
+      el('slipTotalGaji').textContent = formatRupiah(currentSlip.totalGaji);
     }
     // Ubah nomor apa pun menjadi format internasional Indonesia tanpa tanda baca.
     function normalizeWhatsappNumber(value) {
@@ -794,13 +1230,34 @@
         `Tidak check in: ${slip.tidakCheckIn} hari`,
         `Honor per hari: ${formatRupiah(DAILY_SALARY)}`,
         `Potongan: - ${formatRupiah(slip.potongan)}`,
-        `*Gaji dibayar: ${formatRupiah(slip.dibayar)}*`,
+        `Gaji dibayar: ${formatRupiah(slip.dibayar)}`,
+        ...extraPayLines(slip.extraPay || {}).map(([label, value]) => `${label}: ${value}`),
+        `*Total gaji: ${formatRupiah(slip.totalGaji ?? slip.dibayar)}*`,
         '',
         '*Rekap honor per properti:*',
         ...slipRecapLines(slip),
         '',
         `Dibuat: ${formatLocalDateTimeWib()}`,
       ].join('\n');
+    }
+    // Ambil logo YOUR HOME versi berwarna (sama dengan pengaturan Admin Properti) untuk kop Slip Gaji PDF.
+    async function loadSlipLogo() {
+      try {
+        const settingsResponse = await fetch(`${API_BASE}/settings`, { cache: 'no-store' });
+        const settings = await settingsResponse.json().catch(() => ({}));
+        const logoUrl = settings?.data?.header_logo;
+        if (!logoUrl) return;
+        const imageResponse = await fetch(logoUrl);
+        const blob = await imageResponse.blob();
+        slipLogoDataUrl = await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result);
+          reader.onerror = reject;
+          reader.readAsDataURL(blob);
+        });
+      } catch (error) {
+        console.warn('Gagal memuat logo untuk slip gaji:', error);
+      }
     }
     function buildSlipPdf(slip) {
       const { jsPDF } = window.jspdf;
@@ -811,15 +1268,30 @@
       const right = pageWidth - margin;
       let y = margin + 4;
 
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(16);
-      doc.text('YOUR HOME', margin, y);
+      if (slipLogoDataUrl) {
+        const logoW = 120, logoH = logoW * (213 / 924);
+        try { doc.addImage(slipLogoDataUrl, 'PNG', margin, y - 14, logoW, logoH); } catch (error) { console.warn('Gagal menempel logo di PDF:', error); }
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(7.5);
+        doc.setTextColor(140);
+        doc.text('www.yourhome.id', margin, y - 14 + logoH + 9);
+        doc.setTextColor(0);
+      } else {
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(16);
+        doc.text('YOUR HOME', margin, y);
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(7.5);
+        doc.setTextColor(140);
+        doc.text('www.yourhome.id', margin, y + 12);
+        doc.setTextColor(0);
+      }
       doc.setFont('helvetica', 'normal');
       doc.setFontSize(9);
       doc.setTextColor(110);
       doc.text(`Dibuat: ${formatLocalDateTimeWib()}`, right, y - 2, { align:'right' });
       doc.setTextColor(0);
-      y += 16;
+      y += 34;
       doc.setFont('helvetica', 'bold');
       doc.setFontSize(11);
       doc.text('SLIP GAJI CREW', margin, y);
@@ -904,14 +1376,26 @@
       }
 
       y += 8;
+      const extraRows = [['Gaji dibayar (honor)', formatRupiah(slip.dibayar)], ...extraPayLines(slip.extraPay || {})];
+      doc.setFontSize(10);
+      extraRows.forEach(([label, value]) => {
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(110);
+        doc.text(label, margin, y);
+        doc.setTextColor(0);
+        doc.setFont('helvetica', 'bold');
+        doc.text(value, right, y, { align:'right' });
+        y += 16;
+      });
+      y += 4;
       doc.setDrawColor(60);
       doc.setLineWidth(1.2);
       doc.rect(margin, y, right - margin, 36);
       doc.setFont('helvetica', 'bold');
       doc.setFontSize(11);
-      doc.text('GAJI DIBAYAR', margin + 12, y + 23);
+      doc.text('TOTAL GAJI', margin + 12, y + 23);
       doc.setFontSize(14);
-      doc.text(formatRupiah(slip.dibayar), right - 12, y + 23, { align:'right' });
+      doc.text(formatRupiah(slip.totalGaji ?? slip.dibayar), right - 12, y + 23, { align:'right' });
       doc.setLineWidth(0.5);
       return doc;
     }
@@ -1067,11 +1551,12 @@
         crewManagementItems = (Array.isArray(response.data) ? response.data : []).filter(crew => Number(crew.active) === 1);
         rows.innerHTML = crewManagementItems.length ? crewManagementItems.map(crew => `
           <tr>
-            <td>${escapeHtml(crew.name)}</td>
-            <td><strong>${escapeHtml(crew.crew_code || 'ID belum ada')}</strong></td>
-            <td><span class="crew-status ${Number(crew.active) ? 'active' : 'inactive'}">${Number(crew.active) ? 'Aktif' : 'Nonaktif'}</span></td>
-            <td><div class="actions"><button class="button" type="button" data-crew-action="edit" data-crew-id="${escapeHtml(crew.id)}">Edit</button>${Number(crew.active) ? `<button class="button danger" type="button" data-crew-action="disable" data-crew-id="${escapeHtml(crew.id)}">Nonaktifkan</button>` : ''}</div></td>
-          </tr>`).join('') : '<tr><td colspan="4" class="empty-cell">Belum ada data crew.</td></tr>';
+            <td data-label="Nama Crew">${escapeHtml(crew.name)}</td>
+            <td data-label="ID Crew"><strong>${escapeHtml(crew.crew_code || 'ID belum ada')}</strong></td>
+            <td data-label="Status"><span class="crew-status ${Number(crew.active) ? 'active' : 'inactive'}">${Number(crew.active) ? 'Aktif' : 'Nonaktif'}</span></td>
+            <td data-label="Aksi"><div class="actions"><button class="button" type="button" data-crew-action="edit" data-crew-id="${escapeHtml(crew.id)}">Edit</button>${Number(crew.active) ? `<button class="button danger" type="button" data-crew-action="disable" data-crew-id="${escapeHtml(crew.id)}">Nonaktifkan</button>` : ''}</div></td>
+          </tr>`).join('') : '<tr class="empty-row"><td colspan="4" class="empty-cell">Belum ada data crew.</td></tr>';
+        if (assignReady) refreshAssignCrewFilter();
       } catch (error) {
         rows.innerHTML = '<tr><td colspan="4" class="empty-cell">Daftar crew gagal dimuat.</td></tr>';
         throw error;
@@ -1168,6 +1653,7 @@
         filterIds.forEach(id => { el(id).value = selectedFilters[id]; });
         el('footerUpdatedAt').textContent = formatLocalDateTimeWib();
         applyFilters();
+        if (assignReady) loadAssignmentProperties();
       } finally {
         refreshInProgress = false;
       }
@@ -1429,6 +1915,10 @@
       el('crewCancelEditBtn').addEventListener('click', resetCrewManagementForm);
       el('slipPdfBtn').addEventListener('click', saveSlipPdf);
       el('slipWhatsappBtn').addEventListener('click', sendSlipWhatsApp);
+      EXTRA_PAY_FIELDS.forEach(field => {
+        const input = el(`extra${field[0].toUpperCase()}${field.slice(1)}`);
+        if (input) input.addEventListener('input', refreshSlipExtraPay);
+      });
       document.getElementById('detailEditBtn').addEventListener('click', () => {
         closeModal('detailModal');
         editRecord(detailRecord);
@@ -1449,7 +1939,9 @@
         });
       });
       await loadCrewManagement();
+      initAssignmentModule();
       applyFilters();
+      loadSlipLogo();
       setInterval(() => {
         if (getLocalDateKey() !== sessionStorage.getItem('dashboard_admin_login_date')) {
           logoutAdmin();
@@ -1547,6 +2039,563 @@
       }
     }
     init();
+  </script>
+
+  <div class="task-modal hidden" id="taskModal">
+    <div class="task-modal-card" role="dialog" aria-modal="true" aria-labelledby="taskModalTitle">
+      <div class="task-modal-head">
+        <div><h2 id="taskModalTitle">Buat Tugas Baru</h2><p class="subtitle" id="taskModalSubtitle">Pilih crew, lalu tentukan jenis tugasnya.</p></div>
+        <button class="task-modal-close" id="closeTaskModalBtn" type="button" aria-label="Tutup">&times;</button>
+      </div>
+      <form class="task-form task-modal-body" id="taskForm">
+        <label class="field"><span class="meta-label">Tanggal tugas</span><input id="taskDate" type="date" required /></label>
+        <label class="field"><span class="meta-label">Properti / lokasi</span><input id="taskPropertyDisplay" type="text" readonly /><input id="taskProperty" type="hidden" required /></label>
+        <fieldset class="field wide"><legend class="meta-label">Crew tujuan</legend><div id="taskCrewChoices" class="crew-checklist" role="group" aria-label="Pilih satu atau beberapa crew"></div></fieldset>
+        <label class="field"><span class="meta-label">Jenis tugas</span><select id="taskType" required><option value="">Pilih tugas</option><option value="Check-in Tamu">Check-in tamu</option><option value="Check-out Tamu">Check-out tamu</option><option value="Tangani Komplain">Tangani komplain</option><option value="Jadwal Tugas">Jadwal tugas</option></select></label>
+        <label class="field"><span class="meta-label">Jam target</span><input id="taskTime" type="time" /></label>
+        <label class="field wide"><span class="meta-label">Catatan kepala petugas</span><input id="taskNote" type="text" maxlength="300" placeholder="Detail singkat tugas atau keluhan" /></label>
+        <div class="task-actions">
+          <p id="taskMessage" class="task-message" role="status" aria-live="polite"></p>
+          <div><button class="button" id="cancelTaskModalBtn" type="button">Batal</button> <button class="button primary" id="submitTaskBtn" type="submit">Kirim Tugas ke Crew</button></div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+  /* ================= MODUL PENUGASAN & KALENDER (gabungan dari input-tugas.html) ================= */
+  const ASSIGN_DOW = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'];
+  const ASSIGN_CATEGORY_LABELS = { apartment:'Apartemen', villa:'Villa', guesthouse:'Guest House', 'guest-house':'Guest House', kos:'Kosan', kosan:'Kosan' };
+  let assignReady = false;
+  let assignMonth = formatLocalDateKey().slice(0, 7);
+  let assignPropertyMonth = formatLocalDateKey().slice(0, 7);
+  let assignSelectedDate = '';
+  let assignSelectedCell = '';
+  let assignPropertyNames = [];
+  let assignBookings = [];
+  let assignNoticeTimer = null;
+  let assignEditingTaskId = '';
+
+  const assignEl = id => document.getElementById(id);
+  const DASHBOARD_VIEW_KEY = 'yourhome_dashboard_view';
+  function switchDashboardView(view) {
+    const target = ['penugasan', 'laporbug'].includes(view) ? view : 'absensi';
+    assignEl('viewAbsensi').classList.toggle('hidden', target !== 'absensi');
+    assignEl('viewPenugasan').classList.toggle('hidden', target !== 'penugasan');
+    assignEl('viewLaporBug').classList.toggle('hidden', target !== 'laporbug');
+    const absensiBtn = assignEl('viewAbsensiBtn');
+    const penugasanBtn = assignEl('viewPenugasanBtn');
+    const laporBugBtn = assignEl('viewLaporBugBtn');
+    absensiBtn.classList.toggle('active', target === 'absensi');
+    penugasanBtn.classList.toggle('active', target === 'penugasan');
+    laporBugBtn.classList.toggle('active', target === 'laporbug');
+    absensiBtn.setAttribute('aria-selected', String(target === 'absensi'));
+    penugasanBtn.setAttribute('aria-selected', String(target === 'penugasan'));
+    laporBugBtn.setAttribute('aria-selected', String(target === 'laporbug'));
+    try { localStorage.setItem(DASHBOARD_VIEW_KEY, target); } catch {}
+  }
+  function currentDashboardView() {
+    try {
+      const saved = localStorage.getItem(DASHBOARD_VIEW_KEY);
+      if (saved === 'penugasan' || saved === 'absensi' || saved === 'laporbug') return saved;
+    } catch {}
+    return 'absensi';
+  }
+  async function submitBugReport() {
+    const textarea = assignEl('bugMessage');
+    const status = assignEl('bugStatus');
+    const message = textarea.value.trim();
+    status.className = 'pin-message';
+    if (!message) { status.textContent = 'Tulis pesan terlebih dahulu.'; return; }
+    status.textContent = 'Mengirim...';
+    try {
+      const response = await fetch(`${API_BASE}/admin/contact-it`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(state.adminToken ? { Authorization: `Bearer ${state.adminToken}` } : {}),
+        },
+        body: JSON.stringify({ message }),
+      });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok || result.ok === false) throw new Error(result.error || 'Pesan gagal dikirim.');
+      status.className = 'pin-message success';
+      status.textContent = 'Pesan sudah dikirim ke Telegram IT.';
+      textarea.value = '';
+    } catch (error) {
+      status.className = 'pin-message error';
+      status.textContent = error.message || 'Pesan gagal dikirim.';
+    }
+  }
+  function assignSameProperty(left, right) {
+    return String(left || '').trim().toLocaleLowerCase('id') === String(right || '').trim().toLocaleLowerCase('id');
+  }
+  function assignBookingRange(booking) {
+    const dates = [];
+    const start = Date.parse(`${booking.checkin}T00:00:00Z`);
+    const end = Date.parse(`${booking.checkout}T00:00:00Z`);
+    if (!Number.isFinite(start) || !Number.isFinite(end) || end < start) return dates;
+    const total = Math.min(60, Math.round((end - start) / 86400000) + 1);
+    for (let index = 0; index < total; index++) dates.push(new Date(start + index * 86400000).toISOString().slice(0, 10));
+    return dates;
+  }
+  function assignFindConflict(property, dateKey) {
+    if (!property || !dateKey) return null;
+    return assignBookings.find(booking => assignSameProperty(booking.property, property) && assignBookingRange(booking).includes(dateKey)) || null;
+  }
+  function assignBookingText(booking) {
+    return `Properti ini sudah dibooking ${formatDate(booking.checkin)} \u2192 ${formatDate(booking.checkout)}${booking.platform ? ` (${booking.platform})` : ''}${booking.guest ? ` oleh ${booking.guest}` : ''}`;
+  }
+  function assignNotify(text, type = '') {
+    const notice = assignEl('taskNotice');
+    if (!notice) return;
+    notice.className = `task-message task-notice ${type}`;
+    notice.textContent = text;
+    clearTimeout(assignNoticeTimer);
+    assignNoticeTimer = setTimeout(() => { notice.textContent = ''; notice.className = 'task-message task-notice'; }, 9000);
+  }
+  function assignCellKey(property, dateKey) {
+    return `${property}\u0000${dateKey}`;
+  }
+  function assignPropertyValue() {
+    return assignEl('taskProperty').value.trim();
+  }
+  function setAssignmentProperty(property) {
+    assignEl('taskProperty').value = String(property || '').trim();
+    assignEl('taskPropertyDisplay').value = String(property || '').trim();
+  }
+
+  function assignFilteredTasks() {
+    const date = assignEl('assignFilterDate').value;
+    const crew = assignEl('assignFilterCrew').value;
+    const status = assignEl('assignFilterStatus').value;
+    return readFieldTasks()
+      .filter(task => (!date || task.date === date) && (!crew || task.crew === crew) && (!status || task.status === status))
+      .sort((left, right) => `${right.date} ${right.time || ''}`.localeCompare(`${left.date} ${left.time || ''}`));
+  }
+  function refreshAssignCrewFilter() {
+    const select = assignEl('assignFilterCrew');
+    const previous = select.value;
+    const crews = [...new Set([
+      ...(crewManagementItems || []).filter(crew => Number(crew.active) === 1).map(crew => crew.name),
+      ...readFieldTasks().map(task => task.crew),
+    ].map(crew => String(crew || '').trim()).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'id'));
+    select.replaceChildren(new Option('Semua crew', ''), ...crews.map(crew => new Option(crew, crew)));
+    if (crews.includes(previous)) select.value = previous;
+  }
+  function renderAssignmentSummary() {
+    const all = readFieldTasks();
+    const today = formatLocalDateKey();
+    assignEl('assignStatTotal').textContent = all.length;
+    assignEl('assignStatPending').textContent = all.filter(task => task.status !== 'completed').length;
+    assignEl('assignStatDone').textContent = all.filter(task => task.status === 'completed').length;
+    assignEl('assignStatToday').textContent = all.filter(task => task.date === today).length;
+  }
+  function renderAssignmentTable() {
+    const tasks = assignFilteredTasks();
+    renderAssignmentSummary();
+    assignEl('assignTaskCount').textContent = `${tasks.length} tugas`;
+    assignEl('assignTaskRows').innerHTML = tasks.length
+      ? tasks.map(task => {
+        const completed = task.status === 'completed';
+        return `<tr><td data-label="Tanggal / Jam"><strong>${escapeHtml(formatDate(task.date))}</strong><div class="muted">${escapeHtml(task.time || 'Tanpa jam')}</div></td><td data-label="Crew" class="crew">${escapeHtml(task.crew)}</td><td data-label="Properti" class="unit">${escapeHtml(task.property)}</td><td data-label="Tugas"><span class="job">${escapeHtml(task.type)}</span></td><td data-label="Catatan">${escapeHtml(task.note || '-')}</td><td data-label="Status"><span class="${completed ? 'hadir' : 'honor'}">${completed ? 'Sudah dikerjakan' : 'Belum dikerjakan'}</span></td><td data-label="Aksi"><div class="admin-actions"><button class="detail-btn" type="button" data-assign-edit="${escapeHtml(task.id)}">Edit</button><button class="detail-btn" type="button" data-assign-delete="${escapeHtml(task.id)}">Hapus</button></div></td></tr>`;
+      }).join('')
+      : '<tr><td colspan="7" class="empty-cell">Belum ada tugas pada filter ini. Klik kotak di Kalender Properti untuk membuat tugas.</td></tr>';
+    renderTaskCalendar();
+    renderPropertyCalendar();
+  }
+
+  function renderTaskCalendar() {
+    const grid = assignEl('taskCalendarGrid');
+    if (!grid) return;
+    const [year, month] = assignMonth.split('-').map(Number);
+    const tasks = readFieldTasks();
+    const today = formatLocalDateKey();
+    const monthTasks = tasks.filter(task => String(task.date || '').startsWith(assignMonth));
+    const monthPending = monthTasks.filter(task => task.status !== 'completed').length;
+    const totalDays = new Date(year, month, 0).getDate();
+    const firstWeekday = new Date(year, month - 1, 1).getDay();
+    assignEl('taskCalendarTitle').textContent = `Kalender Tugas Berjalan \u00b7 ${new Date(year, month - 1, 1).toLocaleDateString('id-ID', { month:'long', year:'numeric' })}`;
+    assignEl('taskCalTodayBtn').textContent = new Date(year, month - 1, 1).toLocaleDateString('id-ID', { month: 'long' });
+    assignEl('taskCalendarSummary').textContent = monthTasks.length
+      ? `${monthTasks.length} tugas bulan ini \u00b7 ${monthPending} belum dikerjakan`
+      : 'Belum ada tugas pada bulan ini.';
+    const cells = ASSIGN_DOW.map(label => `<span class="cal-dow">${label}</span>`);
+    for (let index = 0; index < firstWeekday; index++) cells.push('<span class="cal-day is-empty"></span>');
+    for (let day = 1; day <= totalDays; day++) {
+      const dateKey = `${assignMonth}-${String(day).padStart(2, '0')}`;
+      const dayTasks = monthTasks.filter(task => task.date === dateKey);
+      const dayPending = dayTasks.filter(task => task.status !== 'completed').length;
+      const crews = [...new Set(dayTasks.map(task => String(task.crew || '').trim()).filter(Boolean))];
+      const classes = ['cal-day'];
+      if (dateKey === today) classes.push('is-today');
+      if (dateKey === assignSelectedDate) classes.push('is-selected');
+      const badge = dayTasks.length ? `<span class="cal-badge ${dayPending ? 'pending' : 'done'}">${dayTasks.length} tugas</span>` : '';
+      const crewLine = crews.length ? `<span class="cal-crews">${escapeHtml(crews.slice(0, 2).join(', '))}${crews.length > 2 ? ` +${crews.length - 2}` : ''}</span>` : '';
+      cells.push(`<button type="button" class="${classes.join(' ')}" data-assign-date="${dateKey}"><span class="cal-day-num">${day}</span>${badge}${crewLine}</button>`);
+    }
+    grid.innerHTML = cells.join('');
+    const totals = new Map();
+    monthTasks.forEach(task => {
+      const crew = String(task.crew || '').trim() || 'Tanpa crew';
+      if (!totals.has(crew)) totals.set(crew, { total:0, pending:0 });
+      const entry = totals.get(crew);
+      entry.total += 1;
+      if (task.status !== 'completed') entry.pending += 1;
+    });
+    assignEl('taskCrewChips').innerHTML = totals.size
+      ? `<strong>Semua crew:</strong> ${[...totals.entries()].sort((a, b) => a[0].localeCompare(b[0], 'id'))
+        .map(([crew, info]) => `<span class="chip-crew">${escapeHtml(crew)} <span>${info.total} tugas \u00b7 ${info.pending} belum</span></span>`).join('')}`
+      : '<span>Belum ada crew dengan tugas pada bulan ini.</span>';
+  }
+
+  function propertyShortCode(name) {
+    const cleaned = String(name || '').trim();
+    if (!cleaned) return '';
+    const words = cleaned.split(/\s+/).filter(Boolean);
+    const code = words.length > 1 ? words.map(word => word[0]).join('') : cleaned.slice(0, 3);
+    return code.toUpperCase();
+  }
+
+  function renderPropertyCalendar() {
+    const head = assignEl('propertyCalendarHead');
+    const body = assignEl('propertyCalendarBody');
+    if (!head || !body) return;
+    const [year, month] = assignPropertyMonth.split('-').map(Number);
+    const monthTasks = readFieldTasks().filter(task => String(task.date || '').startsWith(assignPropertyMonth) && String(task.property || '').trim());
+    const tasksByCell = new Map();
+    monthTasks.forEach(task => {
+      const key = assignCellKey(String(task.property).trim(), task.date);
+      if (!tasksByCell.has(key)) tasksByCell.set(key, []);
+      tasksByCell.get(key).push(task);
+    });
+    const bookingCells = new Map();
+    assignBookings.forEach(booking => {
+      assignBookingRange(booking).forEach(dateKey => bookingCells.set(assignCellKey(booking.property, dateKey), booking));
+    });
+    const today = formatLocalDateKey();
+    const monthBookings = assignBookings.filter(booking => assignBookingRange(booking).some(dateKey => dateKey.startsWith(assignPropertyMonth) && dateKey >= today));
+    // Daftar baris properti murni ikut katalog aktif dasbord.html: properti yang diarsip/dihapus
+    // atau diganti nama di sana otomatis hilang/berubah di sini juga (bukan lagi dari riwayat tugas/check-in lama).
+    const names = [...new Set(assignPropertyNames)].sort((a, b) => a.localeCompare(b, 'id'));
+    const totalDays = new Date(year, month, 0).getDate();
+    const currentMonth = today.slice(0, 7);
+    const startDay = assignPropertyMonth === currentMonth ? Number(today.slice(8, 10)) : 1;
+    const visibleTasks = monthTasks.filter(task => Number(String(task.date).slice(8, 10)) >= startDay);
+    const visibleBookings = monthBookings.filter(booking => assignBookingRange(booking).some(dateKey => dateKey >= today));
+    assignEl('propertyCalendarTitle').textContent = `Kalender Properti \u00b7 ${new Date(year, month - 1, 1).toLocaleDateString('id-ID', { month:'long', year:'numeric' })}`;
+    assignEl('propertyCalTodayBtn').textContent = new Date(year, month - 1, 1).toLocaleDateString('id-ID', { month: 'long' });
+    assignEl('propertyCalendarSummary').textContent = `${names.length} properti \u00b7 ${visibleTasks.length} tugas \u00b7 ${visibleBookings.length} booking${assignPropertyMonth === currentMonth ? ` \u00b7 menampilkan tanggal ${startDay}\u2013${totalDays}` : ''}`;
+    const headCells = ['<th></th>'];
+    for (let day = startDay; day <= totalDays; day++) {
+      const dateKey = `${assignPropertyMonth}-${String(day).padStart(2, '0')}`;
+      const weekend = [0, 6].includes(new Date(year, month - 1, day).getDay());
+      headCells.push(`<th class="${weekend ? 'is-weekend' : ''}">${day}</th>`);
+    }
+    head.innerHTML = `<tr>${headCells.join('')}</tr>`;
+    if (!names.length) {
+      body.innerHTML = '<tr><td class="empty-cell">Belum ada data properti. Data muncul setelah absensi atau properti dimuat.</td></tr>';
+      const chips = assignEl('bookingChips');
+      chips.innerHTML = '';
+      chips.classList.add('hidden');
+      return;
+    }
+    body.innerHTML = names.map(name => {
+      const cells = [];
+      for (let day = startDay; day <= totalDays; day++) {
+        const dateKey = `${assignPropertyMonth}-${String(day).padStart(2, '0')}`;
+        const key = assignCellKey(name, dateKey);
+        const cellTasks = tasksByCell.get(key) || [];
+        const cellBooking = bookingCells.get(key) || null;
+        const pending = cellTasks.filter(task => task.status !== 'completed').length;
+        const classes = ['prop-cell'];
+        if (cellTasks.length) classes.push(pending ? 'has-task' : 'all-done');
+        if (cellBooking) classes.push('has-booking');
+        if (dateKey === today) classes.push('is-today');
+        if (key === assignSelectedCell) classes.push('is-selected');
+        const parts = [`${name} \u00b7 ${dateKey}`];
+        parts.push(cellTasks.length ? `${cellTasks.length} tugas (${pending} belum)` : 'belum ada tugas');
+        if (cellBooking) parts.push(assignBookingText(cellBooking));
+        cells.push(`<td><button type="button" class="${classes.join(' ')}" data-assign-property="${escapeHtml(name)}" data-assign-day="${dateKey}" title="${escapeHtml(parts.join(' \u00b7 '))}">${cellTasks.length || (cellBooking ? '\u2022' : '')}</button></td>`);
+      }
+      return `<tr><td class="prop-name" title="${escapeHtml(name)}"><span class="prop-name-full">${escapeHtml(name)}</span><span class="prop-name-short">${escapeHtml(propertyShortCode(name))}</span></td>${cells.join('')}</tr>`;
+    }).join('');
+    const bookingSummary = monthBookings.length
+      ? `<details class="booking-summary"><summary>Booking berjalan &amp; akan datang (${monthBookings.length})</summary><div class="booking-list">${monthBookings.sort((a, b) => a.checkin.localeCompare(b.checkin))
+        .map(booking => `<span class="chip-booking">${escapeHtml(booking.property)} <span>${escapeHtml(formatDate(booking.checkin))} \u2192 ${escapeHtml(formatDate(booking.checkout))}${booking.platform ? ` \u00b7 ${escapeHtml(booking.platform)}` : ''}${booking.guest ? ` \u00b7 ${escapeHtml(booking.guest)}` : ''}</span></span>`).join('')}</div></details>`
+      : '';
+    const bookingChips = assignEl('bookingChips');
+    bookingChips.innerHTML = bookingSummary;
+    bookingChips.classList.toggle('hidden', !bookingSummary);
+  }
+
+  function assignCheckBookingWarning() {
+    const box = assignEl('taskMessage');
+    if (!box) return;
+    const property = assignPropertyValue();
+    const date = assignEl('taskDate').value;
+    const conflict = property && date ? assignFindConflict(property, date) : null;
+    if (conflict) {
+      box.className = 'task-message';
+      box.textContent = `${assignBookingText(conflict)}. Tugas tetap dapat dikirim.`;
+    } else if (/sudah dibooking/i.test(box.textContent)) {
+      box.className = 'task-message';
+      box.textContent = '';
+    }
+  }
+  function selectedAssignmentCrews() {
+    return [...assignEl('taskCrewChoices').querySelectorAll('input:checked')].map(input => input.value);
+  }
+  function refreshAssignmentCrewOptions(selectedCrews = []) {
+    const selected = new Set(selectedCrews);
+    const activeCrews = (crewManagementItems || []).filter(crew => Number(crew.active) === 1).map(crew => crew.name);
+    const crews = [...new Set([...activeCrews, ...selectedCrews])].sort((left, right) => left.localeCompare(right, 'id'));
+    assignEl('taskCrewChoices').innerHTML = crews.length
+      ? crews.map(crew => `<label class="crew-choice"><input type="checkbox" value="${escapeHtml(crew)}" ${selected.has(crew) ? 'checked' : ''} ${assignEditingTaskId && !selected.has(crew) ? 'disabled' : ''} />${escapeHtml(crew)}${activeCrews.includes(crew) ? '' : ' (tidak aktif)'}</label>`).join('')
+      : '<span class="muted">Belum ada crew aktif.</span>';
+  }
+  function openTaskModal(property = '', dateKey = '') {
+    assignEditingTaskId = '';
+    assignEl('taskModalTitle').textContent = 'Buat Tugas Baru';
+    assignEl('submitTaskBtn').textContent = 'Kirim Tugas ke Crew';
+    if (dateKey) assignEl('taskDate').value = dateKey;
+    else if (!assignEl('taskDate').value) assignEl('taskDate').value = formatLocalDateKey();
+    if (property) setAssignmentProperty(property);
+    assignEl('taskMessage').className = 'task-message';
+    assignEl('taskMessage').textContent = '';
+    assignEl('taskModal').classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+    refreshAssignmentCrewOptions();
+    assignCheckBookingWarning();
+    assignEl('taskCrewChoices').querySelector('input')?.focus();
+  }
+  function editAssignmentTask(id) {
+    const task = readFieldTasks().find(item => item.id === id);
+    if (!task) return;
+    assignEditingTaskId = id;
+    refreshAssignmentCrewOptions([task.crew]);
+    setAssignmentProperty(task.property || '');
+    assignEl('taskDate').value = task.date || formatLocalDateKey();
+    assignEl('taskType').value = task.type || '';
+    assignEl('taskTime').value = task.time || '';
+    assignEl('taskNote').value = task.note || '';
+    assignEl('taskModalTitle').textContent = `Edit Tugas \u00b7 ${task.crew}`;
+    assignEl('submitTaskBtn').textContent = 'Simpan Perubahan';
+    assignEl('taskMessage').className = 'task-message';
+    assignEl('taskMessage').textContent = '';
+    assignEl('taskModal').classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+    assignCheckBookingWarning();
+    assignEl('taskCrewChoices').querySelector('input:checked')?.focus();
+  }
+  function closeTaskModal() {
+    assignEl('taskModal').classList.add('hidden');
+    document.body.style.overflow = '';
+  }
+  function prefillAssignmentForm(property, dateKey) {
+    assignSelectedCell = assignCellKey(property, dateKey);
+    assignSelectedDate = dateKey;
+    assignEl('assignFilterDate').value = dateKey;
+    renderAssignmentTable();
+    openTaskModal(property, dateKey);
+    const existing = readFieldTasks().filter(task => String(task.property || '').trim() === property && task.date === dateKey);
+    if (existing.length) {
+      assignEl('taskMessage').className = 'task-message';
+      assignEl('taskMessage').textContent = `Sudah ada ${existing.length} tugas untuk ${property} pada ${formatDate(dateKey)} (${[...new Set(existing.map(task => task.crew))].join(', ')}).`;
+    }
+    assignCheckBookingWarning();
+  }
+  function submitAssignmentTask(event) {
+    event.preventDefault();
+    const date = assignEl('taskDate').value;
+    const crews = selectedAssignmentCrews();
+    const type = assignEl('taskType').value;
+    const property = assignPropertyValue();
+    if (!date || !crews.length || !type || !property) {
+      assignEl('taskMessage').className = 'task-message error';
+      assignEl('taskMessage').textContent = 'Lengkapi tanggal, crew, properti, dan jenis tugas.';
+      return;
+    }
+    const original = assignEditingTaskId ? readFieldTasks().find(item => item.id === assignEditingTaskId) : null;
+    const tasks = readFieldTasks();
+    const waktu = assignEl('taskTime').value;
+    const catatan = assignEl('taskNote').value.trim();
+    if (original) {
+      const index = tasks.findIndex(item => item.id === original.id);
+      if (index < 0) {
+        assignEl('taskMessage').className = 'task-message error';
+        assignEl('taskMessage').textContent = 'Tugas ini sudah tidak ada. Muat ulang halaman.';
+        return;
+      }
+      const crew = crews[0];
+      tasks[index] = { ...tasks[index], date, crew, property, type, time:waktu, note:catatan, updatedAt:new Date().toISOString() };
+      writeFieldTasks(tasks);
+      assignMonth = date.slice(0, 7);
+      assignSelectedDate = date;
+      assignEl('assignFilterDate').value = date;
+      refreshAssignCrewFilter();
+      renderAssignmentTable();
+      closeTaskModal();
+      assignNotify(`Perubahan tugas ${type} untuk ${crew} (${property} \u00b7 ${formatDate(date)}) disimpan.`, 'success');
+      return;
+    }
+    const createdAt = new Date().toISOString();
+    crews.forEach(crew => tasks.push({
+      id: `task-${crypto.randomUUID()}`,
+      date, crew, property, type,
+      time: waktu,
+      note: catatan,
+      status: 'assigned',
+      createdAt,
+    }));
+    writeFieldTasks(tasks);
+    assignEl('taskNote').value = '';
+    assignMonth = date.slice(0, 7);
+    assignSelectedDate = date;
+    assignEl('assignFilterDate').value = date;
+    refreshAssignCrewFilter();
+    renderAssignmentTable();
+    closeTaskModal();
+    assignNotify(`${crews.length} tugas ${type} untuk ${crews.length === 1 ? crews[0] : `${crews.length} crew`} (${property} \u00b7 ${formatDate(date)}) tersimpan. Crew melihatnya di tab Tugas Hari Ini.`, 'success');
+  }
+  function deleteAssignmentTask(id) {
+    const task = readFieldTasks().find(item => item.id === id);
+    if (!task) return;
+    if (!confirm(`Hapus tugas ${task.type} untuk ${task.crew} (${formatDate(task.date)})?`)) return;
+    writeFieldTasks(readFieldTasks().filter(item => item.id !== id));
+    refreshAssignCrewFilter();
+    renderAssignmentTable();
+    assignNotify('Tugas dihapus.', 'success');
+  }
+  async function loadAssignmentProperties() {
+    try {
+      const response = await workerRequest(`${API_BASE}/admin/properties?_=${Date.now()}`);
+      const properties = Array.isArray(response.data) ? response.data : [];
+      // Hanya properti aktif (sesuai dasbord.html) yang tampil; yang diarsip/dihapus di sana otomatis hilang di sini juga.
+      assignPropertyNames = properties
+        .filter(property => property.active !== false)
+        .map(property => String(property.name || '').trim())
+        .filter(Boolean);
+    } catch (error) {
+      assignPropertyNames = [];
+    }
+    renderPropertyCalendar();
+  }
+  async function loadAssignmentBookings() {
+    try {
+      const response = await workerRequest(`${API_BASE}/dashboard/bookings?_=${Date.now()}`);
+      const rows = Array.isArray(response.data) ? response.data : [];
+      assignBookings = rows
+        .filter(row => !['cancelled', 'canceled'].includes(String(row.status || '').trim().toLowerCase()))
+        .map(row => ({
+          id: String(row.id || ''),
+          property: String(row.propName || '').trim(),
+          checkin: String(row.checkin || '').slice(0, 10),
+          checkout: String(row.checkout || '').slice(0, 10),
+          guest: String(row.guest || '').trim(),
+          platform: String(row.platform || '').trim(),
+          status: String(row.status || '').trim(),
+        }))
+        .filter(booking => booking.property && /^\d{4}-\d{2}-\d{2}$/.test(booking.checkin) && /^\d{4}-\d{2}-\d{2}$/.test(booking.checkout));
+    } catch (error) {
+      assignBookings = [];
+    }
+    renderPropertyCalendar();
+    assignCheckBookingWarning();
+  }
+  function shiftAssignMonth(offset) {
+    const [year, month] = assignMonth.split('-').map(Number);
+    const shifted = new Date(year, month - 1 + offset, 1);
+    assignMonth = `${shifted.getFullYear()}-${String(shifted.getMonth() + 1).padStart(2, '0')}`;
+    renderTaskCalendar();
+  }
+  function shiftAssignPropertyMonth(offset) {
+    const [year, month] = assignPropertyMonth.split('-').map(Number);
+    const shifted = new Date(year, month - 1 + offset, 1);
+    const next = `${shifted.getFullYear()}-${String(shifted.getMonth() + 1).padStart(2, '0')}`;
+    // Tanggal yang sudah berjalan tidak ditampilkan, jadi bulan lampau dilewati.
+    if (next < formatLocalDateKey().slice(0, 7)) return;
+    assignPropertyMonth = next;
+    renderPropertyCalendar();
+  }
+  function initAssignmentModule() {
+    if (assignReady) {
+      renderAssignmentTable();
+      return;
+    }
+    assignReady = true;
+    assignEl('assignTaskRows').addEventListener('click', event => {
+      const editId = event.target.dataset.assignEdit;
+      if (editId) {
+        editAssignmentTask(editId);
+        return;
+      }
+      const id = event.target.dataset.assignDelete;
+      if (id) deleteAssignmentTask(id);
+    });
+    ['assignFilterDate', 'assignFilterCrew', 'assignFilterStatus'].forEach(id => assignEl(id).addEventListener('change', renderAssignmentTable));
+    assignEl('assignResetFilterBtn').addEventListener('click', () => {
+      assignEl('assignFilterDate').value = '';
+      assignEl('assignFilterCrew').value = '';
+      assignEl('assignFilterStatus').value = '';
+      assignSelectedDate = '';
+      renderAssignmentTable();
+    });
+    assignEl('taskCalendarGrid').addEventListener('click', event => {
+      const button = event.target.closest('[data-assign-date]');
+      if (!button) return;
+      const dateKey = button.dataset.assignDate;
+      assignSelectedDate = assignSelectedDate === dateKey ? '' : dateKey;
+      assignEl('assignFilterDate').value = assignSelectedDate;
+      renderAssignmentTable();
+    });
+    assignEl('taskCalPrevBtn').addEventListener('click', () => shiftAssignMonth(-1));
+    assignEl('taskCalNextBtn').addEventListener('click', () => shiftAssignMonth(1));
+    assignEl('taskCalTodayBtn').addEventListener('click', () => {
+      assignMonth = formatLocalDateKey().slice(0, 7);
+      renderTaskCalendar();
+    });
+    assignEl('propertyCalendarBody').addEventListener('click', event => {
+      const button = event.target.closest('[data-assign-property]');
+      if (button) prefillAssignmentForm(button.dataset.assignProperty, button.dataset.assignDay);
+    });
+    assignEl('propertyCalPrevBtn').addEventListener('click', () => shiftAssignPropertyMonth(-1));
+    assignEl('propertyCalNextBtn').addEventListener('click', () => shiftAssignPropertyMonth(1));
+    assignEl('propertyCalTodayBtn').addEventListener('click', () => {
+      assignPropertyMonth = formatLocalDateKey().slice(0, 7);
+      renderPropertyCalendar();
+    });
+    assignEl('closeTaskModalBtn').addEventListener('click', closeTaskModal);
+    assignEl('cancelTaskModalBtn').addEventListener('click', closeTaskModal);
+    assignEl('taskModal').addEventListener('click', event => { if (event.target === assignEl('taskModal')) closeTaskModal(); });
+    document.addEventListener('keydown', event => {
+      if (event.key === 'Escape' && !assignEl('taskModal').classList.contains('hidden')) closeTaskModal();
+    });
+    assignEl('taskForm').addEventListener('submit', submitAssignmentTask);
+    assignEl('taskDate').addEventListener('change', assignCheckBookingWarning);
+    window.addEventListener('storage', event => {
+      if (event.key !== FIELD_TASKS_KEY) return;
+      refreshAssignCrewFilter();
+      renderAssignmentTable();
+    });
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden && state.adminToken) {
+        refreshAssignCrewFilter();
+        renderAssignmentTable();
+        loadAssignmentBookings();
+      }
+    });
+    assignEl('taskDate').value = formatLocalDateKey();
+    assignEl('viewAbsensiBtn').addEventListener('click', () => switchDashboardView('absensi'));
+    assignEl('viewPenugasanBtn').addEventListener('click', () => switchDashboardView('penugasan'));
+    assignEl('viewLaporBugBtn').addEventListener('click', () => switchDashboardView('laporbug'));
+    assignEl('submitBugBtn').addEventListener('click', submitBugReport);
+    switchDashboardView(currentDashboardView());
+    refreshAssignCrewFilter();
+    renderAssignmentTable();
+    loadAssignmentProperties();
+    loadAssignmentBookings();
+  }
   </script>
 </body>
 </html>
