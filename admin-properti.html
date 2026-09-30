@@ -3,51 +3,248 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="theme-color" content="#3e2723" />
+  <meta name="theme-color" content="#241915" />
   <title>Admin Website | YOUR HOME</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <style>
-    :root{--coffee:#3e2723;--terracotta:#a0522d;--cream:#faf7f2;--paper:#fff;--line:#e2dbd0;--muted:#776f66;--green:#3f5a3a;--danger:#b42318;--shadow:0 12px 30px rgba(62,39,35,.1)}
-    *{box-sizing:border-box}body{margin:0;background:var(--cream);color:var(--coffee);font-family:Inter,Arial,sans-serif}.hidden{display:none!important}
-    .page{max-width:1280px;margin:0 auto;padding:26px 20px 56px}.topbar{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:20px;flex-wrap:wrap}h1,h2,h3{font-family:Georgia,serif;margin:0}h1{font-size:1.7rem}.subtitle,.hint{color:var(--muted);font-size:.82rem;margin:5px 0 0}.actions{display:flex;gap:8px;flex-wrap:wrap}.button{border:1px solid var(--line);background:var(--paper);color:var(--coffee);padding:10px 14px;border-radius:8px;font-weight:700;cursor:pointer}.button.primary{background:var(--terracotta);border-color:var(--terracotta);color:#fff}.button.danger{background:var(--danger);border-color:var(--danger);color:#fff}.button:disabled{opacity:.55;cursor:not-allowed}
-    .panel{background:var(--paper);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);padding:20px;margin-bottom:18px}.toolbar{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap}.toolbar select,.field input,.field select,.field textarea{border:1px solid var(--line);border-radius:8px;background:#fff;color:var(--coffee);padding:10px 11px;font:inherit;width:100%}.toolbar select{width:auto;min-width:180px}.field{display:flex;flex-direction:column;gap:5px}.field label,.meta-label{font-size:.7rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}.form-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}.field.full{grid-column:1/-1}.field textarea{min-height:180px;resize:vertical}.check{display:flex;align-items:center;gap:8px;padding-top:25px;font-size:.84rem}.check input{width:auto}.form-actions{display:flex;justify-content:flex-end;gap:8px;grid-column:1/-1;padding-top:6px}.status{min-height:1.2em;font-size:.8rem;font-weight:700}.status.success{color:var(--green)}.status.error{color:var(--danger)}
-    .property-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));grid-auto-rows:minmax(62px,auto);align-content:start;gap:8px;margin-top:12px;max-height:1400px;overflow-y:auto;padding:2px 6px 2px 2px}.property-item{border:1px solid var(--line);border-radius:8px;padding:9px 11px;display:flex;justify-content:space-between;gap:8px;align-items:center}.property-item strong{display:block;font-size:.9rem}.property-item span{display:block;color:var(--muted);font-size:.68rem;margin-top:2px}.property-item .button{padding:7px 10px;font-size:.74rem}.empty{padding:24px;text-align:center;color:var(--muted)}
-    .gallery{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px;margin-top:8px}.gallery-item{position:relative;aspect-ratio:16/10;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--cream)}.gallery-item[draggable="true"]{cursor:grab}.gallery-item.dragging{opacity:.45;outline:2px dashed var(--terracotta)}.gallery-item img{width:100%;height:100%;object-fit:cover}.gallery-remove{position:absolute;top:4px;right:4px;width:24px;height:24px;border:0;border-radius:50%;background:rgba(180,35,24,.9);color:#fff;font-weight:700;cursor:pointer}.gallery-new{position:absolute;left:4px;bottom:4px;padding:2px 5px;border-radius:4px;background:rgba(62,39,35,.85);color:#fff;font-size:.62rem;font-weight:700}.upload-note{color:var(--muted);font-size:.75rem;margin-top:6px}
-    .logo-settings{background:#2b211e;color:#fff;border-color:#2b211e}.logo-settings h2{color:#fff}.logo-settings .hint{color:#d8c7bd}.logo-settings-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-top:16px}.logo-upload{padding:14px;border:1px solid rgba(255,255,255,.16);border-radius:10px;background:rgba(255,255,255,.06)}.logo-upload label{display:block;color:#f0d4c5;font-size:.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin-bottom:8px}.logo-upload input{width:100%;color:#fff;font:inherit}.logo-preview{height:74px;margin-top:10px;padding:8px;background:rgba(255,255,255,.94);border-radius:8px;display:grid;place-items:center}.logo-preview img{max-width:100%;max-height:58px;object-fit:contain}.logo-settings .status{margin-top:12px;color:#f0d4c5}.contact-settings{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:14px}.contact-settings label{display:flex;flex-direction:column;gap:5px;color:#f0d4c5;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em}.contact-settings input{border:1px solid rgba(255,255,255,.2);border-radius:8px;background:rgba(255,255,255,.95);color:var(--coffee);padding:10px 11px;font:inherit;width:100%}@media(max-width:900px){.logo-settings-grid{grid-template-columns:1fr 1fr}}@media(max-width:760px){.logo-settings-grid,.contact-settings{grid-template-columns:1fr}}
-    .it-contact textarea{width:100%;min-height:120px;resize:vertical;border:1px solid var(--line);border-radius:8px;padding:10px 11px;font:inherit;color:var(--coffee)}.it-contact .form-actions{padding-top:0}.it-contact .hint{margin-bottom:10px}.contact-inbox{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(220px,.6fr);gap:14px;margin-top:18px}.contact-history{display:grid;gap:8px;max-height:280px;overflow:auto}.contact-message{border:1px solid var(--line);border-radius:8px;padding:10px 12px;text-align:left;background:#fff;color:var(--coffee);cursor:pointer}.contact-message:hover,.contact-message.active{border-color:var(--terracotta);background:#fffaf6}.contact-message strong{display:block;font-size:.8rem}.contact-message span{display:block;color:var(--muted);font-size:.7rem;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.contact-detail{border:1px solid var(--line);border-radius:8px;padding:14px;min-height:140px;background:var(--cream);font-size:.86rem;line-height:1.5;white-space:pre-wrap}.contact-filters{display:flex;gap:6px;flex-wrap:wrap}.contact-filter{border:1px solid var(--line);background:#fff;color:var(--coffee);border-radius:7px;padding:7px 9px;font-size:.72rem;font-weight:700;cursor:pointer}.contact-filter.active{background:var(--terracotta);border-color:var(--terracotta);color:#fff}.contact-status{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}.contact-status button{border:1px solid var(--line);background:#fff;border-radius:7px;padding:7px 9px;font-size:.72rem;cursor:pointer}.contact-status button.active{background:var(--green);border-color:var(--green);color:#fff}@media(max-width:760px){.logo-settings-grid,.contact-settings,.contact-inbox{grid-template-columns:1fr}}
-    .login{min-height:100vh;display:grid;place-items:center;padding:20px}.login-card{width:min(420px,100%);background:var(--paper);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:24px}.login-logo{display:block;width:min(250px,100%);height:72px;object-fit:contain;object-position:center;margin:0 auto 14px}.login-card>h1,.login-card>.subtitle{text-align:center}.login-card>.subtitle{margin-top:10px}.login-form{display:grid;gap:12px;margin-top:34px}
-    .category-form-section{grid-column:1/-1;border:1px solid var(--line);border-radius:8px;padding:14px}.category-form-section[hidden]{display:none}.category-form-section h3{font-size:1rem}.category-fields-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:12px}.category-fields-grid .field-full{grid-column:1/-1}@media(max-width:760px){.category-fields-grid{grid-template-columns:1fr}.category-fields-grid .field-full{grid-column:auto}}
-    .domain-expiry{display:grid;grid-template-columns:minmax(0,1fr) minmax(220px,1.15fr);align-items:center;gap:10px 16px;align-self:start;padding:14px 16px;background:#2b211e;color:#fff;border-color:#2b211e}.domain-expiry .toolbar{grid-column:1;min-width:0}.domain-expiry h2{color:#fff;font-size:1.12rem}.domain-expiry .hint{color:#d8c7bd}.domain-countdown{grid-column:2;grid-row:1;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;margin:0}.domain-countdown-unit{padding:8px 5px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);border-radius:8px;text-align:center}.domain-countdown-unit strong{display:block;font-size:1.2rem;font-variant-numeric:tabular-nums}.domain-countdown-unit span{display:block;margin-top:2px;color:#d8c7bd;font-size:.58rem;text-transform:uppercase}.domain-expiry-status{grid-column:1/-1;min-height:0;margin:0;color:#f0d4c5;font-size:.7rem}
-    @media(max-width:760px){.domain-expiry{grid-template-columns:1fr;gap:10px;padding:14px}.domain-expiry .toolbar,.domain-countdown,.domain-expiry-status{grid-column:1}.domain-countdown{grid-row:auto}}
-    .room-option-list{display:grid;gap:8px;margin-top:8px}.room-option-row{display:grid;grid-template-columns:1.1fr .7fr 1.8fr auto;gap:8px;align-items:start}.room-option-row input,.room-option-row textarea{border:1px solid var(--line);border-radius:8px;padding:9px 10px;font:inherit;width:100%}.room-option-row textarea{min-height:42px;resize:vertical}.room-option-row .button{padding:8px 10px}.room-option-empty{color:var(--muted);font-size:.78rem;padding:10px 0}@media(max-width:900px){.room-option-row{grid-template-columns:1fr 1fr}.room-option-row textarea{grid-column:1/-1}.room-option-row .button{grid-column:1/-1}}
-    @media(min-width:901px){#app{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:0 18px}#app>.topbar,#app>#logoSettingsPanel{grid-column:1/-1}#propertyListPanel{grid-column:1;grid-row:2;align-self:stretch}#editorPanel{grid-column:2;grid-row:2}#logoSettingsPanel{grid-row:3}#contactItPanel{grid-column:1;grid-row:4}#domainExpiryPanel{grid-column:2;grid-row:4}}
-    @media(max-width:900px){#app{display:block}}
-    .password-wrap{position:relative;display:block}.password-wrap input{padding-right:46px}.password-toggle{position:absolute;right:8px;top:50%;transform:translateY(-50%);border:0;background:transparent;color:var(--muted);padding:6px;font-size:1rem;line-height:1;cursor:pointer}
-    @media(max-width:760px){.form-grid,.property-list{grid-template-columns:1fr}.field.full{grid-column:auto}.form-actions{grid-column:auto}.page{padding:20px 12px 40px}}
+    :root{
+      --ink:#241915;--ink-2:#3d2c25;--bg:#f1f0ed;--paper:#ffffff;--sunken:#f7f6f3;
+      --line:#e4e0da;--line-strong:#d2cbc2;--muted:#6f675f;
+      --accent:#6b3f2a;--accent-hover:#56321f;--brass:#b5832f;--brass-soft:#f6ecdb;
+      --success:#2e6a4c;--success-soft:#e7f2ec;--danger:#b3261e;--danger-soft:#fbeae8;
+      --ring:0 0 0 3px rgba(181,131,47,.32);
+      --shadow:0 1px 2px rgba(36,25,21,.05),0 10px 28px -16px rgba(36,25,21,.22);
+      --r-sm:6px;--r:9px;--r-lg:14px;--r-xl:18px;
+      /* legacy aliases */
+      --coffee:var(--ink);--terracotta:var(--accent);--cream:var(--sunken);--green:var(--success);
+    }
+    *{box-sizing:border-box}
+    html{-webkit-text-size-adjust:100%}
+    body{margin:0;background:var(--bg);color:var(--ink);font-family:'Plus Jakarta Sans',system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
+    .hidden{display:none!important}
+    h1,h2,h3{font-family:inherit;margin:0;letter-spacing:-.015em;color:inherit}
+    h1{font-size:1.6rem;font-weight:800;line-height:1.2}
+    h2{font-size:1.08rem;font-weight:700}
+    h3{font-size:.95rem;font-weight:700}
+    code{font-family:inherit;font-weight:600;background:rgba(255,255,255,.12);padding:1px 6px;border-radius:5px}
+    :focus-visible{outline:none;box-shadow:var(--ring)}
+    .subtitle,.hint{color:var(--muted);font-size:.84rem;margin:4px 0 0;line-height:1.5}
+
+    /* Buttons */
+    .button{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:40px;border:1px solid var(--line-strong);background:var(--paper);color:var(--ink);padding:9px 16px;border-radius:var(--r);font:inherit;font-size:.86rem;font-weight:600;text-decoration:none;cursor:pointer;transition:background .15s,border-color .15s,color .15s}
+    .button:hover{background:var(--sunken);border-color:var(--ink-2)}
+    .button.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+    .button.primary:hover{background:var(--accent-hover);border-color:var(--accent-hover)}
+    .button.danger{background:var(--paper);border-color:#e6b4ae;color:var(--danger)}
+    .button.danger:hover{background:var(--danger);border-color:var(--danger);color:#fff}
+    .button:disabled{opacity:.5;cursor:not-allowed}
+    .button:disabled:hover{background:var(--paper);border-color:var(--line-strong);color:var(--ink)}
+    .button.primary:disabled:hover{background:var(--accent);border-color:var(--accent);color:#fff}
+    .actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+
+    /* Page + top bar */
+    .page{max-width:1320px;margin:0 auto;padding:20px 20px 64px}
+    .topbar{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:18px;padding:22px 26px;background:var(--ink);color:#fff;border-radius:var(--r-xl);position:relative;overflow:hidden}
+    .topbar::after{content:"";position:absolute;right:-60px;top:-80px;width:260px;height:260px;border-radius:50%;border:38px solid rgba(181,131,47,.13);pointer-events:none}
+    .topbar>*{position:relative;z-index:1}
+    .topbar .subtitle{color:#cdbfb6}
+    .topbar .button{background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.2);color:#fff}
+    .topbar .button:hover{background:rgba(255,255,255,.16);border-color:rgba(255,255,255,.35)}
+    .topbar .button.danger{color:#ffc7c0}
+    .topbar .button.danger:hover{background:var(--danger);border-color:var(--danger);color:#fff}
+
+    /* Panels */
+    .panel{background:var(--paper);border:1px solid var(--line);border-radius:var(--r-lg);box-shadow:var(--shadow);padding:22px;margin-bottom:18px}
+    .toolbar{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap;padding-bottom:16px;border-bottom:1px solid var(--line)}
+
+    /* Form controls */
+    .toolbar select,.field input,.field select,.field textarea{border:1px solid var(--line-strong);border-radius:var(--r);background:var(--paper);color:var(--ink);padding:9px 12px;font:inherit;font-size:.9rem;width:100%;min-height:40px;transition:border-color .15s,box-shadow .15s}
+    select{appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5l5 5 5-5' fill='none' stroke='%236f675f' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")!important;background-repeat:no-repeat!important;background-position:right 12px center!important;padding-right:34px!important;cursor:pointer}
+    .toolbar select{width:auto;min-width:170px;background-color:var(--paper)}
+    .field input:hover,.field select:hover,.field textarea:hover,.toolbar select:hover{border-color:var(--ink-2)}
+    .field input:focus,.field select:focus,.field textarea:focus,.toolbar select:focus,.room-option-row input:focus,.room-option-row textarea:focus,.it-contact textarea:focus,.contact-settings input:focus{outline:none;border-color:var(--brass);box-shadow:var(--ring)}
+    .field input[readonly]{background:var(--sunken);color:var(--muted);border-color:var(--line);cursor:default}
+    .field input[readonly]:hover{border-color:var(--line)}
+    .field input:disabled,.field textarea:disabled,.field select:disabled,.room-option-row input:disabled,.room-option-row textarea:disabled{background:var(--sunken);color:var(--muted);cursor:not-allowed}
+    input[type="file"]{padding:6px!important;font-size:.82rem!important;color:var(--muted);background:var(--sunken)!important;border-style:dashed!important;cursor:pointer}
+    input[type="file"]::file-selector-button{font:inherit;font-weight:600;font-size:.8rem;margin-right:10px;padding:7px 12px;border:1px solid var(--line-strong);border-radius:var(--r-sm);background:var(--paper);color:var(--ink);cursor:pointer}
+    input[type="file"]::file-selector-button:hover{border-color:var(--ink-2)}
+    .field{display:flex;flex-direction:column;gap:6px;min-width:0}
+    .field label,.meta-label{font-size:.8rem;font-weight:600;color:var(--ink-2);letter-spacing:0}
+    .form-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px 14px;margin-top:18px}
+    .field.full{grid-column:1/-1}
+    .field textarea{min-height:170px;resize:vertical;line-height:1.55}
+    p.hint.field{display:block;margin:0;padding:10px 12px;background:var(--brass-soft);border-radius:var(--r);color:#6b4a14;font-size:.82rem}
+    .check{display:flex;align-items:center;gap:8px;padding-top:25px;font-size:.84rem}.check input{width:auto}
+    .form-actions{display:flex;justify-content:flex-end;gap:8px;grid-column:1/-1;padding-top:6px;flex-wrap:wrap}
+    #propertyForm .form-actions{position:sticky;bottom:0;z-index:5;margin:0 -22px -22px;padding:14px 22px;background:rgba(255,255,255,.94);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);border-top:1px solid var(--line);border-radius:0 0 var(--r-lg) var(--r-lg)}
+    .status{min-height:1.2em;font-size:.82rem;font-weight:600;margin:0}
+    .status:empty{display:none}
+    .status.success{color:var(--success)}
+    .status.error{color:var(--danger)}
+    #saveMessage{grid-column:1/-1}
+    #saveMessage:not(:empty),#contactItStatus:not(:empty){padding:9px 12px;border-radius:var(--r);background:var(--sunken)}
+    #saveMessage.success,#contactItStatus.success{background:var(--success-soft)}
+    #saveMessage.error,#contactItStatus.error,#listMessage:not(:empty){background:var(--danger-soft)}
+    #listMessage:not(:empty){margin-top:14px;padding:9px 12px;border-radius:var(--r)}
+
+    /* Property list */
+    .property-list{display:grid;grid-template-columns:1fr;align-content:start;gap:6px;margin-top:14px;max-height:1200px;overflow-y:auto;padding:2px 4px 2px 2px;scrollbar-width:thin;scrollbar-color:var(--line-strong) transparent}
+    .property-item{border:1px solid var(--line);border-radius:var(--r);padding:11px 12px 11px 14px;display:flex;justify-content:space-between;gap:12px;align-items:center;background:var(--paper);transition:border-color .15s,background .15s}
+    .property-item:hover{border-color:var(--line-strong);background:var(--sunken)}
+    .property-item>div:first-child{min-width:0}
+    .property-item strong{display:block;font-size:.92rem;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .property-item span{display:block;color:var(--muted);font-size:.74rem;margin-top:3px;line-height:1.4}
+    .property-item .button{min-height:34px;padding:6px 12px;font-size:.78rem;white-space:nowrap}
+    .empty{padding:36px 20px;text-align:center;color:var(--muted);border:1px dashed var(--line-strong);border-radius:var(--r);font-size:.88rem}
+
+    /* Gallery */
+    .gallery{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px;margin-top:4px}
+    #propertyMainPreview{grid-template-columns:1fr;max-width:260px}
+    .gallery>.hint{grid-column:1/-1;margin:0;padding:14px;border:1px dashed var(--line-strong);border-radius:var(--r);text-align:center;background:var(--sunken)}
+    .gallery-item{position:relative;aspect-ratio:16/10;border:1px solid var(--line);border-radius:var(--r);overflow:hidden;background:var(--sunken)}
+    .gallery-item[draggable="true"]{cursor:grab}
+    .gallery-item[draggable="true"]:active{cursor:grabbing}
+    .gallery-item.dragging{opacity:.45;outline:2px dashed var(--brass);outline-offset:2px}
+    .gallery-item img{width:100%;height:100%;object-fit:cover;display:block}
+    .gallery-remove{position:absolute;top:5px;right:5px;width:24px;height:24px;display:grid;place-items:center;border:0;border-radius:50%;background:rgba(36,25,21,.72);color:#fff;font-size:.95rem;font-weight:700;line-height:1;cursor:pointer;transition:background .15s}
+    .gallery-remove:hover{background:var(--danger)}
+    .gallery-new{position:absolute;left:5px;bottom:5px;padding:2px 7px;border-radius:999px;background:var(--brass);color:#fff;font-size:.64rem;font-weight:700}
+    .upload-note{color:var(--muted);font-size:.76rem;margin:2px 0 0}
+
+    /* Category sections */
+    .category-form-section{grid-column:1/-1;border:1px solid var(--line);border-radius:12px;padding:16px;background:var(--sunken)}
+    .category-form-section[hidden]{display:none}
+    .category-form-section .field input:not([readonly]):not(:disabled){background:var(--paper)}
+    .category-fields-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-top:12px}
+    .category-fields-grid .field-full{grid-column:1/-1}
+
+    .room-option-list{display:grid;gap:8px;margin-top:4px}
+    .room-option-row{display:grid;grid-template-columns:1.1fr .8fr 1.8fr auto;gap:8px;align-items:start;padding:10px;background:var(--paper);border:1px solid var(--line);border-radius:var(--r)}
+    .room-option-row input,.room-option-row textarea{border:1px solid var(--line-strong);border-radius:var(--r);padding:9px 11px;font:inherit;font-size:.88rem;width:100%;min-height:40px;color:var(--ink);background:var(--paper)}
+    .room-option-row textarea{min-height:40px;resize:vertical}
+    .room-option-row .button{min-height:40px;padding:8px 12px}
+    .room-option-empty{color:var(--muted);font-size:.82rem;padding:12px;border:1px dashed var(--line-strong);border-radius:var(--r);background:var(--paper);text-align:center}
+    #addRoomOption{align-self:flex-start;margin-top:4px}
+
+    /* Logo & contact settings */
+    .logo-settings-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-top:18px}
+    .logo-upload{padding:14px;border:1px solid var(--line);border-radius:12px;background:var(--sunken);display:flex;flex-direction:column;gap:10px}
+    .logo-upload label{display:block;color:var(--ink-2);font-size:.82rem;font-weight:700}
+    .logo-upload input{width:100%;border:1px dashed var(--line-strong);border-radius:var(--r);font:inherit}
+    .logo-preview{height:84px;padding:10px;border:1px solid var(--line);border-radius:var(--r);display:grid;place-items:center;background-color:#fff;background-image:linear-gradient(45deg,#f1efeb 25%,transparent 25%),linear-gradient(-45deg,#f1efeb 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#f1efeb 75%),linear-gradient(-45deg,transparent 75%,#f1efeb 75%);background-size:14px 14px;background-position:0 0,0 7px,7px -7px,-7px 0}
+    .logo-preview img{max-width:100%;max-height:62px;object-fit:contain}
+    .logo-preview .hint{margin:0;background:rgba(255,255,255,.9);padding:2px 8px;border-radius:5px}
+    .contact-settings{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-top:18px;padding-top:18px;border-top:1px solid var(--line)}
+    .contact-settings label{display:flex;flex-direction:column;gap:6px;color:var(--ink-2);font-size:.8rem;font-weight:600}
+    .contact-settings input{border:1px solid var(--line-strong);border-radius:var(--r);background:var(--paper);color:var(--ink);padding:9px 12px;font:inherit;font-size:.9rem;font-weight:400;width:100%;min-height:40px}
+    #logoSaveMessage:not(:empty){margin-top:14px;padding:9px 12px;border-radius:var(--r);background:var(--sunken)}
+    #logoSaveMessage.success{background:var(--success-soft)}
+    #logoSaveMessage.error{background:var(--danger-soft)}
+
+    /* Contact IT */
+    .it-contact form{margin-top:16px;display:grid;gap:12px}
+    .it-contact textarea{width:100%;min-height:130px;resize:vertical;border:1px solid var(--line-strong);border-radius:var(--r);padding:10px 12px;font:inherit;font-size:.9rem;color:var(--ink)}
+    .it-contact .form-actions{padding-top:0}
+    .contact-inbox{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(220px,.6fr);gap:14px;margin-top:18px}.contact-history{display:grid;gap:8px;max-height:280px;overflow:auto}.contact-message{border:1px solid var(--line);border-radius:var(--r);padding:10px 12px;text-align:left;background:#fff;color:var(--ink);cursor:pointer}.contact-message:hover,.contact-message.active{border-color:var(--accent);background:var(--sunken)}.contact-message strong{display:block;font-size:.8rem}.contact-message span{display:block;color:var(--muted);font-size:.72rem;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.contact-detail{border:1px solid var(--line);border-radius:var(--r);padding:14px;min-height:140px;background:var(--sunken);font-size:.86rem;line-height:1.5;white-space:pre-wrap}.contact-filters{display:flex;gap:6px;flex-wrap:wrap}.contact-filter{border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:7px;padding:7px 9px;font-size:.74rem;font-weight:600;cursor:pointer}.contact-filter.active{background:var(--accent);border-color:var(--accent);color:#fff}.contact-status{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}.contact-status button{border:1px solid var(--line);background:#fff;border-radius:7px;padding:7px 9px;font-size:.74rem;cursor:pointer}.contact-status button.active{background:var(--success);border-color:var(--success);color:#fff}
+
+    /* Dialog */
+    dialog.modal{border:0;padding:0;border-radius:var(--r-xl);width:min(420px,calc(100vw - 32px));box-shadow:0 30px 70px -20px rgba(36,25,21,.5);color:var(--ink)}
+    dialog.modal::backdrop{background:rgba(36,25,21,.5);backdrop-filter:blur(2px)}
+    .modal-content{padding:26px 26px 22px}
+    .modal-content::before{content:"✓";display:grid;place-items:center;width:44px;height:44px;border-radius:50%;background:var(--success-soft);color:var(--success);font-weight:800;font-size:1.2rem;margin-bottom:14px}
+    .modal-content p{color:var(--muted);margin:6px 0 20px;font-size:.9rem}
+
+    /* Login */
+    .login{min-height:100vh;display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr)}
+    .login-aside{position:relative;overflow:hidden;background:var(--ink);color:#fff;padding:48px 56px;display:flex;flex-direction:column;justify-content:space-between}
+    .login-aside::before{content:"";position:absolute;left:-120px;bottom:-140px;width:460px;height:460px;border-radius:50%;border:64px solid rgba(181,131,47,.14)}
+    .login-aside::after{content:"";position:absolute;right:48px;top:48px;width:120px;height:120px;border-radius:50%;border:1px solid rgba(255,255,255,.12)}
+    .login-aside>*{position:relative;z-index:1}
+    .login-aside-brand{font-weight:800;letter-spacing:.02em;font-size:1rem}
+    .login-aside h2{font-size:clamp(1.7rem,2.6vw,2.4rem);font-weight:800;line-height:1.15;letter-spacing:-.025em;max-width:16ch}
+    .login-aside p{color:#cdbfb6;max-width:42ch;margin:14px 0 0;font-size:.95rem}
+    .login-aside small{color:#9d8e85;font-size:.78rem}
+    .login-main{display:grid;place-items:center;padding:32px 20px;background:var(--bg)}
+    .login-card{width:min(400px,100%);background:var(--paper);border:1px solid var(--line);border-radius:var(--r-xl);box-shadow:var(--shadow);padding:30px}
+    .login-logo{display:block;width:min(200px,100%);height:60px;object-fit:contain;object-position:left center;margin:0 0 22px}
+    .login-card>h1{font-size:1.45rem}
+    .login-card>.subtitle{margin-top:6px}
+    .login-form{display:grid;gap:16px;margin-top:26px}
+    .login-form .button.primary{min-height:44px;margin-top:4px}
+    #loginMessage:not(:empty){padding:9px 12px;border-radius:var(--r);background:var(--danger-soft)}
+    .password-wrap{position:relative;display:block}
+    .password-wrap input{padding-right:46px}
+    .password-toggle{position:absolute;right:6px;top:50%;transform:translateY(-50%);border:0;background:transparent;color:var(--muted);padding:6px 8px;border-radius:6px;font-size:1rem;line-height:1;cursor:pointer}
+    .password-toggle:hover{background:var(--sunken);color:var(--ink)}
+
+    /* Desktop layout */
+    @media(min-width:901px){
+      #app{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:0 18px}
+      #app>.topbar,#app>#logoSettingsPanel{grid-column:1/-1}
+      #propertyListPanel{grid-column:1;grid-row:2;align-self:stretch}
+      #editorPanel{grid-column:2;grid-row:2}
+      #logoSettingsPanel{grid-row:3}
+      #contactItPanel{grid-column:1/-1;grid-row:4}
+    }
+    @media(max-width:1100px){.contact-settings{grid-template-columns:repeat(2,minmax(0,1fr))}.form-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+    @media(max-width:900px){
+      #app{display:block}
+      .logo-settings-grid{grid-template-columns:1fr 1fr}
+      .login{grid-template-columns:1fr}
+      .login-aside{display:none}
+      .room-option-row{grid-template-columns:1fr 1fr}.room-option-row textarea{grid-column:1/-1}.room-option-row .button{grid-column:1/-1}
+      .gallery{grid-template-columns:repeat(4,minmax(0,1fr))}
+    }
+    @media(max-width:760px){
+      .page{padding:12px 12px 40px}
+      .topbar{padding:18px;border-radius:var(--r-lg)}
+      .panel{padding:16px}
+      #propertyForm .form-actions{margin:0 -16px -16px;padding:12px 16px}
+      .form-grid,.logo-settings-grid,.contact-settings,.contact-inbox,.category-fields-grid{grid-template-columns:1fr}
+      .field.full,.form-actions,.category-fields-grid .field-full{grid-column:auto}
+      .toolbar .actions,.toolbar select{width:100%}
+      .gallery{grid-template-columns:repeat(3,minmax(0,1fr))}
+      .property-item{flex-wrap:wrap}
+    }
+    @media(prefers-reduced-motion:reduce){*{transition:none!important}}
   </style>
 </head>
 <body>
   <section id="loginScreen" class="login">
-    <div class="login-card">
-      <img id="loginLogo" class="login-logo" src="https://ik.imagekit.io/o1hnx31yy/yh%20(2).png?tr=f-jpg" alt="YOUR HOME" />
-      <h1>Admin Website</h1>
-      <p class="subtitle">Kelola data properti YOUR HOME.</p>
-      <form id="loginForm" class="login-form">
-        <label class="field"><span class="meta-label">ID Staf</span><select id="adminStaffId" autocomplete="username" required><option value="master">Master</option></select></label>
-        <label class="field"><span class="meta-label">Password</span><span class="password-wrap"><input id="adminPassword" type="password" autocomplete="current-password" required /><button id="toggleAdminPassword" class="password-toggle" type="button" aria-label="Tampilkan password" title="Tampilkan password">&#128065;</button></span></label>
-        <button class="button primary" type="submit">Masuk</button>
-        <p id="loginMessage" class="status error"></p>
-      </form>
+    <aside class="login-aside" aria-hidden="true">
+      <div class="login-aside-brand">YOUR HOME</div>
+      <div>
+        <h2>Kelola katalog properti dari satu tempat.</h2>
+        <p>Perbarui harga, foto, lokasi, dan status tayang apartemen, villa, guest house, dan kosan di website.</p>
+      </div>
+      <small>Panel khusus staf YOUR HOME</small>
+    </aside>
+    <div class="login-main">
+      <div class="login-card">
+        <img id="loginLogo" class="login-logo" src="https://ik.imagekit.io/o1hnx31yy/yh%20(2).png?tr=f-jpg" alt="YOUR HOME" />
+        <h1>Admin Website</h1>
+        <p class="subtitle">Kelola data properti YOUR HOME.</p>
+        <form id="loginForm" class="login-form">
+          <label class="field"><span class="meta-label">ID Staf</span><select id="adminStaffId" autocomplete="username" required><option value="master">Master</option></select></label>
+          <label class="field"><span class="meta-label">Password</span><span class="password-wrap"><input id="adminPassword" type="password" autocomplete="current-password" required /><button id="toggleAdminPassword" class="password-toggle" type="button" aria-label="Tampilkan password" title="Tampilkan password">&#128065;</button></span></label>
+          <button class="button primary" type="submit">Masuk</button>
+          <p id="loginMessage" class="status error"></p>
+        </form>
+      </div>
     </div>
   </section>
 
   <main id="app" class="page hidden">
     <header class="topbar">
-      <div><h1>Kelola Properti</h1><p class="subtitle">Edit data publik tanpa mengubah kode `index.html`.</p></div>
+      <div><h1>Kelola Properti</h1><p class="subtitle">Edit data publik tanpa mengubah kode <code>index.html</code>.</p></div>
       <div class="actions"><a class="button" href="navigasi312.html">Dashboard</a><button class="button danger" id="logoutBtn" type="button">Logout</button></div>
     </header>
 
     <section class="panel" id="propertyListPanel">
-      <div class="toolbar"><div><h2>Daftar Properti</h2><p class="hint">Katalog bersama dari Dashboard. Properti baru dibuat di Dashboard.</p></div><div class="actions"><select id="categoryFilter"><option value="">Semua kategori</option><option value="apartment">Apartemen</option><option value="villa">Villa</option><option value="guesthouse">Guest House</option><option value="kos">Kosan</option></select><select id="publicationFilter"><option value="current" selected>Aktif & Draft</option><option value="draft">Draft · Perlu dilengkapi</option><option value="active">Aktif · Tampil di website</option><option value="archived">Arsip · tidak tampil di website</option><option value="all">Semua status</option></select></div></div>
+      <div class="toolbar"><div><h2>Daftar Properti</h2><p class="hint">Katalog bersama dari Dashboard. Properti baru dibuat di Dashboard.</p></div><div class="actions"><select id="categoryFilter" aria-label="Filter kategori"><option value="">Semua kategori</option><option value="apartment">Apartemen</option><option value="villa">Villa</option><option value="guesthouse">Guest House</option><option value="kos">Kosan</option></select><select id="publicationFilter" aria-label="Filter status"><option value="current" selected>Aktif & Draft</option><option value="draft">Draft · Perlu dilengkapi</option><option value="active">Aktif · Tampil di website</option><option value="archived">Arsip · tidak tampil di website</option><option value="all">Semua status</option></select></div></div>
       <p id="listMessage" class="status error"></p>
       <div id="propertyList" class="property-list"></div>
     </section>
@@ -67,7 +264,7 @@
             <label class="field"><span class="meta-label">Jumlah Kamar Tidur</span><input id="kosBeds" type="number" min="0" /></label>
             <label class="field"><span class="meta-label">Jumlah Kamar Mandi</span><input id="kosBaths" type="number" min="0" /></label>
             <label class="field"><span class="meta-label">Kapasitas Tamu per Unit</span><input id="kosGuests" type="number" min="0" /></label>
-            <div class="field field-full"><span class="meta-label">Tipe Kamar dan Harga Bulanan</span><p class="upload-note">Tambahkan tiap tipe kamar, harga per bulan, dan detail fasilitasnya.</p><div id="roomOptionList" class="room-option-list"></div><button class="button" id="addRoomOption" type="button">Tambah Tipe Kamar</button></div>
+            <div class="field field-full"><span class="meta-label">Tipe Kamar dan Harga Bulanan</span><p class="upload-note">Tambahkan tiap tipe kamar, harga per bulan, dan detail fasilitasnya.</p><div id="roomOptionList" class="room-option-list"></div><button class="button" id="addRoomOption" type="button">+ Tambah Tipe Kamar</button></div>
           </div>
         </section>
         <section class="category-form-section" data-category-section="stay">
@@ -80,12 +277,12 @@
             <label class="field"><span class="meta-label">Kapasitas Tamu</span><input id="propertyGuests" type="number" min="0" /></label>
           </div>
         </section>
-        <div class="field"><span class="meta-label">Foto Utama (1 foto)</span><div id="propertyMainPreview" class="gallery"></div><input id="propertyMainFile" type="file" accept="image/*" /><p class="upload-note">Pilih 1 foto utama. Kompres otomatis di bawah 100 KB.</p></div>
-        <div class="field full"><span class="meta-label">Foto Galeri (banyak foto)</span><div id="propertyGallery" class="gallery"></div><input id="propertyImageFiles" type="file" accept="image/*" multiple /><p class="upload-note">Pilih banyak foto untuk tur ruangan. Kompres otomatis di bawah 100 KB per file.</p></div>
+        <div class="field full"><span class="meta-label">Foto Utama (1 foto)</span><div id="propertyMainPreview" class="gallery"></div><input id="propertyMainFile" type="file" accept="image/*" /><p class="upload-note">Pilih 1 foto utama. Kompres otomatis di bawah 100 KB.</p></div>
+        <div class="field full"><span class="meta-label">Foto Galeri (banyak foto)</span><div id="propertyGallery" class="gallery"></div><input id="propertyImageFiles" type="file" accept="image/*" multiple /><p class="upload-note">Pilih banyak foto untuk tur ruangan. Seret foto untuk mengubah urutan. Kompres otomatis di bawah 100 KB per file.</p></div>
         <label class="field"><span class="meta-label">Pencarian Google Maps</span><input id="propertyMapQuery" /></label>
         <label class="field"><span class="meta-label">Link Google Maps</span><input id="propertyMapLink" type="url" /></label>
-        <label class="field full"><span class="meta-label">Kode Embed Google Maps</span><textarea id="propertyMapEmbed" placeholder="Tempel kode &lt;iframe ...&gt; dari Google Maps"></textarea></label>
         <label class="field"><span class="meta-label">Urutan Tampil</span><input id="propertySortOrder" type="number" min="0" /></label>
+        <label class="field full"><span class="meta-label">Kode Embed Google Maps</span><textarea id="propertyMapEmbed" placeholder="Tempel kode &lt;iframe ...&gt; dari Google Maps"></textarea></label>
         <label class="field full"><span class="meta-label">Deskripsi</span><textarea id="propertyDescription"></textarea></label>
         <p id="saveMessage" class="status" role="status" aria-live="polite"></p>
         <div class="form-actions"><button class="button" type="submit" name="publicationAction" value="draft">Simpan Draft</button><button class="button primary" id="publishPropertyButton" type="submit" name="publicationAction" value="publish">Publish ke Website</button></div>
@@ -93,10 +290,10 @@
     </section>
 
     <section class="panel logo-settings" id="logoSettingsPanel">
-      <div class="toolbar"><div><h2>Logo Website</h2><p class="hint">Logo Website berlaku untuk situs publik. Logo Dashboard diatur terpisah. Perubahan disimpan ke database website.</p></div></div>
+      <div class="toolbar"><div><h2>Logo & Kontak Website</h2><p class="hint">Logo Website berlaku untuk situs publik. Logo Dashboard diatur terpisah. Perubahan disimpan otomatis ke database website.</p></div></div>
       <div class="logo-settings-grid">
-        <div class="logo-upload"><label for="headerLogoFile">Logo Atas Website & Dasb Log in</label><input id="headerLogoFile" type="file" accept="image/*" /><div class="logo-preview" id="headerLogoPreview"></div></div>
-        <div class="logo-upload"><label for="footerLogoFile">Logo Footer Wesbite</label><input id="footerLogoFile" type="file" accept="image/*" /><div class="logo-preview" id="footerLogoPreview"></div></div>
+        <div class="logo-upload"><label for="headerLogoFile">Logo atas website & halaman login</label><input id="headerLogoFile" type="file" accept="image/*" /><div class="logo-preview" id="headerLogoPreview"></div></div>
+        <div class="logo-upload"><label for="footerLogoFile">Logo footer website</label><input id="footerLogoFile" type="file" accept="image/*" /><div class="logo-preview" id="footerLogoPreview"></div></div>
         <div class="logo-upload"><label for="dashboardLogoFile">Logo Dashboard</label><input id="dashboardLogoFile" type="file" accept="image/*" /><div class="logo-preview" id="dashboardLogoPreview"></div></div>
       </div>
       <div class="contact-settings">
@@ -116,17 +313,6 @@
         <div class="form-actions"><button class="button primary" type="submit">Kirim Pesan</button></div>
       </form>
     </section>
-    <section class="panel domain-expiry" id="domainExpiryPanel" aria-labelledby="domainExpiryTitle">
-      <div class="toolbar"><div><h2 id="domainExpiryTitle">Masa Aktif Domain</h2><p class="hint">yourhome.id · Berakhir 23 September 2027</p></div></div>
-      <div class="domain-countdown" id="domainCountdown" role="timer" aria-live="off" aria-label="Hitung mundur masa aktif domain">
-        <div class="domain-countdown-unit"><strong id="domainDays">0</strong><span>Hari</span></div>
-        <div class="domain-countdown-unit"><strong id="domainHours">00</strong><span>Jam</span></div>
-        <div class="domain-countdown-unit"><strong id="domainMinutes">00</strong><span>Menit</span></div>
-        <div class="domain-countdown-unit"><strong id="domainSeconds">00</strong><span>Detik</span></div>
-      </div>
-      <p class="domain-expiry-status" id="domainExpiryStatus" role="status" aria-live="polite"></p>
-    </section>
-
   </main>
 
   <dialog id="contactItDialog" class="modal">
@@ -423,22 +609,6 @@
         input.addEventListener('input', () => setCurrencyInputValue(input, input.value));
       });
     }
-    function updateDomainCountdown() {
-      const expiry = new Date(2027, 8, 23, 23, 59, 59).getTime();
-      const remaining = Math.max(0, expiry - Date.now());
-      const totalSeconds = Math.floor(remaining / 1000);
-      const days = Math.floor(totalSeconds / 86400);
-      const hours = Math.floor((totalSeconds % 86400) / 3600);
-      const minutes = Math.floor((totalSeconds % 3600) / 60);
-      const seconds = totalSeconds % 60;
-      el('domainDays').textContent = days.toLocaleString('id-ID');
-      el('domainHours').textContent = String(hours).padStart(2, '0');
-      el('domainMinutes').textContent = String(minutes).padStart(2, '0');
-      el('domainSeconds').textContent = String(seconds).padStart(2, '0');
-      el('domainExpiryStatus').textContent = remaining ? 'Hitung mundur menuju akhir masa aktif domain.' : 'Masa aktif domain sudah berakhir.';
-    }
-    updateDomainCountdown();
-    setInterval(updateDomainCountdown, 1000);
     function compressImageForUpload(file) {
       return new Promise((resolve, reject) => {
         const reader = new FileReader();
