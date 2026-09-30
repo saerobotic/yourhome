@@ -76,33 +76,45 @@
 </head>
 <body class="text-slate-800">
 
-<main id="adminLoginScreen" class="min-h-screen flex items-center justify-center p-4 bg-slate-100">
-  <section class="w-full max-w-md bg-white border border-slate-200 rounded-xl shadow-sm p-6 sm:p-8">
-    <div class="mb-6">
-      <img id="dashboardLoginLogo" alt="YOUR HOME" class="hidden mx-auto w-48 max-h-16 object-contain mb-5">
-      <p class="text-xs font-bold uppercase tracking-wider text-brand-600">YOUR HOME · Dashboard</p>
-      <h1 class="text-2xl font-extrabold text-slate-900 mt-2">Dasbord Management</h1>
-      <p class="text-sm text-slate-500 mt-1">Pilih akun dan masukkan password untuk membuka dashboard.</p>
+<main id="adminLoginScreen" class="min-h-screen grid lg:grid-cols-2">
+  <aside class="hidden lg:flex relative overflow-hidden gradient-bg text-white flex-col justify-between p-12">
+    <div class="absolute -left-28 -bottom-32 w-[420px] h-[420px] rounded-full border-[56px] border-white/10 pointer-events-none"></div>
+    <div class="absolute right-10 top-10 w-28 h-28 rounded-full border border-white/15 pointer-events-none"></div>
+    <div class="relative z-10 text-sm font-extrabold tracking-wide">YOUR HOME</div>
+    <div class="relative z-10">
+      <h2 class="text-4xl font-extrabold leading-tight max-w-sm">Kelola operasional YOUR HOME dari satu dashboard.</h2>
+      <p class="mt-4 text-indigo-100 max-w-sm text-sm">Pantau booking, keuangan, owner, dan crew apartemen, villa, guest house, dan kosan secara real-time.</p>
     </div>
-    <form id="dashboardLoginForm" class="space-y-4">
-      <label class="block">
-        <span class="block text-sm font-semibold text-slate-700 mb-1.5">ID Akun</span>
-        <select id="dashboardLoginAccount" required autocomplete="username" class="w-full border border-slate-200 rounded-lg px-3 py-2.5 text-sm bg-white"><option value="master">Master</option></select>
-      </label>
-      <label class="block">
-        <span class="block text-sm font-semibold text-slate-700 mb-1.5">Password</span>
-        <span class="relative block">
-          <input id="dashboardLoginPassword" type="password" required autocomplete="current-password" class="w-full border border-slate-200 rounded-lg px-3 py-2.5 pr-12 text-sm">
-          <button type="button" data-toggle-password="dashboardLoginPassword" aria-label="Tampilkan password" class="absolute inset-y-0 right-0 px-3 text-slate-500 hover:text-slate-800">
-            <svg data-eye-icon width="19" height="19" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>
-          </button>
-        </span>
-      </label>
-      <p id="dashboardLoginStatus" class="text-sm min-h-5" role="status" aria-live="polite"></p>
-      <button id="dashboardLoginButton" type="submit" class="w-full bg-brand-600 hover:bg-brand-700 disabled:opacity-60 text-white text-sm font-semibold px-4 py-2.5 rounded-lg">Masuk</button>
-      <p class="text-xs text-slate-400 text-center">Sesi berlaku 1 hari atau sampai logout.</p>
-    </form>
-  </section>
+    <small class="relative z-10 text-indigo-200 text-xs">Panel khusus staf YOUR HOME</small>
+  </aside>
+  <div class="flex items-center justify-center p-4 bg-slate-100">
+    <section class="w-full max-w-md bg-white border border-slate-200 rounded-xl shadow-sm p-6 sm:p-8">
+      <div class="mb-6">
+        <img id="dashboardLoginLogo" alt="YOUR HOME" class="hidden mx-auto w-48 max-h-16 object-contain mb-5">
+        <p class="text-xs font-bold uppercase tracking-wider text-brand-600">YOUR HOME · Dashboard</p>
+        <h1 class="text-2xl font-extrabold text-slate-900 mt-2">Dasbord Management</h1>
+        <p class="text-sm text-slate-500 mt-1">Pilih akun dan masukkan password untuk membuka dashboard.</p>
+      </div>
+      <form id="dashboardLoginForm" class="space-y-4">
+        <label class="block">
+          <span class="block text-sm font-semibold text-slate-700 mb-1.5">ID Akun</span>
+          <select id="dashboardLoginAccount" required autocomplete="username" class="w-full border border-slate-200 rounded-lg px-3 py-2.5 text-sm bg-white"><option value="master">Master</option></select>
+        </label>
+        <label class="block">
+          <span class="block text-sm font-semibold text-slate-700 mb-1.5">Password</span>
+          <span class="relative block">
+            <input id="dashboardLoginPassword" type="password" required autocomplete="current-password" class="w-full border border-slate-200 rounded-lg px-3 py-2.5 pr-12 text-sm">
+            <button type="button" data-toggle-password="dashboardLoginPassword" aria-label="Tampilkan password" class="absolute inset-y-0 right-0 px-3 text-slate-500 hover:text-slate-800">
+              <svg data-eye-icon width="19" height="19" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+          </span>
+        </label>
+        <p id="dashboardLoginStatus" class="text-sm min-h-5" role="status" aria-live="polite"></p>
+        <button id="dashboardLoginButton" type="submit" class="w-full bg-brand-600 hover:bg-brand-700 disabled:opacity-60 text-white text-sm font-semibold px-4 py-2.5 rounded-lg">Masuk</button>
+        <p class="text-xs text-slate-400 text-center">Sesi berlaku 1 hari atau sampai logout.</p>
+      </form>
+    </section>
+  </div>
 </main>
 
 <!-- ============== APP SHELL ============== -->
