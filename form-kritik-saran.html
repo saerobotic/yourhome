@@ -564,7 +564,6 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
             <div style="margin-top:2px">Terdeteksi otomatis dari stiker QR properti ini.</div>
           </div>
         </div>
-        <button type="button" class="field-hint" id="propertyLockedChange" style="background:none;border:none;padding:0;margin-top:6px;text-decoration:underline;cursor:pointer;color:var(--terracotta)">Bukan properti ini? Pilih manual</button>
       </div>
 
       <div class="row-2">
@@ -976,7 +975,6 @@ toStep2.addEventListener('click', () => {
 // tamu tidak perlu pilih dropdown lagi — langsung terkunci ke properti itu.
 const propertyLockedGroup = document.getElementById('propertyLockedGroup');
 const propertyLockedName = document.getElementById('propertyLockedName');
-const propertyLockedChange = document.getElementById('propertyLockedChange');
 
 function findPropertyByName(name){
   const target = name.trim().toLocaleLowerCase('id');
@@ -1002,15 +1000,6 @@ function lockPropertyFromQr(){
   validateStep1();
   return true;
 }
-
-propertyLockedChange.addEventListener('click', () => {
-  propertyLockedGroup.style.display = 'none';
-  typeGrid.style.display = 'grid';
-  selectedType = null; selectedProperty = null;
-  typeGrid.querySelectorAll('.type-card').forEach(c => c.classList.remove('selected'));
-  propertyNameGroup.style.display = 'none';
-  validateStep1();
-});
 
 /* ============== STEP 2: RATING ============== */
 const ratingRows = document.querySelectorAll('.rating-row');
