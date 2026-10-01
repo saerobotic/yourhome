@@ -165,7 +165,7 @@
       <div class="space-y-4">
         <div>
              <label for="crewSelect" class="block text-sm font-semibold text-gray-700 mb-1.5">ID Crew</label>
-             <input id="crewSelect" type="text" maxlength="20" pattern="[A-Za-z0-9_-]{3,20}" autocomplete="username" placeholder="Masukkan ID Crew"
+             <input id="crewSelect" type="text" maxlength="20" pattern="[A-Za-z0-9_\-]{3,20}" autocomplete="username" placeholder="Masukkan ID Crew"
                class="w-full px-4 py-3.5 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition text-base" />
              <p id="crewListStatus" class="text-xs text-gray-500 mt-1.5" role="status" aria-live="polite">ID Crew diberikan oleh admin.</p>
         </div>
@@ -672,12 +672,8 @@
       const badgeText = completed ? 'Sudah dikerjakan' : waitingForCheckin ? 'Menunggu check-in' : 'Belum dikerjakan';
       const badgeClass = completed ? 'bg-green-50 text-green-700' : waitingForCheckin ? 'bg-brand-50 text-brand-800' : 'bg-amber-50 text-amber-800';
       const buttonText = completed ? 'Tandai belum dikerjakan' : waitingForCheckin ? 'Batalkan tanda selesai' : 'Tandai sudah dikerjakan';
-      const buttonClass = completed || waitingForCheckin
-<<<<<<< HEAD
+            const buttonClass = completed || waitingForCheckin
         ? 'border-red-600 bg-red-600 text-white hover:bg-red-700'
-=======
-        ? 'border-brand-600 bg-brand-600 text-white hover:bg-brand-700'
->>>>>>> 666079aa382260c98f5893ed7eb754a0b371fa85
         : 'border-gray-200 text-gray-700 hover:bg-gray-50';
       const waitingText = waitingForCheckin ? '<p class="mt-2 text-xs text-gray-500">Menunggu check-in berhasil untuk mengonfirmasi tugas.</p>' : '';
       return `<article class="rounded-xl border border-gray-200 bg-white p-4"><div class="flex flex-wrap items-start justify-between gap-2"><div class="min-w-0"><h4 class="font-bold text-gray-800">${escapeHtml(task.type || 'Tugas')}</h4><p class="mt-1 text-sm text-gray-600">${escapeHtml(task.property || 'Properti')}</p></div><span class="shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold ${badgeClass}">${badgeText}</span></div><p class="mt-2 text-xs text-gray-500">${escapeHtml(task.time || 'Tanpa jam')}${task.note ? ` · ${escapeHtml(task.note)}` : ''}</p>${waitingText}<button type="button" data-crew-task-id="${escapeHtml(task.id)}" aria-pressed="${completed || waitingForCheckin}" class="mt-3 rounded-lg border px-3 py-2 text-sm font-semibold transition ${buttonClass}">${buttonText}</button></article>`;
@@ -1005,7 +1001,7 @@
     const loginBtn = document.getElementById('loginBtn');
 
     const updateLoginButton = () => {
-      loginBtn.disabled = !/^[A-Za-z0-9_-]{3,20}$/.test(crewSelect.value.trim()) || crewPinInput.value.trim().length !== 6;
+      loginBtn.disabled = !/^[A-Za-z0-9_-]{3,20}$/.test(crewSelect.value.trim()) || !/^\d{6}$/.test(crewPinInput.value.trim());
     };
     crewSelect.addEventListener('input', updateLoginButton);
     crewPinInput.addEventListener('input', updateLoginButton);
