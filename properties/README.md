@@ -16,6 +16,8 @@ Untuk menyimpan logo dan kontak website, jalankan `migration-site-settings.sql` 
 
 Untuk daftar karyawan/crew, jalankan `migration-dashboard-crews.sql` satu kali pada D1 sebelum deploy Worker terbaru. Jika tabel `crews` sudah tersedia untuk Check In Crew, migration ini tidak mengubah data. Master/Admin mengelola nama dari **Dashboard → Pengaturan → Daftar Karyawan / Crew**; kru baru memerlukan PIN login 6 digit. Penghapusan menonaktifkan kru agar histori check-in tetap utuh. Check In Crew memuat nama aktif dari `GET /crews`.
 
+Untuk absen masuk selfie karyawan kantor di portal Admin, jalankan `migration-dashboard-office-employees.sql` satu kali pada D1. Daftar karyawan kantor terpisah dari Crew; hanya akun Master yang mengelola nama dari **Dasbord → Pengaturan → Karyawan Kantor**. Empat karyawan aktif pertama ditampilkan di portal. Worker menyimpan satu absen per karyawan per tanggal WIB ke D1 dan foto selfie ke R2. Untuk database baru, `schema.sql` sudah menyertakan tabel dan indeks yang sama. Jika `migration-dashboard-employee-attendance.sql` versi lama sudah dijalankan, biarkan tabel `employee_attendance_records` tetap ada; versi itu hanya tabel crew lama dan tidak lagi dipakai.
+
 Setelah tabel `crews` tersedia, jalankan `migration-crew-id.sql` satu kali. Migration ini menambahkan ID Crew unik dan memberi ID awal otomatis kepada crew lama. Di **Check In Crew Dashboard → Kelola Data Crew**, admin dapat menambah/mengubah nama, ID Crew, dan PIN 6 digit. Crew masuk dari halaman Check In memakai ID Crew dan PIN; histori tetap menampilkan nama crew.
 
 ## Dashboard finance dan akun

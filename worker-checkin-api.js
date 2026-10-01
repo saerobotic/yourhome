@@ -1850,6 +1850,242 @@ export default {
         return bad('Metode Chat tidak didukung.', 405);
       }
 
+      if (path === '/dashboard/office-employees') {
+        const adminSecret = String(env.ADMIN_DASHBOARD_SECRET || '').trim();
+        const tokenData = await getAdminTokenPayload(request, adminSecret);
+        if (!hasDashboardRole(tokenData)) return bad('Login dashboard diperlukan.', 401);
+
+        if (request.method === 'GET') {
+          try {
+            const result = await env.DB.prepare(`
+              SELECT id, name, active, created_at, updated_at
+              FROM office_employees ORDER BY active DESC, name COLLATE NOCASE ASC
+            `).all();
+            return json({ ok:true, data:result.results || [] });
+          } catch (error) {
+            if (/no such table: office_employees/i.test(String(error?.message || error))) {
+              return bad('Daftar karyawan kantor belum disiapkan. Jalankan migration-dashboard-office-employees.sql di D1.', 503);
+            }
+            throw error;
+          }
+        }
+
+        if (request.method !== 'POST') return bad('Metode karyawan kantor tidak didukung.', 405);
+        if (tokenData.account_id !== 'master' || tokenData.role !== 'Master') return bad('Hanya akun Master yang dapat menambah karyawan kantor.', 403);
+        const body = await request.json();
+        const name = String(body.name || '').trim().replace(/\s+/g, ' ');
+        if (name.length < 2 || name.length > 80) return bad('Nama karyawan wajib 2 sampai 80 karakter.');
+        const activeCount = await env.DB.prepare('SELECT COUNT(*) AS count FROM office_employees WHERE active = 1').first();
+        if (Number(activeCount?.count || 0) >= 4) return bad('Maksimal empat karyawan kantor aktif untuk tombol absensi.', 409);
+        const duplicate = await env.DB.prepare('SELECT id FROM office_employees WHERE name = ? COLLATE NOCASE').bind(name).first();
+        if (duplicate) return bad('Nama karyawan kantor sudah terdaftar.', 409);
+        const id = crypto.randomUUID();
+        const now = new Date().toISOString();
+        await env.DB.prepare(`
+          INSERT INTO office_employees (id, name, active, created_at, updated_at)
+          VALUES (?, ?, 1, ?, ?)
+        `).bind(id, name, now, now).run();
+        return json({ ok:true, data:{ id, name, active:1, created_at:now, updated_at:now } }, 201);
+      }
+
+      const officeEmployeeMatch = path.match(/^\/dashboard\/office-employees\/([^/]+)$/);
+      if (request.method === 'PATCH' && officeEmployeeMatch) {
+        const adminSecret = String(env.ADMIN_DASHBOARD_SECRET || '').trim();
+        const tokenData = await getAdminTokenPayload(request, adminSecret);
+        if (tokenData?.account_id !== 'master' || tokenData.role !== 'Master') return bad('Hanya akun Master yang dapat mengubah karyawan kantor.', 403);
+        const id = decodeURIComponent(officeEmployeeMatch[1]);
+        const employee = await env.DB.prepare('SELECT id, name, active FROM office_employees WHERE id = ?').bind(id).first();
+        if (!employee) return bad('Karyawan kantor tidak ditemukan.', 404);
+        const body = await request.json();
+        const name = Object.prototype.hasOwnProperty.call(body, 'name')
+          ? String(body.name || '').trim().replace(/\s+/g, ' ')
+          : employee.name;
+        const active = body.active === undefined ? Number(employee.active)
+          : body.active === true || body.active === 1 ? 1
+          : body.active === false || body.active === 0 ? 0 : null;
+        if (name.length < 2 || name.length > 80 || active === null) return bad('Nama atau status karyawan kantor tidak valid.');
+        if (Number(employee.active) === 0 && active === 1) {
+          const activeCount = await env.DB.prepare('SELECT COUNT(*) AS count FROM office_employees WHERE active = 1 AND id <> ?').bind(id).first();
+          if (Number(activeCount?.count || 0) >= 4) return bad('Maksimal empat karyawan kantor aktif untuk tombol absensi.', 409);
+        }
+        const duplicate = await env.DB.prepare('SELECT id FROM office_employees WHERE name = ? COLLATE NOCASE AND id <> ?')
+          .bind(name, id).first();
+        if (duplicate) return bad('Nama karyawan kantor sudah digunakan.', 409);
+        const now = new Date().toISOString();
+        await env.DB.prepare('UPDATE office_employees SET name = ?, active = ?, updated_at = ? WHERE id = ?')
+          .bind(name, active, now, id).run();
+        return json({ ok:true, data:{ id, name, active, updated_at:now } });
+      }
+
+      if (path === '/dashboard/employee-attendance') {
+        const adminSecret = String(env.ADMIN_DASHBOARD_SECRET || '').trim();
+        const tokenData = await getAdminTokenPayload(request, adminSecret);
+        if (!hasDashboardRole(tokenData)) return bad('Login dashboard diperlukan.', 401);
+
+        const dateParts = Object.fromEntries(new Intl.DateTimeFormat('en-CA', {
+          timeZone:'Asia/Jakarta', year:'numeric', month:'2-digit', day:'2-digit',
+        }).formatToParts(new Date()).filter(part => part.type !== 'literal').map(part => [part.type, part.value]));
+        const workDate = `${dateParts.year}-${dateParts.month}-${dateParts.day}`;
+
+        if (request.method === 'GET') {
+          const requestedDate = String(url.searchParams.get('date') || '').trim();
+          const queryDate = /^\d{4}-\d{2}-\d{2}$/.test(requestedDate) ? requestedDate : workDate;
+          try {
+            const result = await env.DB.prepare(`
+              SELECT id, employee_id, employee_name, work_date, checked_in_at, checked_out_at,
+                     lat, lng, accuracy, checkout_lat, checkout_lng, checkout_accuracy,
+                     selfie_url, checkout_selfie_url
+              FROM office_employee_attendance
+              WHERE work_date = ?
+              ORDER BY checked_in_at DESC
+            `).bind(queryDate).all();
+            const now = Date.now();
+            const records = (result.results || []).map(record => {
+              const checkedInAt = Date.parse(record.checked_in_at);
+              const checkedOutAt = record.checked_out_at ? Date.parse(record.checked_out_at) : now;
+              const workedSeconds = Number.isFinite(checkedInAt) && Number.isFinite(checkedOutAt)
+                ? Math.max(0, Math.floor((checkedOutAt - checkedInAt) / 1000))
+                : null;
+              return { ...record, worked_seconds:workedSeconds };
+            });
+            return json({ ok:true, data:{ work_date:queryDate, records } });
+          } catch (error) {
+            if (/no such table: office_employee_attendance/i.test(String(error?.message || error))) {
+              return bad('Absensi karyawan kantor belum disiapkan. Jalankan migration-dashboard-office-employees.sql di D1.', 503);
+            }
+            throw error;
+          }
+        }
+
+        if (request.method !== 'POST') return bad('Metode absensi tidak didukung.', 405);
+        const body = await request.json();
+        const employeeId = String(body.employee_id || '').trim();
+        const lat = Number(body.lat);
+        const lng = Number(body.lng);
+        const accuracy = body.accuracy == null || body.accuracy === '' ? null : Number(body.accuracy);
+        const selfie = String(body.selfie || '');
+        if (!employeeId || !selfie.startsWith('data:image/')) return bad('Karyawan dan foto selfie wajib diisi.');
+        if (!Number.isFinite(lat) || lat < -90 || lat > 90 || !Number.isFinite(lng) || lng < -180 || lng > 180) {
+          return bad('Koordinat lokasi tidak valid.');
+        }
+        if (accuracy != null && (!Number.isFinite(accuracy) || accuracy < 0)) return bad('Akurasi lokasi tidak valid.');
+
+        const employee = await env.DB.prepare('SELECT id, name FROM office_employees WHERE id = ? AND active = 1').bind(employeeId).first();
+        if (!employee) return bad('Karyawan kantor tidak aktif atau tidak ditemukan.', 404);
+        try {
+          const existing = await env.DB.prepare(`
+            SELECT id, checked_in_at FROM office_employee_attendance WHERE employee_id = ? AND work_date = ?
+          `).bind(employeeId, workDate).first();
+          if (existing) return bad('Karyawan ini sudah absen masuk hari ini.', 409);
+        } catch (error) {
+          if (/no such table: office_employee_attendance/i.test(String(error?.message || error))) {
+            return bad('Absensi karyawan kantor belum disiapkan. Jalankan migration-dashboard-office-employees.sql di D1.', 503);
+          }
+          throw error;
+        }
+
+        let parsedSelfie;
+        try { parsedSelfie = parseDataUrl(selfie); }
+        catch { return bad('Foto selfie tidak valid.'); }
+        if (!String(parsedSelfie.contentType || '').startsWith('image/')) return bad('Selfie harus berupa foto.');
+        if (parsedSelfie.bytes.byteLength >= 100 * 1024) return bad('Foto selfie wajib di bawah 100 KB.');
+
+        const attendanceId = crypto.randomUUID();
+        const checkedInAt = new Date().toISOString();
+        const objectKey = `employee-attendance/${workDate}/${attendanceId}/selfie.jpg`;
+        await env.PHOTOS.put(objectKey, parsedSelfie.bytes, {
+          httpMetadata:{ contentType:parsedSelfie.contentType || 'image/jpeg' },
+        });
+        const selfieUrl = publicFileUrl(url.origin, objectKey);
+        try {
+          await env.DB.prepare(`
+            INSERT INTO office_employee_attendance (id, employee_id, employee_name, work_date, checked_in_at, lat, lng, accuracy, selfie_url)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+          `).bind(attendanceId, employee.id, employee.name, workDate, checkedInAt, lat, lng, accuracy, selfieUrl).run();
+        } catch (error) {
+          if (/UNIQUE constraint failed/i.test(String(error?.message || error))) return bad('Karyawan ini sudah absen masuk hari ini.', 409);
+          throw error;
+        }
+        return json({ ok:true, data:{ id:attendanceId, employee_id:employee.id, employee_name:employee.name, work_date:workDate, checked_in_at:checkedInAt, lat, lng, accuracy, selfie_url:selfieUrl } }, 201);
+      }
+
+      // Absen pulang (GPS saja, tanpa selfie -- karyawan dianggap sudah di kantor) dan reset/hapus
+      // satu baris absen (perlu PIN Master, untuk koreksi data salah input/testing).
+      const employeeAttendanceRecordMatch = path.match(/^\/dashboard\/employee-attendance\/([^/]+)$/);
+      if (employeeAttendanceRecordMatch && ['PATCH', 'DELETE'].includes(request.method)) {
+        const adminSecret = String(env.ADMIN_DASHBOARD_SECRET || '').trim();
+        const tokenData = await getAdminTokenPayload(request, adminSecret);
+        if (!hasDashboardRole(tokenData)) return bad('Login dashboard diperlukan.', 401);
+        const id = decodeURIComponent(employeeAttendanceRecordMatch[1]);
+        let attendance;
+        try {
+          attendance = await env.DB.prepare(`
+            SELECT id, employee_id, employee_name, checked_out_at FROM office_employee_attendance WHERE id = ?
+          `).bind(id).first();
+        } catch (error) {
+          if (/no such column: checked_out_at/i.test(String(error?.message || error))) {
+            return bad('Kolom absen pulang belum tersedia. Jalankan migration-dashboard-office-employee-checkout.sql di D1.', 503);
+          }
+          throw error;
+        }
+        if (!attendance) return bad('Data absen tidak ditemukan.', 404);
+
+        if (request.method === 'DELETE') {
+          let body = {};
+          try { body = await request.json(); } catch {}
+          const pin = String(body.pin || '').trim();
+          if (!/^\d{4}$/.test(pin)) return bad('Masukkan PIN Master tepat 4 digit.', 400);
+          const master = await env.DB.prepare(`
+            SELECT delete_pin_salt, delete_pin_hash FROM dashboard_users
+            WHERE account_id = 'master' AND active = 1
+          `).first();
+          if (!master?.delete_pin_hash) return bad('PIN Master belum diinisialisasi. Login sebagai Master terlebih dahulu.', 409);
+          const attemptedHash = await hashDashboardPassword(pin, master.delete_pin_salt);
+          if (!constantTimeEqual(attemptedHash, master.delete_pin_hash)) return bad('PIN Master salah.', 403);
+          await env.DB.prepare('DELETE FROM office_employee_attendance WHERE id = ?').bind(id).run();
+          return json({ ok:true, data:{ id, deleted:true } });
+        }
+
+        const body = await request.json();
+        if (body.action !== 'checkout') return bad('Aksi tidak didukung.', 400);
+        if (attendance.checked_out_at) return bad('Karyawan ini sudah absen pulang.', 409);
+        const lat = Number(body.lat);
+        const lng = Number(body.lng);
+        const accuracy = body.accuracy == null || body.accuracy === '' ? null : Number(body.accuracy);
+        const selfie = String(body.selfie || '');
+        if (!selfie.startsWith('data:image/')) return bad('Foto selfie wajib diisi untuk absen pulang.');
+        if (!Number.isFinite(lat) || lat < -90 || lat > 90 || !Number.isFinite(lng) || lng < -180 || lng > 180) {
+          return bad('Koordinat lokasi tidak valid.');
+        }
+        if (accuracy != null && (!Number.isFinite(accuracy) || accuracy < 0)) return bad('Akurasi lokasi tidak valid.');
+        let parsedCheckoutSelfie;
+        try { parsedCheckoutSelfie = parseDataUrl(selfie); }
+        catch { return bad('Foto selfie tidak valid.'); }
+        if (!String(parsedCheckoutSelfie.contentType || '').startsWith('image/')) return bad('Selfie harus berupa foto.');
+        if (parsedCheckoutSelfie.bytes.byteLength >= 100 * 1024) return bad('Foto selfie wajib di bawah 100 KB.');
+        const checkedOutAt = new Date().toISOString();
+        const checkoutObjectKey = `employee-attendance/checkout/${id}/selfie.jpg`;
+        await env.PHOTOS.put(checkoutObjectKey, parsedCheckoutSelfie.bytes, {
+          httpMetadata:{ contentType:parsedCheckoutSelfie.contentType || 'image/jpeg' },
+        });
+        const checkoutSelfieUrl = publicFileUrl(url.origin, checkoutObjectKey);
+        let updated;
+        try {
+          updated = await env.DB.prepare(`
+            UPDATE office_employee_attendance
+            SET checked_out_at = ?, checkout_lat = ?, checkout_lng = ?, checkout_accuracy = ?, checkout_selfie_url = ?
+            WHERE id = ? AND checked_out_at IS NULL
+          `).bind(checkedOutAt, lat, lng, accuracy, checkoutSelfieUrl, id).run();
+        } catch (error) {
+          if (/no such column: checkout_selfie_url/i.test(String(error?.message || error))) {
+            return bad('Kolom selfie absen pulang belum tersedia. Jalankan migration-dashboard-office-employee-checkout-selfie.sql di D1.', 503);
+          }
+          throw error;
+        }
+        if (!updated.meta?.changes) return bad('Karyawan ini sudah absen pulang.', 409);
+        return json({ ok:true, data:{ id, employee_id:attendance.employee_id, employee_name:attendance.employee_name, checked_out_at:checkedOutAt, checkout_lat:lat, checkout_lng:lng, checkout_accuracy:accuracy, checkout_selfie_url:checkoutSelfieUrl } });
+      }
+
       if (path === '/dashboard/crews') {
         const adminSecret = String(env.ADMIN_DASHBOARD_SECRET || '').trim();
         const tokenData = await getAdminTokenPayload(request, adminSecret);

@@ -42,13 +42,17 @@
 *{box-sizing:border-box;margin:0;padding:0}
 html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
 body{
+  min-height:100vh;
+  min-height:100dvh;
+  display:flex;
+  flex-direction:column;
   font-family:'Poppins', system-ui, sans-serif;
   background:var(--cream);
   color:var(--charcoal);
   line-height:1.65;
   overflow-x:hidden;
   font-weight:400;
-  padding-bottom:80px;
+  padding-bottom:0;
   -webkit-font-smoothing:antialiased;
 }
 h1,h2,h3,h4{font-family:'Playfair Display', Georgia, serif;font-weight:600;line-height:1.25;color:var(--coffee-d);letter-spacing:-.01em}
@@ -394,7 +398,8 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
 /* ============== FOOTER ============== */
 .footer{
   background:var(--coffee-d);color:rgba(255,255,255,.6);
-  padding:30px 0 26px;font-size:.78rem;
+  margin-top:auto;
+  padding:30px 0 calc(26px + env(safe-area-inset-bottom, 0px));font-size:.78rem;
   text-align:center;
 }
 .footer-logo{height:38px;width:auto;margin:0 auto 12px;object-fit:contain;opacity:.9}

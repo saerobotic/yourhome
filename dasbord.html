@@ -42,8 +42,9 @@
   .modal-overlay.show{opacity:1;}
   .modal-panel{transform:translateY(16px) scale(.97);transition:all .2s;}
   .modal-overlay.show .modal-panel{transform:translateY(0) scale(1);}
-  .stat-card{transition:all .2s;}
+  .stat-card{transition:all .2s;position:relative;overflow:hidden;}
   .stat-card:hover{transform:translateY(-2px);box-shadow:0 12px 28px -10px rgba(15,23,42,.15);}
+  .stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--accent,#94a3b8);}
   .prop-card{transition:all .2s;}
   .prop-card:hover{transform:translateY(-3px);box-shadow:0 18px 36px -14px rgba(15,23,42,.22);}
   table tbody tr{transition:background .12s;}
@@ -162,6 +163,10 @@
         <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
         <span>Laporan Owner</span>
       </button>
+      <button onclick="switchView('laporan-agen')" class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left">
+        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 11l18-6v14L3 15v-4z"/><path d="M8 15v4a2 2 0 002 2h1"/></svg>
+        <span>Laporan Agen</span>
+      </button>
       <button onclick="switchView('bagi-hasil')" class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left">
         <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 3v18m5-14H9.5a3.5 3.5 0 100 7h5a3.5 3.5 0 110 7H6"/></svg>
         <span>Kalkulator Bagi Hasil</span>
@@ -173,6 +178,11 @@
       <button onclick="switchView('owner')" class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left">
         <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 20h5v-2a4 4 0 00-3-3.87M9 20H4v-2a4 4 0 013-3.87m6-1.13a4 4 0 10-4-4 4 4 0 004 4zm6 0a3 3 0 10-3-3"/></svg>
         <span>Owner</span>
+      </button>
+      <div class="px-3 pt-5 pb-2 text-[10px] uppercase tracking-wider text-slate-500 font-bold">Karyawan</div>
+      <button onclick="switchView('absensi-karyawan')" class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left">
+        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+        <span>Absensi Karyawan</span>
       </button>
       <div class="px-3 pt-5 pb-2 text-[10px] uppercase tracking-wider text-slate-500 font-bold">Sistem</div>
       <button onclick="toggleStaffChat()" class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left">
@@ -284,7 +294,7 @@
 
         <!-- Stat cards -->
         <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-          <div class="stat-card bg-white rounded-2xl p-5 border border-slate-100">
+          <div class="stat-card bg-white rounded-2xl p-5 border border-slate-100" style="--accent:#10b981">
             <div class="flex items-center justify-between mb-3">
               <div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
                 <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"/></svg>
@@ -294,7 +304,7 @@
             <div class="text-2xl font-extrabold text-slate-900" id="stat-revenue">Rp 0</div>
             <div class="text-xs text-slate-500 mt-1">Booking + pemasukan tambahan bulan ini</div>
           </div>
-          <div class="stat-card bg-white rounded-2xl p-5 border border-slate-100">
+          <div class="stat-card bg-white rounded-2xl p-5 border border-slate-100" style="--accent:#f43f5e">
             <div class="flex items-center justify-between mb-3">
               <div class="w-10 h-10 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center">
                 <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
@@ -304,7 +314,7 @@
             <div class="text-2xl font-extrabold text-slate-900" id="stat-expense">Rp 0</div>
             <div class="text-xs text-slate-500 mt-1">Pengeluaran bulan ini</div>
           </div>
-          <div class="stat-card bg-white rounded-2xl p-5 border border-slate-100">
+          <div class="stat-card bg-white rounded-2xl p-5 border border-slate-100" style="--accent:#4f46e5">
             <div class="flex items-center justify-between mb-3">
               <div class="w-10 h-10 rounded-xl bg-brand-50 text-brand-600 flex items-center justify-center">
                 <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
@@ -314,7 +324,7 @@
             <div class="text-2xl font-extrabold text-slate-900" id="stat-profit">Rp 0</div>
             <div class="text-xs text-slate-500 mt-1">Arus kas bersih bulan ini</div>
           </div>
-          <div class="stat-card bg-white rounded-2xl p-5 border border-slate-100">
+          <div class="stat-card bg-white rounded-2xl p-5 border border-slate-100" style="--accent:#f59e0b">
             <div class="flex items-center justify-between mb-3">
               <div class="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center">
                 <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
@@ -326,23 +336,53 @@
           </div>
         </div>
 
-        <!-- Charts row -->
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
-          <!-- Revenue vs Expense -->
-          <div class="lg:col-span-2 bg-white rounded-2xl p-5 border border-slate-100">
-            <div class="flex items-center justify-between mb-4">
+        <!-- Tren bulanan (revenue vs pengeluaran + proyeksi akhir bulan) + Peringkat Properti -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6 items-start">
+          <div class="bg-white rounded-2xl p-5 border border-slate-100">
+            <div class="flex items-center justify-between mb-4 flex-wrap gap-3">
               <div>
-                <h3 class="font-bold text-slate-900">Revenue vs Pengeluaran</h3>
-                <p class="text-xs text-slate-500">6 bulan terakhir</p>
+                <h3 class="font-bold text-slate-900">Tren Pendapatan vs Pengeluaran</h3>
+                <p class="text-xs text-slate-500" id="chartRevenueSub">6 bulan terakhir &middot; garis putus-putus = proyeksi akhir bulan berjalan</p>
               </div>
               <div class="flex gap-1 bg-slate-100 p-1 rounded-lg">
-                <button class="tab-btn active" onclick="setChartTab(this,'6m')">6 Bulan</button>
-                <button class="tab-btn" onclick="setChartTab(this,'12m')">12 Bulan</button>
+                <button class="tab-btn active" id="chartTab6m" onclick="setChartTab(this,6)">6 Bulan</button>
+                <button class="tab-btn" id="chartTab12m" onclick="setChartTab(this,12)">12 Bulan</button>
               </div>
             </div>
-            <div class="h-64"><canvas id="chartRevenue"></canvas></div>
+            <div class="h-72"><canvas id="chartRevenue"></canvas></div>
           </div>
 
+          <div class="bg-white rounded-2xl p-5 border border-slate-100">
+            <div class="mb-4">
+              <h3 class="font-bold text-slate-900">Peringkat Properti</h3>
+              <p class="text-xs text-slate-500">Revenue bulan berjalan, tertinggi ke terendah</p>
+            </div>
+            <div id="chartPropRankScroll" style="height:288px;overflow-y:auto;overflow-x:hidden">
+              <div id="chartPropRankWrap"><canvas id="chartPropRank"></canvas></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Harian: pendapatan & okupansi bulan berjalan -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
+          <div class="bg-white rounded-2xl p-5 border border-slate-100">
+            <div class="mb-4">
+              <h3 class="font-bold text-slate-900">Pendapatan Harian</h3>
+              <p class="text-xs text-slate-500" id="chartDailySub">Bulan berjalan</p>
+            </div>
+            <div class="h-56"><canvas id="chartDailyRevenue"></canvas></div>
+          </div>
+          <div class="bg-white rounded-2xl p-5 border border-slate-100">
+            <div class="mb-4">
+              <h3 class="font-bold text-slate-900">Okupansi Harian</h3>
+              <p class="text-xs text-slate-500">Persentase unit terisi per hari, bulan berjalan</p>
+            </div>
+            <div class="h-56"><canvas id="chartOccupancy"></canvas></div>
+          </div>
+        </div>
+
+        <!-- Charts row -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
           <!-- Platform breakdown -->
           <div class="bg-white rounded-2xl p-5 border border-slate-100">
             <div class="flex items-center justify-between mb-4">
@@ -354,10 +394,7 @@
             <div class="h-48"><canvas id="chartPlatform"></canvas></div>
             <div id="platformLegend" class="mt-3 space-y-1.5 text-xs"></div>
           </div>
-        </div>
 
-        <!-- Bottom row -->
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
           <!-- Expense breakdown -->
           <div class="bg-white rounded-2xl p-5 border border-slate-100">
             <div class="flex items-center justify-between mb-4">
@@ -369,35 +406,35 @@
             <div class="h-44"><canvas id="chartExpense"></canvas></div>
             <div id="expenseLegend" class="mt-3 space-y-1.5 text-xs"></div>
           </div>
+        </div>
 
-          <!-- Recent bookings -->
-          <div class="lg:col-span-2 bg-white rounded-2xl border border-slate-100 overflow-hidden">
-            <div class="flex items-center justify-between p-5 pb-3">
-              <div>
-                <h3 class="font-bold text-slate-900">Booking Terbaru</h3>
-                <p class="text-xs text-slate-500">5 transaksi terakhir</p>
-              </div>
-              <button onclick="switchView('daftar-booking')" class="text-xs font-semibold text-brand-600 hover:text-brand-700">Lihat semua →</button>
+        <!-- Recent bookings -->
+        <div class="bg-white rounded-2xl border border-slate-100 overflow-hidden mb-6">
+          <div class="flex items-center justify-between p-5 pb-3">
+            <div>
+              <h3 class="font-bold text-slate-900">Booking Terbaru</h3>
+              <p class="text-xs text-slate-500">5 transaksi terakhir</p>
             </div>
-            <div class="overflow-x-auto">
-              <table class="w-full text-sm">
-                <thead class="bg-slate-50 text-slate-500 text-xs uppercase tracking-wider">
-                  <tr>
-                    <th class="text-left font-semibold px-5 py-3">Tamu</th>
-                    <th class="text-left font-semibold px-3 py-3">Properti</th>
-                    <th class="text-left font-semibold px-3 py-3 hidden md:table-cell">Platform</th>
-                    <th class="text-left font-semibold px-3 py-3 hidden sm:table-cell">Check-in</th>
-                    <th class="text-right font-semibold px-5 py-3">Nilai</th>
-                  </tr>
-                </thead>
-                <tbody id="recentBookingsBody" class="divide-y divide-slate-100"></tbody>
-              </table>
-            </div>
+            <button onclick="switchView('daftar-booking')" class="text-xs font-semibold text-brand-600 hover:text-brand-700">Lihat semua →</button>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+              <thead class="bg-slate-50 text-slate-500 text-xs uppercase tracking-wider">
+                <tr>
+                  <th class="text-left font-semibold px-5 py-3">Tamu</th>
+                  <th class="text-left font-semibold px-3 py-3">Properti</th>
+                  <th class="text-left font-semibold px-3 py-3 hidden md:table-cell">Platform</th>
+                  <th class="text-left font-semibold px-3 py-3 hidden sm:table-cell">Check-in</th>
+                  <th class="text-right font-semibold px-5 py-3">Nilai</th>
+                </tr>
+              </thead>
+              <tbody id="recentBookingsBody" class="divide-y divide-slate-100"></tbody>
+            </table>
           </div>
         </div>
 
         <!-- Top properties -->
-        <div class="mt-6 bg-white rounded-2xl p-5 border border-slate-100">
+        <div class="bg-white rounded-2xl p-5 border border-slate-100">
           <div class="flex items-center justify-between mb-4">
             <div>
               <h3 class="font-bold text-slate-900">Performa Properti</h3>
@@ -675,6 +712,65 @@
       </div>
 
       <!-- =========================================== -->
+      <!-- ABSENSI KARYAWAN VIEW                        -->
+      <!-- =========================================== -->
+      <div id="view-absensi-karyawan" class="view">
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+          <div class="stat-card bg-white rounded-2xl p-5 border border-slate-100" style="--accent:#10b981">
+            <p class="text-xs font-semibold text-slate-500 uppercase tracking-wide">Sudah Absen</p>
+            <p id="attendanceCheckedInCount" class="text-2xl font-extrabold text-slate-900 mt-1">0</p>
+          </div>
+          <div class="stat-card bg-white rounded-2xl p-5 border border-slate-100" style="--accent:#f59e0b">
+            <p class="text-xs font-semibold text-slate-500 uppercase tracking-wide">Belum Absen</p>
+            <p id="attendanceNotCheckedInCount" class="text-2xl font-extrabold text-slate-900 mt-1">0</p>
+          </div>
+          <div class="stat-card bg-white rounded-2xl p-5 border border-slate-100" style="--accent:#4f46e5">
+            <p class="text-xs font-semibold text-slate-500 uppercase tracking-wide">Karyawan Aktif</p>
+            <p id="attendanceActiveEmployeeCount" class="text-2xl font-extrabold text-slate-900 mt-1">0</p>
+          </div>
+        </div>
+
+        <section class="bg-white rounded-2xl p-5 sm:p-6 border border-slate-100">
+          <div class="flex flex-wrap items-end justify-between gap-3 mb-5">
+            <div>
+              <h2 class="text-lg font-bold text-slate-900">Riwayat Absen Masuk</h2>
+              <p class="text-sm text-slate-500 mt-1">Input dari tombol "Klik Absen Karyawan" di footer Admin Portal.</p>
+            </div>
+            <div class="flex items-end gap-2">
+              <label class="block">
+                <span class="block text-xs font-semibold text-slate-600 mb-1">Tanggal</span>
+                <input id="attendanceDateFilter" type="date" onchange="loadAttendanceDashboard()" class="border border-slate-200 rounded-lg px-3 py-2 text-sm">
+              </label>
+              <button type="button" onclick="loadAttendanceDashboard()" class="h-[38px] bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-semibold px-3 rounded-lg">Muat Ulang</button>
+            </div>
+          </div>
+          <p id="attendanceDashboardStatus" class="text-sm text-slate-500 mb-3" role="status" aria-live="polite"></p>
+          <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+              <thead class="bg-slate-50 text-slate-500 text-xs uppercase">
+                <tr>
+                  <th class="text-left px-4 py-3">Masuk</th>
+                  <th class="text-left px-4 py-3">Pulang</th>
+                  <th class="text-left px-4 py-3">Lama Kerja</th>
+                  <th class="text-left px-4 py-3">Nama</th>
+                  <th class="text-left px-4 py-3">Selfie</th>
+                  <th class="text-left px-4 py-3">Lokasi</th>
+                  <th class="text-right px-4 py-3">Aksi</th>
+                </tr>
+              </thead>
+              <tbody id="attendanceTableBody" class="divide-y divide-slate-100"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="bg-white rounded-2xl p-5 sm:p-6 border border-slate-100 mt-6">
+          <h2 class="text-lg font-bold text-slate-900 mb-1">Belum Absen</h2>
+          <p class="text-sm text-slate-500 mb-4">Karyawan aktif yang belum klik absen masuk pada tanggal yang dipilih.</p>
+          <div id="attendanceMissingList" class="flex flex-wrap gap-2 text-sm"></div>
+        </section>
+      </div>
+
+      <!-- =========================================== -->
       <!-- LAPORAN VIEW                                 -->
       <!-- =========================================== -->
       <div id="view-laporan" class="view">
@@ -713,6 +809,53 @@
         </div>
 
         <div id="reportContent"></div>
+      </div>
+
+      <!-- =========================================== -->
+      <!-- LAPORAN AGEN                                 -->
+      <!-- =========================================== -->
+      <div id="view-laporan-agen" class="view">
+        <div class="bg-white rounded-2xl border border-slate-100 p-4 mb-5 flex flex-wrap items-center gap-3">
+          <div class="flex-1 min-w-[200px]">
+            <label class="text-xs text-slate-500 font-semibold">Pilih Agen</label>
+            <select id="reportAgen" onchange="renderAgentReport()" class="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 bg-white mt-0.5"></select>
+          </div>
+          <label class="block"><span class="block text-xs text-slate-500 font-semibold">Bulan</span><input id="reportAgenMonth" type="month" onchange="renderAgentReport()" class="text-sm border border-slate-200 rounded-lg px-3 py-2 mt-0.5"></label>
+          <div class="flex gap-2 self-end">
+            <button onclick="toggleAgentManualForm()" class="flex items-center gap-2 bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold px-4 py-2 rounded-lg">
+              <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 4v16m8-8H4"/></svg>
+              Tambah Manual
+            </button>
+            <button onclick="exportAgentReportExcel()" title="Unduh CSV yang dapat dibuka di Excel" class="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold px-4 py-2 rounded-lg">
+              <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+              Export Excel
+            </button>
+            <button onclick="exportAgentReportPdf()" class="flex items-center gap-2 bg-rose-600 hover:bg-rose-700 text-white text-sm font-semibold px-4 py-2 rounded-lg">
+              <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+              Export PDF
+            </button>
+            <button onclick="shareAgentReportWhatsApp()" class="flex items-center gap-2 bg-slate-900 hover:bg-slate-800 text-white text-sm font-semibold px-4 py-2 rounded-lg">
+              <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51l-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.999-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>
+              Kirim WhatsApp
+            </button>
+          </div>
+        </div>
+
+        <div id="agentManualFormCard" class="hidden bg-white rounded-2xl border border-slate-100 p-4 mb-5">
+          <h3 class="font-bold text-slate-900 text-sm mb-3">Tambah Bonus / Penyesuaian Manual</h3>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <label class="block"><span class="block text-xs text-slate-500 font-semibold mb-1">Tanggal</span><input id="agentManualDate" type="date" class="w-full text-sm border border-slate-200 rounded-lg px-3 py-2"></label>
+            <label class="block"><span class="block text-xs text-slate-500 font-semibold mb-1">Jumlah (Rp)</span><input id="agentManualAmount" type="text" inputmode="numeric" pattern="[0-9.]*" data-currency-input placeholder="0" class="w-full text-sm border border-slate-200 rounded-lg px-3 py-2"></label>
+            <label class="block sm:col-span-1"><span class="block text-xs text-slate-500 font-semibold mb-1">Keterangan</span><input id="agentManualDesc" type="text" maxlength="200" placeholder="cth: bonus closing 5 booking" class="w-full text-sm border border-slate-200 rounded-lg px-3 py-2"></label>
+          </div>
+          <p id="agentManualStatus" class="text-xs mt-2" role="status" aria-live="polite"></p>
+          <div class="flex gap-2 mt-3">
+            <button type="button" id="agentManualSubmitBtn" onclick="submitAgentManualEntry()" class="bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold px-4 py-2 rounded-lg">Simpan</button>
+            <button type="button" onclick="toggleAgentManualForm(false)" class="text-sm font-semibold text-slate-500 px-4 py-2">Batal</button>
+          </div>
+        </div>
+
+        <div id="reportAgenContent"></div>
       </div>
 
       <!-- =========================================== -->
@@ -934,11 +1077,24 @@
         <div class="mt-5 grid grid-cols-1 xl:grid-cols-2 gap-5">
           <section id="crewManagementPanel" class="bg-white rounded-xl border border-slate-100 overflow-hidden">
             <div class="p-5 pb-3 flex items-center justify-between gap-3">
-              <div><h3 class="font-bold text-slate-900">Daftar Karyawan / Crew</h3><p class="text-xs text-slate-500">Nama aktif tersedia di Check In Crew dan pilihan penerima pengeluaran Gaji.</p></div>
+              <div><h3 class="font-bold text-slate-900">Daftar Crew</h3><p class="text-xs text-slate-500">Crew untuk login Check In Crew dan pilihan penerima pengeluaran Gaji.</p></div>
               <button type="button" onclick="openCrewModal()" class="inline-flex items-center gap-2 bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold px-3 py-2 rounded-lg"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 4v16m8-8H4"/></svg>Tambah Karyawan</button>
             </div>
             <p id="crewManagementStatus" class="px-5 text-sm" role="status" aria-live="polite"></p>
             <div class="overflow-x-auto"><table class="w-full text-sm"><thead class="bg-slate-50 text-slate-500 text-xs uppercase"><tr><th class="text-left px-5 py-3">Nama</th><th class="text-left px-3 py-3">Status</th><th class="text-right px-5 py-3">Aksi</th></tr></thead><tbody id="crewTableBody" class="divide-y divide-slate-100"></tbody></table></div>
+          </section>
+          <section id="officeEmployeePanel" class="bg-white rounded-xl border border-slate-100 overflow-hidden" hidden>
+            <div class="p-5 pb-3">
+              <h3 class="font-bold text-slate-900">Karyawan Kantor</h3>
+              <p class="text-xs text-slate-500 mt-1">Nama karyawan kantor untuk tombol Absen Masuk di Admin Portal. Terpisah dari Crew.</p>
+            </div>
+            <form id="officeEmployeeForm" class="px-5 pb-4">
+              <input id="officeEmployeeEditId" type="hidden">
+              <label class="block"><span class="block text-xs font-semibold text-slate-600 mb-1">Nama karyawan</span><input id="officeEmployeeName" required minlength="2" maxlength="80" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm" placeholder="Masukkan nama karyawan"></label>
+              <div class="flex gap-2 mt-3"><button id="officeEmployeeSaveButton" type="submit" class="bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold px-3 py-2 rounded-lg">Tambah Karyawan</button><button id="officeEmployeeCancelEdit" type="button" class="hidden border border-slate-200 text-sm font-semibold px-3 py-2 rounded-lg">Batal Edit</button></div>
+              <p id="officeEmployeeStatus" class="text-sm mt-2" role="status" aria-live="polite"></p>
+            </form>
+            <div class="overflow-x-auto"><table class="w-full text-sm"><thead class="bg-slate-50 text-slate-500 text-xs uppercase"><tr><th class="text-left px-5 py-3">Nama</th><th class="text-left px-3 py-3">Status</th><th class="text-right px-5 py-3">Aksi</th></tr></thead><tbody id="officeEmployeeTableBody" class="divide-y divide-slate-100"></tbody></table></div>
           </section>
           <section id="agentManagementPanel" class="bg-white rounded-xl border border-slate-100 overflow-hidden">
             <div class="p-5 pb-3 flex items-center justify-between gap-3">
@@ -1157,6 +1313,14 @@
       <p id="cancelBookingStatus" class="text-sm" role="status" aria-live="polite"></p>
       <div class="flex gap-2"><button type="button" onclick="closeModal('modal-cancel-booking')" class="flex-1 border border-slate-200 rounded-lg px-4 py-2 text-sm font-semibold">Kembali</button><button id="cancelBookingButton" type="submit" class="flex-1 bg-rose-600 hover:bg-rose-700 text-white rounded-lg px-4 py-2 text-sm font-semibold">Cancel dan Catat Refund</button></div>
     </form>
+  </div>
+</div>
+
+<!-- ============== MODAL: FOTO SELFIE ABSENSI ============== -->
+<div id="modal-attendance-photo" class="modal-overlay fixed inset-0 bg-slate-900/80 z-50 hidden items-center justify-center p-4" onclick="if(event.target===this) closeModal('modal-attendance-photo')">
+  <div class="relative max-w-md w-full">
+    <button type="button" onclick="closeModal('modal-attendance-photo')" aria-label="Tutup" class="absolute -top-10 right-0 text-white"><svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg></button>
+    <img id="attendancePhotoModalImg" src="" alt="Selfie absen masuk" class="w-full rounded-xl">
   </div>
 </div>
 
@@ -1723,9 +1887,12 @@ let currentFinanceTab = 'expense';
 let extraBedTotalStock = null; // null = belum diatur Master/Admin, berarti belum ditegakkan
 let calDate = new Date(new Date().getFullYear(), new Date().getMonth(), 1); // bulan berjalan
 let charts = {};
+let dashboardChartMonths = 6;
+let dashboardPropStats = [];
 let financeCategories = [];
 let financeEntries = [];
 let crewMembers = [];
+let officeEmployees = [];
 let AGENTS = [];
 let expenseProofDataUrl = '';
 let editExpenseProofDataUrl = '';
@@ -1785,6 +1952,14 @@ function showDashboardApp(account){
   document.getElementById('userActionsHeader').hidden = account.account_id !== 'master';
   document.getElementById('crewManagementPanel').hidden = account.role === 'IT';
   document.getElementById('agentManagementPanel').hidden = account.role === 'IT';
+  document.getElementById('officeEmployeePanel').hidden = account.account_id !== 'master' || account.role !== 'Master';
+  if(account.account_id === 'master' && account.role === 'Master') {
+    loadOfficeEmployees().catch(error => {
+      const status = document.getElementById('officeEmployeeStatus');
+      status.className = 'text-sm mt-2 text-rose-600';
+      status.textContent = error.message || 'Daftar karyawan kantor gagal dimuat.';
+    });
+  }
   document.getElementById('addPropertyButton').classList.toggle('hidden', account.role === 'IT');
   document.getElementById('settingsNavItem').classList.toggle('hidden', account.role === 'IT');
   document.getElementById('adminLoginScreen').classList.add('hidden');
@@ -2182,6 +2357,7 @@ async function loadAgents(){
     console.warn('Gagal memuat daftar agen.', error);
   }
   populateBookingAgentSelect();
+  populateAgentReportSelect();
   renderAgentTable();
 }
 
@@ -2683,9 +2859,11 @@ const VIEW_META = {
   'pengeluaran': { title:'Keuangan', sub:'Catat pemasukan dan pantau pengeluaran properti' },
   'omset': { title:'Omset', sub:'Daftar omset bulanan Januari sampai Desember per tahun' },
   'laporan': { title:'Laporan Owner', sub:'Generate laporan keuangan per owner' },
+  'laporan-agen': { title:'Laporan Agen', sub:'Rekap booking dan fee per agen/marketing' },
   'bagi-hasil': { title:'Kalkulator Bagi Hasil', sub:'Hitung pembagian bulanan sesuai perjanjian owner' },
   'nota-lunas': { title:'Nota Lunas', sub:'Buat nota lunas tamu, unduh PDF, lalu kirim ke WhatsApp (tidak disimpan ke sistem)' },
   'owner': { title:'Owner', sub:'Daftar pemilik properti dengan persentase kepemilikan' },
+  'absensi-karyawan': { title:'Absensi Karyawan', sub:'Pantau absen masuk karyawan kantor via selfie dan lokasi' },
   'bantuan': { title:'Bantuan', sub:'Laporkan bug atau kendala teknis kepada tim IT' },
   'pengaturan': { title:'Pengaturan', sub:'User role, komisi & konfigurasi sistem' }
 };
@@ -2708,8 +2886,13 @@ function switchView(name){
   if(name==='omset') renderMonthlyRevenue();
   if(name==='owner') renderOwners();
   if(name==='laporan'){ populateOwnerSelect(); renderReport(); }
+  if(name==='laporan-agen'){ populateAgentReportSelect(); renderAgentReport(); }
   if(name==='bagi-hasil'){ populateShareCalculatorOwners(); renderShareCalculatorInputs(); }
   if(name==='nota-lunas') prepareNotaForm();
+  if(name==='absensi-karyawan'){
+    document.getElementById('attendanceDateFilter').value = new Date().toLocaleDateString('en-CA', { timeZone:'Asia/Jakarta' });
+    loadAttendanceDashboard();
+  }
   if(name==='pengaturan'){ renderUsers(); loadExtraBedStock(); }
   /* Close mobile sidebar */
   if(window.innerWidth < 1024){
@@ -3048,6 +3231,7 @@ function renderDashboard(){
     }).filter(Boolean).join(', ');
     return { prop:p, gradient:propertyGradientOf(p), bookings:bk.length, rev, exp, net:rev-exp, occ, ownerName };
   }).sort((a,b)=>b.rev-a.rev);
+  dashboardPropStats = propStats;
   document.getElementById('topPropsBody').innerHTML = propStats.map(s => `
     <tr>
       <td class="px-4 py-3">
@@ -3075,31 +3259,143 @@ function renderDashboard(){
 }
 
 /* ============== CHARTS ============== */
+/* Bulan "YYYY-MM" dari N bulan terakhir, selalu berakhir di bulan kalender berjalan --
+   sengaja tidak memakai currentPeriod (itu punya filter Laporan Owner) supaya tren di
+   Dashboard selalu bergulir otomatis tiap bulan, bukan macet di satu bulan yang dipilih. */
+function getRecentMonthKeys(count){
+  const now = new Date();
+  const keys = [];
+  for(let i = count - 1; i >= 0; i--){
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    keys.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`);
+  }
+  return keys;
+}
 function initCharts(){
-  /* Revenue vs Expense */
-  const monthKeys = getPeriodMonthKeys();
-  const months = monthKeys.map(month => new Date(`${month}-01T00:00:00`).toLocaleDateString('id-ID', { month:'short' }));
+  /* Tren Pendapatan vs Pengeluaran, bergulir N bulan + proyeksi akhir bulan berjalan */
+  const monthKeys = getRecentMonthKeys(dashboardChartMonths);
+  const months = monthKeys.map(month => new Date(`${month}-01T00:00:00`).toLocaleDateString('id-ID', { month:'short', year:dashboardChartMonths > 6 ? '2-digit' : undefined }));
   const revData = monthKeys.map(month =>
     BOOKINGS.filter(booking => booking.checkin.startsWith(month)).reduce((sum, booking) => sum + getBookingNetAmount(booking), 0) +
     INCOMES.filter(entry => entry.date.startsWith(month) && !['income-opening-balance', 'income-booking'].includes(entry.categoryId)).reduce((sum, entry) => sum + entry.amount, 0)
   );
   const expData = monthKeys.map(month => EXPENSES.filter(expense => expense.date.startsWith(month)).reduce((sum, expense) => sum + expense.amount, 0));
+
+  const now = new Date();
+  const currentMonthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+  const isCurrentMonthShown = monthKeys[monthKeys.length - 1] === currentMonthKey;
+  const chartLabels = isCurrentMonthShown ? [...months, 'Proyeksi'] : months;
+  const revLine = isCurrentMonthShown ? [...revData, null] : revData;
+  const expLine = isCurrentMonthShown ? [...expData, null] : expData;
+  let projLine = null;
+  if(isCurrentMonthShown){
+    const dayOfMonth = now.getDate();
+    const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+    const currentActual = revData[revData.length - 1];
+    const projectedTotal = dayOfMonth > 0 ? Math.round(currentActual / dayOfMonth * daysInMonth) : currentActual;
+    projLine = new Array(chartLabels.length).fill(null);
+    projLine[chartLabels.length - 2] = currentActual;
+    projLine[chartLabels.length - 1] = projectedTotal;
+  }
+  document.getElementById('chartRevenueSub').textContent = `${dashboardChartMonths} bulan terakhir` +
+    (isCurrentMonthShown ? ' · garis putus-putus = proyeksi akhir bulan berjalan' : '');
   if(charts.revenue) charts.revenue.destroy();
   charts.revenue = new Chart(document.getElementById('chartRevenue'), {
-    type:'bar',
+    type:'line',
     data:{
-      labels: months,
+      labels: chartLabels,
       datasets:[
-        { label:'Revenue', data:revData, backgroundColor:'#4f46e5', borderRadius:6, barPercentage:0.6, categoryPercentage:0.7 },
-        { label:'Pengeluaran', data:expData, backgroundColor:'#fbbf24', borderRadius:6, barPercentage:0.6, categoryPercentage:0.7 }
+        { label:'Revenue', data:revLine, borderColor:'#4f46e5', backgroundColor:'rgba(79,70,229,.1)', fill:true, tension:.35, pointRadius:3, pointHoverRadius:5 },
+        { label:'Pengeluaran', data:expLine, borderColor:'#f59e0b', backgroundColor:'rgba(245,158,11,.1)', fill:true, tension:.35, pointRadius:3, pointHoverRadius:5 },
+        ...(projLine ? [{ label:'Proyeksi Revenue', data:projLine, borderColor:'#4f46e5', backgroundColor:'transparent', borderDash:[6,4], tension:0, pointRadius:4, pointHoverRadius:6, spanGaps:true }] : []),
       ]
     },
     options:{
       responsive:true, maintainAspectRatio:false,
-      plugins:{ legend:{ position:'bottom', labels:{ boxWidth:10, boxHeight:10, usePointStyle:true, padding:15 } } },
+      plugins:{
+        legend:{ position:'bottom', labels:{ boxWidth:10, boxHeight:10, usePointStyle:true, padding:15, font:{size:11} } },
+        tooltip:{ callbacks:{ label:c => c.parsed.y == null ? null : `${c.dataset.label}: ${fmtRp(c.parsed.y)}` } }
+      },
       scales:{
-        y:{ grid:{ color:'#f1f5f9' }, ticks:{ callback:v=>fmtRpShort(v), font:{size:11} } },
+        y:{ beginAtZero:true, grid:{ color:'#f1f5f9' }, ticks:{ callback:v=>fmtRpShort(v), font:{size:11} } },
         x:{ grid:{ display:false }, ticks:{ font:{size:11} } }
+      }
+    }
+  });
+
+  /* Pendapatan Harian, bulan berjalan */
+  const daysInCurrentMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+  const dayLabels = Array.from({ length:daysInCurrentMonth }, (_, i) => String(i + 1));
+  const dailyRevData = dayLabels.map((_, i) => {
+    const dayKey = `${currentMonthKey}-${String(i + 1).padStart(2, '0')}`;
+    return BOOKINGS.filter(booking => booking.checkin === dayKey).reduce((sum, booking) => sum + getBookingNetAmount(booking), 0) +
+      INCOMES.filter(entry => entry.date === dayKey && !['income-opening-balance', 'income-booking'].includes(entry.categoryId)).reduce((sum, entry) => sum + entry.amount, 0);
+  });
+  document.getElementById('chartDailySub').textContent = new Date(`${currentMonthKey}-01T00:00:00`).toLocaleDateString('id-ID', { month:'long', year:'numeric' });
+  if(charts.dailyRevenue) charts.dailyRevenue.destroy();
+  charts.dailyRevenue = new Chart(document.getElementById('chartDailyRevenue'), {
+    type:'line',
+    data:{ labels:dayLabels, datasets:[{ label:'Pendapatan', data:dailyRevData, borderColor:'#4f46e5', backgroundColor:'rgba(79,70,229,.12)', fill:true, tension:.3, pointRadius:0, pointHoverRadius:4 }] },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{ display:false }, tooltip:{ callbacks:{ label:c => fmtRp(c.parsed.y) } } },
+      scales:{
+        x:{ grid:{ display:false }, ticks:{ font:{size:9}, maxTicksLimit:10 } },
+        y:{ beginAtZero:true, grid:{ color:'#f1f5f9' }, ticks:{ callback:v=>fmtRpShort(v), font:{size:10} } }
+      }
+    }
+  });
+
+  /* Okupansi Harian, bulan berjalan -- persentase properti aktif dengan booking yang menginap pada hari itu */
+  const activeProps = PROPERTIES.filter(property => property.active !== false);
+  const occBookings = BOOKINGS.filter(booking => !isBookingCancelled(booking));
+  const occData = dayLabels.map((_, i) => {
+    const dayKey = `${currentMonthKey}-${String(i + 1).padStart(2, '0')}`;
+    if(!activeProps.length) return 0;
+    const occupiedPropIds = new Set(
+      occBookings.filter(booking => booking.checkin <= dayKey && dayKey < booking.checkout).map(booking => booking.propId)
+    );
+    return Math.round(occupiedPropIds.size / activeProps.length * 100);
+  });
+  if(charts.occupancy) charts.occupancy.destroy();
+  charts.occupancy = new Chart(document.getElementById('chartOccupancy'), {
+    type:'line',
+    data:{ labels:dayLabels, datasets:[{ label:'Okupansi', data:occData, borderColor:'#16a34a', backgroundColor:'rgba(22,163,74,.15)', fill:true, tension:.3, pointRadius:0, pointHoverRadius:4 }] },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{ display:false }, tooltip:{ callbacks:{ label:c => `${c.parsed.y}% terisi` } } },
+      scales:{
+        x:{ grid:{ display:false }, ticks:{ font:{size:9}, maxTicksLimit:10 } },
+        y:{ beginAtZero:true, max:100, grid:{ color:'#f1f5f9' }, ticks:{ callback:v=>v+'%', font:{size:10} } }
+      }
+    }
+  });
+
+  /* Peringkat revenue properti, tertinggi ke terendah */
+  const rankStats = dashboardPropStats.filter(s => s.rev > 0);
+  const rankLabels = rankStats.map(s => s.prop.code || s.prop.name);
+  const rankData = rankStats.map(s => s.rev);
+  const rankWrap = document.getElementById('chartPropRankWrap');
+  rankWrap.style.height = `${Math.max(220, rankStats.length * 28)}px`;
+  if(charts.propRank) charts.propRank.destroy();
+  charts.propRank = new Chart(document.getElementById('chartPropRank'), {
+    type:'bar',
+    data:{
+      labels: rankLabels,
+      datasets:[{ data:rankData, backgroundColor:'#4f46e5', borderRadius:5, barPercentage:0.7, categoryPercentage:0.75 }]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false, indexAxis:'y',
+      plugins:{
+        legend:{ display:false },
+        tooltip:{ callbacks:{
+          title:items => rankStats[items[0].dataIndex]?.prop.name || items[0].label,
+          label:c => fmtRp(c.parsed.x),
+        } }
+      },
+      scales:{
+        x:{ beginAtZero:true, grid:{ color:'#f1f5f9' }, ticks:{ callback:v=>fmtRpShort(v), font:{size:10} } },
+        y:{ grid:{ display:false }, ticks:{ font:{size:11, weight:600} } }
       }
     }
   });
@@ -3146,10 +3442,11 @@ function initCharts(){
       <span class="font-semibold text-slate-900">${fmtRpShort(catTotals[c])} <span class="text-slate-400 font-normal">(${expTotal ? Math.round(catTotals[c]/expTotal*100) : 0}%)</span></span>
     </div>`).join('');
 }
-function setChartTab(btn,mode){
+function setChartTab(btn,months){
   btn.parentElement.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
-  showToast(mode==='12m'?'Menampilkan 12 bulan terakhir':'Menampilkan 6 bulan terakhir');
+  dashboardChartMonths = months;
+  initCharts();
 }
 
 /* ============== PROPERTIES ============== */
@@ -3630,7 +3927,7 @@ function renderBookingView(){
 function renderBookingsTable(){
   const categoryFilter = document.getElementById('filterPropBooking')?.value || 'all';
   const platFilter = document.getElementById('filterPlatformBooking')?.value || 'all';
-  let filtered = [...BOOKINGS].sort((a,b)=>b.checkin.localeCompare(a.checkin));
+  let filtered = [...BOOKINGS].sort((a,b)=>a.checkin.localeCompare(b.checkin));
   filtered = filtered.filter(booking => isDateInReportPeriod(booking.checkin, currentPeriod));
   if(currentBookingStatus !== 'all') filtered = filtered.filter(booking => normalizeBookingStatus(booking.status) === normalizeBookingStatus(currentBookingStatus));
   if(categoryFilter !== 'all') filtered = filtered.filter(booking => PROPERTIES.some(property => property.id === booking.propId && property.type === categoryFilter));
@@ -3704,6 +4001,181 @@ async function loadCrewMembers(){
   crewMembers = Array.isArray(result.data) ? result.data : [];
   populateEmployeeSelect();
   renderCrewTable();
+}
+
+async function loadOfficeEmployees(){
+  const result = await dashboardApi('/dashboard/office-employees');
+  officeEmployees = Array.isArray(result.data) ? result.data : [];
+  renderOfficeEmployees();
+}
+
+function renderOfficeEmployees(){
+  const table = document.getElementById('officeEmployeeTableBody');
+  if(!table) return;
+  table.innerHTML = officeEmployees.length ? officeEmployees.map(employee => {
+    const active = Number(employee.active) === 1;
+    return `<tr>
+      <td class="px-5 py-3 font-medium text-slate-800">${escapeHtml(employee.name)}</td>
+      <td class="px-3 py-3"><span class="badge ${active ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-500'}">${active ? 'Aktif' : 'Nonaktif'}</span></td>
+      <td class="px-5 py-3 text-right whitespace-nowrap"><button type="button" data-office-employee-action="edit" data-office-employee-id="${escapeHtml(employee.id)}" class="text-xs font-semibold text-brand-600 hover:text-brand-800">Edit</button><button type="button" data-office-employee-action="toggle" data-office-employee-id="${escapeHtml(employee.id)}" class="ml-3 text-xs font-semibold ${active ? 'text-rose-600 hover:text-rose-800' : 'text-emerald-700 hover:text-emerald-900'}">${active ? 'Nonaktifkan' : 'Aktifkan'}</button></td>
+    </tr>`;
+  }).join('') : '<tr><td colspan="3" class="px-5 py-8 text-center text-sm text-slate-400">Belum ada karyawan kantor. Tambahkan nama di atas.</td></tr>';
+}
+
+function resetOfficeEmployeeForm(){
+  document.getElementById('officeEmployeeForm').reset();
+  document.getElementById('officeEmployeeEditId').value = '';
+  document.getElementById('officeEmployeeSaveButton').textContent = 'Tambah Karyawan';
+  document.getElementById('officeEmployeeCancelEdit').classList.add('hidden');
+  document.getElementById('officeEmployeeStatus').textContent = '';
+}
+
+async function submitOfficeEmployeeForm(event){
+  event.preventDefault();
+  const id = document.getElementById('officeEmployeeEditId').value;
+  const name = document.getElementById('officeEmployeeName').value.trim();
+  const button = document.getElementById('officeEmployeeSaveButton');
+  const status = document.getElementById('officeEmployeeStatus');
+  button.disabled = true;
+  status.className = 'text-sm mt-2 text-slate-500';
+  status.textContent = id ? 'Menyimpan perubahan nama...' : 'Menambahkan karyawan...';
+  try {
+    await dashboardApi(id ? `/dashboard/office-employees/${encodeURIComponent(id)}` : '/dashboard/office-employees', {
+      method:id ? 'PATCH' : 'POST', body:JSON.stringify({ name }),
+    });
+    await loadOfficeEmployees();
+    resetOfficeEmployeeForm();
+    document.getElementById('officeEmployeeStatus').className = 'text-sm mt-2 text-emerald-700';
+    document.getElementById('officeEmployeeStatus').textContent = id ? 'Nama karyawan berhasil diperbarui.' : 'Karyawan kantor berhasil ditambahkan.';
+  } catch(error) {
+    status.className = 'text-sm mt-2 text-rose-600';
+    status.textContent = error.message || 'Data karyawan gagal disimpan.';
+  } finally {
+    button.disabled = false;
+  }
+}
+
+async function handleOfficeEmployeeAction(event){
+  const button = event.target.closest('button[data-office-employee-action]');
+  if(!button) return;
+  const employee = officeEmployees.find(item => item.id === button.dataset.officeEmployeeId);
+  if(!employee) return;
+  if(button.dataset.officeEmployeeAction === 'edit'){
+    document.getElementById('officeEmployeeEditId').value = employee.id;
+    document.getElementById('officeEmployeeName').value = employee.name;
+    document.getElementById('officeEmployeeSaveButton').textContent = 'Simpan Nama';
+    document.getElementById('officeEmployeeCancelEdit').classList.remove('hidden');
+    document.getElementById('officeEmployeeStatus').textContent = '';
+    document.getElementById('officeEmployeeName').focus();
+    return;
+  }
+  const active = Number(employee.active) === 1;
+  if(active && !window.confirm(`Nonaktifkan karyawan ${employee.name}? Riwayat absennya tetap tersimpan.`)) return;
+  button.disabled = true;
+  try {
+    await dashboardApi(`/dashboard/office-employees/${encodeURIComponent(employee.id)}`, {
+      method:'PATCH', body:JSON.stringify({ active:!active }),
+    });
+    await loadOfficeEmployees();
+    document.getElementById('officeEmployeeStatus').className = 'text-sm mt-2 text-emerald-700';
+    document.getElementById('officeEmployeeStatus').textContent = active ? 'Karyawan dinonaktifkan; riwayat absen tetap tersimpan.' : 'Karyawan diaktifkan kembali.';
+  } catch(error) {
+    document.getElementById('officeEmployeeStatus').className = 'text-sm mt-2 text-rose-600';
+    document.getElementById('officeEmployeeStatus').textContent = error.message || 'Status karyawan gagal diubah.';
+  } finally {
+    button.disabled = false;
+  }
+}
+
+let attendanceEmployeesCache = [];
+
+async function loadAttendanceDashboard(){
+  const status = document.getElementById('attendanceDashboardStatus');
+  const dateInput = document.getElementById('attendanceDateFilter');
+  if(!dateInput.value) dateInput.value = new Date().toLocaleDateString('en-CA', { timeZone:'Asia/Jakarta' });
+  status.textContent = 'Memuat data absensi...';
+  try {
+    const [employeeResult, attendanceResult] = await Promise.all([
+      dashboardApi('/dashboard/office-employees'),
+      dashboardApi(`/dashboard/employee-attendance?date=${encodeURIComponent(dateInput.value)}`),
+    ]);
+    attendanceEmployeesCache = Array.isArray(employeeResult.data) ? employeeResult.data : [];
+    const records = Array.isArray(attendanceResult.data?.records) ? attendanceResult.data.records : [];
+    renderAttendanceDashboard(records);
+    status.textContent = '';
+  } catch(error) {
+    attendanceEmployeesCache = [];
+    renderAttendanceDashboard([]);
+    status.textContent = error.message || 'Data absensi gagal dimuat.';
+  }
+}
+
+function renderAttendanceDashboard(records){
+  const activeEmployees = attendanceEmployeesCache.filter(employee => Number(employee.active) === 1);
+  const checkedInIds = new Set(records.map(record => record.employee_id));
+  const missing = activeEmployees.filter(employee => !checkedInIds.has(employee.id));
+
+  document.getElementById('attendanceCheckedInCount').textContent = records.length;
+  document.getElementById('attendanceActiveEmployeeCount').textContent = activeEmployees.length;
+  document.getElementById('attendanceNotCheckedInCount').textContent = Math.max(0, activeEmployees.length - records.length);
+
+  const tableBody = document.getElementById('attendanceTableBody');
+  tableBody.innerHTML = records.length ? records.map(record => {
+    const checkInTime = new Date(record.checked_in_at).toLocaleTimeString('id-ID', { hour:'2-digit', minute:'2-digit', timeZone:'Asia/Jakarta' });
+    const checkOutTime = record.checked_out_at ? new Date(record.checked_out_at).toLocaleTimeString('id-ID', { hour:'2-digit', minute:'2-digit', timeZone:'Asia/Jakarta' }) : '';
+    const duration = record.checked_out_at ? formatAttendanceDuration(record.checked_in_at, record.checked_out_at) : '-';
+    const checkInMapUrl = `https://www.google.com/maps?q=${record.lat},${record.lng}`;
+    const checkOutMapUrl = record.checked_out_at ? `https://www.google.com/maps?q=${record.checkout_lat},${record.checkout_lng}` : '';
+    return `<tr>
+      <td class="px-4 py-3 whitespace-nowrap">${checkInTime} WIB</td>
+      <td class="px-4 py-3 whitespace-nowrap">${record.checked_out_at ? `${checkOutTime} WIB` : '<span class="text-amber-600 font-semibold">Belum pulang</span>'}</td>
+      <td class="px-4 py-3 whitespace-nowrap">${duration}</td>
+      <td class="px-4 py-3 font-medium text-slate-800">${escapeHtml(record.employee_name)}</td>
+      <td class="px-4 py-3">
+        <div class="flex items-center gap-1.5">
+          <button type="button" onclick="viewAttendancePhoto('${record.selfie_url}')" title="Selfie absen masuk"><img src="${record.selfie_url}" alt="Selfie masuk ${escapeHtml(record.employee_name)}" class="w-10 h-10 rounded-full object-cover border border-slate-200"></button>
+          ${record.checkout_selfie_url ? `<button type="button" onclick="viewAttendancePhoto('${record.checkout_selfie_url}')" title="Selfie absen pulang"><img src="${record.checkout_selfie_url}" alt="Selfie pulang ${escapeHtml(record.employee_name)}" class="w-10 h-10 rounded-full object-cover border border-rose-200"></button>` : ''}
+        </div>
+      </td>
+      <td class="px-4 py-3 whitespace-nowrap">
+        <a href="${checkInMapUrl}" target="_blank" rel="noopener noreferrer" class="text-brand-600 hover:text-brand-700 text-xs font-semibold">Masuk${record.accuracy ? ` (±${Math.round(record.accuracy)}m)` : ''}</a>
+        ${checkOutMapUrl ? `<br><a href="${checkOutMapUrl}" target="_blank" rel="noopener noreferrer" class="text-brand-600 hover:text-brand-700 text-xs font-semibold">Pulang${record.checkout_accuracy ? ` (±${Math.round(record.checkout_accuracy)}m)` : ''}</a>` : ''}
+      </td>
+      <td class="px-4 py-3 text-right whitespace-nowrap"><button type="button" onclick="resetAttendanceRecord('${record.id}','${escapeHtml(record.employee_name)}')" class="text-xs font-semibold text-rose-600 hover:text-rose-800">Reset</button></td>
+    </tr>`;
+  }).join('') : '<tr><td colspan="7" class="px-4 py-8 text-center text-sm text-slate-400">Belum ada absen masuk pada tanggal ini.</td></tr>';
+
+  const missingContainer = document.getElementById('attendanceMissingList');
+  missingContainer.innerHTML = missing.length
+    ? missing.map(employee => `<span class="inline-flex items-center gap-1.5 bg-amber-50 text-amber-700 px-3 py-1.5 rounded-full font-semibold">${escapeHtml(employee.name)}</span>`).join('')
+    : '<p class="text-sm text-slate-400">Semua karyawan aktif sudah absen masuk pada tanggal ini.</p>';
+}
+
+function viewAttendancePhoto(url){
+  document.getElementById('attendancePhotoModalImg').src = url;
+  openModal('modal-attendance-photo');
+}
+
+function formatAttendanceDuration(startIso, endIso){
+  const ms = new Date(endIso) - new Date(startIso);
+  if(!Number.isFinite(ms) || ms < 0) return '-';
+  const totalMinutes = Math.round(ms / 60000);
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+  return `${hours} jam ${String(minutes).padStart(2,'0')} menit`;
+}
+
+async function resetAttendanceRecord(id, employeeName){
+  if(!window.confirm(`Reset/hapus absen ${employeeName} pada tanggal ini? Tindakan ini tidak dapat dibatalkan.`)) return;
+  const pin = window.prompt('Masukkan PIN Master (4 digit) untuk menghapus absen ini:');
+  if(pin === null) return;
+  try {
+    await dashboardApi(`/dashboard/employee-attendance/${encodeURIComponent(id)}`, { method:'DELETE', body:JSON.stringify({ pin:pin.trim() }) });
+    showToast(`Absen ${employeeName} berhasil direset.`);
+    await loadAttendanceDashboard();
+  } catch(error) {
+    showToast(error.message || 'Gagal mereset absen.');
+  }
 }
 
 function populateEmployeeSelect(){
@@ -5736,6 +6208,356 @@ function shareReportWhatsApp(){
   else showToast('WhatsApp diblokir browser. Izinkan pop-up untuk membuka pilihan kontak.');
 }
 
+/* ============== LAPORAN AGEN ============== */
+/* Fee agen sudah dihitung dan tersimpan per booking (booking.agentFeeAmount) saat booking
+   dibuat/diedit di menu Booking, dan masuk otomatis ke buku kas sebagai pengeluaran
+   "Fee Agen". Laporan ini hanya merekap ulang per agen + bulan dari data yang sama,
+   tanpa kalkulasi baru -- supaya selalu sinkron dengan Booking dan Keuangan.    */
+let lastAgentReportSummary = null;
+function populateAgentReportSelect(){
+  const sel = document.getElementById('reportAgen');
+  if(!sel) return;
+  const selected = sel.value;
+  const activeAgents = AGENTS.filter(agent => Number(agent.active) === 1);
+  sel.innerHTML = activeAgents.length
+    ? activeAgents.map(agent => `<option value="${escapeHtml(agent.id)}">${escapeHtml(agent.name)}</option>`).join('')
+    : '<option value="">Belum ada agen aktif</option>';
+  if(activeAgents.some(agent => agent.id === selected)) sel.value = selected;
+  else if(activeAgents.length) sel.value = activeAgents[0].id;
+  const monthInput = document.getElementById('reportAgenMonth');
+  if(monthInput && !monthInput.value) monthInput.value = new Date().toISOString().slice(0, 7);
+}
+function fmtAgentReportDate(dateStr){
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(dateStr || '')) return dateStr || '-';
+  return new Date(`${dateStr}T00:00:00`).toLocaleDateString('id-ID', { day:'2-digit', month:'short', year:'numeric' });
+}
+function renderAgentReport(){
+  const content = document.getElementById('reportAgenContent');
+  const agentId = document.getElementById('reportAgen').value;
+  const month = document.getElementById('reportAgenMonth').value;
+  if(!agentId){
+    lastAgentReportSummary = null;
+    content.innerHTML = '<div class="bg-white rounded-xl border border-slate-200 p-5 text-sm text-slate-500">Belum ada agen aktif. Tambahkan agen di menu Pengaturan terlebih dahulu.</div>';
+    return;
+  }
+  if(!/^\d{4}-\d{2}$/.test(month)){
+    lastAgentReportSummary = null;
+    content.innerHTML = '<div class="bg-white rounded-xl border border-rose-200 p-5 text-sm text-rose-700">Pilih bulan laporan terlebih dahulu.</div>';
+    return;
+  }
+  const agent = AGENTS.find(item => item.id === agentId);
+  if(!agent){
+    lastAgentReportSummary = null;
+    content.innerHTML = '<div class="bg-white rounded-xl border border-rose-200 p-5 text-sm text-rose-700">Agen tidak ditemukan.</div>';
+    return;
+  }
+  const monthLabel = new Date(`${month}-01T00:00:00`).toLocaleDateString('id-ID', { month:'long', year:'numeric' });
+  const bookings = BOOKINGS.filter(booking => booking.agentId === agentId && String(booking.checkin || '').startsWith(month))
+    .sort((a, b) => a.checkin.localeCompare(b.checkin));
+  const activeBookings = bookings.filter(booking => !isBookingCancelled(booking));
+  const totalBookingValue = activeBookings.reduce((sum, booking) => sum + getBookingNetAmount(booking), 0);
+  const totalFee = activeBookings.reduce((sum, booking) => sum + (Number(booking.agentFeeAmount) || 0), 0);
+  const cancelledCount = bookings.length - activeBookings.length;
+  const agentNameKey = normalizePropertyNameForMatch(agent.name);
+  // Termasuk juga pengeluaran kategori "Fee Agen"/"Bonus Agen" yang ditambah manual lewat
+  // tombol Keuangan biasa (bukan khusus tombol Tambah Manual di sini), selama penerimanya
+  // nama agen ini -- supaya kedua jalur input tetap terbaca di laporan yang sama. Entri
+  // otomatis dari booking (id diawali "booking-agent-fee-") dikecualikan karena sudah
+  // dihitung di tabel Rincian Booking.
+  const manualEntries = EXPENSES.filter(expense =>
+    ['expense-agent-bonus', 'expense-agent-fee'].includes(expense.categoryId) &&
+    !expense.id.startsWith('booking-agent-fee-') &&
+    normalizePropertyNameForMatch(expense.payee) === agentNameKey &&
+    String(expense.date || '').startsWith(month))
+    .sort((a, b) => a.date.localeCompare(b.date));
+  const totalBonus = manualEntries.reduce((sum, expense) => sum + expense.amount, 0);
+  lastAgentReportSummary = {
+    agent, month, monthLabel, bookings, manualEntries,
+    totals:{ bookingCount:activeBookings.length, bookingValue:totalBookingValue, fee:totalFee, bonus:totalBonus, grandTotal:totalFee + totalBonus, cancelledCount },
+  };
+  content.innerHTML = `
+    <div class="bg-white rounded-2xl border border-slate-100 p-6 mb-5">
+      <div>
+        <h2 class="text-xl font-extrabold text-slate-900">${escapeHtml(agent.name)}</h2>
+        <p class="text-sm text-slate-500">${escapeHtml(agent.agent_code || 'Tanpa ID Agen')} · ${escapeHtml(agent.phone || 'Tanpa nomor HP')}</p>
+        <p class="text-xs text-slate-400 mt-1">Periode laporan: <b>${monthLabel}</b> · ${activeBookings.length} booking aktif${cancelledCount ? ` · ${cancelledCount} dibatalkan` : ''}</p>
+      </div>
+    </div>
+    <div class="grid grid-cols-2 lg:grid-cols-3 gap-4 mb-5">
+      <div class="bg-white rounded-2xl p-4 border border-slate-100">
+        <div class="text-xs text-slate-500">Jumlah Booking</div>
+        <div class="text-xl font-bold text-slate-900 mt-1">${activeBookings.length}</div>
+      </div>
+      <div class="bg-white rounded-2xl p-4 border border-slate-100">
+        <div class="text-xs text-slate-500">Total Nilai Booking</div>
+        <div class="text-xl font-bold text-slate-900 mt-1">${fmtRpShort(totalBookingValue)}</div>
+      </div>
+      <div class="bg-white rounded-2xl p-4 border border-slate-100">
+        <div class="text-xs text-slate-500">Total Fee + Bonus</div>
+        <div class="text-xl font-bold text-emerald-700 mt-1">${fmtRpShort(totalFee + totalBonus)}</div>
+        ${totalBonus ? `<div class="text-[11px] text-slate-400 mt-0.5">Fee booking ${fmtRpShort(totalFee)} + bonus ${fmtRpShort(totalBonus)}</div>` : ''}
+      </div>
+    </div>
+    <div class="bg-white rounded-2xl border border-slate-100 overflow-hidden mb-5">
+      <div class="p-5 pb-3"><h3 class="font-bold text-slate-900">Rincian Booking</h3><p class="text-xs text-slate-500">Fee mengikuti pengaturan yang dipilih saat booking dibuat/diedit, dan sudah tercatat di Keuangan sebagai pengeluaran "Fee Agen".</p></div>
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead class="bg-slate-50 text-slate-500 text-xs uppercase tracking-wider">
+            <tr>
+              <th class="text-left font-semibold px-5 py-3">Check-in</th>
+              <th class="text-left font-semibold px-3 py-3">Properti</th>
+              <th class="text-left font-semibold px-3 py-3 hidden sm:table-cell">Tamu</th>
+              <th class="text-left font-semibold px-3 py-3 hidden sm:table-cell">Status</th>
+              <th class="text-right font-semibold px-3 py-3">Nilai Booking</th>
+              <th class="text-center font-semibold px-3 py-3">Fee</th>
+              <th class="text-right font-semibold px-5 py-3">Nominal Fee</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100">
+            ${bookings.length ? bookings.map(booking => {
+              const cancelled = isBookingCancelled(booking);
+              return `<tr class="${cancelled ? 'opacity-50' : ''}">
+                <td class="px-5 py-3 text-slate-700">${fmtAgentReportDate(booking.checkin)}</td>
+                <td class="px-3 py-3 text-slate-700">${escapeHtml(booking.propName || '')}</td>
+                <td class="px-3 py-3 text-slate-700 hidden sm:table-cell">${escapeHtml(booking.guest || '')}</td>
+                <td class="px-3 py-3 hidden sm:table-cell"><span class="text-xs font-semibold ${cancelled ? 'text-rose-600' : 'text-emerald-700'}">${escapeHtml(booking.status || '')}</span></td>
+                <td class="px-3 py-3 text-right text-slate-700">${fmtRp(getBookingNetAmount(booking))}</td>
+                <td class="px-3 py-3 text-center text-slate-500 text-xs">${booking.agentFeeType === 'percent' ? `${booking.agentFeeValue}%` : 'Rp tetap'}</td>
+                <td class="px-5 py-3 text-right font-semibold text-emerald-700">${cancelled ? '—' : fmtRp(Number(booking.agentFeeAmount) || 0)}</td>
+              </tr>`;
+            }).join('') : `<tr><td colspan="7" class="px-5 py-8 text-center text-slate-400">Belum ada booking dari agen ini pada ${monthLabel}.</td></tr>`}
+            ${bookings.length ? `<tr class="bg-slate-50 font-bold">
+              <td class="px-5 py-3 text-slate-900" colspan="4">TOTAL (booking aktif)</td>
+              <td class="px-3 py-3 text-right text-slate-900">${fmtRp(totalBookingValue)}</td>
+              <td class="px-3 py-3"></td>
+              <td class="px-5 py-3 text-right text-emerald-700">${fmtRp(totalFee)}</td>
+            </tr>` : ''}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="bg-white rounded-2xl border border-slate-100 overflow-hidden mb-5">
+      <div class="p-5 pb-3"><h3 class="font-bold text-slate-900">Bonus &amp; Penyesuaian Manual</h3><p class="text-xs text-slate-500">Dari tombol "Tambah Manual" di atas, maupun dari tombol Keuangan biasa (kategori "Fee Agen" atau "Bonus Agen" dengan penerima nama agen ini).</p></div>
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead class="bg-slate-50 text-slate-500 text-xs uppercase tracking-wider">
+            <tr>
+              <th class="text-left font-semibold px-5 py-3">Tanggal</th>
+              <th class="text-left font-semibold px-3 py-3">Keterangan</th>
+              <th class="text-left font-semibold px-3 py-3 hidden sm:table-cell">Kategori</th>
+              <th class="text-right font-semibold px-3 py-3">Jumlah</th>
+              <th class="text-right font-semibold px-5 py-3">Aksi</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100">
+            ${manualEntries.length ? manualEntries.map(expense => `
+              <tr>
+                <td class="px-5 py-3 text-slate-700">${fmtAgentReportDate(expense.date)}</td>
+                <td class="px-3 py-3 text-slate-700">${escapeHtml(expense.desc || expense.cat || 'Bonus Agen')}</td>
+                <td class="px-3 py-3 text-slate-500 hidden sm:table-cell">${escapeHtml(expense.cat || '')}</td>
+                <td class="px-3 py-3 text-right font-semibold text-emerald-700">${fmtRp(expense.amount)}</td>
+                <td class="px-5 py-3 text-right"><button type="button" onclick="deleteAgentManualEntry('${escapeHtml(expense.id)}')" class="text-xs font-semibold text-rose-600 hover:text-rose-700">Hapus</button></td>
+              </tr>`).join('') : `<tr><td colspan="5" class="px-5 py-6 text-center text-slate-400">Belum ada bonus/penyesuaian manual bulan ini.</td></tr>`}
+            ${manualEntries.length ? `<tr class="bg-slate-50 font-bold">
+              <td class="px-5 py-3 text-slate-900" colspan="3">TOTAL BONUS MANUAL</td>
+              <td class="px-3 py-3 text-right text-emerald-700">${fmtRp(totalBonus)}</td>
+              <td class="px-5 py-3"></td>
+            </tr>` : ''}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
+}
+function toggleAgentManualForm(show){
+  const card = document.getElementById('agentManualFormCard');
+  const makeVisible = typeof show === 'boolean' ? show : card.classList.contains('hidden');
+  card.classList.toggle('hidden', !makeVisible);
+  if(makeVisible){
+    document.getElementById('agentManualStatus').textContent = '';
+    if(!document.getElementById('agentManualDate').value) document.getElementById('agentManualDate').value = new Date().toISOString().slice(0, 10);
+  }
+}
+async function submitAgentManualEntry(){
+  const status = document.getElementById('agentManualStatus');
+  const button = document.getElementById('agentManualSubmitBtn');
+  if(!lastAgentReportSummary?.agent){
+    status.className = 'text-xs mt-2 text-rose-600';
+    status.textContent = 'Pilih agen terlebih dahulu.';
+    return;
+  }
+  const date = document.getElementById('agentManualDate').value;
+  const amount = parseCurrencyInput(document.getElementById('agentManualAmount').value);
+  const description = document.getElementById('agentManualDesc').value.trim();
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(date) || !amount || amount <= 0){
+    status.className = 'text-xs mt-2 text-rose-600';
+    status.textContent = 'Isi tanggal dan jumlah yang valid.';
+    return;
+  }
+  button.disabled = true;
+  status.className = 'text-xs mt-2 text-slate-500';
+  status.textContent = 'Menyimpan ke D1...';
+  try {
+    await dashboardApi('/admin/finance/entries', {
+      method:'POST',
+      body:JSON.stringify({
+        kind:'expense', category_id:'expense-agent-bonus', property_id:null, property_name:'',
+        entry_date:date, amount, description:description || 'Bonus Agen', payee:lastAgentReportSummary.agent.name,
+        recurrence:'once',
+      }),
+    });
+    document.getElementById('agentManualAmount').value = '';
+    document.getElementById('agentManualDesc').value = '';
+    toggleAgentManualForm(false);
+    showToast('Bonus/penyesuaian manual tersimpan.');
+    await loadFinanceData();
+    renderAgentReport();
+  } catch(error) {
+    status.className = 'text-xs mt-2 text-rose-600';
+    status.textContent = error.message || 'Gagal menyimpan.';
+  } finally {
+    button.disabled = false;
+  }
+}
+async function deleteAgentManualEntry(id){
+  const entry = EXPENSES.find(item => item.id === id);
+  if(!entry) return;
+  if(!confirm(`Hapus "${entry.desc || entry.cat}" sebesar ${fmtRp(entry.amount)}?`)) return;
+  const pin = window.prompt('Masukkan PIN Master (4 digit) untuk menyetujui penghapusan:');
+  if(pin === null) return;
+  try {
+    await dashboardApi(`/admin/finance/entries/${encodeURIComponent(id)}`, { method:'DELETE', body:JSON.stringify({ pin:pin.trim() }) });
+    showToast('Bonus/penyesuaian manual dihapus.');
+    await loadFinanceData();
+    renderAgentReport();
+  } catch(error) {
+    showToast(error.message || 'Gagal menghapus.');
+  }
+}
+function exportAgentReportExcel(){
+  if(!lastAgentReportSummary){
+    showToast('Pilih agen dan bulan laporan yang valid terlebih dahulu.');
+    return;
+  }
+  const { agent, monthLabel, totals } = lastAgentReportSummary;
+  const rows = [
+    ['Laporan Agen', agent.name],
+    ['ID Agen', agent.agent_code || ''],
+    ['Periode', monthLabel],
+    ['Jumlah Booking', totals.bookingCount],
+    ['Total Nilai Booking', totals.bookingValue],
+    ['Fee Booking', totals.fee],
+    ['Bonus/Penyesuaian Manual', totals.bonus],
+    ['Total Fee + Bonus', totals.grandTotal],
+    [''],
+  ];
+  document.querySelectorAll('#reportAgenContent table').forEach(table => {
+    table.querySelectorAll('tr').forEach(row => {
+      rows.push([...row.querySelectorAll('th, td')].map(cell => cell.innerText.replace(/\s+/g, ' ').trim()));
+    });
+  });
+  const csv = '﻿' + rows.map(row => row.map(value => {
+    const cell = String(value ?? '');
+    return /[";\r\n]/.test(cell) ? `"${cell.replace(/"/g, '""')}"` : cell;
+  }).join(';')).join('\r\n');
+  const blobUrl = URL.createObjectURL(new Blob([csv], { type:'text/csv;charset=utf-8' }));
+  const link = document.createElement('a');
+  const agentSlug = agent.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+  link.href = blobUrl;
+  link.download = `laporan-agen-${agentSlug}-${lastAgentReportSummary.month}.csv`;
+  link.click();
+  URL.revokeObjectURL(blobUrl);
+  showToast('Laporan CSV kompatibel Excel berhasil diunduh.');
+}
+function exportAgentReportPdf(){
+  if(!lastAgentReportSummary){
+    showToast('Pilih agen dan bulan laporan yang valid terlebih dahulu.');
+    return;
+  }
+  if(!window.jspdf?.jsPDF){
+    showToast('Pembuat PDF belum termuat. Periksa koneksi internet lalu muat ulang halaman.');
+    return;
+  }
+  const { agent, monthLabel, bookings, manualEntries, totals } = lastAgentReportSummary;
+  const doc = new window.jspdf.jsPDF({ unit:'pt', format:'a4', orientation:'landscape' });
+  const margin = 36;
+  const right = doc.internal.pageSize.getWidth() - margin;
+  const startY = pdfDocumentHeader(doc, 'Laporan Agen', `${agent.name} · ${monthLabel}`);
+  const fixedWidths = [70, 150, 130, 80, 110, 70];
+  const columns = [
+    { label:'CHECK-IN', width:fixedWidths[0] },
+    { label:'PROPERTI', width:fixedWidths[1] },
+    { label:'TAMU', width:fixedWidths[2] },
+    { label:'STATUS', width:fixedWidths[3] },
+    { label:'NILAI BOOKING', width:fixedWidths[4], align:'right' },
+    { label:'FEE', width:right - margin - fixedWidths.reduce((sum, value) => sum + value, 0), align:'right' },
+  ];
+  const rows = bookings.map(booking => {
+    const cancelled = isBookingCancelled(booking);
+    return {
+      cells: [
+        fmtAgentReportDate(booking.checkin),
+        booking.propName || '-',
+        booking.guest || '-',
+        booking.status || '-',
+        fmtRp(getBookingNetAmount(booking)),
+        cancelled ? '-' : fmtRp(Number(booking.agentFeeAmount) || 0),
+      ],
+    };
+  });
+  if(!rows.length) rows.push({ cells:['Tidak ada booking pada periode ini.', '-', '-', '-', '-', '-'] });
+  rows.push({
+    emphasis: true,
+    cells: ['TOTAL (booking aktif)', '', '', String(totals.bookingCount), fmtRp(totals.bookingValue), fmtRp(totals.fee)],
+  });
+  let endY = pdfTable(doc, { margin, columns, rows, startY });
+  if(manualEntries.length){
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(10);
+    doc.setTextColor(0);
+    doc.text('BONUS & PENYESUAIAN MANUAL', margin, endY + 22);
+    const bonusColumns = [
+      { label:'TANGGAL', width:90 },
+      { label:'KETERANGAN', width:right - margin - 90 - 110 },
+      { label:'JUMLAH', width:110, align:'right' },
+    ];
+    const bonusRows = manualEntries.map(expense => ({
+      cells: [fmtAgentReportDate(expense.date), expense.desc || expense.cat || 'Bonus Agen', fmtRp(expense.amount)],
+    }));
+    bonusRows.push({ emphasis:true, cells:['TOTAL BONUS', '', fmtRp(totals.bonus)] });
+    endY = pdfTable(doc, { margin, columns:bonusColumns, rows:bonusRows, startY:endY + 30 });
+  }
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(11);
+  doc.text(`Total Fee + Bonus: ${fmtRp(totals.grandTotal)}`, margin, endY + 22);
+  const agentSlug = agent.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+  pdfSave(doc, `laporan-agen-${agentSlug}-${lastAgentReportSummary.month}.pdf`);
+}
+function shareAgentReportWhatsApp(){
+  if(!lastAgentReportSummary){
+    showToast('Pilih agen dan bulan laporan yang valid terlebih dahulu.');
+    return;
+  }
+  const { agent, monthLabel, totals } = lastAgentReportSummary;
+  const phone = normalizeWhatsAppPhone(agent.phone);
+  if(!phone){
+    showToast(`Agen ${agent.name} belum punya nomor WhatsApp tersimpan. Tambahkan dulu di Pengaturan.`);
+    return;
+  }
+  const message = [
+    `Laporan Fee Agen YOUR HOME - ${agent.name}`,
+    `Periode: ${monthLabel}`,
+    `Jumlah booking: ${totals.bookingCount}`,
+    `Total nilai booking: ${fmtRp(totals.bookingValue)}`,
+    `Fee booking: ${fmtRp(totals.fee)}`,
+    ...(totals.bonus ? [`Bonus/penyesuaian manual: ${fmtRp(totals.bonus)}`] : []),
+    `Total fee + bonus: ${fmtRp(totals.grandTotal)}`,
+  ].join('\n');
+  const popup = window.open(`https://wa.me/${phone}?text=${encodeURIComponent(message)}`, '_blank');
+  if(popup) popup.opener = null;
+  else showToast('WhatsApp diblokir browser. Izinkan pop-up untuk membuka pilihan kontak.');
+}
+
 /* ============== GENERATOR NOTA LUNAS ============== */
 /* Nota dibuat hanya di browser: tidak ada panggilan API, tidak masuk D1,
    dan tidak memengaruhi booking maupun laporan keuangan. */
@@ -7482,6 +8304,9 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('passwordForm').addEventListener('submit', changeDashboardPassword);
   document.getElementById('deletePinForm').addEventListener('submit', changeDashboardDeletePin);
   document.getElementById('crewForm').addEventListener('submit', submitCrewForm);
+  document.getElementById('officeEmployeeForm').addEventListener('submit', submitOfficeEmployeeForm);
+  document.getElementById('officeEmployeeCancelEdit').addEventListener('click', resetOfficeEmployeeForm);
+  document.getElementById('officeEmployeeTableBody').addEventListener('click', handleOfficeEmployeeAction);
   document.getElementById('ownerForm').addEventListener('submit', submitOwner);
   document.getElementById('crewTableBody').addEventListener('click', handleCrewTableAction);
   document.getElementById('agentForm').addEventListener('submit', submitAgentForm);
