@@ -901,6 +901,112 @@ export default {
       }
 
       // Ambil properti aktif untuk website publik
+      // ================= GANTI KODE PROPERTI (form untuk pihak management, tanpa login) =================
+      // Link dibagikan langsung ke management; GET menampilkan nama + kode saat ini, POST menyimpan
+      // perubahan dan mengirim notifikasi Telegram ke Sigit. Dibatasi rate limit karena publik.
+      if (request.method === 'GET' && path === '/property-codes') {
+        const result = await env.DB.prepare(`
+          SELECT id, dashboard_id, property_code, publication_status, active, name, category
+          FROM properties ORDER BY name COLLATE NOCASE
+        `).all();
+        return json({ ok:true, data:(result.results || []).map(row => ({
+          id:row.id, name:row.name, category:row.category, property_code:row.property_code || '',
+          archived: row.publication_status === 'archived' || Number(row.active) === 0,
+        })) });
+      }
+
+      if (request.method === 'POST' && path === '/property-codes') {
+        const rate = await reserveLoginAttempt(env, request, 'property-code-change');
+        if (rate.limited) return bad('Terlalu banyak percobaan. Coba lagi dalam 15 menit.', 429);
+        const body = await request.json();
+        const submittedBy = String(body.submitted_by || '').trim().slice(0, 120);
+        const changes = Array.isArray(body.changes) ? body.changes : [];
+        if (!changes.length) return bad('Tidak ada data kode untuk disimpan.');
+        if (changes.length > 300) return bad('Terlalu banyak baris dalam satu kali kirim.');
+        const validChange = change => change && typeof change.id === 'string' && change.id &&
+          typeof change.new_code === 'string' && /^[A-Za-z0-9-]{1,20}$/.test(change.new_code.trim());
+        const cleaned = changes.filter(validChange).map(change => ({ id:change.id, new_code:change.new_code.trim().toUpperCase() }));
+        if (changes.some(change => !validChange(change))) {
+          return bad('Format kode baru tidak valid. Gunakan huruf, angka, dan tanda minus saja (maks 20 karakter).');
+        }
+
+        const rows = await env.DB.prepare('SELECT id, dashboard_id, name, property_code FROM properties').all();
+        const byId = new Map((rows.results || []).map(row => [row.id, row]));
+        const actual = cleaned.filter(change => byId.has(change.id) && byId.get(change.id).property_code !== change.new_code);
+        if (!actual.length) return bad('Tidak ada kode yang berubah dari sebelumnya.');
+
+        const finalCodes = new Map((rows.results || []).map(row => [row.id, row.property_code]));
+        actual.forEach(change => finalCodes.set(change.id, change.new_code));
+        const seenCodes = new Map();
+        for (const [id, code] of finalCodes) {
+          if (!code) continue;
+          if (seenCodes.has(code)) {
+            return bad(`Kode "${code}" dipakai lebih dari satu properti. Pastikan setiap kode unik sebelum menyimpan.`, 409);
+          }
+          seenCodes.set(code, id);
+        }
+
+        const now = new Date().toISOString();
+        const statements = actual.map(change => env.DB.prepare(`
+          UPDATE properties SET property_code = ?, updated_at = ? WHERE id = ?
+        `).bind(change.new_code, now, change.id));
+
+        // Sinkron juga ke dashboard_management_data, supaya kode baru tidak tertimpa balik
+        // saat Dashboard menyimpan ulang daftar Owner/properti (lihat buildDashboardCatalogStatements).
+        const saved = await env.DB.prepare(`SELECT data_json FROM dashboard_management_data WHERE id = 'main'`).first();
+        if (saved) {
+          try {
+            const managementData = JSON.parse(saved.data_json);
+            if (Array.isArray(managementData.properties)) {
+              let touched = false;
+              actual.forEach(change => {
+                const dashboardId = byId.get(change.id)?.dashboard_id;
+                if (!dashboardId) return;
+                const managed = managementData.properties.find(property => property.id === dashboardId);
+                if (managed) { managed.code = change.new_code; touched = true; }
+              });
+              if (touched) {
+                statements.push(env.DB.prepare(`
+                  UPDATE dashboard_management_data SET data_json = ?, updated_by = ?, updated_at = ? WHERE id = 'main'
+                `).bind(JSON.stringify(managementData), 'property-code-form', now));
+              }
+            }
+          } catch {
+            // Data Dashboard rusak: lanjutkan simpan kode properti saja, tanpa sinkron management data.
+          }
+        }
+
+        await env.DB.batch(statements);
+
+        const telegramToken = String(env.TELEGRAM_BOT_TOKEN || '').trim();
+        const telegramChatId = String(env.TELEGRAM_CHAT_ID || '').trim();
+        if (telegramToken && telegramChatId) {
+          const lines = actual.map(change => {
+            const row = byId.get(change.id);
+            return `${row.name}: ${row.property_code || '(kosong)'} -> ${change.new_code}`;
+          });
+          const text = [
+            'PERUBAHAN KODE PROPERTI',
+            submittedBy ? `Dikirim oleh: ${submittedBy}` : '',
+            '',
+            ...lines,
+            '',
+            now,
+          ].filter(line => line !== '').join('\n');
+          try {
+            await fetch(`https://api.telegram.org/bot${telegramToken}/sendMessage`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ chat_id: telegramChatId, text }),
+            });
+          } catch {
+            // Jangan gagalkan penyimpanan hanya karena notifikasi Telegram gagal terkirim.
+          }
+        }
+
+        return json({ ok:true, data:{ changed: actual.length } });
+      }
+
       if (request.method === 'GET' && path === '/properties') {
         const [result, bookingResult] = await Promise.all([
           env.DB.prepare(`
@@ -954,16 +1060,9 @@ export default {
         let managementData;
         try { managementData = JSON.parse(saved.data_json); }
         catch { return bad('Daftar properti di D1 rusak dan tidak dapat dibaca.', 500); }
-        const publishedResult = await env.DB.prepare(`
-          SELECT dashboard_id, name FROM properties
-          WHERE active = 1 AND publication_status = 'active'
-        `).all();
-        const publishedIds = new Set((publishedResult.results || []).map(property => property.dashboard_id).filter(Boolean));
-        const publishedNames = new Set((publishedResult.results || []).map(property => String(property.name || '').trim().toLocaleLowerCase('id')));
         const seenNames = new Set();
         const properties = (Array.isArray(managementData.properties) ? managementData.properties : [])
           .filter(property => property && property.active !== false && property.active !== 0 && typeof property.name === 'string' && property.name.trim())
-          .filter(property => publishedIds.has(String(property.id || '')) || publishedNames.has(property.name.trim().toLocaleLowerCase('id')))
           .filter(property => {
             const key = property.name.trim().toLocaleLowerCase('id');
             if (seenNames.has(key)) return false;
@@ -979,7 +1078,7 @@ export default {
       if (request.method === 'GET' && path === '/settings') {
         const result = await env.DB.prepare(`
           SELECT key, value FROM site_settings
-          WHERE key IN ('header_logo', 'footer_logo', 'dashboard_logo', 'footer_location', 'footer_phone', 'footer_email', 'footer_instagram')
+          WHERE key IN ('header_logo', 'footer_logo', 'dashboard_logo', 'footer_location', 'footer_phone', 'footer_email', 'footer_instagram', 'linktree_links')
         `).all();
         return json({
           ok: true,
@@ -1004,12 +1103,21 @@ export default {
         const workDate = String(
           body.work_date || body.workDate || ''
         ).trim();
+        const pin = String(body.pin || '').trim();
 
         if (!crew || !unit || !jobType || !workDate) {
           return bad(
             'crew, unit, job_type, work_date wajib diisi'
           );
         }
+        if (!/^\d{4}$/.test(pin)) return bad('Masukkan PIN Master tepat 4 digit.', 400);
+        const master = await env.DB.prepare(`
+          SELECT delete_pin_salt, delete_pin_hash FROM dashboard_users
+          WHERE account_id = 'master' AND active = 1
+        `).first();
+        if (!master?.delete_pin_hash) return bad('PIN Master belum diinisialisasi. Login sebagai Master terlebih dahulu.', 409);
+        const attemptedPinHash = await hashDashboardPassword(pin, master.delete_pin_salt);
+        if (!constantTimeEqual(attemptedPinHash, master.delete_pin_hash)) return bad('PIN Master salah.', 403);
 
         const id = crypto.randomUUID();
         const createdAt = new Date().toISOString();
@@ -3668,12 +3776,32 @@ export default {
         const body = await request.json();
         const allowedKeys = new Set([
           'header_logo', 'footer_logo', 'dashboard_logo', 'footer_location', 'footer_phone',
-          'footer_email', 'footer_instagram',
+          'footer_email', 'footer_instagram', 'linktree_links',
         ]);
         const key = String(body.key || '').trim();
         if (!allowedKeys.has(key)) return bad('Setting tidak dikenal');
 
         let value = String(body.value || '').trim();
+        if (key === 'linktree_links') {
+          let links;
+          try { links = JSON.parse(value); }
+          catch { return bad('Format tautan Linktree tidak valid.'); }
+          if (!Array.isArray(links) || links.length !== 10) return bad('Linktree harus berisi tepat 10 tautan.');
+          const cleanedLinks = [];
+          for (const link of links) {
+            const label = String(link?.label || '').trim();
+            const linkUrl = String(link?.url || '').trim();
+            if (label.length > 80 || linkUrl.length > 2048) return bad('Judul maksimal 80 karakter dan URL maksimal 2048 karakter.');
+            if (linkUrl) {
+              let protocol;
+              try { protocol = new URL(linkUrl).protocol; }
+              catch { return bad('Salah satu URL Linktree tidak valid.'); }
+              if (!['http:', 'https:', 'mailto:', 'tel:'].includes(protocol)) return bad('URL Linktree hanya boleh menggunakan http, https, mailto, atau tel.');
+            }
+            cleanedLinks.push({ label, url:linkUrl });
+          }
+          value = JSON.stringify(cleanedLinks);
+        }
         if (key === 'header_logo' || key === 'footer_logo' || key === 'dashboard_logo') {
           const parsed = parseDataUrl(value);
           if (parsed.bytes.byteLength > 500 * 1024) {

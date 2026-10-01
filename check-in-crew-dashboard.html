@@ -482,7 +482,7 @@
       <button class="button" id="laporBugTopBtn" type="button"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="6" width="8" height="14" rx="4"/><path d="M9 12H4M20 12h-5M12 6V3M9 3l1.5 3M15 3l-1.5 3M5 15l3-1M19 15l-3-1M5 9l3 1M19 9l-3 1"/></svg><span>Lapor Bug</span></button>
       <button class="button" id="exportExcelBtn" type="button" title="Download Excel"><svg class="btn-icon" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg><span class="btn-word">Download&nbsp;</span><span>Excel</span></button>
       <button class="button primary" id="manualEntryBtn" type="button">+ Tambah Data Manual</button>
-      <button class="button danger" id="deleteAllBtn" type="button">Hapus Semua Data</button>
+      <button class="button danger" id="deleteAllBtn" type="button" style="display:none">Hapus Semua Data</button>
     </div>
 
     <nav class="view-switch" role="tablist" aria-label="Pilih tampilan dashboard">
@@ -1708,7 +1708,11 @@
       el('editModal').classList.add('open');
     }
     function fillEditSelect(id, key, selectedValue) {
-      const values = [...new Set(state.records.map(record => record[key]).filter(Boolean))];
+      // Crew diambil dari "Kelola Data Crew" (sumber sama dengan Dashboard), bukan dari riwayat
+      // check-in, supaya crew baru yang belum pernah check-in tetap muncul di dropdown.
+      const values = key === 'crew'
+        ? [...new Set(crewManagementItems.map(crew => crew.name).filter(Boolean))]
+        : [...new Set(state.records.map(record => record[key]).filter(Boolean))];
       if (selectedValue && !values.includes(selectedValue)) values.push(selectedValue);
       values.sort((a, b) => a.localeCompare(b, 'id'));
       const placeholder = key === 'crew' ? 'Pilih crew' : `Pilih ${key}`;
@@ -1736,6 +1740,12 @@
           return;
         }
         if (!confirmPhrase('tambah data manual', 'TAMBAH DATA')) return;
+        const pin = window.prompt('Masukkan PIN Master (4 digit) untuk menyetujui penambahan data manual:');
+        if (pin === null) return;
+        if (!/^\d{4}$/.test(pin.trim())) {
+          alert('PIN Master harus tepat 4 digit.');
+          return;
+        }
         try {
           await workerRequest(`${API_BASE}/checkins/manual`, {
             method: 'POST',
@@ -1743,7 +1753,8 @@
               crew,
               unit,
               job_type: jobType,
-              work_date: workDate
+              work_date: workDate,
+              pin: pin.trim()
             })
           });
           closeModal('editModal');
@@ -2079,6 +2090,7 @@
   let assignSelectedDate = '';
   let assignSelectedCell = '';
   let assignPropertyNames = [];
+  let assignPropertyCodes = new Map();
   let assignBookings = [];
   let assignNoticeTimer = null;
   let assignEditingTaskId = '';
@@ -2347,7 +2359,8 @@
         if (cellBooking) parts.push(assignBookingText(cellBooking));
         cells.push(`<td><button type="button" class="${classes.join(' ')}" data-assign-property="${escapeHtml(name)}" data-assign-day="${dateKey}" title="${escapeHtml(parts.join(' \u00b7 '))}">${cellTasks.length || (cellBooking ? '\u2022' : '')}</button></td>`);
       }
-      return `<tr><td class="prop-name" title="${escapeHtml(name)}"><span class="prop-name-full">${escapeHtml(name)}</span><span class="prop-name-short">${escapeHtml(propertyShortCode(name))}</span></td>${cells.join('')}</tr>`;
+      const shortCode = assignPropertyCodes.get(name) || propertyShortCode(name);
+      return `<tr><td class="prop-name" title="${escapeHtml(name)}"><span class="prop-name-full">${escapeHtml(name)}</span><span class="prop-name-short">${escapeHtml(shortCode)}</span></td>${cells.join('')}</tr>`;
     }).join('');
     const bookingSummary = monthBookings.length
       ? `<details class="booking-summary"><summary>Booking berjalan &amp; akan datang (${monthBookings.length})</summary><div class="booking-list">${monthBookings.sort((a, b) => a.checkin.localeCompare(b.checkin))
@@ -2501,12 +2514,16 @@
       const response = await workerRequest(`${API_BASE}/admin/properties?_=${Date.now()}`);
       const properties = Array.isArray(response.data) ? response.data : [];
       // Hanya properti aktif (sesuai dasbord.html) yang tampil; yang diarsip/dihapus di sana otomatis hilang di sini juga.
-      assignPropertyNames = properties
-        .filter(property => property.active !== false)
+      const activeProperties = properties.filter(property => property.active !== false);
+      assignPropertyNames = activeProperties
         .map(property => String(property.name || '').trim())
         .filter(Boolean);
+      assignPropertyCodes = new Map(activeProperties
+        .map(property => [String(property.name || '').trim(), String(property.property_code || '').trim()])
+        .filter(([name, code]) => name && code));
     } catch (error) {
       assignPropertyNames = [];
+      assignPropertyCodes = new Map();
     }
     renderPropertyCalendar();
   }

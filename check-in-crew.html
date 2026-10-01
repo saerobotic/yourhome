@@ -331,25 +331,10 @@
         <div class="mt-4">
           <div class="flex items-center justify-between gap-2 mb-1.5"><label for="unitInput" class="block text-sm font-semibold text-gray-700">Pilih Properti <span class="text-red-500">*</span></label><button type="button" id="refreshPropertiesBtn" class="text-xs font-semibold text-brand-700 hover:underline">Perbarui daftar</button></div>
           <select id="unitInput"
-                  class="w-full px-4 py-3.5 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition text-base">
+              class="w-full px-4 py-3.5 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition text-base" disabled>
             <option value="">— Pilih properti —</option>
-            <optgroup label="Apartemen">
-              <option>Lantai 7 Sudirman Suites</option><option>Lantai 11 Sudirman Suites</option><option>Lantai 18 Sudirman Suites</option><option>Lantai 19 Sudirman Suites</option><option>Apartment Galeri Ciumbuleuit 3</option>
-            </optgroup>
-            <optgroup label="Villa">
-              <option>Villa Aurum</option><option>Villa Putih</option><option>Villa Alam 1</option><option>Villa Alam 2</option><option>Villa Alam 1 &amp; 2</option><option>Villa Trinity Garden Villa</option><option>Villa X4</option><option>Villa X7</option><option>Villa X47</option><option>Villa AWN</option><option>Villa Casa Kemilau Bintang</option><option>Villa Casa Bliss</option><option>Villa De Bukit Dago</option><option>Villa Ferrum</option><option>Villa Rustic Nine</option><option>Villa Alba Uno</option><option>Villa Alba Duo</option><option>Villa Tree Vena</option><option>Villa Sananda</option><option>Villa Aprilia</option><option>Villa Halimun</option><option>Villa Halimpu</option><option>Villa Manakala</option><option>Villa De Green</option><option>Villa Casa M3</option>
-            </optgroup>
-            <optgroup label="Guest House">
-              <option>Davion House</option><option>Guest House Tatar Banyak Sumba</option>
-            </optgroup>
-            <optgroup label="Kosan">
-              <option>Kosan De Orange Kost</option>
-            </optgroup>
-            <option value="Lainnya">Lainnya</option>
           </select>
           <p id="checkinPropertiesStatus" class="text-xs text-gray-500 mt-1.5" role="status" aria-live="polite">Daftar properti akan dimuat dari Dashboard setelah login.</p>
-          <input type="text" id="customUnitInput" placeholder="Tulis nama properti atau unit"
-                 class="hidden w-full mt-2 px-4 py-3.5 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition text-base" />
         </div>
 
         <!-- Dropdown Jenis Pekerjaan -->
@@ -764,6 +749,7 @@
     const refreshButton = document.getElementById('refreshPropertiesBtn');
     const selectedValue = select.value;
     refreshButton.disabled = true;
+    select.disabled = true;
     status.textContent = 'Memuat properti aktif dari Dashboard…';
     try {
       const response = await api('/checkin/properties', { cache:'no-store' });
@@ -790,20 +776,22 @@
         });
         options.push(optgroup);
       });
-      options.push(new Option('Lainnya', 'Lainnya'));
       select.replaceChildren(...options);
-      if (selectedValue === 'Lainnya' || properties.some(property => property.name === selectedValue)) select.value = selectedValue;
+      if (properties.some(property => property.name === selectedValue)) select.value = selectedValue;
+      select.disabled = properties.length === 0;
       const documentationFilter = document.getElementById('crewDocumentationProperty');
       const selectedDocumentationProperty = documentationFilter.value;
       documentationFilter.replaceChildren(new Option('Semua properti', ''));
       properties.forEach(property => documentationFilter.appendChild(new Option(property.name, property.name)));
       if (properties.some(property => property.name === selectedDocumentationProperty)) documentationFilter.value = selectedDocumentationProperty;
-      status.textContent = properties.length ? `${properties.length} properti aktif dari Dashboard.` : 'Belum ada properti aktif di Dashboard. Pilih Lainnya untuk unit khusus.';
+      status.textContent = properties.length ? `${properties.length} properti aktif dari Dashboard.` : 'Belum ada properti aktif di Dashboard.';
       validateForm();
       if (!silent) showToast('Daftar properti berhasil diperbarui.', 'success');
       return true;
     } catch (error) {
-      status.textContent = 'Daftar belum tersinkron. Pilihan lama tetap tersedia; coba perbarui lagi.';
+      select.replaceChildren(new Option('— Daftar properti tidak tersedia —', ''));
+      select.disabled = true;
+      status.textContent = 'Gagal memuat daftar properti Dashboard. Periksa koneksi atau hubungi admin.';
       if (!silent) showToast(error.message || 'Daftar properti gagal dimuat.', 'error');
       return false;
     } finally {
@@ -1114,12 +1102,8 @@
     document.getElementById('workPhotoInput').addEventListener('change', handleWorkPhotoUpload);
 
     document.getElementById('unitInput').addEventListener('change', () => {
-      const customInput = document.getElementById('customUnitInput');
-      customInput.classList.toggle('hidden', document.getElementById('unitInput').value !== 'Lainnya');
-      if (document.getElementById('unitInput').value !== 'Lainnya') customInput.value = '';
       validateForm();
     });
-    document.getElementById('customUnitInput').addEventListener('input', validateForm);
 
     // --- CHECK-IN: validasi form real-time ---
     ['unitInput', 'jobTypeSelect'].forEach(id => {
@@ -1371,8 +1355,7 @@
     const hasPhoto = !!state.photoData;
     const hasWorkPhotos = state.workPhotos.length > 0;
     const selectedUnit = document.getElementById('unitInput').value;
-    const customUnit = document.getElementById('customUnitInput').value.trim();
-    const hasUnit = selectedUnit !== '' && (selectedUnit !== 'Lainnya' || customUnit !== '');
+    const hasUnit = selectedUnit !== '';
     const hasJob = document.getElementById('jobTypeSelect').value !== '';
     document.getElementById('saveCheckinBtn').disabled = isSavingCheckin || !(hasGps && hasPhoto && hasWorkPhotos && hasUnit && hasJob);
   }
@@ -1385,9 +1368,7 @@
     }
     const selectedUnit = document.getElementById('unitInput').value;
     document.getElementById('confirmCrewName').textContent = state.currentCrew || '-';
-    document.getElementById('confirmPropertyName').textContent = selectedUnit === 'Lainnya'
-      ? document.getElementById('customUnitInput').value.trim()
-      : selectedUnit;
+    document.getElementById('confirmPropertyName').textContent = selectedUnit;
     document.getElementById('confirmJobType').textContent = document.getElementById('jobTypeSelect').selectedOptions[0]?.textContent || '-';
     document.getElementById('confirmWorkDate').textContent = formatWorkDate(state.today);
     document.getElementById('confirmPhotoCount').textContent = `1 selfie · ${state.workPhotos.length} foto hasil kerja · GPS ±${Math.round(state.gpsData?.accuracy || 0)} m`;
@@ -1420,9 +1401,7 @@
       return;
     }
     const selectedUnit = document.getElementById('unitInput').value;
-    const unit = selectedUnit === 'Lainnya'
-      ? document.getElementById('customUnitInput').value.trim()
-      : selectedUnit;
+    const unit = selectedUnit;
     const jobType = document.getElementById('jobTypeSelect').value;
     if (!state.gpsData || !state.photoData || !state.workPhotos.length || !unit || !jobType) {
       showToast('Lengkapi GPS, foto bukti, dan foto hasil kerja terlebih dahulu.', 'error');
@@ -1586,8 +1565,6 @@
     preview.classList.remove('border-solid', 'border-brand-500');
     renderWorkPhotoPreview();
     document.getElementById('unitInput').value = '';
-    document.getElementById('customUnitInput').value = '';
-    document.getElementById('customUnitInput').classList.add('hidden');
     document.getElementById('jobTypeSelect').value = '';
     document.getElementById('saveCheckinBtn').disabled = true;
   }

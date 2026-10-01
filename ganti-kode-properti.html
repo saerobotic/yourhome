@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Ganti Kode Properti — YOUR HOME</title>
+<meta name="robots" content="noindex, nofollow" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,400&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+:root{
+  --cream:#FAF7F2; --cream-deep:#F1ECE2; --sand:#E8E0D2;
+  --terracotta:#A0522D; --terracotta-d:#8B4513;
+  --coffee:#5C4033; --coffee-d:#3E2723; --charcoal:#2C2620;
+  --white:#FFFFFF; --grey:#8C857C; --grey-l:#D9D3C8;
+  --green:#3F5A3A; --red:#B42318;
+  --shadow:0 10px 30px rgba(60,40,25,.10); --radius:14px; --radius-sm:9px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Poppins',system-ui,sans-serif;background:var(--cream);color:var(--charcoal);line-height:1.5;padding-bottom:60px}
+h1,h2{font-family:'Playfair Display',Georgia,serif;font-weight:700;color:var(--coffee-d);letter-spacing:-.01em}
+.container{max-width:760px;margin:0 auto;padding:0 18px}
+.header{background:var(--coffee-d);color:#fff;padding:28px 0 22px}
+.header h1{color:#fff;font-size:clamp(1.4rem,4.5vw,1.9rem)}
+.header p{color:rgba(255,255,255,.75);font-size:.86rem;margin-top:6px}
+.card{background:var(--white);border:1px solid var(--grey-l);border-radius:var(--radius);box-shadow:var(--shadow);padding:18px;margin-top:18px}
+.hint-box{background:var(--cream-deep);border:1px solid var(--sand);border-radius:var(--radius-sm);padding:12px 14px;font-size:.84rem;color:var(--coffee);margin-top:18px}
+.field{display:block;margin-bottom:14px}
+.field label{display:block;font-size:.75rem;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:var(--grey);margin-bottom:5px}
+.field input{width:100%;padding:10px 12px;border:1px solid var(--grey-l);border-radius:8px;font:inherit;font-size:.95rem;color:var(--charcoal);background:#fff}
+.field input:focus{outline:none;border-color:var(--terracotta)}
+.list-head{display:flex;align-items:center;gap:8px;padding:0 0 8px;font-size:.66rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--grey)}
+.list-head .col-current,.list-head .col-tetap,.list-head .col-new{flex:none;text-align:center}
+.list-head .col-current{width:82px}
+.list-head .col-tetap{width:62px}
+.list-head .col-new{width:90px}
+.prop-row{display:flex;align-items:center;gap:8px;padding:12px 0;border-bottom:1px solid var(--cream-deep)}
+.prop-row:last-child{border-bottom:none}
+.prop-row.is-dirty{background:#FBF0E8;margin:0 -10px;padding:12px 10px;border-radius:8px}
+.prop-info{flex:1;min-width:0}
+.prop-info strong{display:block;font-size:.92rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.prop-info span{display:block;font-size:.74rem;color:var(--grey);margin-top:2px}
+.prop-info.archived strong{color:var(--grey)}
+.prop-code-current{width:82px;flex:none;text-align:center;font-weight:700;letter-spacing:.03em;color:var(--coffee);background:var(--cream-deep);border-radius:8px;padding:9px 4px;font-size:.84rem}
+.prop-tetap{width:62px;flex:none;display:flex;flex-direction:column;align-items:center;gap:2px}
+.prop-tetap input{width:18px;height:18px;accent-color:var(--green)}
+.prop-tetap span{font-size:.62rem;color:var(--grey);text-transform:uppercase;letter-spacing:.03em}
+.prop-code-input{width:90px;flex:none}
+.prop-code-input input{width:100%;text-align:center;text-transform:uppercase;font-weight:700;letter-spacing:.03em;padding:9px 4px;font-size:.84rem}
+.prop-code-input input::placeholder{text-transform:none;font-weight:400;color:var(--grey-l)}
+.prop-code-input input:disabled{background:var(--cream-deep);color:var(--grey-l);cursor:not-allowed}
+.prop-code-input input.changed{border-color:var(--terracotta);background:#fff}
+.search-row{margin-top:14px}
+.search-row input{width:100%;padding:10px 12px;border:1px solid var(--grey-l);border-radius:8px;font:inherit}
+.status{margin-top:10px;font-size:.84rem;min-height:1.2em}
+.status.error{color:var(--red)}
+.status.ok{color:var(--green)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:13px 18px;border-radius:10px;border:none;font:inherit;font-weight:700;font-size:.95rem;cursor:pointer;transition:filter .15s}
+.btn-primary{background:var(--coffee-d);color:#fff}
+.btn-primary:hover{filter:brightness(1.08)}
+.btn-primary:disabled{opacity:.55;cursor:wait}
+.loading{text-align:center;color:var(--grey);padding:30px 0;font-size:.88rem}
+.modal-overlay{position:fixed;inset:0;background:rgba(44,38,32,.55);display:flex;align-items:center;justify-content:center;padding:20px;z-index:100;opacity:0;pointer-events:none;transition:opacity .2s}
+.modal-overlay.show{opacity:1;pointer-events:auto}
+.modal{background:#fff;border-radius:var(--radius);box-shadow:0 20px 60px rgba(0,0,0,.25);max-width:420px;width:100%;padding:26px 24px;text-align:center}
+.modal .icon{width:52px;height:52px;border-radius:50%;background:#E9F0E6;color:var(--green);display:flex;align-items:center;justify-content:center;margin:0 auto 14px;font-size:1.6rem}
+.modal h2{font-size:1.25rem;margin-bottom:8px}
+.modal p{color:var(--grey);font-size:.88rem;line-height:1.6}
+.modal .btn{margin-top:18px}
+.modal-actions{display:flex;gap:10px;margin-top:18px}
+.modal-actions .btn{margin-top:0}
+.btn-secondary{background:var(--cream-deep);color:var(--coffee-d)}
+.confirm-row{display:flex;justify-content:space-between;gap:10px;padding:7px 0;border-bottom:1px solid var(--cream-deep);font-size:.84rem}
+.confirm-row:last-child{border-bottom:none}
+.confirm-row .name{color:var(--charcoal);font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.confirm-row .change{flex:none;color:var(--terracotta-d);font-weight:700;white-space:nowrap}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="container">
+    <h1>Ganti Kode Properti</h1>
+    <p>Centang "Tetap" untuk properti yang kodenya tidak berubah. Uncheck "Tetap" lalu isi kolom "Ganti Jadi" untuk properti yang kodenya mau diganti.</p>
+  </div>
+</div>
+
+<div class="container">
+  <div class="card">
+    <div class="field">
+      <label for="submittedBy">Nama Anda (opsional)</label>
+      <input id="submittedBy" type="text" maxlength="120" placeholder="Supaya Sigit tahu siapa yang mengubah" />
+    </div>
+    <div class="search-row">
+      <input id="searchInput" type="text" placeholder="Cari nama properti..." />
+    </div>
+    <div class="list-head"><span style="flex:1">Properti</span><span class="col-current">Kode</span><span class="col-tetap">Tetap</span><span class="col-new">Ganti Jadi</span></div>
+    <div id="propList"><div class="loading">Memuat daftar properti...</div></div>
+    <p id="formStatus" class="status" role="status" aria-live="polite"></p>
+    <button class="btn btn-primary" id="submitBtn" type="button">Simpan Perubahan</button>
+  </div>
+
+  <div class="hint-box">
+    Contoh: properti kode <strong>A</strong> mau diganti jadi <strong>B</strong> — uncheck "Tetap", lalu ketik <strong>B</strong> di kolom "Ganti Jadi". Properti kode <strong>C</strong> yang tetap — biarkan centang "Tetap" tidak diubah. Setelah "Simpan Perubahan" ditekan, akan muncul ringkasan untuk diperiksa ulang sebelum benar-benar terkirim. Sigit otomatis mendapat notifikasi begitu data dikirim.
+  </div>
+</div>
+
+<div class="modal-overlay" id="confirmOverlay">
+  <div class="modal">
+    <div class="icon" style="background:#FBF0E8;color:var(--terracotta-d)">&#9888;</div>
+    <h2>Periksa dulu sebelum kirim</h2>
+    <p>Apakah sudah yakin dengan perubahan kode berikut?</p>
+    <div id="confirmSummary" style="text-align:left;margin-top:14px;max-height:220px;overflow:auto"></div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" id="confirmCancelBtn" type="button">Periksa Lagi</button>
+      <button class="btn btn-primary" id="confirmSendBtn" type="button">Ya, Kirim</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="successOverlay">
+  <div class="modal">
+    <div class="icon">&#10003;</div>
+    <h2>Data sudah terkirim</h2>
+    <p>Silakan konfirmasi ke Sigit jika data telah diubah di link yang dikirim ini.</p>
+    <button class="btn btn-primary" id="closeModalBtn" type="button">Tutup</button>
+  </div>
+</div>
+
+<script>
+const API_BASE = 'https://your-home-checkin-api.saerobotic.workers.dev';
+const el = id => document.getElementById(id);
+let properties = [];
+
+function escapeHtml(value) {
+  return String(value ?? '').replace(/[&<>"']/g, ch => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[ch]));
+}
+
+const CATEGORY_LABEL = { villa:'Villa', apartment:'Apartemen', guesthouse:'Guest House', kos:'Kosan' };
+
+function renderList() {
+  const query = el('searchInput').value.trim().toLowerCase();
+  const filtered = properties.filter(p => !query || p.name.toLowerCase().includes(query));
+  if (!filtered.length) {
+    el('propList').innerHTML = '<div class="loading">Tidak ada properti yang cocok.</div>';
+    return;
+  }
+  el('propList').innerHTML = filtered.map(p => `
+    <div class="prop-row" data-row-id="${escapeHtml(p.id)}">
+      <div class="prop-info${p.archived ? ' archived' : ''}">
+        <strong>${escapeHtml(p.name)}</strong>
+        <span>${escapeHtml(CATEGORY_LABEL[p.category] || p.category || '')}${p.archived ? ' · Arsip' : ''}</span>
+      </div>
+      <div class="prop-code-current">${escapeHtml(p.property_code || '—')}</div>
+      <div class="prop-tetap"><input type="checkbox" checked data-tetap-id="${escapeHtml(p.id)}" /><span>Tetap</span></div>
+      <div class="prop-code-input">
+        <input type="text" maxlength="20" data-id="${escapeHtml(p.id)}" value="" placeholder="kode baru" disabled />
+      </div>
+    </div>
+  `).join('');
+  el('propList').querySelectorAll('input[data-tetap-id]').forEach(checkbox => {
+    const row = checkbox.closest('.prop-row');
+    const input = row.querySelector('input[data-id]');
+    checkbox.addEventListener('change', () => {
+      input.disabled = checkbox.checked;
+      if (checkbox.checked) { input.value = ''; input.classList.remove('changed'); row.classList.remove('is-dirty'); }
+      else input.focus();
+    });
+  });
+  el('propList').querySelectorAll('input[data-id]').forEach(input => {
+    input.addEventListener('input', () => {
+      input.value = input.value.toUpperCase();
+      const isDirty = input.value.trim() !== '';
+      input.classList.toggle('changed', isDirty);
+      input.closest('.prop-row').classList.toggle('is-dirty', isDirty);
+    });
+  });
+}
+
+async function loadProperties() {
+  try {
+    const response = await fetch(`${API_BASE}/property-codes`, { cache:'no-store' });
+    const result = await response.json().catch(() => ({}));
+    if (!response.ok || !result.ok) throw new Error(result.error || 'Gagal memuat daftar properti.');
+    properties = Array.isArray(result.data) ? result.data : [];
+    renderList();
+  } catch (error) {
+    el('propList').innerHTML = `<div class="loading">${escapeHtml(error.message || 'Gagal memuat daftar properti.')}</div>`;
+  }
+}
+
+let pendingChanges = [];
+
+function collectChanges() {
+  const changes = [];
+  el('propList').querySelectorAll('input[data-id]').forEach(input => {
+    if (input.disabled) return;
+    const property = properties.find(p => p.id === input.dataset.id);
+    const newCode = input.value.trim();
+    if (property && newCode && newCode !== (property.property_code || '').trim().toUpperCase()) {
+      changes.push({ id: property.id, name: property.name, old_code: property.property_code || '—', new_code: newCode });
+    }
+  });
+  return changes;
+}
+
+function openConfirm() {
+  const status = el('formStatus');
+  pendingChanges = collectChanges();
+  if (!pendingChanges.length) {
+    status.className = 'status error';
+    status.textContent = 'Belum ada kode yang diubah. Uncheck "Tetap" lalu isi kode baru dulu.';
+    return;
+  }
+  status.className = 'status';
+  status.textContent = '';
+  el('confirmSummary').innerHTML = pendingChanges.map(c => `
+    <div class="confirm-row"><span class="name">${escapeHtml(c.name)}</span><span class="change">${escapeHtml(c.old_code)} &rarr; ${escapeHtml(c.new_code)}</span></div>
+  `).join('');
+  el('confirmOverlay').classList.add('show');
+}
+
+async function sendChanges() {
+  const status = el('formStatus');
+  const confirmButton = el('confirmSendBtn');
+  confirmButton.disabled = true;
+  confirmButton.textContent = 'Mengirim...';
+  try {
+    const response = await fetch(`${API_BASE}/property-codes`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        submitted_by: el('submittedBy').value.trim(),
+        changes: pendingChanges.map(c => ({ id: c.id, new_code: c.new_code })),
+      }),
+    });
+    const result = await response.json().catch(() => ({}));
+    if (!response.ok || !result.ok) throw new Error(result.error || 'Gagal menyimpan perubahan.');
+    el('confirmOverlay').classList.remove('show');
+    status.textContent = '';
+    el('successOverlay').classList.add('show');
+    await loadProperties();
+  } catch (error) {
+    el('confirmOverlay').classList.remove('show');
+    status.className = 'status error';
+    status.textContent = error.message || 'Gagal menyimpan perubahan.';
+  } finally {
+    confirmButton.disabled = false;
+    confirmButton.textContent = 'Ya, Kirim';
+  }
+}
+
+el('searchInput').addEventListener('input', renderList);
+el('submitBtn').addEventListener('click', openConfirm);
+el('confirmCancelBtn').addEventListener('click', () => el('confirmOverlay').classList.remove('show'));
+el('confirmSendBtn').addEventListener('click', sendChanges);
+el('closeModalBtn').addEventListener('click', () => el('successOverlay').classList.remove('show'));
+loadProperties();
+</script>
+</body>
+</html>

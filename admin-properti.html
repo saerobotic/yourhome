@@ -99,7 +99,9 @@
     .property-list{display:grid;grid-template-columns:1fr;align-content:start;gap:6px;margin-top:14px;max-height:1200px;overflow-y:auto;padding:2px 4px 2px 2px;scrollbar-width:thin;scrollbar-color:var(--line-strong) transparent}
     .property-item{border:1px solid var(--line);border-radius:var(--r);padding:11px 12px 11px 14px;display:flex;justify-content:space-between;gap:12px;align-items:center;background:var(--paper);transition:border-color .15s,background .15s}
     .property-item:hover{border-color:var(--line-strong);background:var(--sunken)}
-    .property-item>div:first-child{min-width:0}
+    .property-item>div:first-child{min-width:0;display:flex;gap:10px;align-items:flex-start}
+    .property-item .property-no{flex:none;min-width:22px;color:var(--muted);font-size:.78rem;font-weight:700;line-height:1.5}
+    .property-item .property-main{min-width:0}
     .property-item strong{display:block;font-size:.92rem;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
     .property-item span{display:block;color:var(--muted);font-size:.74rem;margin-top:3px;line-height:1.4}
     .property-item .button{min-height:34px;padding:6px 12px;font-size:.78rem;white-space:nowrap}
@@ -150,6 +152,16 @@
     #logoSaveMessage.error{background:var(--danger-soft)}
 
     /* Contact IT */
+    .admin-tools-grid{grid-column:1/-1;grid-row:3;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));align-items:stretch;gap:18px;margin-bottom:18px}
+    .admin-tools-grid>.panel{min-width:0;margin-bottom:0}
+    .linktree-form{display:grid;gap:7px;margin-top:12px}
+    .linktree-row{display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr);gap:7px}
+    .linktree-row input{width:100%;min-width:0;min-height:36px;padding:7px 8px;border:1px solid var(--line-strong);border-radius:var(--r-sm);font:inherit;font-size:.72rem;color:var(--ink);background:var(--paper)}
+    .linktree-form .form-actions{padding-top:5px}
+    .feedback-qr-wrap{display:grid;place-items:center;margin:14px auto 8px}
+    #feedbackQrCanvas{display:block;width:88px;height:88px;border:1px solid var(--line);border-radius:6px;background:#fff;image-rendering:pixelated}
+    .qr-feedback-count{justify-content:center;margin-top:10px}
+    .qr-feedback-action{margin-top:12px}
     .it-contact form{margin-top:16px;display:grid;gap:12px}
     .it-contact textarea{width:100%;min-height:130px;resize:vertical;border:1px solid var(--line-strong);border-radius:var(--r);padding:10px 12px;font:inherit;font-size:.9rem;color:var(--ink)}
     .it-contact .form-actions{padding-top:0}
@@ -191,13 +203,12 @@
       #app>.topbar,#app>#logoSettingsPanel{grid-column:1/-1}
       #propertyListPanel{grid-column:1;grid-row:2;align-self:stretch}
       #editorPanel{grid-column:2;grid-row:2}
-      #logoSettingsPanel{grid-row:3}
-      #contactItPanel{grid-column:1;grid-row:4}
-      #qrFeedbackPanel{grid-column:2;grid-row:4}
+      #logoSettingsPanel{grid-row:4}
     }
     @media(max-width:1100px){.contact-settings{grid-template-columns:repeat(2,minmax(0,1fr))}.form-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
     @media(max-width:900px){
       #app{display:block}
+      .admin-tools-grid{grid-template-columns:1fr}
       .logo-settings-grid{grid-template-columns:1fr 1fr}
       .login{grid-template-columns:1fr}
       .login-aside{display:none}
@@ -295,7 +306,46 @@
       </form>
     </section>
 
-    <section class="panel logo-settings" id="logoSettingsPanel">
+    <div class="admin-tools-grid" id="adminToolsPanel">
+      <section class="panel" id="linktreeAdminPanel">
+        <div class="toolbar"><div><h2>Kelola Linktree</h2><p class="hint">Atur 10 judul dan URL yang tampil di portal admin.</p></div></div>
+        <form id="linktreeForm" class="linktree-form">
+          <div class="linktree-row"><input id="linktreeLabel1" maxlength="80" aria-label="Judul tautan 1" placeholder="Judul tautan 1"><input id="linktreeUrl1" type="text" inputmode="url" maxlength="2048" aria-label="URL tautan 1" placeholder="https://... "></div>
+          <div class="linktree-row"><input id="linktreeLabel2" maxlength="80" aria-label="Judul tautan 2" placeholder="Judul tautan 2"><input id="linktreeUrl2" type="text" inputmode="url" maxlength="2048" aria-label="URL tautan 2" placeholder="https://... "></div>
+          <div class="linktree-row"><input id="linktreeLabel3" maxlength="80" aria-label="Judul tautan 3" placeholder="Judul tautan 3"><input id="linktreeUrl3" type="text" inputmode="url" maxlength="2048" aria-label="URL tautan 3" placeholder="https://... "></div>
+          <div class="linktree-row"><input id="linktreeLabel4" maxlength="80" aria-label="Judul tautan 4" placeholder="Judul tautan 4"><input id="linktreeUrl4" type="text" inputmode="url" maxlength="2048" aria-label="URL tautan 4" placeholder="https://... "></div>
+          <div class="linktree-row"><input id="linktreeLabel5" maxlength="80" aria-label="Judul tautan 5" placeholder="Judul tautan 5"><input id="linktreeUrl5" type="text" inputmode="url" maxlength="2048" aria-label="URL tautan 5" placeholder="https://... "></div>
+          <div class="linktree-row"><input id="linktreeLabel6" maxlength="80" aria-label="Judul tautan 6" placeholder="Judul tautan 6"><input id="linktreeUrl6" type="text" inputmode="url" maxlength="2048" aria-label="URL tautan 6" placeholder="https://... "></div>
+          <div class="linktree-row"><input id="linktreeLabel7" maxlength="80" aria-label="Judul tautan 7" placeholder="Judul tautan 7"><input id="linktreeUrl7" type="text" inputmode="url" maxlength="2048" aria-label="URL tautan 7" placeholder="https://... "></div>
+          <div class="linktree-row"><input id="linktreeLabel8" maxlength="80" aria-label="Judul tautan 8" placeholder="Judul tautan 8"><input id="linktreeUrl8" type="text" inputmode="url" maxlength="2048" aria-label="URL tautan 8" placeholder="https://... "></div>
+          <div class="linktree-row"><input id="linktreeLabel9" maxlength="80" aria-label="Judul tautan 9" placeholder="Judul tautan 9"><input id="linktreeUrl9" type="text" inputmode="url" maxlength="2048" aria-label="URL tautan 9" placeholder="https://... "></div>
+          <div class="linktree-row"><input id="linktreeLabel10" maxlength="80" aria-label="Judul tautan 10" placeholder="Judul tautan 10"><input id="linktreeUrl10" type="text" inputmode="url" maxlength="2048" aria-label="URL tautan 10" placeholder="https://... "></div>
+          <p id="linktreeSaveMessage" class="status" role="status" aria-live="polite"></p>
+          <div class="form-actions"><button class="button primary" id="saveLinktreeButton" type="submit">Simpan Linktree</button></div>
+        </form>
+      </section>
+
+      <section class="panel it-contact" id="contactItPanel">
+        <div class="toolbar"><div><h2>Contact IT</h2><p class="hint">Laporkan bug atau kendala teknis kepada tim IT.</p></div></div>
+        <form id="contactItForm">
+          <label class="field"><span class="meta-label">Judul</span><input id="contactItTitle" type="text" required maxlength="160" placeholder="Contoh: Foto properti gagal diperbarui"></label>
+          <label class="field"><span class="meta-label">Pesan</span><textarea id="contactItMessage" required maxlength="2000" placeholder="Tulis kendala atau pesan untuk tim IT..."></textarea></label>
+          <p id="contactItStatus" class="status" role="status" aria-live="polite"></p>
+          <div class="form-actions"><button class="button primary" type="submit">Kirim Pesan</button></div>
+        </form>
+      </section>
+
+      <section class="panel qr-feedback-card" id="qrFeedbackPanel">
+        <div class="toolbar"><div><h2>QR Kritik &amp; Saran</h2><p class="hint">QR form masukan tamu dan kelola stiker per properti.</p></div></div>
+        <a class="feedback-qr-wrap" href="https://yourhome.id/form-kritik-saran.html" target="_blank" rel="noopener noreferrer" aria-label="Buka form Kritik dan Saran">
+          <canvas id="feedbackQrCanvas" width="88" height="88" aria-label="QR Code form Kritik dan Saran"></canvas>
+        </a>
+        <div class="qr-feedback-count"><strong id="feedbackCountValue">—</strong><span>Komplain Tercatat</span></div>
+        <div class="qr-feedback-action"><a class="button primary" href="admin-qr-kritik-saran.html">Kelola QR per Properti</a></div>
+      </section>
+    </div>
+
+    <footer class="panel logo-settings" id="logoSettingsPanel">
       <div class="toolbar"><div><h2>Logo & Kontak Website</h2><p class="hint">Logo Website berlaku untuk situs publik. Logo Dashboard diatur terpisah. Perubahan disimpan otomatis ke database website.</p></div></div>
       <div class="logo-settings-grid">
         <div class="logo-upload"><label for="headerLogoFile">Logo atas website & halaman login</label><input id="headerLogoFile" type="file" accept="image/*" /><div class="logo-preview" id="headerLogoPreview"></div></div>
@@ -309,29 +359,14 @@
         <label>Instagram<input id="footerContactInstagram" placeholder="@yourhomeapartment" /></label>
       </div>
       <p id="logoSaveMessage" class="status" role="status" aria-live="polite"></p>
-    </section>
-
-    <section class="panel it-contact" id="contactItPanel">
-      <div class="toolbar"><div><h2>Contact IT</h2><p class="hint">Laporkan bug atau kendala teknis kepada tim IT.</p></div></div>
-      <form id="contactItForm">
-        <label class="field"><span class="meta-label">Judul</span><input id="contactItTitle" type="text" required maxlength="160" placeholder="Contoh: Foto properti gagal diperbarui"></label>
-        <label class="field"><span class="meta-label">Pesan</span><textarea id="contactItMessage" required maxlength="2000" placeholder="Tulis kendala atau pesan untuk tim IT..."></textarea></label>
-        <p id="contactItStatus" class="status" role="status" aria-live="polite"></p>
-        <div class="form-actions"><button class="button primary" type="submit">Kirim Pesan</button></div>
-      </form>
-    </section>
-
-    <section class="panel qr-feedback-card" id="qrFeedbackPanel">
-      <div class="toolbar"><div><h2>QR Code Scan &amp; Data Kritik dan Saran</h2><p class="hint">Generate stiker QR per properti, lihat masukan dari tamu.</p></div></div>
-      <div class="qr-feedback-count"><strong id="feedbackCountValue">—</strong><span>Komplain Tercatat</span></div>
-      <div class="qr-feedback-action"><a class="button primary" href="admin-qr-kritik-saran.html">Buka QR Kritik &amp; Saran</a></div>
-    </section>
+    </footer>
   </main>
 
   <dialog id="contactItDialog" class="modal">
     <div class="modal-content"><h2>Pesan Terkirim</h2><p>Pesan masuk antrean IT dan dikirim ke Telegram.</p><div class="form-actions"><button class="button primary" id="closeContactItDialog" type="button">Tutup</button></div></div>
   </dialog>
 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
   <script>
     const API_BASE = 'https://your-home-checkin-api.saerobotic.workers.dev';
     const state = { token: sessionStorage.getItem('dashboard_admin_token') || '', properties: [], selectedId: null, mainImageUrl: '', mainImageFile: null, mainImagePreview: '', galleryUrls: [], galleryChanged: false, newImageFiles: [], newImagePreviews: [], roomOptions: [], settings: {} };
@@ -417,6 +452,70 @@
       state.settings[`footer_${field}`] = response.data.value;
       el('logoSaveMessage').className = 'status success';
       el('logoSaveMessage').textContent = 'Kontak footer berhasil disimpan.';
+    }
+    function parseLinktreeLinks(value) {
+      try {
+        const links = JSON.parse(value || '[]');
+        return Array.isArray(links) && links.length === 10 ? links : Array.from({ length:10 }, () => ({ label:'', url:'' }));
+      } catch {
+        return Array.from({ length:10 }, () => ({ label:'', url:'' }));
+      }
+    }
+    function loadLinktreeForm() {
+      const links = parseLinktreeLinks(state.settings.linktree_links);
+      links.forEach((link, index) => {
+        el(`linktreeLabel${index + 1}`).value = link.label || '';
+        el(`linktreeUrl${index + 1}`).value = link.url || '';
+      });
+    }
+    async function saveLinktree(event) {
+      event.preventDefault();
+      const button = el('saveLinktreeButton');
+      const message = el('linktreeSaveMessage');
+      const links = Array.from({ length:10 }, (_, index) => ({
+        label:el(`linktreeLabel${index + 1}`).value.trim(),
+        url:el(`linktreeUrl${index + 1}`).value.trim(),
+      }));
+      button.disabled = true;
+      message.className = 'status';
+      message.textContent = 'Menyimpan Linktree...';
+      try {
+        const response = await request(`${API_BASE}/admin/settings`, {
+          method:'POST',
+          body:JSON.stringify({ key:'linktree_links', value:JSON.stringify(links) }),
+        });
+        state.settings.linktree_links = response.data.value;
+        message.className = 'status success';
+        message.textContent = 'Linktree berhasil disimpan.';
+      } catch (error) {
+        message.className = 'status error';
+        message.textContent = error.message || 'Linktree gagal disimpan.';
+      } finally {
+        button.disabled = false;
+      }
+    }
+    function renderFeedbackQr() {
+      const canvas = el('feedbackQrCanvas');
+      try {
+        const qr = qrcode(0, 'M');
+        qr.addData('https://yourhome.id/form-kritik-saran.html');
+        qr.make();
+        const context = canvas.getContext('2d');
+        const moduleCount = qr.getModuleCount();
+        const margin = 2;
+        const cellSize = Math.floor(canvas.width / (moduleCount + margin * 2));
+        const offset = Math.floor((canvas.width - cellSize * (moduleCount + margin * 2)) / 2);
+        context.fillStyle = '#fff';
+        context.fillRect(0, 0, canvas.width, canvas.height);
+        context.fillStyle = '#241915';
+        for (let row = 0; row < moduleCount; row++) {
+          for (let column = 0; column < moduleCount; column++) {
+            if (qr.isDark(row, column)) context.fillRect(offset + (column + margin) * cellSize, offset + (row + margin) * cellSize, cellSize, cellSize);
+          }
+        }
+      } catch (error) {
+        canvas.classList.add('hidden');
+      }
     }
     async function submitContactMessage(event) {
       event.preventDefault();
@@ -611,7 +710,7 @@
       });
       const statusLabels = { draft:'Perlu dilengkapi', active:'Tampil di website', archived:'Arsip · tidak tampil di website' };
       const emptyMessage = publicationFilter === 'archived' ? 'Tidak ada properti di arsip.' : 'Belum ada properti sesuai filter.';
-      el('propertyList').innerHTML = items.length ? items.map(property => `<article class="property-item"><div><strong>${escapeHtml(property.name)}</strong><span>${escapeHtml(property.property_code || 'Kode belum diatur')} · ${escapeHtml(categoryLabels[property.category] || property.category)} · ${formatPrice(property.price)} · ${statusLabels[property.publication_status] || 'Perlu dilengkapi'}</span></div><div class="property-actions"><button class="button" type="button" data-edit-id="${escapeHtml(property.id)}">Lengkapi / Edit</button></div></article>`).join('') : `<div class="empty">${emptyMessage}</div>`;
+      el('propertyList').innerHTML = items.length ? items.map((property, index) => `<article class="property-item"><div><span class="property-no">${index + 1}.</span><div class="property-main"><strong>${escapeHtml(property.name)}</strong><span>${escapeHtml(property.property_code || 'Kode belum diatur')} · ${escapeHtml(categoryLabels[property.category] || property.category)} · ${formatPrice(property.price)} · ${statusLabels[property.publication_status] || 'Perlu dilengkapi'}</span></div></div><div class="property-actions"><button class="button" type="button" data-edit-id="${escapeHtml(property.id)}">Lengkapi / Edit</button></div></article>`).join('') : `<div class="empty">${emptyMessage}</div>`;
       el('propertyList').querySelectorAll('[data-edit-id]').forEach(button => button.addEventListener('click', () => propertyFormValue(state.properties.find(property => property.id === button.dataset.editId))));
     }
     function escapeHtml(value) { return String(value ?? '').replace(/[&<>'"]/g, character => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', "'":'&#39;', '"':'&quot;' }[character])); }
@@ -813,6 +912,8 @@
       button.title = isVisible ? 'Tampilkan password' : 'Sembunyikan password';
     });
     el('propertyForm').addEventListener('submit', saveProperty);
+    el('linktreeForm').addEventListener('submit', saveLinktree);
+    renderFeedbackQr();
     setupCurrencyInputs();
     updatePropertyEditorAccess();
     el('publicationFilter').addEventListener('change', renderList);
@@ -848,7 +949,7 @@
     el('logoutBtn').addEventListener('click', () => { sessionStorage.removeItem('dashboard_admin_token'); state.token = ''; showLogin(); });
     window.addEventListener('pageshow', resetPropertyFilters);
     loadLoginLogo();
-    if (state.token) { showApp(); loadSettings().then(loadProperties).catch(error => { el('listMessage').textContent = error.message; }); loadFeedbackCount(); } else showLogin();
+    if (state.token) { showApp(); loadSettings().then(() => { loadLinktreeForm(); return loadProperties(); }).catch(error => { el('listMessage').textContent = error.message; }); loadFeedbackCount(); } else showLogin();
   </script>
 </body>
 </html>

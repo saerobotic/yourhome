@@ -106,6 +106,10 @@ Periode billing (`KOSAN_PERIODS`, `KOSAN_CURRENT_PERIOD`) didefinisikan sebagai 
 
 Membuat `kosan_tenants` (profil permanen penghuni: biodata MOU, key foto KTP/foto diri di R2 prefix privat `kosan-identity/`) dan `kosan_stays` (satu baris per masa tinggal: kamar, harga, deposit, tanggal masuk/keluar, nomor MOU). Penghuni yang keluar lalu kembali, termasuk di kamar berbeda, cukup memakai profil lama + baris `kosan_stays` baru. Aman dijalankan ulang. Tabel ini belum dipakai Worker/`kosan.html` sampai endpoint dan UI-nya dibuat.
 
+## Ganti Kode Properti (ganti-kode-properti.html)
+
+Halaman publik tanpa login, dibagikan sebagai link langsung ke pihak management. Menampilkan seluruh properti di katalog (`GET /property-codes`, publik) dengan kolom kode yang bisa diubah; kolom yang tidak disentuh tetap sama. Simpan lewat `POST /property-codes` (dibatasi rate limit `property-code-change`, reuse tabel `auth_login_attempts`), yang memvalidasi keunikan kode, memperbarui `properties.property_code`, ikut menyinkronkan field `code` di `dashboard_management_data` (agar tidak tertimpa balik saat Dashboard menyimpan ulang Owner/properti), lalu mengirim notifikasi Telegram berisi daftar perubahan ke chat IT yang sama dengan Contact IT/Lapor Bug. Tidak perlu migration baru — kolom `property_code` sudah ada di `properties`.
+
 ## Kritik & Saran Tamu (form-kritik-saran.html) + QR Stiker Properti
 
 Jalankan `../migrations/migration-guest-feedback.sql` satu kali pada D1 sebelum deploy Worker terbaru. Migrasi ini membuat tabel `guest_feedback` untuk menyimpan submit dari `form-kritik-saran.html`; sebelumnya form ini tidak tersambung ke backend sama sekali (hanya `console.log`, tidak ada data yang benar-benar tersimpan). Setelah migrasi, deploy `worker-checkin-api.js`, lalu publikasikan `form-kritik-saran.html` (root situs utama) dan `admin_yourhome/admin-qr-kritik-saran.html` (folder `admin_yourhome`, deploy ke `admin.yourhome.id`) bersamaan.
