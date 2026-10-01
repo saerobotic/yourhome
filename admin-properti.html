@@ -57,6 +57,11 @@
 
     /* Panels */    
     .panel{background:var(--paper);border:1px solid var(--line);border-radius:var(--r-lg);box-shadow:var(--shadow);padding:22px;margin-bottom:18px}
+    .qr-feedback-card{display:flex;flex-direction:column;justify-content:space-between}
+    .qr-feedback-count{margin-top:20px;display:flex;align-items:baseline;gap:10px}
+    .qr-feedback-count strong{font-size:2.4rem;font-weight:800;color:var(--accent);line-height:1}
+    .qr-feedback-count span{color:var(--muted);font-size:.84rem;font-weight:600}
+    .qr-feedback-action{margin-top:20px;display:flex;justify-content:center}
     .toolbar{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap;padding-bottom:16px;border-bottom:1px solid var(--line)}
 
     /* Form controls */
@@ -187,7 +192,8 @@
       #propertyListPanel{grid-column:1;grid-row:2;align-self:stretch}
       #editorPanel{grid-column:2;grid-row:2}
       #logoSettingsPanel{grid-row:3}
-      #contactItPanel{grid-column:1/-1;grid-row:4}
+      #contactItPanel{grid-column:1;grid-row:4}
+      #qrFeedbackPanel{grid-column:2;grid-row:4}
     }
     @media(max-width:1100px){.contact-settings{grid-template-columns:repeat(2,minmax(0,1fr))}.form-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
     @media(max-width:900px){
@@ -240,7 +246,7 @@
   <main id="app" class="page hidden">
     <header class="topbar">
       <div><h1>Kelola Properti</h1><p class="subtitle">Edit data publik tanpa mengubah kode <code>index.html</code>.</p></div>
-      <div class="actions"><a class="button" href="dasbord.html">Dashboard</a><a class="button" href="https://admin.yourhome.id/admin-qr-kritik-saran.html">QR Kritik &amp; Saran</a><button class="button danger" id="logoutBtn" type="button">Logout</button></div>
+      <div class="actions"><a class="button" href="dasbord.html">Dashboard</a><button class="button danger" id="logoutBtn" type="button">Logout</button></div>
     </header>
 
     <section class="panel" id="propertyListPanel">
@@ -312,6 +318,12 @@
         <p id="contactItStatus" class="status" role="status" aria-live="polite"></p>
         <div class="form-actions"><button class="button primary" type="submit">Kirim Pesan</button></div>
       </form>
+    </section>
+
+    <section class="panel qr-feedback-card" id="qrFeedbackPanel">
+      <div class="toolbar"><div><h2>QR Code Scan &amp; Data Kritik dan Saran</h2><p class="hint">Generate stiker QR per properti, lihat masukan dari tamu.</p></div></div>
+      <div class="qr-feedback-count"><strong id="feedbackCountValue">—</strong><span>Komplain Tercatat</span></div>
+      <div class="qr-feedback-action"><a class="button primary" href="admin-qr-kritik-saran.html">Buka QR Kritik &amp; Saran</a></div>
     </section>
   </main>
 
@@ -390,6 +402,14 @@
         const key = `footer_${field}`;
         el(`footerContact${field[0].toUpperCase()}${field.slice(1)}`).value = state.settings[key] || fallback;
       });
+    }
+    async function loadFeedbackCount() {
+      try {
+        const response = await request(`${API_BASE}/admin/guest-feedback?limit=1`);
+        el('feedbackCountValue').textContent = Number(response.pagination?.total || 0);
+      } catch {
+        el('feedbackCountValue').textContent = '—';
+      }
     }
     async function saveFooterContact(field, value) {
       const response = await request(`${API_BASE}/admin/settings`, { method: 'POST', body: JSON.stringify({ key: `footer_${field}`, value: value.trim() }) });
@@ -697,6 +717,7 @@
         el('adminPassword').value = '';
         await loadSettings();
         await loadProperties();
+        loadFeedbackCount();
       } catch (error) { showLogin(error.message); } finally { button.disabled = false; }
     }
     async function saveProperty(event) {
@@ -825,7 +846,7 @@
     el('logoutBtn').addEventListener('click', () => { sessionStorage.removeItem('dashboard_admin_token'); state.token = ''; showLogin(); });
     window.addEventListener('pageshow', resetPropertyFilters);
     loadLoginLogo();
-    if (state.token) { showApp(); loadSettings().then(loadProperties).catch(error => { el('listMessage').textContent = error.message; }); } else showLogin();
+    if (state.token) { showApp(); loadSettings().then(loadProperties).catch(error => { el('listMessage').textContent = error.message; }); loadFeedbackCount(); } else showLogin();
   </script>
 </body>
 </html>

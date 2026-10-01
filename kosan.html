@@ -259,6 +259,8 @@ input, select { font: inherit; color: inherit; }
 
 /* === Tables === */
 .table-wrap { overflow-x: auto; }
+.room-payment-history { max-height: 270px; overflow-y: auto; }
+.room-payment-history thead th { position: sticky; top: 0; z-index: 1; background: #fff; }
 table { width: 100%; border-collapse: collapse; }
 table thead th {
   text-align: left;
@@ -603,6 +605,17 @@ table tbody tr:last-child td { border-bottom: none; }
 .mou-input.error, .mou-select.error { border-color: var(--red-600); background: var(--red-50); }
 .mou-textarea { resize: vertical; min-height: 90px; }
 .mou-hint { font-size: 11px; color: var(--ink-500); margin-top: 5px; }
+.mou-privacy-note { margin-bottom: 14px; padding: 12px 14px; border-radius: 10px; background: var(--green-50, #f0fdf4); border: 1px solid var(--green-100, #dcfce7); color: var(--ink-700); font-size: 12.5px; line-height: 1.55; }
+.mou-privacy-note strong { color: var(--green-600); display: block; margin-bottom: 2px; }
+.mou-photo-slot { min-height: 150px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; padding: 10px; border: 1.5px dashed var(--ink-200); border-radius: 10px; background: var(--ink-50); text-align: center; font-size: 12px; }
+.mou-photo-slot.filled { border-style: solid; border-color: var(--green-600); background: #fff; }
+.mou-photo-slot.error { border-color: var(--red-600); background: var(--red-100); }
+.mou-photo-slot img { max-width: 100%; max-height: 190px; border-radius: 8px; object-fit: contain; }
+.mou-photo-actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.mou-photo-actions .btn { font-size: 12px; padding: 7px 10px; cursor: pointer; }
+.mou-doc-photos { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.mou-doc-photos figure { margin: 0; text-align: center; font-size: 11px; color: var(--ink-500); }
+.mou-doc-photos img { width: 100%; max-height: 220px; object-fit: contain; border: 1px solid var(--ink-200); border-radius: 6px; }
 
 .mou-policy-box {
   max-height: 340px; overflow-y: auto; border: 1px solid var(--ink-200); border-radius: var(--radius-sm);
@@ -997,7 +1010,7 @@ table tbody tr:last-child td { border-bottom: none; }
                 <th>Kamar</th>
                 <th>Depo</th>
                 <th class="text-right">Harga / Bulan</th>
-                <th>Status Bayar (Juli 2026)</th>
+                <th id="penyewa-paystatus-head">Status Bayar (Juli 2026)</th>
                 <th></th>
               </tr>
             </thead>
@@ -1022,6 +1035,8 @@ table tbody tr:last-child td { border-bottom: none; }
           <button data-mode="matrix" class="active">Matriks</button>
           <button data-mode="list">Daftar</button>
         </div>
+        <button class="btn" type="button" onclick="openRentPaymentModal()">+ Catat Pembayaran</button>
+        <button class="btn btn-ghost" type="button" onclick="openKosanExpenseFromPayment()">+ Catat Pengeluaran</button>
       </div>
 
       <div class="card">
@@ -1056,7 +1071,7 @@ table tbody tr:last-child td { border-bottom: none; }
         <div class="card-head">
           <h3>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-            Tren Pendapatan 17 Bulan
+            Tren Pendapatan <span id="report-period-count">17</span> Bulan
           </h3>
         </div>
         <div style="height: 340px;"><canvas id="chart-report-income"></canvas></div>
@@ -1217,12 +1232,16 @@ table tbody tr:last-child td { border-bottom: none; }
             <input type="text" class="mou-input" id="tk-tenant-name" placeholder="Masukkan nama penyewa" required>
           </div>
           <div class="mou-form-group">
-            <label class="mou-label">Harga Sewa / Bulan (Rp) *</label>
-            <input type="number" class="mou-input" id="tk-price" placeholder="1200000">
+            <label class="mou-label" for="tk-price">Harga Sewa / Bulan (Rp) *</label>
+            <input type="text" class="mou-input" id="tk-price" inputmode="numeric" data-currency-input placeholder="1.200.000">
           </div>
           <div class="mou-form-group">
             <label class="mou-label" for="tk-depo">Deposit wajib (Rp) *</label>
-            <input type="number" class="mou-input" id="tk-depo" min="1" step="1" value="500000" required>
+            <input type="text" class="mou-input" id="tk-depo" inputmode="numeric" data-currency-input placeholder="300.000" required>
+          </div>
+          <div class="mou-form-group">
+            <label class="mou-label" for="tk-start-date">Tanggal Mulai Sewa *</label>
+            <input type="date" class="mou-input" id="tk-start-date">
           </div>
           <div class="mou-form-group span-2">
             <label class="mou-label">Catatan (opsional)</label>
@@ -1391,6 +1410,42 @@ table tbody tr:last-child td { border-bottom: none; }
             <input type="text" class="mou-input" id="mou-bio-ikatan" placeholder="Contoh: Orang Tua, Kakak, Saudara">
           </div>
         </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <h3>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="11" r="2.5"/><path d="M14 10h4M14 14h4M6 16c.8-1.5 2-2 3-2s2.2.5 3 2"/></svg>
+            Foto KTP &amp; Foto Diri Penghuni
+          </h3>
+        </div>
+        <div class="mou-privacy-note">
+          <strong>&#128274; Data Anda terjamin aman bersama kami.</strong>
+          Foto KTP dan foto diri hanya dipakai untuk verifikasi identitas penghuni dan arsip MOU House in Bandung, tidak dibagikan ke pihak ketiga tanpa persetujuan Anda.
+          Foto KTP otomatis diberi watermark <em>"Khusus MOU House in Bandung"</em> sehingga tidak bisa disalahgunakan untuk keperluan lain.
+        </div>
+        <div class="mou-grid">
+          <div class="mou-form-group">
+            <label class="mou-label">Foto KTP / Identitas *</label>
+            <div class="mou-photo-slot" id="mou-photo-ktp-slot"><span class="muted">Belum ada foto KTP</span></div>
+            <div class="mou-photo-actions">
+              <label class="btn btn-ghost">&#128247; Foto KTP<input type="file" accept="image/*" capture="environment" hidden onchange="mouHandlePhoto('ktp', event, 'Difoto langsung')"></label>
+              <label class="btn btn-ghost">&#128444;&#65039; Upload<input type="file" accept="image/*" hidden onchange="mouHandlePhoto('ktp', event, 'Diunggah dari galeri')"></label>
+              <button type="button" class="btn btn-ghost" onclick="mouRemovePhoto('ktp')">Hapus</button>
+            </div>
+          </div>
+          <div class="mou-form-group">
+            <label class="mou-label">Foto Diri Penghuni *</label>
+            <div class="mou-photo-slot" id="mou-photo-selfie-slot"><span class="muted">Belum ada foto diri</span></div>
+            <div class="mou-photo-actions">
+              <label class="btn btn-ghost">&#129331; Selfie<input type="file" accept="image/*" capture="user" hidden onchange="mouHandlePhoto('selfie', event, 'Selfie oleh penghuni')"></label>
+              <label class="btn btn-ghost">&#128247; Difoto Staf<input type="file" accept="image/*" capture="environment" hidden onchange="mouHandlePhoto('selfie', event, 'Difoto oleh staf')"></label>
+              <label class="btn btn-ghost">&#128444;&#65039; Upload<input type="file" accept="image/*" hidden onchange="mouHandlePhoto('selfie', event, 'Diunggah dari galeri')"></label>
+              <button type="button" class="btn btn-ghost" onclick="mouRemovePhoto('selfie')">Hapus</button>
+            </div>
+          </div>
+        </div>
+        <div class="mou-hint" style="margin-top:8px">Tips: pastikan KTP terbaca jelas (tidak silau/buram) dan wajah terlihat penuh tanpa masker/kacamata hitam. Foto otomatis dikompres agar ringan.</div>
       </div>
 
       <div class="card">
@@ -1631,13 +1686,13 @@ table tbody tr:last-child td { border-bottom: none; }
           </p>
           <p style="font-size:13px; line-height:1.7; color: var(--ink-700); margin-top:10px;">
             Website ini dihasilkan dari data <code>Kosan.xlsx</code> yang Anda unggah. Seluruh riwayat
-            pembayaran dari Maret 2025 hingga Juli 2026 telah dimuat dan dapat dipantau melalui
-            dashboard interaktif. Periode aktif saat ini adalah <strong id="info-current-period">Juli 2026</strong>.
+            riwayat pembayaran mulai <strong id="info-period-start">Maret 2025</strong> telah dimuat dan dapat dipantau
+            melalui dashboard interaktif. Periode aktif saat ini adalah <strong id="info-current-period">Juli 2026</strong>.
           </p>
           <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:14px;">
             <span class="badge paid">2 Gedung</span>
             <span class="badge occupied">26 Kamar</span>
-            <span class="badge depo">17 Periode</span>
+            <span class="badge depo" id="info-period-count">17 Periode</span>
             <span class="badge none">Data Lokal</span>
           </div>
         </div>
@@ -1685,7 +1740,7 @@ table tbody tr:last-child td { border-bottom: none; }
           </div>
           <div style="padding:14px; background:var(--amber-50); border-radius:10px; border:1px solid var(--amber-100);">
             <div style="font-weight:700; color:var(--amber-600); margin-bottom:6px;">4. Pembayaran</div>
-            <div style="font-size:12px; color:var(--ink-700);">Matriks pembayaran 17 bulan. Hover untuk lihat tanggal bayar. Filter per periode.</div>
+            <div style="font-size:12px; color:var(--ink-700);">Matriks pembayaran <span id="payment-matrix-period-count">17</span> bulan. Hover untuk lihat tanggal bayar. Filter per periode.</div>
           </div>
         </div>
       </div>
@@ -4824,9 +4879,78 @@ const DATA = {
   "generated_at": "2026-09-29 14:19:55"
 };
 
-const PERIODS = DATA.meta.periods;
-const CURRENT_PERIOD = DATA.meta.current_period;
-const CURRENT_PERIOD_LABEL = DATA.meta.current_period_label;
+const KOSAN_MONTHS_ID = DATA.meta.months_id;
+
+function getBillingPeriodKey() {
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'Asia/Makassar', year: 'numeric', month: '2-digit',
+  }).formatToParts(new Date());
+  const year = parts.find(part => part.type === 'year').value;
+  const month = parts.find(part => part.type === 'month').value;
+  return `${year}-${month}`;
+}
+
+function shiftBillingPeriod(periodKey, offset) {
+  const [year, month] = periodKey.split('-').map(Number);
+  const shifted = new Date(Date.UTC(year, month - 1 + offset, 1));
+  const nextYear = shifted.getUTCFullYear();
+  const nextMonth = shifted.getUTCMonth() + 1;
+  return {
+    key: `${nextYear}-${String(nextMonth).padStart(2, '0')}`,
+    label: `${KOSAN_MONTHS_ID[nextMonth - 1]} ${nextYear}`,
+  };
+}
+
+function getBillingDateKey() {
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Makassar', year: 'numeric', month: '2-digit', day: '2-digit',
+  }).formatToParts(new Date());
+  const value = type => parts.find(part => part.type === type).value;
+  return `${value('year')}-${value('month')}-${value('day')}`;
+}
+
+function buildKosanPeriods(currentPeriod) {
+  const [startYear, startMonth] = DATA.meta.periods[0].key.split('-').map(Number);
+  const [endYear, endMonth] = currentPeriod.split('-').map(Number);
+  const cursor = new Date(Date.UTC(startYear, startMonth - 1, 1));
+  const periods = [];
+  while (cursor.getUTCFullYear() < endYear ||
+    (cursor.getUTCFullYear() === endYear && cursor.getUTCMonth() + 1 <= endMonth)) {
+    const year = cursor.getUTCFullYear();
+    const month = cursor.getUTCMonth() + 1;
+    periods.push({
+      key: `${year}-${String(month).padStart(2, '0')}`,
+      label: `${KOSAN_MONTHS_ID[month - 1]} ${year}`,
+    });
+    cursor.setUTCMonth(cursor.getUTCMonth() + 1);
+  }
+  return periods;
+}
+
+const CURRENT_PERIOD = getBillingPeriodKey();
+const CURRENT_PERIOD_LABEL = (() => {
+  const [year, month] = CURRENT_PERIOD.split('-').map(Number);
+  return `${KOSAN_MONTHS_ID[month - 1]} ${year}`;
+})();
+const PERIODS = buildKosanPeriods(CURRENT_PERIOD);
+const PAYMENT_ENTRY_PERIODS = buildKosanPeriods(shiftBillingPeriod(CURRENT_PERIOD, 12).key);
+let PAYMENT_PERIODS = [...PERIODS];
+const PERIOD_RANGE_LABEL = `${PERIODS[0].label} - ${CURRENT_PERIOD_LABEL}`;
+
+function extendStaticRoomPayments(buildings) {
+  buildings.forEach(building => building.rooms.forEach(room => {
+    const payments = new Map((room.payments || []).map(payment => [payment.period, payment]));
+    const lastRecordedPeriod = [...payments.keys()].sort().at(-1) || '';
+    room.payments = PERIODS.map(period => payments.get(period.key) || {
+      period: period.key,
+      label: period.label,
+      status: period.key > lastRecordedPeriod ? 'unpaid' : 'none',
+      date: null,
+    });
+  }));
+}
+extendStaticRoomPayments(DATA.buildings);
+
 // Seed awal (dipakai sebelum data live dari D1 selesai dimuat); diganti sepenuhnya oleh
 // applyKosanRoomsFromApi() setelah loadKosanRoomsFromDb() berhasil.
 let BUILDINGS = DATA.buildings;
@@ -4916,14 +5040,14 @@ function calcStats() {
   let paidCount = 0, unpaidCount = 0;
   ALL_ROOMS.forEach(r => {
     const p = r.payments.find(x => x.period === CURRENT_PERIOD);
-    if (p && p.status === 'paid') { incomeCurrent += r.price; paidCount++; }
+    if (p && p.status === 'paid') { incomeCurrent += p.amount || r.price; paidCount++; }
     else if (p && p.status === 'unpaid') { unpaidCount++; }
   });
   // Total all-time income
   let incomeTotal = 0;
   ALL_ROOMS.forEach(r => {
     r.payments.forEach(p => {
-      if (p.status === 'paid') incomeTotal += r.price;
+      if (p.status === 'paid' && p.period <= CURRENT_PERIOD) incomeTotal += p.amount || r.price;
     });
   });
   const occRate = total ? Math.round((occupied/total)*100) : 0;
@@ -4964,7 +5088,7 @@ function renderStats() {
       icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>'
     },
     {
-      label: 'Total Pendapatan 17 Bulan', value: fmtIDRShort(s.incomeTotal), delta: 'Maret 2025 - Juli 2026',
+      label: `Total Pendapatan ${PERIODS.length} Bulan`, value: fmtIDRShort(s.incomeTotal), delta: PERIOD_RANGE_LABEL,
       accent: 'var(--amber-600)', accentBg: 'var(--amber-100)',
       icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>'
     },
@@ -5430,12 +5554,12 @@ let payMode = 'matrix';
 let payPeriod = CURRENT_PERIOD;
 
 function renderPembayaran() {
-  document.getElementById('pay-matrix-period-label').textContent = '— ' + (PERIODS.find(p => p.key === payPeriod)?.label || '');
+  document.getElementById('pay-matrix-period-label').textContent = '— ' + (PAYMENT_PERIODS.find(p => p.key === payPeriod)?.label || '');
 
   const building = document.getElementById('pay-building').value;
   const q = document.getElementById('pay-search').value.trim().toLowerCase();
 
-  let rooms = ALL_ROOMS.slice();
+  let rooms = ALL_ROOMS.filter(r => r.status === 'occupied');
   if (building) rooms = rooms.filter(r => r.building === building);
   if (q) rooms = rooms.filter(r => {
     return (r.tenant_name || '').toLowerCase().includes(q) ||
@@ -5463,12 +5587,12 @@ function renderPayMatrix(rooms) {
     <tr>
       <th class="room-col">Gedung / Kamar</th>
       <th>Penyewa</th>
-      ${PERIODS.map(p => `<th title="${p.label}">${p.label.split(' ')[0].slice(0,3)}<br><span style="font-size:10px;color:var(--ink-400);">'${p.label.split(' ')[1].slice(2)}</span></th>`).join('')}
+      ${PAYMENT_PERIODS.map(p => `<th title="${p.label}">${p.label.split(' ')[0].slice(0,3)}<br><span style="font-size:10px;color:var(--ink-400);">'${p.label.split(' ')[1].slice(2)}</span></th>`).join('')}
     </tr>
   `;
   const body = document.getElementById('pay-matrix-body');
   if (!rooms.length) {
-    body.innerHTML = `<tr><td colspan="${PERIODS.length + 2}"><div class="empty">Tidak ada kamar yang cocok.</div></td></tr>`;
+    body.innerHTML = `<tr><td colspan="${PAYMENT_PERIODS.length + 2}"><div class="empty">Tidak ada kamar yang cocok.</div></td></tr>`;
     return;
   }
   body.innerHTML = rooms.map(r => `
@@ -5478,13 +5602,14 @@ function renderPayMatrix(rooms) {
         <div class="cell-sub">${r.building}</div>
       </td>
       <td>${r.tenant_name ? `<div class="cell-strong">${r.tenant_name}</div><div class="cell-sub">${fmtIDR(r.price)}</div>` : '<span class="muted">&mdash;</span>'}</td>
-      ${r.payments.map(p => {
+      ${PAYMENT_PERIODS.map(period => {
+        const p = r.payments.find(payment => payment.period === period.key) || { ...period, status:'none', date:null };
         const sym = p.status === 'paid' ? '✓' : p.status === 'unpaid' ? '!' : p.status === 'checkout' ? 'CO' : '·';
         const tip = p.status === 'paid' ? `Lunas ${p.label} — ${fmtDateID(p.date)}` :
                    p.status === 'unpaid' ? `Belum bayar ${p.label}` :
                    p.status === 'checkout' ? `Check-out ${p.label}` :
                    `Tidak aktif ${p.label}`;
-        return `<td><div class="payment-cell ${p.status}"><span>${sym}</span><span class="tip">${tip}</span></div></td>`;
+        return `<td><div class="payment-cell ${p.status}" style="cursor:pointer" onclick="openPaymentCellModal('${r.building}','${r.room_number}','${period.key}')"><span>${sym}</span><span class="tip">${tip}</span></div></td>`;
       }).join('')}
     </tr>
   `).join('');
@@ -5498,7 +5623,7 @@ function renderPayList(rooms) {
       <th class="room-col">Gedung / Kamar</th>
       <th>Penyewa</th>
       <th class="text-right">Harga</th>
-      <th>Status ${PERIODS.find(p=>p.key===payPeriod)?.label || ''}</th>
+      <th>Status ${PAYMENT_PERIODS.find(p=>p.key===payPeriod)?.label || ''}</th>
       <th>Tanggal Bayar</th>
     </tr>
   `;
@@ -5526,13 +5651,13 @@ function renderPayList(rooms) {
 }
 
 function renderPaySummary(rooms) {
-  const period = PERIODS.find(p => p.key === payPeriod)?.label || '';
+  const period = PAYMENT_PERIODS.find(p => p.key === payPeriod)?.label || '';
   let paid = 0, unpaid = 0, none = 0, checkout = 0;
   let incomePaid = 0, potentialIncome = 0;
   rooms.forEach(r => {
     const p = r.payments.find(x => x.period === payPeriod);
     if (!p) { none++; return; }
-    if (p.status === 'paid') { paid++; incomePaid += r.price; }
+    if (p.status === 'paid') { paid++; incomePaid += p.amount || r.price; }
     else if (p.status === 'unpaid') { unpaid++; potentialIncome += r.price; }
     else if (p.status === 'checkout') checkout++;
     else none++;
@@ -5561,6 +5686,491 @@ function renderPaySummary(rooms) {
   `;
 }
 
+function escapePaymentHtml(value) {
+  return String(value || '').replace(/[&<>"']/g, character => ({
+    '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;',
+  })[character]);
+}
+
+function rentRoomKey(room) {
+  return `${room.building}||${room.room_number}`;
+}
+
+function findRentRoom(key) {
+  return ALL_ROOMS.find(room => rentRoomKey(room) === key);
+}
+
+function rentPaymentRoomPayload(room) {
+  return {
+    ...(room.id ? { room_id:room.id } : {}),
+    building:room.building,
+    room_number:String(room.room_number),
+    room:{
+      building_code:room.buildingCode || '',
+      room_label:room.room_label || `Kamar ${room.room_number}`,
+      tenant_name:room.tenant_name || '',
+      price:Number(room.price) || 0,
+      depo_amount:Number(room.depo?.amount ?? room.depo_amount) || 0,
+      depo_refundable:Boolean(room.depo?.refundable ?? room.depo_refundable),
+      notes:room.notes || '',
+      payments:Array.isArray(room.payments) ? room.payments : [],
+    },
+  };
+}
+
+let kosanIncomeCategories = [];
+
+function switchKosanIncomeType(type) {
+  document.querySelectorAll('#kinc-type-toggle button').forEach(button => {
+    button.classList.toggle('active', button.dataset.type === type);
+  });
+  document.getElementById('kinc-rent-section').classList.toggle('hidden', type !== 'rent');
+  document.getElementById('kinc-other-section').classList.toggle('hidden', type !== 'other');
+}
+
+async function loadKosanIncomeCategories() {
+  const select = document.getElementById('kinc-cat');
+  try {
+    await ensureKdoProperty();
+    const result = await kosanApi('/admin/finance');
+    kosanIncomeCategories = (result.data.categories || [])
+      .filter(category => category.kind === 'income' && category.id !== 'income-kosan-rent');
+    if (!select) return;
+    select.innerHTML = kosanIncomeCategories.length
+      ? kosanIncomeCategories.map(category => `<option value="${escapePaymentHtml(category.id)}">${escapePaymentHtml(category.name)}</option>`).join('')
+      : '<option value="">Belum ada kategori — tambahkan dengan tombol +</option>';
+  } catch (error) {
+    if (select) select.innerHTML = '<option value="">Gagal memuat kategori</option>';
+    showToast(error.message || 'Kategori pemasukan gagal dimuat.');
+  }
+}
+
+async function kosanSubmitNewIncomeCategory() {
+  const nameInput = document.getElementById('kinc-new-cat-name');
+  const status = document.getElementById('kinc-new-cat-status');
+  const name = nameInput.value.trim();
+  if (name.length < 2 || name.length > 60) { status.textContent = 'Nama kategori 2-60 karakter.'; return; }
+  status.textContent = 'Menyimpan kategori...';
+  try {
+    const result = await kosanApi('/admin/finance/categories', { method:'POST', body:JSON.stringify({ kind:'income', name }) });
+    await loadKosanIncomeCategories();
+    document.getElementById('kinc-cat').value = result.data.id;
+    nameInput.value = '';
+    status.textContent = '';
+    document.getElementById('kinc-add-cat-row').classList.add('hidden');
+    showToast(`Kategori ${result.data.name} tersimpan.`);
+  } catch (error) {
+    status.textContent = error.message || 'Gagal menyimpan kategori.';
+  }
+}
+
+async function saveKosanOtherIncome() {
+  const message = document.getElementById('kinc-message');
+  const button = document.getElementById('kinc-submit');
+  const category = kosanIncomeCategories.find(item => item.id === document.getElementById('kinc-cat').value);
+  const amount = parseCurrencyInput(document.getElementById('kinc-amount').value);
+  const entryDate = document.getElementById('kinc-date').value;
+  const room = findRentRoom(document.getElementById('kinc-room').value);
+  if (!category) { message.textContent = 'Pilih atau tambahkan kategori pemasukan dulu.'; return; }
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(entryDate) || !Number.isSafeInteger(amount) || amount <= 0) {
+    message.textContent = 'Tanggal dan jumlah wajib valid.';
+    return;
+  }
+  const extra = document.getElementById('kinc-desc').value.trim();
+  const roomLabel = room ? `${room.building} Kamar ${room.room_number}` : '';
+  const description = [category.name, roomLabel, extra].filter(Boolean).join(' - ').slice(0, 240);
+  button.disabled = true;
+  message.textContent = 'Menyimpan pemasukan ke buku kas...';
+  try {
+    await ensureKdoProperty();
+    await kosanApi('/admin/finance/entries', {
+      method:'POST',
+      body:JSON.stringify({
+        kind:'income', category_id:category.id,
+        property_id:kdoProperty.id, property_name:kdoProperty.name,
+        entry_date:entryDate, amount, description,
+        payee:(room?.tenant_name || document.getElementById('kinc-payee').value.trim()).slice(0, 120),
+        recurrence:'once',
+      }),
+    });
+    closeModal();
+    showToast(`Pemasukan ${category.name} ${fmtIDR(amount)} tersimpan.`);
+  } catch (error) {
+    message.textContent = error.message || 'Pemasukan gagal disimpan.';
+    button.disabled = false;
+  }
+}
+
+async function openKosanExpenseFromPayment() {
+  try {
+    await ensureKdoProperty();
+    await loadKosanExpenseData();
+    openKosanExpenseModal();
+  } catch (error) {
+    showToast(error.message || 'Form pengeluaran gagal dibuka.');
+  }
+}
+
+function openRentPaymentModal() {
+  const rooms = ALL_ROOMS.filter(room => room.status === 'occupied' && room.price > 0 && room.tenant_name);
+  const today = getBillingDateKey();
+  document.getElementById('modal-title').textContent = 'Catat Pembayaran';
+  document.getElementById('modal-body').innerHTML = `
+    <div class="tabs" id="kinc-type-toggle" style="margin-bottom:14px">
+      <button type="button" class="active" data-type="rent" onclick="switchKosanIncomeType('rent')">Sewa Bulanan</button>
+      <button type="button" data-type="other" onclick="switchKosanIncomeType('other')">Pemasukan Lain</button>
+      <button type="button" data-type="expense" onclick="openKosanExpenseFromPayment()">Pengeluaran</button>
+    </div>
+
+    <div id="kinc-other-section" class="hidden">
+      <div class="mou-grid">
+        <div class="mou-form-group">
+          <label class="mou-label" for="kinc-date">Tanggal Diterima *</label>
+          <input type="date" class="mou-input" id="kinc-date" value="${today}" max="${today}">
+        </div>
+        <div class="mou-form-group">
+          <label class="mou-label" for="kinc-cat">Kategori *</label>
+          <div style="display:flex;gap:8px">
+            <select class="mou-select" id="kinc-cat" style="flex:1"><option value="">Memuat...</option></select>
+            <button type="button" class="btn btn-ghost" onclick="document.getElementById('kinc-add-cat-row').classList.toggle('hidden')">+</button>
+          </div>
+        </div>
+        <div id="kinc-add-cat-row" class="mou-form-group span-2 hidden">
+          <label class="mou-label" for="kinc-new-cat-name">Nama Kategori Baru</label>
+          <div style="display:flex;gap:8px">
+            <input type="text" class="mou-input" id="kinc-new-cat-name" style="flex:1" maxlength="60" placeholder="cth: Listrik, Laundry, Deposit, Denda">
+            <button type="button" class="btn" onclick="kosanSubmitNewIncomeCategory()">Simpan</button>
+          </div>
+          <div class="mou-hint" id="kinc-new-cat-status"></div>
+        </div>
+        <div class="mou-form-group span-2">
+          <label class="mou-label" for="kinc-room">Dari Penyewa / Kamar (opsional)</label>
+          <select class="mou-select" id="kinc-room">
+            <option value="">— Umum / bukan penyewa —</option>
+            ${rooms.map(room => `<option value="${escapePaymentHtml(rentRoomKey(room))}">${escapePaymentHtml(room.tenant_name)} · ${escapePaymentHtml(room.building)} Kamar ${escapePaymentHtml(room.room_number)}</option>`).join('')}
+          </select>
+        </div>
+        <div class="mou-form-group">
+          <label class="mou-label" for="kinc-amount">Jumlah (Rp) *</label>
+          <input type="text" class="mou-input" inputmode="numeric" pattern="[0-9.]*" data-currency-input id="kinc-amount" placeholder="100.000">
+        </div>
+        <div class="mou-form-group">
+          <label class="mou-label" for="kinc-payee">Dibayar oleh (jika bukan penyewa)</label>
+          <input type="text" class="mou-input" id="kinc-payee" maxlength="120">
+        </div>
+        <div class="mou-form-group span-2">
+          <label class="mou-label" for="kinc-desc">Keterangan (opsional)</label>
+          <input type="text" class="mou-input" id="kinc-desc" maxlength="200" placeholder="cth: token listrik Oktober">
+        </div>
+        <div class="mou-form-group span-2">
+          <div class="mou-hint" id="kinc-message" role="status">Tercatat sebagai pemasukan Kosan De Orange di buku kas bersama.</div>
+        </div>
+      </div>
+      <div class="mou-action-bar" style="margin-top:14px">
+        <button class="btn" id="kinc-submit" type="button" onclick="saveKosanOtherIncome()">Simpan Pemasukan</button>
+        <button class="btn btn-ghost" type="button" onclick="closeModal()">Batal</button>
+      </div>
+    </div>
+
+    <div id="kinc-rent-section">
+    ${rooms.length ? '' : '<div class="mou-hint" style="margin-bottom:10px">Belum ada kamar terisi dengan harga sewa. Gunakan tab Pemasukan Lain untuk pemasukan umum.</div>'}
+    <div class="mou-grid">
+      <div class="mou-form-group span-2">
+        <label class="mou-label" for="rent-payment-room">Penyewa / Kamar *</label>
+        <select class="mou-select" id="rent-payment-room" onchange="updateRentPaymentPreview()">
+          ${rooms.map(room => `<option value="${escapePaymentHtml(rentRoomKey(room))}">${escapePaymentHtml(room.tenant_name)} · ${escapePaymentHtml(room.building)} Kamar ${escapePaymentHtml(room.room_number)} · ${fmtIDR(room.price)}/bulan</option>`).join('')}
+        </select>
+      </div>
+      <div class="mou-form-group">
+        <label class="mou-label" for="rent-payment-start">Mulai Bulan *</label>
+        <select class="mou-select" id="rent-payment-start" onchange="updateRentPaymentPreview()">
+          ${PAYMENT_ENTRY_PERIODS.map(period => `<option value="${period.key}" ${period.key === CURRENT_PERIOD ? 'selected' : ''}>${period.label}</option>`).join('')}
+        </select>
+      </div>
+      <div class="mou-form-group">
+        <label class="mou-label" for="rent-payment-months">Jumlah Bulan *</label>
+        <input type="number" class="mou-input" id="rent-payment-months" min="1" max="12" step="1" value="1" oninput="updateRentPaymentPreview()">
+      </div>
+      <div class="mou-form-group">
+        <label class="mou-label" for="rent-payment-date">Tanggal Diterima *</label>
+        <input type="date" class="mou-input" id="rent-payment-date" value="${getBillingDateKey()}" max="${getBillingDateKey()}">
+      </div>
+      <div class="mou-form-group">
+        <label class="mou-label" for="rent-payment-method">Metode Pembayaran *</label>
+        <select class="mou-select" id="rent-payment-method">
+          <option>Transfer BCA</option>
+          <option>Transfer Bank Lain</option>
+          <option>Tunai</option>
+          <option>Lainnya</option>
+        </select>
+      </div>
+      <div class="mou-form-group span-2">
+        <label class="mou-label">Periode yang Dibayar</label>
+        <div class="mou-input" id="rent-payment-range" style="background:var(--ink-50);"></div>
+      </div>
+      <div class="mou-form-group span-2">
+        <label class="mou-label">Total Diterima</label>
+        <div class="mou-input cell-strong" id="rent-payment-total" style="background:var(--green-50);color:var(--green-600);"></div>
+      </div>
+      <div class="mou-form-group span-2">
+        <label class="mou-label" for="rent-payment-notes">Catatan (opsional)</label>
+        <textarea class="mou-textarea" id="rent-payment-notes" maxlength="500" placeholder="Contoh: dibayar oleh keluarga penyewa"></textarea>
+      </div>
+      <div class="mou-form-group span-2">
+        <div class="mou-hint" id="rent-payment-message" role="status">Satu transaksi kas akan dibuat; setiap bulan dalam periode akan ditandai lunas.</div>
+      </div>
+    </div>
+    <div class="mou-action-bar" style="margin-top:14px">
+      <button class="btn" id="rent-payment-submit" type="button" onclick="saveRentPayment()">Simpan &amp; Unduh Bukti</button>
+      <button class="btn btn-ghost" type="button" onclick="closeModal()">Batal</button>
+    </div>
+    </div>
+  `;
+  setupCurrencyInputs(document.getElementById('modal-body'));
+  document.getElementById('modal-overlay').classList.add('show');
+  updateRentPaymentPreview();
+  loadKosanIncomeCategories();
+}
+
+function updateRentPaymentPreview() {
+  const roomSelect = document.getElementById('rent-payment-room');
+  if (!roomSelect) return;
+  const room = findRentRoom(roomSelect.value);
+  const startPeriod = document.getElementById('rent-payment-start').value;
+  const monthCount = Number(document.getElementById('rent-payment-months').value);
+  const validCount = Number.isInteger(monthCount) && monthCount >= 1 && monthCount <= 12;
+  const coveredPeriods = validCount
+    ? Array.from({ length:monthCount }, (_, index) => shiftBillingPeriod(startPeriod, index))
+    : [];
+  const endPeriod = coveredPeriods[coveredPeriods.length - 1];
+  const conflictingPeriod = room && coveredPeriods.find(period =>
+    room.payments.some(payment => payment.period === period.key && ['paid', 'checkout'].includes(payment.status))
+  );
+  document.getElementById('rent-payment-range').textContent = endPeriod
+    ? (startPeriod === endPeriod.key ? endPeriod.label : `${coveredPeriods[0].label} - ${endPeriod.label}`)
+    : 'Isi jumlah bulan 1 sampai 12.';
+  document.getElementById('rent-payment-total').textContent = validCount && room
+    ? fmtIDR(room.price * monthCount)
+    : '—';
+  const message = document.getElementById('rent-payment-message');
+  const submit = document.getElementById('rent-payment-submit');
+  if (conflictingPeriod) {
+    message.textContent = `${conflictingPeriod.label} sudah lunas atau berstatus check-out; pilih periode lain agar tidak tercatat ganda.`;
+  } else {
+    message.textContent = 'Satu transaksi kas akan dibuat; setiap bulan dalam periode akan ditandai lunas.';
+  }
+  submit.disabled = !room || !validCount || Boolean(conflictingPeriod);
+}
+
+async function saveRentPayment() {
+  const room = findRentRoom(document.getElementById('rent-payment-room').value);
+  const startPeriod = document.getElementById('rent-payment-start').value;
+  const monthsPaid = Number(document.getElementById('rent-payment-months').value);
+  const receivedDate = document.getElementById('rent-payment-date').value;
+  const method = document.getElementById('rent-payment-method').value;
+  const notes = document.getElementById('rent-payment-notes').value.trim();
+  if (!room || !Number.isInteger(monthsPaid) || monthsPaid < 1 || monthsPaid > 12 || !receivedDate) {
+    showToast('Lengkapi data pembayaran dengan benar.');
+    return;
+  }
+  const periods = Array.from({ length:monthsPaid }, (_, index) => shiftBillingPeriod(startPeriod, index));
+  const conflictingPeriod = periods.find(period =>
+    room.payments.some(payment => payment.period === period.key && ['paid', 'checkout'].includes(payment.status))
+  );
+  if (conflictingPeriod) {
+    showToast(`${conflictingPeriod.label} sudah lunas atau check-out.`);
+    updateRentPaymentPreview();
+    return;
+  }
+  const total = room.price * monthsPaid;
+  const periodLabel = periods.length === 1 ? periods[0].label : `${periods[0].label} - ${periods.at(-1).label}`;
+  if (!confirm(`Catat pembayaran ${room.tenant_name} sebesar ${fmtIDR(total)} untuk ${periodLabel}?\n\nStatus ${monthsPaid} bulan akan menjadi lunas.`)) return;
+
+  const button = document.getElementById('rent-payment-submit');
+  const message = document.getElementById('rent-payment-message');
+  button.disabled = true;
+  message.textContent = 'Menyimpan pembayaran ke D1 dan buku kas...';
+  try {
+    const result = await kosanApi('/kosan/room-payments', {
+      method:'POST',
+      body:JSON.stringify({
+        ...rentPaymentRoomPayload(room), start_period:startPeriod, months_paid:monthsPaid,
+        received_date:receivedDate, method, notes,
+      }),
+    });
+    await loadKosanRoomsFromDb();
+    populateBuildingSelects();
+    payPeriod = startPeriod;
+    const periodSelect = document.getElementById('pay-period');
+    periodSelect.value = startPeriod;
+    renderPembayaran();
+    renderHero();
+    renderStats();
+    if (chartIncome) renderIncomeChart('all');
+    closeModal();
+    downloadRentPaymentReceipt(result.data);
+    showToast(`${fmtIDR(result.data.total_amount)} tercatat untuk ${result.data.months_paid} bulan.`);
+  } catch (error) {
+    message.textContent = error.message || 'Pembayaran gagal disimpan.';
+    button.disabled = false;
+    showToast(error.message || 'Pembayaran gagal disimpan.');
+  }
+}
+
+function downloadRentPaymentReceipt(payment) {
+  const JsPDF = window.jspdf?.jsPDF;
+  if (!JsPDF) {
+    showToast('Pembayaran tersimpan, tetapi library PDF belum tersedia.');
+    return;
+  }
+  const doc = new JsPDF();
+  const margin = 18;
+  let y = 24;
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(16);
+  doc.text('BUKTI PEMBAYARAN SEWA KOS', margin, y);
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(11);
+  y += 14;
+  [
+    `ID Transaksi: ${payment.id}`,
+    `Penyewa: ${payment.tenant_name}`,
+    `Gedung / kamar: ${payment.building} / ${payment.room_number}`,
+    `Periode: ${payment.period_label}`,
+    `Jumlah bulan: ${payment.months_paid}`,
+    `Tanggal diterima: ${fmtDateID(payment.received_date)}`,
+    `Metode: ${payment.method}`,
+    `Total diterima: ${fmtIDR(payment.total_amount)}`,
+    `Catatan: ${payment.notes || '-'}`,
+  ].forEach(line => {
+    doc.text(line, margin, y);
+    y += 9;
+  });
+  doc.save(`Bukti-Sewa-${String(payment.room_number).replace(/[^A-Za-z0-9_-]/g, '-')}-${payment.id.slice(0, 8)}.pdf`);
+}
+
+function buildPaymentNotifMessage(room, payment) {
+  const sapaan = room.tenant_name ? `Halo ${room.tenant_name}` : 'Halo';
+  if (payment.status === 'paid') {
+    return `${sapaan}, terima kasih! Pembayaran sewa kos ${room.building} Kamar ${room.room_number} untuk ${payment.label} sebesar ${fmtIDR(room.price)} sudah kami terima. — House in Bandung`;
+  }
+  return `${sapaan}, kami mengingatkan pembayaran sewa kos ${room.building} Kamar ${room.room_number} untuk ${payment.label} sebesar ${fmtIDR(room.price)} belum kami terima. Mohon segera melakukan pembayaran via transfer ke BCA 5170584815 a.n Rouven Sylviano/Mercybless dan kirim bukti transfernya. Terima kasih — House in Bandung`;
+}
+
+function openPaymentCellModal(building, roomNumber, periodKey) {
+  const room = ALL_ROOMS.find(item => item.building === building && item.room_number === roomNumber);
+  if (!room) {
+    showToast('Data kamar tidak ditemukan. Muat ulang halaman.');
+    return;
+  }
+  const period = PAYMENT_PERIODS.find(item => item.key === periodKey);
+  const payment = room.payments.find(item => item.period === periodKey)
+    || { period:periodKey, label:period?.label || periodKey, status:'none', date:null };
+  const canMarkPaid = room.status === 'occupied' && room.price > 0 && room.tenant_name && !['paid', 'checkout'].includes(payment.status);
+  const today = getBillingDateKey();
+
+  document.getElementById('modal-title').textContent = `${payment.label} — Kamar ${room.room_number} · ${room.building}`;
+  document.getElementById('modal-body').innerHTML = `
+    <div class="kv"><div class="k">Penyewa</div><div class="v">${escapePaymentHtml(room.tenant_name) || '<span class="muted">Tidak ada / kosong</span>'}</div></div>
+    <div class="kv"><div class="k">Harga / Bulan</div><div class="v cell-strong">${fmtIDR(room.price)}</div></div>
+    <div class="kv"><div class="k">Status</div><div class="v"><span class="badge ${payment.status}">${payStatusLabel(payment.status)}</span>${payment.date ? ' &middot; ' + fmtDateID(payment.date) : ''}${payment.method ? ` &middot; ${escapePaymentHtml(payment.method)}` : ''}</div></div>
+    ${canMarkPaid ? `
+      <h4>Catat Pembayaran</h4>
+      <div class="mou-grid">
+        <div class="mou-form-group">
+          <label class="mou-label" for="cell-pay-date">Tanggal Diterima *</label>
+          <input type="date" class="mou-input" id="cell-pay-date" value="${today}" max="${today}">
+        </div>
+        <div class="mou-form-group">
+          <label class="mou-label" for="cell-pay-method">Metode Pembayaran *</label>
+          <select class="mou-select" id="cell-pay-method">
+            <option>Transfer BCA</option>
+            <option>Transfer Bank Lain</option>
+            <option>Tunai</option>
+            <option>Lainnya</option>
+          </select>
+        </div>
+        <div class="mou-form-group span-2">
+          <label class="mou-label" for="cell-pay-notes">Catatan (opsional)</label>
+          <textarea class="mou-textarea" id="cell-pay-notes" maxlength="500"></textarea>
+        </div>
+      </div>
+      <div class="mou-action-bar" style="margin-top:10px">
+        <button class="btn" id="cell-pay-submit" type="button" onclick="markPaymentCellPaid('${escapePaymentHtml(rentRoomKey(room))}','${periodKey}')">&#10003; Tandai Sudah Bayar</button>
+      </div>
+    ` : ''}
+    ${room.status === 'occupied' ? `
+      <h4>Kirim Notif ke Penghuni</h4>
+      <div class="mou-grid">
+        <div class="mou-form-group span-2">
+          <label class="mou-label" for="cell-notif-phone">No. WhatsApp Penghuni *</label>
+          <input type="tel" class="mou-input" id="cell-notif-phone" placeholder="08xxxxxxxxxx">
+        </div>
+        <div class="mou-form-group span-2">
+          <label class="mou-label" for="cell-notif-message">Pesan</label>
+          <textarea class="mou-textarea" id="cell-notif-message" maxlength="1000">${escapePaymentHtml(buildPaymentNotifMessage(room, payment))}</textarea>
+        </div>
+      </div>
+      <div class="mou-action-bar" style="margin-top:10px">
+        <button class="btn btn-ghost" type="button" onclick="sendPaymentCellNotif()">Kirim via WhatsApp</button>
+      </div>
+    ` : ''}
+    <div class="mou-action-bar" style="margin-top:18px;padding-top:14px;border-top:1px solid var(--ink-200)">
+      <button class="btn btn-ghost" type="button" onclick="closeModal()">Tutup</button>
+    </div>
+  `;
+  document.getElementById('modal-overlay').classList.add('show');
+}
+
+async function markPaymentCellPaid(roomKey, periodKey) {
+  const room = findRentRoom(roomKey);
+  const receivedDate = document.getElementById('cell-pay-date').value;
+  const method = document.getElementById('cell-pay-method').value;
+  const notes = document.getElementById('cell-pay-notes').value.trim();
+  if (!room || !receivedDate) {
+    showToast('Lengkapi tanggal pembayaran.');
+    return;
+  }
+  const periodLabel = PAYMENT_PERIODS.find(item => item.key === periodKey)?.label || periodKey;
+  if (!confirm(`Tandai ${room.tenant_name} sudah bayar ${fmtIDR(room.price)} untuk ${periodLabel}?`)) return;
+
+  const button = document.getElementById('cell-pay-submit');
+  button.disabled = true;
+  try {
+    const result = await kosanApi('/kosan/room-payments', {
+      method:'POST',
+      body:JSON.stringify({
+        ...rentPaymentRoomPayload(room), start_period:periodKey, months_paid:1,
+        received_date:receivedDate, method, notes,
+      }),
+    });
+    await loadKosanRoomsFromDb();
+    renderPembayaran();
+    renderHero();
+    renderStats();
+    if (chartIncome) renderIncomeChart('all');
+    closeModal();
+    downloadRentPaymentReceipt(result.data);
+    showToast(`${periodLabel} ditandai lunas.`);
+  } catch (error) {
+    button.disabled = false;
+    showToast(error.message || 'Pembayaran gagal disimpan.');
+  }
+}
+
+function sendPaymentCellNotif() {
+  const phoneInput = document.getElementById('cell-notif-phone');
+  const wa = invoiceFormatWaNumber(phoneInput.value.trim());
+  if (!wa) {
+    showToast('Isi nomor WhatsApp penghuni terlebih dahulu');
+    phoneInput.classList.add('error');
+    return;
+  }
+  phoneInput.classList.remove('error');
+  const message = document.getElementById('cell-notif-message').value.trim();
+  window.open(`https://wa.me/${wa}?text=${encodeURIComponent(message)}`, '_blank');
+}
+
 document.getElementById('pay-search').addEventListener('input', renderPembayaran);
 document.getElementById('pay-building').addEventListener('change', renderPembayaran);
 document.getElementById('pay-period').addEventListener('change', (e) => {
@@ -5585,9 +6195,9 @@ function renderLaporan() {
   const s = calcStats();
   document.getElementById('report-stat-grid').innerHTML = `
     <div class="stat-card" style="--accent:var(--orange-600); --accent-bg:var(--orange-50)">
-      <div class="label">Total Pendapatan (17 bulan)</div>
+      <div class="label">Total Pendapatan (${PERIODS.length} bulan)</div>
       <div class="value">${fmtIDRShort(s.incomeTotal)}</div>
-      <div class="delta">Maret 2025 - Juli 2026</div>
+      <div class="delta">${PERIOD_RANGE_LABEL}</div>
     </div>
     <div class="stat-card" style="--accent:var(--green-600); --accent-bg:var(--green-100)">
       <div class="label">Rata-rata Bulanan</div>
@@ -5695,8 +6305,9 @@ function renderLaporan() {
 
   // Top payers
   const payers = ALL_ROOMS.filter(r => r.tenant_name).map(r => {
-    const paidCount = r.payments.filter(p => p.status === 'paid').length;
-    const totalPaid = paidCount * r.price;
+    const paidPayments = r.payments.filter(p => p.status === 'paid' && p.period <= CURRENT_PERIOD);
+    const paidCount = paidPayments.length;
+    const totalPaid = paidPayments.reduce((total, payment) => total + (payment.amount || r.price), 0);
     return { ...r, paidCount, totalPaid };
   }).sort((a, b) => b.totalPaid - a.totalPaid).slice(0, 12);
 
@@ -5720,8 +6331,9 @@ function showRoomDetail(building, roomNum) {
   if (!r) return;
   document.getElementById('modal-title').textContent = `Detail Kamar ${r.room_number} — ${r.building}`;
   const cur = r.payments.find(p => p.period === CURRENT_PERIOD);
-  const paidCount = r.payments.filter(p => p.status === 'paid').length;
-  const totalPaid = paidCount * r.price;
+  const paidPayments = r.payments.filter(p => p.status === 'paid' && p.period <= CURRENT_PERIOD);
+  const paidCount = paidPayments.length;
+  const totalPaid = paidPayments.reduce((total, payment) => total + (payment.amount || r.price), 0);
   const body = `
     <div class="kv"><div class="k">Gedung</div><div class="v">${r.building}</div></div>
     <div class="kv"><div class="k">Nomor Kamar</div><div class="v">Kamar ${r.room_number}</div></div>
@@ -5732,17 +6344,17 @@ function showRoomDetail(building, roomNum) {
     <div class="kv"><div class="k">Pembayaran ${CURRENT_PERIOD_LABEL}</div><div class="v">${cur ? `<span class="badge ${cur.status}">${payStatusLabel(cur.status)}</span> ${cur.date ? ' &middot; ' + fmtDateID(cur.date) : ''}` : '<span class="muted">&mdash;</span>'}</div></div>
     <div class="kv"><div class="k">Statistik</div><div class="v">${paidCount} dari ${PERIODS.length} bulan lunas &middot; Total ${fmtIDR(totalPaid)}</div></div>
     <h4>Riwayat Pembayaran</h4>
-    <div class="table-wrap" style="max-height:260px; overflow-y:auto;">
+    <div class="table-wrap room-payment-history">
       <table>
         <thead>
           <tr><th>Periode</th><th>Status</th><th class="text-right">Jumlah</th><th>Tanggal Bayar</th></tr>
         </thead>
         <tbody>
-          ${r.payments.map(p => `
+          ${[...r.payments].sort((a, b) => b.period.localeCompare(a.period)).map(p => `
             <tr>
               <td class="cell-strong">${p.label}</td>
-              <td><span class="badge ${p.status}">${payStatusLabel(p.status)}</span></td>
-              <td class="cell-num">${p.status === 'paid' ? fmtIDR(r.price) : '&mdash;'}</td>
+              <td><span class="badge ${p.status}">${payStatusLabel(p.status)}</span>${p.method ? `<div class="cell-sub">${p.method}</div>` : ''}</td>
+              <td class="cell-num">${p.status === 'paid' ? fmtIDR(p.amount || r.price) : '&mdash;'}</td>
               <td>${p.date ? fmtDateID(p.date) : '<span class="muted">&mdash;</span>'}</td>
             </tr>
           `).join('')}
@@ -5750,14 +6362,93 @@ function showRoomDetail(building, roomNum) {
       </table>
     </div>
     ${r.status === 'occupied' ? `
-      <div style="margin-top:18px;padding-top:16px;border-top:1px solid var(--ink-200)">
+      <div style="margin-top:18px;padding-top:16px;border-top:1px solid var(--ink-200);display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn btn-ghost" onclick="openRoomEditModal('${escapePaymentHtml(r.building)}','${escapePaymentHtml(r.room_number)}')">✎ Edit Harga / Deposit</button>
         <button class="btn" style="background:var(--red-600)" onclick="confirmCheckout('${r.building}','${r.room_number}')">🚪 Check-out Penyewa</button>
-        <div class="mou-hint" style="margin-top:8px">Kamar langsung berstatus Kosong dan tersedia untuk booking baru. Tersimpan otomatis, tidak perlu approval.</div>
       </div>
+      <div class="mou-hint" style="margin-top:8px">Kamar langsung berstatus Kosong dan tersedia untuk booking baru. Tersimpan otomatis, tidak perlu approval.</div>
     ` : ''}
   `;
   document.getElementById('modal-body').innerHTML = body;
   document.getElementById('modal-overlay').classList.add('show');
+}
+
+function openRoomEditModal(building, roomNum) {
+  const r = ALL_ROOMS.find(x => x.building === building && x.room_number === roomNum);
+  if (!r) return;
+  if (!r.id) {
+    showToast('Kamar ini belum tersinkron dengan database, muat ulang halaman lalu coba lagi.');
+    return;
+  }
+  const depoAmount = r.depo && typeof r.depo === 'object' ? Number(r.depo.amount) || 0 : Number(r.depo) || 0;
+  const depoRefundable = Boolean(r.depo && typeof r.depo === 'object' ? r.depo.refundable : false);
+  document.getElementById('modal-title').textContent = `Edit Kamar ${r.room_number} — ${r.building}`;
+  document.getElementById('modal-body').innerHTML = `
+    <div class="mou-grid">
+      <div class="mou-form-group span-2">
+        <label class="mou-label" for="room-edit-tenant">Nama Penyewa *</label>
+        <input type="text" class="mou-input" id="room-edit-tenant" maxlength="120" value="${escapePaymentHtml(r.tenant_name)}">
+      </div>
+      <div class="mou-form-group">
+        <label class="mou-label" for="room-edit-price">Harga Sewa / Bulan (Rp) *</label>
+        <input type="text" class="mou-input" id="room-edit-price" inputmode="numeric" data-currency-input value="${r.price}">
+      </div>
+      <div class="mou-form-group">
+        <label class="mou-label" for="room-edit-depo">Deposit (Rp) *</label>
+        <input type="text" class="mou-input" id="room-edit-depo" inputmode="numeric" data-currency-input value="${depoAmount}">
+      </div>
+      <div class="mou-form-group span-2">
+        <label class="mou-label" style="display:flex;align-items:center;gap:8px;font-weight:600;text-transform:none;letter-spacing:0">
+          <input type="checkbox" id="room-edit-refundable" style="width:auto" ${depoRefundable ? 'checked' : ''}> Deposit dapat dikembalikan (refundable)
+        </label>
+      </div>
+      <div class="mou-form-group span-2">
+        <label class="mou-label" for="room-edit-notes">Catatan (opsional)</label>
+        <textarea class="mou-textarea" id="room-edit-notes" maxlength="500">${escapePaymentHtml(r.notes || '')}</textarea>
+      </div>
+      <div class="mou-form-group span-2">
+        <div class="mou-hint" id="room-edit-message" role="status"></div>
+      </div>
+    </div>
+    <div class="mou-action-bar" style="margin-top:14px">
+      <button class="btn" id="room-edit-submit" type="button" onclick="saveRoomEdit('${escapePaymentHtml(r.id)}','${escapePaymentHtml(building)}','${escapePaymentHtml(roomNum)}')">Simpan Perubahan</button>
+      <button class="btn btn-ghost" type="button" onclick="showRoomDetail('${escapePaymentHtml(building)}','${escapePaymentHtml(roomNum)}')">Batal</button>
+    </div>
+  `;
+  setupCurrencyInputs(document.getElementById('modal-body'));
+  document.getElementById('modal-overlay').classList.add('show');
+}
+
+async function saveRoomEdit(roomId, building, roomNum) {
+  const tenantName = document.getElementById('room-edit-tenant').value.trim();
+  const price = parseCurrencyInput(document.getElementById('room-edit-price').value);
+  const depoAmount = parseCurrencyInput(document.getElementById('room-edit-depo').value);
+  const depoRefundable = document.getElementById('room-edit-refundable').checked;
+  const notes = document.getElementById('room-edit-notes').value.trim();
+  const message = document.getElementById('room-edit-message');
+  const button = document.getElementById('room-edit-submit');
+  if (!tenantName || !price) {
+    message.textContent = 'Nama penyewa dan harga sewa wajib diisi.';
+    return;
+  }
+  button.disabled = true;
+  message.textContent = 'Menyimpan perubahan...';
+  try {
+    await kosanApi(`/kosan/rooms/${encodeURIComponent(roomId)}`, {
+      method:'PATCH',
+      body:JSON.stringify({ tenant_name:tenantName, price, depo_amount:depoAmount, depo_refundable:depoRefundable, notes }),
+    });
+    await loadKosanRoomsFromDb();
+    renderPembayaran();
+    renderKamar();
+    renderHero();
+    renderStats();
+    showRoomDetail(building, roomNum);
+    showToast('Data kamar tersimpan.');
+  } catch (error) {
+    message.textContent = error.message || 'Gagal menyimpan perubahan.';
+    button.disabled = false;
+  }
 }
 function closeModal() {
   document.getElementById('modal-overlay').classList.remove('show');
@@ -6128,6 +6819,7 @@ async function submitKosanExpense(event){
     closeModal();
     showToast('Pengeluaran tersimpan.');
     await initPengeluaranView();
+    refreshKosanDashboardExpense();
   } catch(error) {
     status.style.color = 'var(--red-600)';
     status.textContent = error.message || 'Pengeluaran gagal disimpan.';
@@ -6543,6 +7235,82 @@ function mouConfirmSignature(id) {
 }
 
 // --- Form data & validasi ---
+// --- Foto KTP & foto diri penghuni ---
+const mouPhotos = { ktp:null, selfie:null };
+const MOU_PHOTO_EMPTY_LABEL = { ktp:'Belum ada foto KTP', selfie:'Belum ada foto diri' };
+
+function mouDrawWatermark(ctx, width, height) {
+  const size = Math.max(14, Math.round(width / 24));
+  const text = `KHUSUS MOU HOUSE IN BANDUNG · ${new Date().toLocaleDateString('id-ID')}`;
+  ctx.save();
+  ctx.translate(width / 2, height / 2);
+  ctx.rotate(-Math.PI / 7);
+  ctx.font = `bold ${size}px Arial, sans-serif`;
+  ctx.textAlign = 'center';
+  ctx.fillStyle = 'rgba(234, 88, 12, 0.33)';
+  for (let y = -height; y <= height; y += size * 3.2) ctx.fillText(text, 0, y);
+  ctx.restore();
+}
+
+async function mouCompressPhoto(file, withWatermark) {
+  if (!file?.type?.startsWith('image/')) throw new Error('Pilih file gambar.');
+  const bitmap = await createImageBitmap(file);
+  try {
+    const maxBytes = 100 * 1024;
+    let scale = Math.min(1, 1280 / Math.max(bitmap.width, bitmap.height));
+    let quality = 0.85;
+    for (let attempt = 0; attempt < 16; attempt++) {
+      const canvas = document.createElement('canvas');
+      canvas.width = Math.max(1, Math.round(bitmap.width * scale));
+      canvas.height = Math.max(1, Math.round(bitmap.height * scale));
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = '#fff';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+      if (withWatermark) mouDrawWatermark(ctx, canvas.width, canvas.height);
+      const dataUrl = canvas.toDataURL('image/jpeg', quality);
+      if (dataUrl.length * 0.75 < maxBytes) return { data:dataUrl, width:canvas.width, height:canvas.height };
+      if (quality > 0.45) quality -= 0.1;
+      else { scale *= 0.82; quality = 0.8; }
+    }
+    throw new Error('Foto terlalu besar dan tidak dapat dikompres.');
+  } finally {
+    bitmap.close?.();
+  }
+}
+
+function mouRenderPhoto(kind) {
+  const slot = document.getElementById(`mou-photo-${kind}-slot`);
+  if (!slot) return;
+  const photo = mouPhotos[kind];
+  slot.classList.remove('error');
+  slot.classList.toggle('filled', Boolean(photo));
+  slot.innerHTML = photo
+    ? `<img src="${photo.data}" alt="${kind === 'ktp' ? 'Foto KTP' : 'Foto diri penghuni'}"><div class="mou-hint">${escapePaymentHtml(photo.by)} · ${escapePaymentHtml(photo.date)}</div>`
+    : `<span class="muted">${MOU_PHOTO_EMPTY_LABEL[kind]}</span>`;
+}
+
+async function mouHandlePhoto(kind, event, by) {
+  const file = event.target.files?.[0];
+  event.target.value = '';
+  if (!file) return;
+  const slot = document.getElementById(`mou-photo-${kind}-slot`);
+  slot.innerHTML = '<span class="muted">Memproses foto...</span>';
+  try {
+    const compressed = await mouCompressPhoto(file, kind === 'ktp');
+    mouPhotos[kind] = { ...compressed, by, date:new Date().toLocaleString('id-ID', { dateStyle:'medium', timeStyle:'short' }) };
+    showToast(kind === 'ktp' ? 'Foto KTP tersimpan (sudah diberi watermark).' : 'Foto diri tersimpan.');
+  } catch (error) {
+    showToast(error.message || 'Foto gagal diproses.');
+  }
+  mouRenderPhoto(kind);
+}
+
+function mouRemovePhoto(kind) {
+  mouPhotos[kind] = null;
+  mouRenderPhoto(kind);
+}
+
 function mouGetFormData() {
   const v = id => (document.getElementById(id) || {}).value || '';
   return {
@@ -6586,8 +7354,14 @@ function mouValidate() {
   if (!document.getElementById('mou-agree-checkbox').checked) missing++;
   if (!mouSignatures.penghuni.data) missing++;
   if (!mouSignatures.management.data) missing++;
+  ['ktp', 'selfie'].forEach(kind => {
+    if (!mouPhotos[kind]) {
+      document.getElementById(`mou-photo-${kind}-slot`)?.classList.add('error');
+      missing++;
+    }
+  });
   if (missing > 0) {
-    showToast('Lengkapi semua field wajib (*), centang persetujuan, dan kedua tanda tangan');
+    showToast('Lengkapi semua field wajib (*), foto KTP & foto diri, centang persetujuan, dan kedua tanda tangan');
     return false;
   }
   return true;
@@ -6644,6 +7418,13 @@ function mouBuildDocHTML(data) {
         <div class="mou-doc-bio-grid">${bioRows}</div>
       </div>
       <div class="mou-doc-section">
+        <h5>Lampiran Identitas Penghuni</h5>
+        <div class="mou-doc-photos">
+          <figure>${mouPhotos.ktp ? `<img src="${mouPhotos.ktp.data}" alt="Foto KTP">` : '<span style="color:#cbd5e1">Belum ada foto KTP</span>'}<figcaption>Foto KTP${mouPhotos.ktp ? ` · ${escapePaymentHtml(mouPhotos.ktp.by)}` : ''}</figcaption></figure>
+          <figure>${mouPhotos.selfie ? `<img src="${mouPhotos.selfie.data}" alt="Foto diri penghuni">` : '<span style="color:#cbd5e1">Belum ada foto diri</span>'}<figcaption>Foto Diri${mouPhotos.selfie ? ` · ${escapePaymentHtml(mouPhotos.selfie.by)}` : ''}</figcaption></figure>
+        </div>
+      </div>
+      <div class="mou-doc-section">
         <h5>Deposit &amp; Full Payment Methode</h5>
         <div class="mou-doc-bio-row"><div class="mou-doc-bio-key">Transfer via Rekening</div><div class="mou-doc-bio-val">${MOU_BANK_INFO.bank} ${MOU_BANK_INFO.rekening} a.n ${MOU_BANK_INFO.an}</div></div>
       </div>
@@ -6691,6 +7472,7 @@ function mouDownloadPDF() {
   const data = mouGetFormData();
   const pageW = 210, pageH = 297, margin = 20;
   const contentW = pageW - margin * 2;
+  const MOU_PDF_PAGES = 6;
   const inkDark = [28, 25, 23];
   const orange = [234, 88, 12];
 
@@ -6769,7 +7551,7 @@ function mouDownloadPDF() {
   ];
   doc.setFontSize(8.5);
   bioRows.forEach((row) => {
-    if (y > pageH - 60) { drawFooter(1, 5); doc.addPage(); drawHeader('Biodata Penghuni Kost (lanjutan)'); y = 40; }
+    if (y > pageH - 60) { drawFooter(1, MOU_PDF_PAGES); doc.addPage(); drawHeader('Biodata Penghuni Kost (lanjutan)'); y = 40; }
     doc.setFont('helvetica','bold'); doc.setTextColor(100,100,100);
     doc.text(row[0] + ':', margin, y);
     doc.setFont('helvetica','normal'); doc.setTextColor(...inkDark);
@@ -6779,7 +7561,7 @@ function mouDownloadPDF() {
   });
 
   y += 6;
-  if (y > pageH - 55) { drawFooter(1, 5); doc.addPage(); drawHeader('Biodata Penghuni Kost (lanjutan)'); y = 40; }
+  if (y > pageH - 55) { drawFooter(1, MOU_PDF_PAGES); doc.addPage(); drawHeader('Biodata Penghuni Kost (lanjutan)'); y = 40; }
   doc.setFont('helvetica','bold'); doc.setFontSize(8.5); doc.setTextColor(...inkDark);
   doc.text('DEPOSIT & FULL PAYMENT METHODE', margin, y);
   y += 6;
@@ -6794,7 +7576,7 @@ function mouDownloadPDF() {
   doc.text(data.bio.nama || '—', margin, y + 31);
   doc.setFont('helvetica','normal'); doc.setFontSize(7.5); doc.setTextColor(100,100,100);
   doc.text('Tanda tangan Penghuni Kost, ' + data.tanggal, margin, y + 36);
-  drawFooter(1, 5);
+  drawFooter(1, MOU_PDF_PAGES);
 
   // ── HALAMAN 2 & 3: Peraturan dan Tata Tertib Kost (1-10 / 11-20) ──
   const rules = MOU_POLICY_SECTIONS[0].items;
@@ -6807,12 +7589,12 @@ function mouDownloadPDF() {
     chunk.forEach((item, i) => {
       const num = ci * 10 + i + 1;
       const lines = doc.splitTextToSize(`${num}. ${item}`, contentW);
-      if (yy + lines.length * 4.6 > pageH - 30) { drawFooter(2 + ci, 5); doc.addPage(); drawHeader('Peraturan dan Tata Tertib Kost (lanjutan)'); yy = 40; }
+      if (yy + lines.length * 4.6 > pageH - 30) { drawFooter(2 + ci, MOU_PDF_PAGES); doc.addPage(); drawHeader('Peraturan dan Tata Tertib Kost (lanjutan)'); yy = 40; }
       doc.text(lines, margin, yy);
       yy += lines.length * 4.6 + 3;
     });
     paraf(pageH - 34);
-    drawFooter(2 + ci, 5);
+    drawFooter(2 + ci, MOU_PDF_PAGES);
   });
 
   // ── HALAMAN 4: Ketentuan Deposit dan Check-Out ──
@@ -6826,7 +7608,7 @@ function mouDownloadPDF() {
     y4 += lines.length * 4.6 + 3;
   });
   paraf(pageH - 34);
-  drawFooter(4, 5);
+  drawFooter(4, MOU_PDF_PAGES);
 
   // ── HALAMAN 5: Ketentuan Bayar Sewa Kamar Kost + Tanda Tangan ──
   doc.addPage();
@@ -6844,7 +7626,7 @@ function mouDownloadPDF() {
   doc.text(noteLines, margin, y5);
   y5 += noteLines.length * 4.2 + 12;
 
-  if (y5 > pageH - 70) { drawFooter(5, 5); doc.addPage(); drawHeader('Tanda Tangan Serah Terima'); y5 = 40; }
+  if (y5 > pageH - 70) { drawFooter(5, MOU_PDF_PAGES); doc.addPage(); drawHeader('Tanda Tangan Serah Terima'); y5 = 40; }
   doc.setFont('helvetica','bold'); doc.setFontSize(9); doc.setTextColor(...inkDark);
   doc.text('SERAH TERIMA', pageW / 2, y5, { align: 'center' });
   y5 += 10;
@@ -6865,7 +7647,33 @@ function mouDownloadPDF() {
     const lbl = doc.splitTextToSize(p.label, sigW);
     doc.text(lbl, x + sigW/2, y5 + 38, { align: 'center' });
   });
-  drawFooter(doc.internal.getNumberOfPages(), doc.internal.getNumberOfPages());
+  drawFooter(doc.internal.getNumberOfPages(), MOU_PDF_PAGES);
+
+  // ── HALAMAN 6: Lampiran Foto KTP & Foto Diri ──
+  doc.addPage();
+  drawHeader('Lampiran Identitas Penghuni');
+  let y6 = 40;
+  const boxW = contentW, boxH = 95;
+  [
+    { photo:mouPhotos.ktp, label:'FOTO KTP / IDENTITAS' },
+    { photo:mouPhotos.selfie, label:'FOTO DIRI PENGHUNI' },
+  ].forEach(({ photo, label }) => {
+    doc.setFont('helvetica','bold'); doc.setFontSize(9); doc.setTextColor(...inkDark);
+    doc.text(label, margin, y6);
+    doc.setFont('helvetica','normal'); doc.setFontSize(7.5); doc.setTextColor(120,120,120);
+    if (photo) doc.text(`${photo.by} · ${photo.date}`, pageW - margin, y6, { align:'right' });
+    y6 += 4;
+    if (photo) {
+      const ratio = Math.min(boxW / photo.width, boxH / photo.height);
+      const w = photo.width * ratio, h = photo.height * ratio;
+      try { doc.addImage(photo.data, 'JPEG', margin + (boxW - w) / 2, y6, w, h); } catch(e) {}
+    }
+    doc.setDrawColor(220,220,220); doc.rect(margin, y6, boxW, boxH);
+    y6 += boxH + 12;
+  });
+  doc.setFont('helvetica','italic'); doc.setFontSize(7.5); doc.setTextColor(120,120,120);
+  doc.text(doc.splitTextToSize('Data identitas ini dijaga kerahasiaannya dan hanya digunakan untuk verifikasi penghuni serta arsip MOU House in Bandung.', contentW), margin, pageH - 22);
+  drawFooter(doc.internal.getNumberOfPages(), MOU_PDF_PAGES);
 
   const filename = `MOU_${(data.nomor || 'DRAFT').replace(/[^a-zA-Z0-9]/g,'_')}.pdf`;
   doc.save(filename);
@@ -6885,6 +7693,7 @@ function mouSaveDraft() {
     fields,
     agree: document.getElementById('mou-agree-checkbox').checked,
     signatures: mouSignatures,
+    photos: mouPhotos,
   };
   try {
     localStorage.setItem('mou_draft', JSON.stringify(draft));
@@ -6904,6 +7713,11 @@ function mouLoadDraft() {
       if (el) el.value = val;
     });
     document.getElementById('mou-agree-checkbox').checked = !!draft.agree;
+    ['ktp', 'selfie'].forEach(kind => {
+      const photo = (draft.photos || {})[kind];
+      mouPhotos[kind] = photo && photo.data ? photo : null;
+      mouRenderPhoto(kind);
+    });
     ['penghuni','management'].forEach(id => {
       const sig = (draft.signatures || {})[id];
       if (sig && sig.data) {
@@ -6999,6 +7813,7 @@ function applyKosanRoomsFromApi(apiRooms) {
   mergedRooms.forEach(row => {
     if (!grouped.has(row.building)) grouped.set(row.building, { name: row.building, code: row.building_code || row.buildingCode || row.building, rooms: [] });
     grouped.get(row.building).rooms.push({
+      id: row.id,
       building: row.building,
       room_number: row.room_number,
       room_label: row.room_label || `Kamar ${row.room_number}`,
@@ -7011,6 +7826,20 @@ function applyKosanRoomsFromApi(apiRooms) {
   });
   BUILDINGS = [...grouped.values()];
   ALL_ROOMS = BUILDINGS.flatMap(b => b.rooms.map(r => ({ ...r, building: b.name, buildingCode: b.code })));
+  const periodByKey = new Map(PERIODS.map(period => [period.key, period]));
+  ALL_ROOMS.forEach(room => room.payments.forEach(payment => {
+    if (payment.period > CURRENT_PERIOD && !periodByKey.has(payment.period)) {
+      periodByKey.set(payment.period, { key:payment.period, label:payment.label || shiftBillingPeriod(payment.period, 0).label });
+    }
+  }));
+  PAYMENT_PERIODS = [...periodByKey.values()].sort((left, right) => left.key.localeCompare(right.key));
+  const periodSelect = document.getElementById('pay-period');
+  if (periodSelect) {
+    const selected = PAYMENT_PERIODS.some(period => period.key === payPeriod) ? payPeriod : CURRENT_PERIOD;
+    periodSelect.innerHTML = PAYMENT_PERIODS.map(period => `<option value="${period.key}">${period.label}</option>`).join('');
+    periodSelect.value = selected;
+    payPeriod = selected;
+  }
 }
 
 async function loadKosanRoomsFromDb() {
@@ -7034,7 +7863,7 @@ async function loadKosanRoomsFromDb() {
     }
     return true;
   } catch (e) {
-    console.warn('Gagal memuat data kamar dari database. Pastikan migrations/migration-kosan-rooms.sql sudah dijalankan di D1 dan Worker terbaru sudah dideploy.', e);
+    console.warn('Gagal memuat data kamar dari database. Pastikan migration-kosan-rooms.sql, migration-kosan-payment-batches.sql, dan migration-kosan-rent-income-category.sql sudah dijalankan di D1 serta Worker terbaru sudah dideploy.', e);
     showToast('Gagal memuat data kamar dari database: ' + e.message);
     return false;
   }
@@ -7157,13 +7986,14 @@ async function tkGenerate() {
       : '';
   if (roomSelection.includes('||')) building = roomSelection.split('||')[0];
   const tenantName = document.getElementById('tk-tenant-name').value.trim();
-  const price = Number(document.getElementById('tk-price').value) || 0;
-  const depo = Number(document.getElementById('tk-depo').value) || 0;
+  const price = parseCurrencyInput(document.getElementById('tk-price').value);
+  const depo = parseCurrencyInput(document.getElementById('tk-depo').value);
+  const startDate = document.getElementById('tk-start-date').value;
   const notes = document.getElementById('tk-notes').value.trim();
   const statusEl = document.getElementById('tk-generate-status');
 
-  if (!building || !roomSelection || !roomNumber || !price) {
-    statusEl.textContent = 'Pilih gedung, kamar kosong atau nomor kamar baru, dan isi harga sewa.';
+  if (!building || !roomSelection || !roomNumber || !price || !/^\d{4}-\d{2}-\d{2}$/.test(startDate)) {
+    statusEl.textContent = 'Pilih gedung, kamar kosong atau nomor kamar baru, isi harga sewa, dan tanggal mulai sewa.';
     showToast('Lengkapi field wajib (*) terlebih dahulu');
     return;
   }
@@ -7183,13 +8013,14 @@ async function tkGenerate() {
     showToast('Isi deposit dengan nominal lebih dari Rp0.');
     return;
   }
+  if (!confirm(`Kirim pengajuan ${tenantName} di ${building} Kamar ${roomNumber}?\n\nHarga sewa: ${fmtIDR(price)}/bulan\nDeposit: ${fmtIDR(depo)}\nMulai sewa: ${fmtDateID(startDate)}`)) return;
   statusEl.textContent = 'Mengirim pengajuan...';
   try {
     await kosanApi('/kosan/rooms', {
       method: 'POST',
       body: JSON.stringify({
         building, building_code: building.toUpperCase().replace(/\s+/g, ''),
-        room_number: roomNumber, tenant_name: tenantName, price, depo, status:'occupied', notes,
+        room_number: roomNumber, tenant_name: tenantName, price, depo, start_date: startDate, status:'occupied', notes,
       }),
     });
     statusEl.textContent = 'Pengajuan terkirim, menunggu approval Master/Admin.';
@@ -7198,7 +8029,7 @@ async function tkGenerate() {
     document.getElementById('tk-room-number').value = '';
     document.getElementById('tk-new-room-number').classList.add('hidden');
     tkPopulateRoomOptions();
-    document.getElementById('tk-depo').value = 500000;
+    ['tk-depo','tk-start-date'].forEach(id => { document.getElementById(id).value = ''; });
     tkLoadQueue();
   } catch (e) {
     statusEl.textContent = e.message || 'Gagal menghubungi server.';
@@ -7232,14 +8063,19 @@ async function tkLoadQueue() {
 
 async function tkDecide(id, action) {
   try {
-    await kosanApi(`/kosan/rooms/${encodeURIComponent(id)}/${action}`, { method: 'POST' });
-    showToast(action === 'approve' ? 'Pengajuan disetujui & masuk Database Kosan' : 'Pengajuan ditolak');
-    tkLoadQueue();
+    const result = await kosanApi(`/kosan/rooms/${encodeURIComponent(id)}/${action}`, { method: 'POST' });
     if (action === 'approve') {
-      await loadKosanRoomsFromDb();
+      const roomsLoaded = await loadKosanRoomsFromDb();
       populateBuildingSelects();
       renderStats();
+      const roomLoaded = result.data?.room_id && ALL_ROOMS.some(room => room.id === result.data.room_id);
+      showToast(roomsLoaded && roomLoaded
+        ? 'Pengajuan disetujui & masuk Database Kosan dan pilihan MOU'
+        : 'Persetujuan tersimpan, tetapi data kamar belum terbaca dari D1. Muat ulang; jika tetap belum muncul, periksa Worker/D1.');
+    } else {
+      showToast('Pengajuan ditolak');
     }
+    await tkLoadQueue();
   } catch (e) {
     showToast('Gagal memproses: ' + e.message);
     if (getDashboardToken()) tkLoadQueue();
@@ -7599,10 +8435,20 @@ function boot() {
 // INIT
 // ==========================================================
 async function init() {
+  setupCurrencyInputs(document);
   await loadKosanRoomsFromDb();
   populateBuildingSelects();
+  document.querySelector('#penyewa-paystatus option[value="paid"]').textContent = `Sudah Bayar (${CURRENT_PERIOD_LABEL})`;
+  document.querySelector('#penyewa-paystatus option[value="unpaid"]').textContent = `Belum Bayar (${CURRENT_PERIOD_LABEL})`;
+  document.getElementById('penyewa-paystatus-head').textContent = `Status Bayar (${CURRENT_PERIOD_LABEL})`;
+  document.getElementById('current-period-label').textContent = CURRENT_PERIOD_LABEL;
+  document.getElementById('info-period-start').textContent = PERIODS[0].label;
+  document.getElementById('info-period-count').textContent = `${PERIODS.length} Periode`;
+  document.getElementById('report-period-count').textContent = PERIODS.length;
+  document.getElementById('payment-matrix-period-count').textContent = PERIODS.length;
+  document.getElementById('inv-periode').placeholder = CURRENT_PERIOD_LABEL;
   // Populate period select
-  document.getElementById('pay-period').innerHTML = PERIODS.map(p => 
+  document.getElementById('pay-period').innerHTML = PAYMENT_PERIODS.map(p => 
     `<option value="${p.key}" ${p.key===CURRENT_PERIOD?'selected':''}>${p.label}</option>`
   ).join('');
   // Period chip

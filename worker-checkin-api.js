@@ -70,17 +70,65 @@ function slug(value) {
     .replace(/[^a-z0-9_-]/g, '');
 }
 
-// Kalender billing kos (Kamar/Penyewa/Pembayaran di kosan.html). Diperbarui manual
-// tiap kali periode bisnis maju; harus tetap sinkron dengan DATA.meta di kosan.html.
-const KOSAN_PERIODS = [
-  { key:'2025-03', label:'Maret 2025' }, { key:'2025-04', label:'April 2025' }, { key:'2025-05', label:'Mei 2025' },
-  { key:'2025-06', label:'Juni 2025' }, { key:'2025-07', label:'Juli 2025' }, { key:'2025-08', label:'Agustus 2025' },
-  { key:'2025-09', label:'September 2025' }, { key:'2025-10', label:'Oktober 2025' }, { key:'2025-11', label:'November 2025' },
-  { key:'2025-12', label:'Desember 2025' }, { key:'2026-01', label:'Januari 2026' }, { key:'2026-02', label:'Februari 2026' },
-  { key:'2026-03', label:'Maret 2026' }, { key:'2026-04', label:'April 2026' }, { key:'2026-05', label:'Mei 2026' },
-  { key:'2026-06', label:'Juni 2026' }, { key:'2026-07', label:'Juli 2026' },
+// Periode billing kos mengikuti bulan berjalan di zona waktu Jakarta.
+const KOSAN_MONTHS_ID = [
+  'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+  'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember',
 ];
-const KOSAN_CURRENT_PERIOD = '2026-07';
+
+function getKosanCurrentPeriod() {
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'Asia/Jakarta', year: 'numeric', month: '2-digit',
+  }).formatToParts(new Date());
+  const year = parts.find(part => part.type === 'year').value;
+  const month = parts.find(part => part.type === 'month').value;
+  return `${year}-${month}`;
+}
+
+const KOSAN_CURRENT_PERIOD = getKosanCurrentPeriod();
+const KOSAN_PERIODS = (() => {
+  const [endYear, endMonth] = KOSAN_CURRENT_PERIOD.split('-').map(Number);
+  const cursor = new Date(Date.UTC(2025, 2, 1));
+  const periods = [];
+  while (cursor.getUTCFullYear() < endYear ||
+    (cursor.getUTCFullYear() === endYear && cursor.getUTCMonth() + 1 <= endMonth)) {
+    const year = cursor.getUTCFullYear();
+    const month = cursor.getUTCMonth() + 1;
+    periods.push({
+      key: `${year}-${String(month).padStart(2, '0')}`,
+      label: `${KOSAN_MONTHS_ID[month - 1]} ${year}`,
+    });
+    cursor.setUTCMonth(cursor.getUTCMonth() + 1);
+  }
+  return periods;
+})();
+
+function getKosanPeriod(key) {
+  const match = String(key || '').match(/^(\d{4})-(0[1-9]|1[0-2])$/);
+  if (!match) return null;
+  const year = Number(match[1]);
+  const month = Number(match[2]);
+  return { key:match[0], label:`${KOSAN_MONTHS_ID[month - 1]} ${year}` };
+}
+
+function shiftKosanPeriod(key, offset) {
+  const [year, month] = String(key).split('-').map(Number);
+  const shifted = new Date(Date.UTC(year, month - 1 + offset, 1));
+  const nextYear = shifted.getUTCFullYear();
+  const nextMonth = shifted.getUTCMonth() + 1;
+  return {
+    key:`${nextYear}-${String(nextMonth).padStart(2, '0')}`,
+    label:`${KOSAN_MONTHS_ID[nextMonth - 1]} ${nextYear}`,
+  };
+}
+
+function getKosanBillingDate() {
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone:'Asia/Makassar', year:'numeric', month:'2-digit', day:'2-digit',
+  }).formatToParts(new Date());
+  const value = type => parts.find(part => part.type === type).value;
+  return `${value('year')}-${value('month')}-${value('day')}`;
+}
 
 function fileKeyFromPath(pathname) {
   let key = pathname.slice('/files/'.length);
@@ -2623,16 +2671,39 @@ export default {
           env.DB.prepare('SELECT * FROM kosan_rooms ORDER BY building, room_number').all(),
           env.DB.prepare('SELECT * FROM kosan_room_payments').all(),
         ]);
+        let batchesResult = { results:[] };
+        try {
+          batchesResult = await env.DB.prepare('SELECT * FROM kosan_payment_batches').all();
+        } catch (error) {
+          if (!/no such table: kosan_payment_batches/i.test(String(error?.message || error))) throw error;
+        }
         const paymentsByRoom = new Map();
         for (const row of paymentsResult.results || []) {
           if (!paymentsByRoom.has(row.room_id)) paymentsByRoom.set(row.room_id, new Map());
           paymentsByRoom.get(row.room_id).set(row.period, row);
         }
+        const batchesByRoomPeriod = new Map();
+        for (const batch of batchesResult.results || []) {
+          for (let index = 0; index < Number(batch.months_paid || 0); index++) {
+            const period = shiftKosanPeriod(batch.start_period, index);
+            batchesByRoomPeriod.set(`${batch.room_id}\u0000${period.key}`, batch);
+          }
+        }
         const rooms = (roomsResult.results || []).map(room => {
           const existing = paymentsByRoom.get(room.id) || new Map();
-          const payments = KOSAN_PERIODS.map(period => {
+          const periodKeys = new Set(KOSAN_PERIODS.map(period => period.key));
+          existing.forEach((row, periodKey) => {
+            if (periodKey > KOSAN_CURRENT_PERIOD) periodKeys.add(periodKey);
+          });
+          const payments = [...periodKeys].sort().map(periodKey => {
+            const period = getKosanPeriod(periodKey);
             const row = existing.get(period.key);
-            return { period:period.key, label:period.label, status:row?.status || 'unpaid', date:row?.date || null };
+            const batch = batchesByRoomPeriod.get(`${room.id}\u0000${period.key}`);
+            return {
+              period:period.key, label:period.label, status:row?.status || 'unpaid', date:row?.date || null,
+              amount:batch ? Math.round(Number(batch.total_amount) / Number(batch.months_paid)) : null,
+              method:batch?.method || '', notes:batch?.notes || '', batch_id:batch?.id || '',
+            };
           });
           return {
             id:room.id, building:room.building, building_code:room.building_code, room_number:room.room_number,
@@ -2642,6 +2713,131 @@ export default {
           };
         });
         return json({ ok:true, data:rooms });
+      }
+
+      if (request.method === 'POST' && path === '/kosan/room-payments') {
+        const adminSecret = String(env.ADMIN_DASHBOARD_SECRET || '').trim();
+        const tokenData = await getAdminTokenPayload(request, adminSecret);
+        if (!hasManagementRole(tokenData)) return bad('Hanya Master atau Admin yang dapat mencatat pembayaran kos.', 403);
+        const body = await request.json();
+        let roomId = String(body.room_id || '').trim();
+        const building = String(body.building || '').trim();
+        const roomNumber = String(body.room_number || '').trim();
+        const startPeriod = String(body.start_period || '').trim();
+        const monthsPaid = Number(body.months_paid);
+        const receivedDate = String(body.received_date || '').trim();
+        const method = String(body.method || '').trim();
+        const notes = String(body.notes || '').trim();
+        const validMethods = ['Transfer BCA', 'Transfer Bank Lain', 'Tunai', 'Lainnya'];
+        if ((!roomId && (!building || !roomNumber)) || !getKosanPeriod(startPeriod) || !Number.isInteger(monthsPaid) || monthsPaid < 1 || monthsPaid > 12 ||
+            !/^\d{4}-\d{2}-\d{2}$/.test(receivedDate) || receivedDate > getKosanBillingDate() ||
+            !validMethods.includes(method) || notes.length > 500) {
+          return bad('Kamar, bulan, jumlah bulan, tanggal, metode, atau catatan pembayaran tidak valid.');
+        }
+        const findRoom = () => roomId
+          ? env.DB.prepare('SELECT id, building, room_number, tenant_name, price, status FROM kosan_rooms WHERE id = ?').bind(roomId).first()
+          : env.DB.prepare('SELECT id, building, room_number, tenant_name, price, status FROM kosan_rooms WHERE building = ? AND room_number = ?').bind(building, roomNumber).first();
+        let room = await findRoom();
+        // Kamar yang baru ada di snapshot lokal kosan.html dibuat dulu di D1, sama seperti alur checkout.
+        if (!room && !roomId && body.room && typeof body.room === 'object') {
+          const snapshot = body.room;
+          const tenantName = String(snapshot.tenant_name || '').trim();
+          const price = Number(snapshot.price);
+          const depoAmount = Number(snapshot.depo_amount || 0);
+          const snapshotNotes = String(snapshot.notes || '').trim();
+          if (!tenantName || tenantName.length > 120 || snapshotNotes.length > 500 ||
+              !Number.isSafeInteger(price) || price <= 0 || !Number.isSafeInteger(depoAmount) || depoAmount < 0) {
+            return bad('Data kamar dari halaman tidak valid untuk dicatat pembayarannya.');
+          }
+          const now = new Date().toISOString();
+          const newRoomId = `room-${crypto.randomUUID()}`;
+          await env.DB.prepare(`
+            INSERT OR IGNORE INTO kosan_rooms
+              (id, building, building_code, room_number, room_label, tenant_name, price, depo_amount, depo_refundable, status, notes, created_at, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'occupied', ?, ?, ?)
+          `).bind(newRoomId, building, String(snapshot.building_code || '').trim().slice(0, 20), roomNumber,
+            String(snapshot.room_label || `Kamar ${roomNumber}`).trim().slice(0, 100), tenantName, price, depoAmount,
+            snapshot.depo_refundable ? 1 : 0, snapshotNotes, now, now).run();
+          room = await findRoom();
+          if (room) {
+            const historyStatements = (Array.isArray(snapshot.payments) ? snapshot.payments : []).flatMap(payment => {
+              const period = getKosanPeriod(String(payment?.period || '').trim());
+              if (!period) return [];
+              const paymentStatus = ['paid', 'unpaid', 'checkout', 'none'].includes(payment.status) ? payment.status : 'unpaid';
+              const paymentDate = typeof payment.date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(payment.date) ? payment.date : null;
+              return [env.DB.prepare(`
+                INSERT OR IGNORE INTO kosan_room_payments (id, room_id, period, label, status, date, updated_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+              `).bind(`${room.id}-${period.key}`, room.id, period.key, period.label, paymentStatus, paymentDate, now)];
+            });
+            for (let offset = 0; offset < historyStatements.length; offset += 50) {
+              await env.DB.batch(historyStatements.slice(offset, offset + 50));
+            }
+          }
+        }
+        if (!room || room.status !== 'occupied' || !room.tenant_name) return bad('Kamar tidak ditemukan atau tidak sedang ditempati.', 404);
+        roomId = room.id;
+        const monthlyPrice = Number(room.price);
+        const totalAmount = monthlyPrice * monthsPaid;
+        if (!Number.isSafeInteger(monthlyPrice) || monthlyPrice <= 0 || !Number.isSafeInteger(totalAmount)) {
+          return bad('Tarif sewa kamar tidak valid.');
+        }
+        const periods = Array.from({ length:monthsPaid }, (_, index) => shiftKosanPeriod(startPeriod, index));
+        const maximumPeriod = shiftKosanPeriod(KOSAN_CURRENT_PERIOD, 12).key;
+        if (periods[0].key < KOSAN_PERIODS[0].key || periods.at(-1).key > maximumPeriod) {
+          return bad('Periode pembayaran harus berada dalam rentang riwayat kos dan maksimal 12 bulan ke depan.');
+        }
+        const placeholders = periods.map(() => '?').join(', ');
+        const existingPayments = await env.DB.prepare(`
+          SELECT period, status FROM kosan_room_payments
+          WHERE room_id = ? AND period IN (${placeholders})
+        `).bind(roomId, ...periods.map(period => period.key)).all();
+        const blockedPeriods = (existingPayments.results || [])
+          .filter(payment => ['paid', 'checkout'].includes(payment.status))
+          .map(payment => getKosanPeriod(payment.period)?.label || payment.period);
+        if (blockedPeriods.length) return bad(`Tidak dapat mencatat ulang periode: ${blockedPeriods.join(', ')}.` , 409);
+
+        const batchId = crypto.randomUUID();
+        const now = new Date().toISOString();
+        const periodRange = periods.length === 1
+          ? periods[0].label
+          : `${periods[0].label} - ${periods.at(-1).label}`;
+        const description = `Sewa kos ${room.building} Kamar ${room.room_number} (${periodRange}, ${monthsPaid} bulan)`;
+        const statements = [
+          env.DB.prepare(`
+            INSERT INTO kosan_payment_batches (
+              id, room_id, start_period, months_paid, received_date, total_amount, method, notes, created_by, created_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          `).bind(batchId, room.id, startPeriod, monthsPaid, receivedDate, totalAmount, method, notes, tokenData.account_id || '', now),
+          env.DB.prepare(`
+            INSERT INTO finance_entries (
+              id, kind, category_id, category_name, property_id, property_name,
+              entry_date, amount, description, payee, recurrence, created_by, created_at
+            ) VALUES (?, 'income', 'income-kosan-rent', 'Sewa Kos', NULL, ?, ?, ?, ?, ?, 'once', 'kosan-payment', ?)
+          `).bind(`kosan-rent-${batchId}`, room.building, receivedDate, totalAmount, description, room.tenant_name, now),
+          ...periods.map(period => env.DB.prepare(`
+            INSERT INTO kosan_room_payments (id, room_id, period, label, status, date, updated_at)
+            VALUES (?, ?, ?, ?, 'paid', ?, ?)
+            ON CONFLICT(room_id, period) DO UPDATE SET status = 'paid', date = excluded.date, updated_at = excluded.updated_at
+          `).bind(`${room.id}-${period.key}`, room.id, period.key, period.label, receivedDate, now)),
+        ];
+        try {
+          await env.DB.batch(statements);
+        } catch (error) {
+          if (/no such table: kosan_payment_batches|no such column: payment_batch_id/i.test(String(error?.message || error))) {
+            return bad('Fitur pencatatan pembayaran belum disiapkan. Jalankan migration-kosan-payment-batches.sql di D1.', 503);
+          }
+          if (/no such row|FOREIGN KEY constraint failed|no such table: finance_categories/i.test(String(error?.message || error))) {
+            return bad('Kategori pemasukan Sewa Kos belum tersedia. Jalankan migration-kosan-rent-income-category.sql di D1.', 503);
+          }
+          throw error;
+        }
+        return json({ ok:true, data:{
+          id:batchId, room_id:room.id, building:room.building, room_number:room.room_number,
+          tenant_name:room.tenant_name, start_period:startPeriod, end_period:periods.at(-1).key,
+          period_label:periodRange, months_paid:monthsPaid, received_date:receivedDate,
+          total_amount:totalAmount, method, notes,
+        } }, 201);
       }
 
       if (request.method === 'POST' && path === '/kosan/rooms') {
@@ -2657,17 +2853,26 @@ export default {
         const depo = Number(body.depo || 0);
         const status = 'occupied';
         const notes = String(body.notes || '').trim();
+        const startDate = String(body.start_date || '').trim();
         if (!building || building.length > 100) return bad('Nama kost/gedung wajib diisi.');
         if (!roomNumber || roomNumber.length > 20) return bad('Nomor kamar wajib diisi.');
         if (!tenantName || tenantName.length > 120) return bad('Nama penyewa wajib diisi dan maksimal 120 karakter.');
         if (!Number.isSafeInteger(price) || price <= 0) return bad('Harga sewa wajib diisi dan valid.');
         if (!Number.isSafeInteger(depo) || depo <= 0) return bad('Deposit wajib lebih dari Rp0.');
         if (notes.length > 500) return bad('Catatan terlalu panjang.');
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(startDate)) return bad('Tanggal mulai sewa wajib diisi dan valid.');
         const id = crypto.randomUUID();
-        await env.DB.prepare(`
-          INSERT INTO kosan_room_requests (id, building, building_code, room_number, tenant_name, price, depo, status, notes, decision_status, submitted_by, created_at)
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?, ?)
-        `).bind(id, building, buildingCode, roomNumber, tenantName, price, depo, status, notes, String(tokenData.account_id || ''), new Date().toISOString()).run();
+        try {
+          await env.DB.prepare(`
+            INSERT INTO kosan_room_requests (id, building, building_code, room_number, tenant_name, price, depo, status, notes, start_date, decision_status, submitted_by, created_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?, ?)
+          `).bind(id, building, buildingCode, roomNumber, tenantName, price, depo, status, notes, startDate, String(tokenData.account_id || ''), new Date().toISOString()).run();
+        } catch (error) {
+          if (/no such column: start_date/i.test(String(error?.message || error))) {
+            return bad('Kolom tanggal mulai sewa belum tersedia. Jalankan migration-kosan-room-requests-start-date.sql di D1.', 503);
+          }
+          throw error;
+        }
         return json({ ok:true, data:{ id } }, 201);
       }
 
@@ -2688,7 +2893,7 @@ export default {
         const existingRoom = await env.DB.prepare('SELECT id FROM kosan_rooms WHERE building = ? AND room_number = ?')
           .bind(submission.building, submission.room_number).first();
         const roomId = existingRoom?.id || crypto.randomUUID();
-        await env.DB.batch([
+        const statements = [
           env.DB.prepare(`
             INSERT INTO kosan_rooms (id, building, building_code, room_number, room_label, tenant_name, price, depo_amount, depo_refundable, status, notes, created_at, updated_at)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?, ?)
@@ -2699,8 +2904,58 @@ export default {
             submission.tenant_name, submission.price, submission.depo, submission.status, submission.notes, now, now),
           env.DB.prepare(`UPDATE kosan_room_requests SET decision_status = 'approved', decided_by = ?, decided_at = ? WHERE id = ?`)
             .bind(String(tokenData.account_id || ''), now, requestId),
-        ]);
+        ];
+        // Kamar bekas penyewa lama: bersihkan riwayat pembayaran lama supaya tidak tertukar
+        // dengan penyewa baru, lalu siapkan baris "Belum Bayar" sejak tanggal mulai sewa.
+        const startPeriod = getKosanPeriod(String(submission.start_date || '').trim());
+        if (existingRoom && startPeriod) {
+          statements.push(env.DB.prepare(`
+            UPDATE kosan_room_payments SET status = 'none', date = NULL, updated_at = ?
+            WHERE room_id = ? AND period < ?
+          `).bind(now, roomId, startPeriod.key));
+        }
+        if (startPeriod) {
+          let cursor = startPeriod;
+          while (cursor.key <= KOSAN_CURRENT_PERIOD) {
+            statements.push(env.DB.prepare(`
+              INSERT INTO kosan_room_payments (id, room_id, period, label, status, date, updated_at)
+              VALUES (?, ?, ?, ?, 'unpaid', NULL, ?)
+              ON CONFLICT(room_id, period) DO UPDATE SET
+                status = 'unpaid', date = NULL, updated_at = excluded.updated_at
+              WHERE kosan_room_payments.status NOT IN ('paid', 'checkout')
+            `).bind(`${roomId}-${cursor.key}`, roomId, cursor.key, cursor.label, now));
+            cursor = shiftKosanPeriod(cursor.key, 1);
+          }
+        }
+        await env.DB.batch(statements);
         return json({ ok:true, data:{ id:requestId, decision:'approved', room_id:roomId } });
+      }
+
+      const kosanRoomEditMatch = path.match(/^\/kosan\/rooms\/([^/]+)$/);
+      if (request.method === 'PATCH' && kosanRoomEditMatch) {
+        const adminSecret = String(env.ADMIN_DASHBOARD_SECRET || '').trim();
+        const tokenData = await getAdminTokenPayload(request, adminSecret);
+        if (!hasManagementRole(tokenData)) return bad('Hanya Master atau Admin yang dapat mengubah data kamar.', 403);
+        const roomId = decodeURIComponent(kosanRoomEditMatch[1]);
+        const room = await env.DB.prepare('SELECT id, status FROM kosan_rooms WHERE id = ?').bind(roomId).first();
+        if (!room) return bad('Kamar tidak ditemukan.', 404);
+        if (room.status !== 'occupied') return bad('Hanya kamar yang sedang ditempati yang dapat diedit di sini.', 409);
+        const body = await request.json();
+        const tenantName = String(body.tenant_name || '').trim();
+        const price = Number(body.price);
+        const depoAmount = Number(body.depo_amount);
+        const depoRefundable = body.depo_refundable ? 1 : 0;
+        const notes = String(body.notes || '').trim();
+        if (!tenantName || tenantName.length > 120) return bad('Nama penyewa wajib diisi dan maksimal 120 karakter.');
+        if (!Number.isSafeInteger(price) || price <= 0) return bad('Harga sewa wajib diisi dan valid.');
+        if (!Number.isSafeInteger(depoAmount) || depoAmount < 0) return bad('Deposit tidak valid.');
+        if (notes.length > 500) return bad('Catatan terlalu panjang.');
+        const now = new Date().toISOString();
+        await env.DB.prepare(`
+          UPDATE kosan_rooms SET tenant_name = ?, price = ?, depo_amount = ?, depo_refundable = ?, notes = ?, updated_at = ?
+          WHERE id = ?
+        `).bind(tenantName, price, depoAmount, depoRefundable, notes, now, roomId).run();
+        return json({ ok:true, data:{ id:roomId, tenant_name:tenantName, price, depo_amount:depoAmount, depo_refundable:Boolean(depoRefundable), notes } });
       }
 
       if (request.method === 'POST' && path === '/kosan/room-status/checkout') {
