@@ -7911,7 +7911,7 @@ async function confirmCheckout(building, roomNum) {
 }
 
 function tkAccountLabel(accountId) {
-  return { master: 'Master', admin: 'Admin', it: 'IT Support' }[accountId] || accountId;
+  return { master: 'Master', admin: 'Admin', 'admin-1': 'Operasional', it: 'IT Support' }[accountId] || accountId;
 }
 
 function initTambahKamarView() {
@@ -8318,7 +8318,7 @@ async function submitBugReport() {
       method: 'POST',
       body: JSON.stringify({ message }),
     });
-    status.textContent = 'Pesan sudah dikirim ke Telegram IT.';
+    status.textContent = 'Pesan masuk antrean IT dan dikirim ke Telegram.';
     showToast('Pesan berhasil dikirim ke tim IT');
     textarea.value = '';
   } catch (e) {

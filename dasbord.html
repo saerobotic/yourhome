@@ -166,7 +166,7 @@
         <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 3v18m5-14H9.5a3.5 3.5 0 100 7h5a3.5 3.5 0 110 7H6"/></svg>
         <span>Kalkulator Bagi Hasil</span>
       </button>
-      <button id="notaNavItem" onclick="openNotaLunas()" class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left">
+      <button id="notaNavItem" onclick="switchView('nota-lunas')" class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left">
         <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 12h6m-6 3.5h3M7 3h7l5 5v11a2 2 0 01-2 2H7a2 2 0 01-2-2V5a2 2 0 012-2z"/><path d="M14 3v5h5"/></svg>
         <span>Nota Lunas</span>
       </button>
@@ -781,11 +781,13 @@
             <button type="button" onclick="shareOwnerShareWhatsApp()" class="inline-flex items-center gap-2 bg-slate-900 hover:bg-slate-800 text-white text-sm font-semibold px-3 py-2 rounded-lg"><svg width="15" height="15" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51"/></svg>Kirim WhatsApp</button>
           </div>
         </section>
+      </div>
 
-        <!-- =========================================== -->
-        <!-- GENERATOR NOTA LUNAS (tidak menyimpan data)  -->
-        <!-- =========================================== -->
-        <section id="notaPanel" class="mt-6 bg-white border border-slate-200 rounded-xl overflow-hidden">
+      <!-- =========================================== -->
+      <!-- GENERATOR NOTA LUNAS (tidak menyimpan data)  -->
+      <!-- =========================================== -->
+      <div id="view-nota-lunas" class="view">
+        <section id="notaPanel" class="bg-white border border-slate-200 rounded-xl overflow-hidden">
           <div class="p-4 sm:p-5 border-b border-slate-100 flex flex-wrap items-start justify-between gap-3">
             <div class="min-w-0">
               <h2 class="font-bold text-slate-900">Generator Nota Lunas</h2>
@@ -863,6 +865,10 @@
           </div>
           <form id="contactItForm" class="max-w-2xl space-y-4">
             <label class="block">
+              <span class="block text-sm font-semibold text-slate-700 mb-1.5">Judul</span>
+              <input id="contactItTitle" type="text" required maxlength="160" placeholder="Contoh: Kendala login akun Admin" class="w-full border border-slate-200 rounded-lg px-3 py-2.5 text-sm text-slate-700 placeholder:text-slate-400 focus:border-brand-600">
+            </label>
+            <label class="block">
               <span class="block text-sm font-semibold text-slate-700 mb-1.5">Pesan</span>
               <textarea id="contactItMessage" required maxlength="2000" rows="6" placeholder="Tulis kendala atau pesan untuk tim IT..." class="w-full resize-y border border-slate-200 rounded-lg px-3 py-2.5 text-sm text-slate-700 placeholder:text-slate-400 focus:border-brand-600"></textarea>
             </label>
@@ -914,16 +920,35 @@
               <p class="text-xs text-slate-500 mt-1">Persentase owner dan agen disimpan tanpa menghitung nominal transfer.</p>
               <button onclick="switchView('properti')" class="mt-3 text-xs font-semibold text-brand-600 hover:text-brand-700">Atur properti →</button>
             </div>
+            <div class="bg-white rounded-2xl p-5 border border-slate-100">
+              <h3 class="font-bold text-slate-900 mb-1">Stok Extra Bed</h3>
+              <p class="text-xs text-slate-500 mb-3">Total unit extra bed fisik yang dimiliki. Dipakai untuk menolak booking kalau jumlah extra bed yang dipesan bentrok tanggal di semua properti melebihi stok ini.</p>
+              <div class="flex items-center gap-2">
+                <input id="extraBedStockInput" type="number" min="0" step="1" placeholder="Belum diatur" class="w-full text-sm border border-slate-200 rounded-lg px-3 py-2.5">
+                <button type="button" onclick="saveExtraBedStock()" class="shrink-0 bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold px-3 py-2.5 rounded-lg">Simpan</button>
+              </div>
+              <p id="extraBedStockStatus" class="text-xs mt-2" role="status" aria-live="polite"></p>
+            </div>
           </div>
         </div>
-        <section id="crewManagementPanel" class="mt-5 bg-white rounded-xl border border-slate-100 overflow-hidden">
-          <div class="p-5 pb-3 flex items-center justify-between gap-3">
-            <div><h3 class="font-bold text-slate-900">Daftar Karyawan / Crew</h3><p class="text-xs text-slate-500">Nama aktif tersedia di Check In Crew dan pilihan penerima pengeluaran Gaji.</p></div>
-            <button type="button" onclick="openCrewModal()" class="inline-flex items-center gap-2 bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold px-3 py-2 rounded-lg"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 4v16m8-8H4"/></svg>Tambah Karyawan</button>
-          </div>
-          <p id="crewManagementStatus" class="px-5 text-sm" role="status" aria-live="polite"></p>
-          <div class="overflow-x-auto"><table class="w-full text-sm"><thead class="bg-slate-50 text-slate-500 text-xs uppercase"><tr><th class="text-left px-5 py-3">Nama</th><th class="text-left px-3 py-3">Status</th><th class="text-right px-5 py-3">Aksi</th></tr></thead><tbody id="crewTableBody" class="divide-y divide-slate-100"></tbody></table></div>
-        </section>
+        <div class="mt-5 grid grid-cols-1 xl:grid-cols-2 gap-5">
+          <section id="crewManagementPanel" class="bg-white rounded-xl border border-slate-100 overflow-hidden">
+            <div class="p-5 pb-3 flex items-center justify-between gap-3">
+              <div><h3 class="font-bold text-slate-900">Daftar Karyawan / Crew</h3><p class="text-xs text-slate-500">Nama aktif tersedia di Check In Crew dan pilihan penerima pengeluaran Gaji.</p></div>
+              <button type="button" onclick="openCrewModal()" class="inline-flex items-center gap-2 bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold px-3 py-2 rounded-lg"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 4v16m8-8H4"/></svg>Tambah Karyawan</button>
+            </div>
+            <p id="crewManagementStatus" class="px-5 text-sm" role="status" aria-live="polite"></p>
+            <div class="overflow-x-auto"><table class="w-full text-sm"><thead class="bg-slate-50 text-slate-500 text-xs uppercase"><tr><th class="text-left px-5 py-3">Nama</th><th class="text-left px-3 py-3">Status</th><th class="text-right px-5 py-3">Aksi</th></tr></thead><tbody id="crewTableBody" class="divide-y divide-slate-100"></tbody></table></div>
+          </section>
+          <section id="agentManagementPanel" class="bg-white rounded-xl border border-slate-100 overflow-hidden">
+            <div class="p-5 pb-3 flex items-center justify-between gap-3">
+              <div><h3 class="font-bold text-slate-900">Daftar Agen / Marketing</h3><p class="text-xs text-slate-500">Dipilih di form booking untuk mencatat fee agen. Agen bisa login di Agen Portal untuk lihat fee mereka.</p></div>
+              <button type="button" onclick="openAgentModal()" class="inline-flex items-center gap-2 bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold px-3 py-2 rounded-lg"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 4v16m8-8H4"/></svg>Tambah Agen</button>
+            </div>
+            <p id="agentManagementStatus" class="px-5 text-sm" role="status" aria-live="polite"></p>
+            <div class="overflow-x-auto"><table class="w-full text-sm"><thead class="bg-slate-50 text-slate-500 text-xs uppercase"><tr><th class="text-left px-5 py-3">Nama</th><th class="text-left px-3 py-3">ID Agen</th><th class="text-left px-3 py-3">Fee Default</th><th class="text-left px-3 py-3">Portal</th><th class="text-right px-5 py-3">Aksi</th></tr></thead><tbody id="agentTableBody" class="divide-y divide-slate-100"></tbody></table></div>
+          </section>
+        </div>
       </div>
 
     </main>
@@ -964,15 +989,36 @@
 
 <!-- ============== MODAL: BOOKING ============== -->
 <div id="modal-booking" class="modal-overlay fixed inset-0 bg-slate-900/50 z-50 hidden items-center justify-center p-4">
-  <div class="modal-panel bg-white rounded-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
-    <div class="p-5 border-b border-slate-100 flex items-center justify-between sticky top-0 bg-white">
+  <div class="modal-panel bg-white rounded-2xl max-w-lg sm:max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+    <div class="p-5 border-b border-slate-100 flex items-center justify-between sticky top-0 bg-white z-10">
       <div>
         <h3 id="bookingModalTitle" class="font-bold text-lg text-slate-900">Tambah Booking</h3>
         <p class="text-xs text-slate-500">Input manual atau import dari platform</p>
       </div>
       <button onclick="closeModal('modal-booking')" class="p-1 hover:bg-slate-100 rounded-lg"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg></button>
     </div>
-    <form id="bookingForm" onsubmit="event.preventDefault();submitBooking();" class="p-5 space-y-3">
+    <div class="flex flex-col sm:flex-row sm:items-start">
+      <div class="order-1 sm:order-2 p-5 pb-0 sm:pb-5 sm:w-56 sm:flex-shrink-0 sm:border-l sm:border-slate-100">
+        <span class="block text-xs text-slate-500 font-semibold">Capture Pesanan (opsional)</span>
+        <p class="text-[11px] text-slate-400 mt-0.5">Upload screenshot pesanan dari platform sebagai contekan saat isi form manual.</p>
+        <div id="bookingCapturePreviewWrap" class="mt-2 border border-dashed border-slate-300 rounded-lg overflow-hidden relative bg-slate-50 flex items-center justify-center" style="min-height:160px">
+          <img id="bookingCapturePreviewImg" class="hidden w-full max-h-72 sm:max-h-80 object-contain" alt="Capture pesanan">
+          <span id="bookingCaptureEmptyHint" class="text-[11px] text-slate-400 text-center px-3">Belum ada capture</span>
+          <div id="bookingCaptureLoading" class="hidden absolute inset-0 items-center justify-center bg-white/80">
+            <svg class="animate-spin" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-9-9" stroke-linecap="round"/></svg>
+          </div>
+        </div>
+        <div class="flex items-center gap-2 mt-2">
+          <label class="flex-1 text-center cursor-pointer text-xs font-semibold px-2 py-2 border border-slate-200 rounded-lg hover:bg-slate-50">
+            Upload Capture
+            <input id="bookingCaptureInput" type="file" accept="image/*" class="hidden" onchange="handleBookingCaptureUpload(event)">
+          </label>
+          <button type="button" id="bookingCaptureClearBtn" onclick="clearBookingCapture()" class="hidden text-xs font-semibold px-2 py-2 border border-slate-200 rounded-lg hover:bg-rose-50 text-rose-600">Hapus</button>
+        </div>
+        <p id="bookingCaptureSizeHint" class="text-[10px] text-slate-400 mt-1"></p>
+        <input id="bookingCaptureDataUrl" type="hidden">
+      </div>
+      <form id="bookingForm" onsubmit="event.preventDefault();submitBooking();" class="order-2 sm:order-1 p-5 space-y-3 flex-1 min-w-0">
       <input id="bookingEditId" type="hidden">
       <div class="grid grid-cols-2 gap-3">
         <div>
@@ -1027,6 +1073,16 @@
         <label class="block"><span class="block text-xs text-slate-500 font-semibold">Harga per Extra Bed (Rp)</span><input id="newBookingExtraBedPrice" type="text" inputmode="numeric" pattern="[0-9.]*" data-currency-input value="0" class="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 mt-0.5"></label>
       </div>
       <p id="newBookingExtraBedTotal" class="text-xs text-slate-500">Total Extra Bed: Rp 0. Dicatat terpisah dari nilai booking.</p>
+      <p id="newBookingExtraBedStockHint" class="text-xs"></p>
+      <div>
+        <label class="text-xs text-slate-500 font-semibold">Agen / Marketing (opsional)</label>
+        <select id="newBookingAgent" onchange="handleBookingAgentChange()" class="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 bg-white mt-0.5"><option value="">Tidak ada agen</option></select>
+      </div>
+      <div id="newBookingAgentFeeFields" class="hidden grid grid-cols-2 gap-3">
+        <label class="block"><span class="block text-xs text-slate-500 font-semibold">Tipe fee</span><select id="newBookingAgentFeeType" onchange="updateBookingAgentFeeTotal()" class="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 bg-white mt-0.5"><option value="amount">Nominal (Rp)</option><option value="percent">Persen (%)</option></select></label>
+        <label class="block"><span class="block text-xs text-slate-500 font-semibold">Nilai fee</span><input id="newBookingAgentFeeValue" type="text" inputmode="numeric" pattern="[0-9.]*" data-currency-input value="0" class="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 mt-0.5"></label>
+      </div>
+      <p id="newBookingAgentFeeTotal" class="hidden text-xs text-slate-500"></p>
       <div id="bookingRefundFields" class="hidden space-y-3 rounded-lg border border-amber-200 bg-amber-50/70 p-3">
         <p class="text-xs font-semibold text-amber-900">Booking ini sudah dibatalkan. Potongan dan nilai bersih dapat dikoreksi di sini.</p>
         <div class="grid grid-cols-2 gap-3">
@@ -1058,7 +1114,8 @@
         <button id="bookingSubmitButton" type="submit" class="flex-1 text-sm font-semibold px-4 py-2.5 bg-brand-600 hover:bg-brand-700 text-white rounded-lg">Simpan Booking</button>
       </div>
       <p id="bookingFormStatus" class="text-sm" role="status" aria-live="polite"></p>
-    </form>
+      </form>
+    </div>
   </div>
 </div>
 
@@ -1072,6 +1129,19 @@
       <button onclick="closeModal('modal-day-bookings')" class="p-1 hover:bg-slate-100 rounded-lg"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg></button>
     </div>
     <div id="dayBookingsList" class="p-5 space-y-2"></div>
+  </div>
+</div>
+
+<div id="modal-delete-booking" class="modal-overlay fixed inset-0 bg-slate-900/50 z-50 hidden items-center justify-center p-4">
+  <div class="modal-panel bg-white rounded-xl max-w-sm w-full p-5">
+    <div class="flex items-center justify-between mb-3"><h3 class="font-bold text-lg text-rose-700">Hapus Permanen Booking</h3><button type="button" onclick="closeModal('modal-delete-booking')" aria-label="Tutup" class="p-1 hover:bg-slate-100 rounded-lg"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg></button></div>
+    <p id="deleteBookingDescription" class="text-sm text-slate-600"></p>
+    <p class="text-xs text-rose-700 font-semibold mt-2">Tindakan ini tidak dapat dibatalkan.</p>
+    <form id="deleteBookingForm" class="mt-4 space-y-3">
+      <label class="block"><span class="block text-xs font-semibold text-slate-600 mb-1">PIN Master (4 digit)</span><span class="relative block"><input id="deleteBookingPin" type="password" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" required autocomplete="off" class="w-full border border-slate-200 rounded-lg px-3 py-2 pr-12 text-sm" placeholder="PIN persetujuan Master"><button type="button" data-toggle-password="deleteBookingPin" aria-label="Tampilkan PIN" class="absolute inset-y-0 right-0 px-3 text-slate-500 hover:text-slate-800"><svg data-eye-icon width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg></button></span></label>
+      <p id="deleteBookingStatus" class="text-sm" role="status" aria-live="polite"></p>
+      <div class="flex gap-2"><button type="button" onclick="closeModal('modal-delete-booking')" class="flex-1 border border-slate-200 rounded-lg px-4 py-2 text-sm font-semibold">Batal</button><button id="deleteBookingButton" type="submit" class="flex-1 bg-rose-600 hover:bg-rose-700 text-white rounded-lg px-4 py-2 text-sm font-semibold">Hapus Permanen</button></div>
+    </form>
   </div>
 </div>
 
@@ -1457,6 +1527,39 @@
   </div>
 </div>
 
+<div id="modal-agent" class="modal-overlay fixed inset-0 bg-slate-900/50 z-50 hidden items-center justify-center p-4">
+  <div class="modal-panel bg-white rounded-xl max-w-md w-full p-5">
+    <div class="flex items-center justify-between mb-4"><h3 id="agentModalTitle" class="font-bold text-lg text-slate-900">Tambah Agen</h3><button type="button" onclick="closeModal('modal-agent')" aria-label="Tutup" class="p-1 hover:bg-slate-100 rounded-lg"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg></button></div>
+    <form id="agentForm" class="space-y-3">
+      <input id="agentEditId" type="hidden">
+      <label class="block"><span class="block text-xs font-semibold text-slate-600 mb-1">Nama agen</span><input id="agentNameInput" required minlength="2" maxlength="80" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm"></label>
+      <label class="block"><span class="block text-xs font-semibold text-slate-600 mb-1">ID Agen (dipakai login Agen Portal)</span><input id="agentCodeInput" required minlength="3" maxlength="20" pattern="[A-Za-z0-9_-]{3,20}" placeholder="Contoh: AG-BUDI01" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm uppercase"></label>
+      <label class="block"><span class="block text-xs font-semibold text-slate-600 mb-1">No. HP (opsional)</span><input id="agentPhoneInput" type="tel" maxlength="30" placeholder="08xxxxxxxxxx" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm"></label>
+      <label id="agentPinField" class="block"><span id="agentPinLabel" class="block text-xs font-semibold text-slate-600 mb-1">PIN login Agen Portal (wajib 6 digit)</span><span class="relative block"><input id="agentPinInput" type="password" inputmode="numeric" pattern="[0-9]{6}" minlength="6" maxlength="6" autocomplete="new-password" placeholder="6 digit" class="w-full border border-slate-200 rounded-lg px-3 py-2 pr-12 text-sm"><button type="button" data-toggle-password="agentPinInput" aria-label="Tampilkan PIN" class="absolute inset-y-0 right-0 px-3 text-slate-500 hover:text-slate-800"><svg data-eye-icon width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg></button></span></label>
+      <div class="grid grid-cols-2 gap-3">
+        <label class="block"><span class="block text-xs font-semibold text-slate-600 mb-1">Tipe fee default</span><select id="agentFeeTypeInput" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm bg-white"><option value="amount">Nominal (Rp)</option><option value="percent">Persen (%)</option></select></label>
+        <label class="block"><span class="block text-xs font-semibold text-slate-600 mb-1">Nilai fee default</span><input id="agentFeeValueInput" type="text" inputmode="numeric" pattern="[0-9.]*" data-currency-input value="0" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm"></label>
+      </div>
+      <p class="text-xs text-slate-500">Fee default ini akan otomatis terisi tiap kali agen ini dipilih di form booking, tapi tetap bisa diubah per booking.</p>
+      <p id="agentFormStatus" class="text-sm" role="status" aria-live="polite"></p>
+      <div class="flex gap-2"><button type="button" onclick="closeModal('modal-agent')" class="flex-1 border border-slate-200 rounded-lg px-4 py-2 text-sm font-semibold">Batal</button><button id="agentSaveButton" type="submit" class="flex-1 bg-brand-600 hover:bg-brand-700 text-white rounded-lg px-4 py-2 text-sm font-semibold">Simpan</button></div>
+    </form>
+  </div>
+</div>
+
+<div id="modal-delete-agent" class="modal-overlay fixed inset-0 bg-slate-900/50 z-50 hidden items-center justify-center p-4">
+  <div class="modal-panel bg-white rounded-xl max-w-sm w-full p-5">
+    <div class="flex items-center justify-between mb-4"><h3 class="font-bold text-lg text-slate-900">Nonaktifkan Agen</h3><button type="button" onclick="closeModal('modal-delete-agent')" aria-label="Tutup" class="p-1 hover:bg-slate-100 rounded-lg"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg></button></div>
+    <p id="deleteAgentDescription" class="text-sm text-slate-600"></p>
+    <form id="deleteAgentForm" class="mt-4 space-y-3">
+      <input id="deleteAgentId" type="hidden">
+      <label class="block"><span class="block text-xs font-semibold text-slate-600 mb-1">PIN Master (4 digit)</span><span class="relative block"><input id="deleteAgentPin" type="password" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" required autocomplete="off" class="w-full border border-slate-200 rounded-lg px-3 py-2 pr-12 text-sm" placeholder="PIN persetujuan Master"><button type="button" data-toggle-password="deleteAgentPin" aria-label="Tampilkan PIN" class="absolute inset-y-0 right-0 px-3 text-slate-500 hover:text-slate-800"><svg data-eye-icon width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg></button></span></label>
+      <p id="deleteAgentStatus" class="text-sm" role="status" aria-live="polite"></p>
+      <div class="flex gap-2"><button type="button" onclick="closeModal('modal-delete-agent')" class="flex-1 border border-slate-200 rounded-lg px-4 py-2 text-sm font-semibold">Batal</button><button id="deleteAgentButton" type="submit" class="flex-1 bg-rose-600 hover:bg-rose-700 text-white rounded-lg px-4 py-2 text-sm font-semibold">Nonaktifkan</button></div>
+    </form>
+  </div>
+</div>
+
 <div id="modal-delete-owner-share-final" class="modal-overlay fixed inset-0 bg-slate-900/50 z-50 hidden items-center justify-center p-4">
   <div class="modal-panel bg-white rounded-xl max-w-sm w-full p-5">
     <div class="flex items-center justify-between mb-4"><h3 class="font-bold text-lg text-slate-900">Batalkan Laporan Akhir</h3><button type="button" onclick="closeModal('modal-delete-owner-share-final')" aria-label="Tutup" class="p-1 hover:bg-slate-100 rounded-lg"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg></button></div>
@@ -1492,7 +1595,7 @@
 <dialog id="contactItDialog" class="w-[calc(100%-2rem)] max-w-md rounded-xl border-0 p-0 shadow-2xl backdrop:bg-slate-900/50">
   <div class="p-6">
     <h2 class="text-lg font-bold text-slate-900">Pesan Terkirim</h2>
-    <p class="mt-2 text-sm text-slate-600">Pesan sudah dikirim ke Telegram IT.</p>
+    <p class="mt-2 text-sm text-slate-600">Pesan masuk antrean IT dan dikirim ke Telegram.</p>
     <div class="mt-5 flex justify-end">
       <button id="closeContactItDialog" class="bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold px-4 py-2 rounded-lg" type="button">Tutup</button>
     </div>
@@ -1609,7 +1712,7 @@ let currentView = 'dashboard';
 let currentPropFilter = 'all';
 let currentBookingStatus = 'all';
 let currentBookingPage = 1;
-let currentPeriod = 'September 2026';
+let currentPeriod = ''; // diisi otomatis ke bulan berjalan saat renderPeriodMenu() pertama kali jalan
 let lastReportSummary = null;
 let reportOwnerShareFinal = null;
 let reportOwnerShareFinalRequest = 0;
@@ -1617,11 +1720,13 @@ let lastOwnerShareCalculation = null;
 let loadedOwnerShareCalculation = null;
 let currentExpCat = 'all';
 let currentFinanceTab = 'expense';
-let calDate = new Date(2026, 8, 1); // Sept 2026
+let extraBedTotalStock = null; // null = belum diatur Master/Admin, berarti belum ditegakkan
+let calDate = new Date(new Date().getFullYear(), new Date().getMonth(), 1); // bulan berjalan
 let charts = {};
 let financeCategories = [];
 let financeEntries = [];
 let crewMembers = [];
+let AGENTS = [];
 let expenseProofDataUrl = '';
 let editExpenseProofDataUrl = '';
 let financeCategoryKind = 'expense';
@@ -1679,6 +1784,7 @@ function showDashboardApp(account){
   document.getElementById('createAdminButton').classList.toggle('hidden', account.account_id !== 'master');
   document.getElementById('userActionsHeader').hidden = account.account_id !== 'master';
   document.getElementById('crewManagementPanel').hidden = account.role === 'IT';
+  document.getElementById('agentManagementPanel').hidden = account.role === 'IT';
   document.getElementById('addPropertyButton').classList.toggle('hidden', account.role === 'IT');
   document.getElementById('settingsNavItem').classList.toggle('hidden', account.role === 'IT');
   document.getElementById('adminLoginScreen').classList.add('hidden');
@@ -1773,6 +1879,8 @@ async function loginDashboard(event){
     } catch(error) {
       showToast(`Daftar karyawan belum siap: ${error.message}`);
     }
+    await loadExtraBedStock();
+    await loadAgents();
     try {
       await loadFinanceData();
     } catch(error) {
@@ -1813,6 +1921,8 @@ async function initializeDashboardAuth(){
     } catch(error) {
       showToast(`Daftar karyawan belum siap: ${error.message}`);
     }
+    await loadExtraBedStock();
+    await loadAgents();
     try {
       await loadFinanceData();
     } catch(error) {
@@ -2061,6 +2171,189 @@ async function submitCrewDelete(event){
   } finally {
     button.disabled = false;
   }
+}
+
+/* ============== AGEN / MARKETING ============== */
+async function loadAgents(){
+  try {
+    const result = await dashboardApi('/dashboard/agents');
+    AGENTS = Array.isArray(result.data) ? result.data : [];
+  } catch(error) {
+    console.warn('Gagal memuat daftar agen.', error);
+  }
+  populateBookingAgentSelect();
+  renderAgentTable();
+}
+
+function populateBookingAgentSelect(){
+  const select = document.getElementById('newBookingAgent');
+  if(!select) return;
+  const selected = select.value;
+  const activeAgents = AGENTS.filter(agent => Number(agent.active) === 1);
+  select.replaceChildren(new Option('Tidak ada agen', ''), ...activeAgents.map(agent => new Option(agent.name, agent.id)));
+  if(activeAgents.some(agent => agent.id === selected)) select.value = selected;
+}
+
+function renderAgentTable(){
+  const table = document.getElementById('agentTableBody');
+  if(!table) return;
+  const activeAgents = AGENTS.filter(agent => Number(agent.active) === 1);
+  table.innerHTML = activeAgents.length ? activeAgents.map(agent => `
+    <tr>
+      <td class="px-5 py-3 font-medium text-slate-800">${escapeHtml(agent.name)}</td>
+      <td class="px-3 py-3 text-slate-500">${escapeHtml(agent.agent_code)}</td>
+      <td class="px-3 py-3 text-slate-600">${agent.default_fee_type === 'percent' ? `${Number(agent.default_fee_value)}%` : fmtRp(Number(agent.default_fee_value))}</td>
+      <td class="px-5 py-3 text-right whitespace-nowrap">
+        <button type="button" data-agent-action="edit" data-agent-id="${escapeHtml(agent.id)}" class="text-xs font-semibold text-brand-600 hover:text-brand-800">Edit</button>
+        <button type="button" data-agent-action="delete" data-agent-id="${escapeHtml(agent.id)}" class="ml-3 text-xs font-semibold text-rose-600 hover:text-rose-800">Hapus</button>
+      </td>
+    </tr>`).join('') : '<tr><td colspan="4" class="px-5 py-8 text-center text-sm text-slate-400">Belum ada agen aktif.</td></tr>';
+}
+
+function clampAgentDefaultFeeValue(){
+  const typeInput = document.getElementById('agentFeeTypeInput');
+  const valueInput = document.getElementById('agentFeeValueInput');
+  if(typeInput.value === 'percent' && parseCurrencyInput(valueInput.value) > 100) setCurrencyInputValue(valueInput, 100);
+}
+
+function openAgentModal(agentId=''){
+  const agent = AGENTS.find(item => item.id === agentId);
+  document.getElementById('agentForm').reset();
+  document.getElementById('agentEditId').value = agent?.id || '';
+  document.getElementById('agentNameInput').value = agent?.name || '';
+  document.getElementById('agentCodeInput').value = agent?.agent_code || '';
+  document.getElementById('agentPhoneInput').value = agent?.phone || '';
+  document.getElementById('agentFeeTypeInput').value = agent?.default_fee_type || 'amount';
+  setCurrencyInputValue(document.getElementById('agentFeeValueInput'), agent?.default_fee_value ?? 0);
+  document.getElementById('agentPinInput').required = !agent;
+  document.getElementById('agentPinLabel').textContent = agent
+    ? 'PIN login Agen Portal (kosongkan jika tidak diubah)'
+    : 'PIN login Agen Portal (wajib 6 digit)';
+  document.getElementById('agentModalTitle').textContent = agent ? 'Edit Agen' : 'Tambah Agen';
+  document.getElementById('agentSaveButton').textContent = agent ? 'Simpan Perubahan' : 'Tambah Agen';
+  document.getElementById('agentFormStatus').textContent = '';
+  openModal('modal-agent');
+}
+
+async function submitAgentForm(event){
+  event.preventDefault();
+  const id = document.getElementById('agentEditId').value;
+  const status = document.getElementById('agentFormStatus');
+  const button = document.getElementById('agentSaveButton');
+  const agentCode = document.getElementById('agentCodeInput').value.trim().toUpperCase();
+  const pin = document.getElementById('agentPinInput').value.trim();
+  if(!/^[A-Z0-9_-]{3,20}$/.test(agentCode)){
+    status.className = 'text-sm text-rose-600';
+    status.textContent = 'ID Agen wajib 3-20 karakter (huruf, angka, - atau _).';
+    return;
+  }
+  if((!id || pin) && !/^\d{6}$/.test(pin)){
+    status.className = 'text-sm text-rose-600';
+    status.textContent = 'Masukkan PIN 6 digit, atau kosongkan kalau tidak ingin mengubah PIN yang sudah ada.';
+    return;
+  }
+  const body = {
+    name: document.getElementById('agentNameInput').value.trim(),
+    agent_code: agentCode,
+    phone: document.getElementById('agentPhoneInput').value.trim(),
+    default_fee_type: document.getElementById('agentFeeTypeInput').value,
+    default_fee_value: parseCurrencyInput(document.getElementById('agentFeeValueInput').value),
+    ...(pin ? { pin } : {}),
+  };
+  button.disabled = true;
+  status.className = 'text-sm text-slate-500';
+  status.textContent = id ? 'Menyimpan agen...' : 'Menambahkan agen...';
+  try {
+    await dashboardApi(id ? `/dashboard/agents/${encodeURIComponent(id)}` : '/dashboard/agents', {
+      method:id ? 'PATCH' : 'POST', body:JSON.stringify(body)
+    });
+    await loadAgents();
+    closeModal('modal-agent');
+    showToast(id ? 'Agen berhasil diperbarui.' : 'Agen berhasil ditambahkan.');
+  } catch(error) {
+    status.className = 'text-sm text-rose-600';
+    status.textContent = error.message || 'Data agen gagal disimpan.';
+  } finally {
+    button.disabled = false;
+  }
+}
+
+function handleAgentTableAction(event){
+  const button = event.target.closest('button[data-agent-action]');
+  if(!button) return;
+  const agent = AGENTS.find(item => item.id === button.dataset.agentId);
+  if(!agent) return;
+  if(button.dataset.agentAction === 'edit'){ openAgentModal(agent.id); return; }
+  openAgentDeleteModal(agent);
+}
+
+function openAgentDeleteModal(agent){
+  document.getElementById('deleteAgentForm').reset();
+  document.getElementById('deleteAgentId').value = agent.id;
+  document.getElementById('deleteAgentDescription').textContent = `Nonaktifkan ${agent.name}? Agen tidak dapat login Agen Portal atau dipilih di booking baru. Riwayat booking dan fee lama tetap tersimpan.`;
+  document.getElementById('deleteAgentStatus').textContent = '';
+  openModal('modal-delete-agent');
+  document.getElementById('deleteAgentPin').focus();
+}
+
+async function submitAgentDelete(event){
+  event.preventDefault();
+  const id = document.getElementById('deleteAgentId').value;
+  const pinInput = document.getElementById('deleteAgentPin');
+  const status = document.getElementById('deleteAgentStatus');
+  const button = document.getElementById('deleteAgentButton');
+  const agent = AGENTS.find(item => item.id === id);
+  if(!agent) return closeModal('modal-delete-agent');
+  if(!/^\d{4}$/.test(pinInput.value)){
+    status.className = 'text-sm text-rose-600';
+    status.textContent = 'Masukkan PIN Master tepat 4 digit.';
+    return;
+  }
+  button.disabled = true;
+  status.className = 'text-sm text-slate-500';
+  status.textContent = 'Memverifikasi PIN Master...';
+  try {
+    await dashboardApi(`/dashboard/agents/${encodeURIComponent(agent.id)}`, { method:'DELETE', body:JSON.stringify({ pin:pinInput.value }) });
+    await loadAgents();
+    closeModal('modal-delete-agent');
+    showToast(`${agent.name} dinonaktifkan.`);
+  } catch(error) {
+    pinInput.value = '';
+    status.className = 'text-sm text-rose-600';
+    status.textContent = error.message || 'Agen gagal dinonaktifkan.';
+  } finally {
+    button.disabled = false;
+  }
+}
+
+function handleBookingAgentChange(){
+  const agentId = document.getElementById('newBookingAgent').value;
+  const feeFields = document.getElementById('newBookingAgentFeeFields');
+  const agent = AGENTS.find(item => item.id === agentId);
+  feeFields.classList.toggle('hidden', !agent);
+  if(agent){
+    document.getElementById('newBookingAgentFeeType').value = agent.default_fee_type || 'amount';
+    setCurrencyInputValue(document.getElementById('newBookingAgentFeeValue'), agent.default_fee_value ?? 0);
+  }
+  updateBookingAgentFeeTotal();
+}
+
+function updateBookingAgentFeeTotal(){
+  const agentId = document.getElementById('newBookingAgent').value;
+  const total = document.getElementById('newBookingAgentFeeTotal');
+  if(!agentId){
+    total.classList.add('hidden');
+    return;
+  }
+  const feeType = document.getElementById('newBookingAgentFeeType').value;
+  const feeValueInput = document.getElementById('newBookingAgentFeeValue');
+  if(feeType === 'percent' && parseCurrencyInput(feeValueInput.value) > 100) setCurrencyInputValue(feeValueInput, 100);
+  const feeValue = parseCurrencyInput(feeValueInput.value);
+  const amount = parseCurrencyInput(document.getElementById('newBookingAmount').value);
+  const feeAmount = feeType === 'percent' ? Math.round(amount * feeValue / 100) : feeValue;
+  total.classList.remove('hidden');
+  total.className = 'text-xs text-slate-500';
+  total.textContent = `Fee agen: ${fmtRp(feeAmount)}. Dicatat sebagai pengeluaran terpisah dari nilai booking.`;
 }
 
 function setupPasswordToggles(){
@@ -2391,6 +2684,7 @@ const VIEW_META = {
   'omset': { title:'Omset', sub:'Daftar omset bulanan Januari sampai Desember per tahun' },
   'laporan': { title:'Laporan Owner', sub:'Generate laporan keuangan per owner' },
   'bagi-hasil': { title:'Kalkulator Bagi Hasil', sub:'Hitung pembagian bulanan sesuai perjanjian owner' },
+  'nota-lunas': { title:'Nota Lunas', sub:'Buat nota lunas tamu, unduh PDF, lalu kirim ke WhatsApp (tidak disimpan ke sistem)' },
   'owner': { title:'Owner', sub:'Daftar pemilik properti dengan persentase kepemilikan' },
   'bantuan': { title:'Bantuan', sub:'Laporkan bug atau kendala teknis kepada tim IT' },
   'pengaturan': { title:'Pengaturan', sub:'User role, komisi & konfigurasi sistem' }
@@ -2414,8 +2708,9 @@ function switchView(name){
   if(name==='omset') renderMonthlyRevenue();
   if(name==='owner') renderOwners();
   if(name==='laporan'){ populateOwnerSelect(); renderReport(); }
-  if(name==='bagi-hasil'){ populateShareCalculatorOwners(); renderShareCalculatorInputs(); prepareNotaForm(); }
-  if(name==='pengaturan') renderUsers();
+  if(name==='bagi-hasil'){ populateShareCalculatorOwners(); renderShareCalculatorInputs(); }
+  if(name==='nota-lunas') prepareNotaForm();
+  if(name==='pengaturan'){ renderUsers(); loadExtraBedStock(); }
   /* Close mobile sidebar */
   if(window.innerWidth < 1024){
     document.getElementById('sidebar').classList.add('-translate-x-full');
@@ -3366,7 +3661,7 @@ function renderBookingsTable(){
         <td class="px-3 py-3"><span class="badge ${isBookingCancelled(b) ? STATUS_STYLES.Cancelled : STATUS_STYLES[b.status] || ''}">${escapeHtml(b.status)}</span>${isBookingCancelled(b)?`<div class="mt-1 max-w-48 text-[10px] text-rose-600">${escapeHtml(b.cancellationReason)} · Refund ${fmtRp(b.refundAmount || 0)}</div>`:''}</td>
         <td class="px-5 py-3 text-right font-bold text-slate-900">${fmtRp(getBookingNetAmount(b))}${isBookingCancelled(b)?`<div class="text-[10px] font-normal text-slate-400">Nilai awal ${fmtRp(b.amount)}</div>`:''}</td>
         <td class="px-3 py-3 whitespace-nowrap text-xs text-slate-600">${fmtBookingCreatedAt(b.createdAt || b.created_at)}</td>
-        <td class="px-3 py-3 text-right whitespace-nowrap">${currentDashboardAccount?.role !== 'IT' ? `<button type="button" onclick="openBookingModal('${b.id}')" title="${isBookingCancelled(b) ? 'Edit memerlukan PIN Master' : 'Edit booking'}" class="text-xs font-semibold text-brand-600 hover:text-brand-800">Edit</button>${isBookingCancelled(b) ? '' : `<button type="button" onclick="openBookingCancelModal('${b.id}')" class="ml-3 text-xs font-semibold text-rose-600 hover:text-rose-800">Cancel</button>`}<button type="button" onclick="deleteBooking('${b.id}')" title="Hapus permanen booking (tanpa PIN)" class="ml-3 text-xs font-semibold text-rose-800 hover:text-rose-900 underline">Delete</button>` : '—'}</td>
+        <td class="px-3 py-3 text-right whitespace-nowrap">${currentDashboardAccount?.role !== 'IT' ? `<button type="button" onclick="openBookingModal('${b.id}')" title="${isBookingCancelled(b) ? 'Edit memerlukan PIN Master' : 'Edit booking'}" class="text-xs font-semibold text-brand-600 hover:text-brand-800">Edit</button>${isBookingCancelled(b) ? '' : `<button type="button" onclick="openBookingCancelModal('${b.id}')" class="ml-3 text-xs font-semibold text-rose-600 hover:text-rose-800">Cancel</button>`}<button type="button" onclick="openBookingDeleteModal('${b.id}')" title="Hapus permanen booking (perlu PIN Master)" class="ml-3 text-xs font-semibold text-rose-800 hover:text-rose-900 underline">Delete</button>` : '—'}</td>
       </tr>`).join('');
 }
 function changeBookingPage(direction){
@@ -6011,17 +6306,6 @@ function sendNotaWhatsApp(){
   else showToast('WhatsApp diblokir browser. Izinkan pop-up untuk membuka chat tamu.');
 }
 
-/* Menu khusus agar Generator Nota Lunas langsung terlihat di Dashboard. */
-function openNotaLunas(){
-  switchView('bagi-hasil');
-  prepareNotaForm();
-  document.getElementById('pageTitle').textContent = 'Nota Lunas';
-  document.getElementById('pageSubtitle').textContent = 'Buat nota lunas tamu, unduh PDF, lalu kirim ke WhatsApp (tidak disimpan ke sistem)';
-  document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
-  document.getElementById('notaNavItem')?.classList.add('active');
-  setTimeout(() => document.getElementById('notaPanel')?.scrollIntoView({ behavior:'smooth', block:'start' }), 150);
-}
-
 /* ============== USERS ============== */
 function mapDashboardAccount(account){
   const name = String(account.display_name || account.account_id || '?');
@@ -6077,6 +6361,40 @@ function renderUsers(){
       <td class="px-5 py-3 text-center">${statusBadge(u.status)}</td>
       ${isMaster ? `<td class="px-5 py-3 text-right whitespace-nowrap">${accountActionCell(u)}</td>` : ''}
     </tr>`).join('');
+}
+
+async function loadExtraBedStock(){
+  try {
+    const result = await dashboardApi('/dashboard/extra-bed-stock');
+    extraBedTotalStock = result.data?.total ?? null;
+  } catch(error) {
+    console.warn('Gagal memuat stok extra bed.', error);
+  }
+  const input = document.getElementById('extraBedStockInput');
+  if(input) input.value = extraBedTotalStock === null ? '' : extraBedTotalStock;
+}
+
+async function saveExtraBedStock(){
+  const input = document.getElementById('extraBedStockInput');
+  const status = document.getElementById('extraBedStockStatus');
+  const total = Number(input.value);
+  if(!Number.isSafeInteger(total) || total < 0){
+    status.className = 'text-xs mt-2 text-rose-600';
+    status.textContent = 'Masukkan jumlah stok yang valid (bilangan bulat, minimal 0).';
+    return;
+  }
+  status.className = 'text-xs mt-2 text-slate-500';
+  status.textContent = 'Menyimpan...';
+  try {
+    await dashboardApi('/dashboard/extra-bed-stock', { method:'PUT', body:JSON.stringify({ total }) });
+    extraBedTotalStock = total;
+    status.className = 'text-xs mt-2 text-emerald-700';
+    status.textContent = `Stok tersimpan: ${total} unit.`;
+    showToast('Stok extra bed berhasil disimpan.');
+  } catch(error) {
+    status.className = 'text-xs mt-2 text-rose-600';
+    status.textContent = error.message || 'Stok extra bed gagal disimpan.';
+  }
 }
 
 async function loadDashboardAccounts(){
@@ -6205,6 +6523,36 @@ function updateBookingExtraBedTotal(){
   const price = parseCurrencyInput(document.getElementById('newBookingExtraBedPrice').value);
   document.getElementById('newBookingExtraBedTotal').textContent = `Total Extra Bed: ${fmtRp(quantity * price)}. Dicatat terpisah dari nilai booking.`;
   syncBookingCancelAmounts('amount');
+  updateBookingExtraBedStockHint();
+}
+
+// Indikator langsung di form: berapa extra bed yang masih tersedia pada rentang tanggal ini,
+// dihitung dari stok total (Pengaturan) dikurangi booking aktif lain yang tanggalnya tumpang-tindih.
+function updateBookingExtraBedStockHint(){
+  const hint = document.getElementById('newBookingExtraBedStockHint');
+  if(!hint) return;
+  const editId = document.getElementById('bookingEditId').value;
+  const checkin = document.getElementById('newBookingCheckin').value;
+  const checkout = document.getElementById('newBookingCheckout').value;
+  const quantity = Number(document.getElementById('newBookingExtraBedQuantity').value) || 0;
+  if(extraBedTotalStock === null){
+    hint.className = 'text-xs text-slate-400';
+    hint.textContent = 'Stok extra bed belum diatur (lihat menu Pengaturan).';
+    return;
+  }
+  if(!checkin || !checkout || checkout <= checkin){
+    hint.className = 'text-xs text-slate-400';
+    hint.textContent = `Total stok extra bed: ${extraBedTotalStock} unit. Isi tanggal untuk cek ketersediaan.`;
+    return;
+  }
+  const overlappingUsed = BOOKINGS
+    .filter(booking => booking.id !== editId && booking.status !== 'Cancelled' && Number(booking.extraBedQuantity) > 0 &&
+      checkin < booking.checkout && checkout > booking.checkin)
+    .reduce((sum, booking) => sum + Number(booking.extraBedQuantity || 0), 0);
+  const available = Math.max(0, extraBedTotalStock - overlappingUsed);
+  const enough = quantity <= available;
+  hint.className = `text-xs ${enough ? 'text-slate-500' : 'text-rose-600 font-semibold'}`;
+  hint.textContent = `Stok extra bed tersedia: ${available} dari ${extraBedTotalStock} unit pada tanggal ini.`;
 }
 
 // Booking yang sudah dibatalkan: potongan dan pemasukan bersih saling menyesuaikan.
@@ -6235,12 +6583,8 @@ function syncBookingCancelAmounts(source){
     (extraBedTotal > 0 ? ` Extra bed ${fmtRp(extraBedTotal)} − potongan ${fmtRp(extraBedRefund)} = bersih ${fmtRp(extraBedNet)}.` : '');
 }
 
-async function deleteBookingFromDayList(id, ids){
-  await deleteBooking(id);
-  if(BOOKINGS.some(b => b.id === id)) return; // dibatalkan atau gagal, biarkan popup tetap terbuka
-  const remaining = (Array.isArray(ids) ? ids : []).filter(x => x !== id);
-  if(remaining.length) showDayBookings(remaining);
-  else closeModal('modal-day-bookings');
+function deleteBookingFromDayList(id, ids){
+  openBookingDeleteModal(id, ids);
 }
 function showDayBookings(ids){
   if(!Array.isArray(ids) || !ids.length) return;
@@ -6270,17 +6614,81 @@ function showDayBookings(ids){
   document.getElementById('dayBookingsTitle').textContent = `${ids.length} Booking pada tanggal ini`;
   openModal('modal-day-bookings');
 }
-async function deleteBookingFromModal(){
+function deleteBookingFromModal(){
   const id = document.getElementById('bookingEditId').value;
   if(!id) return;
-  await deleteBooking(id);
-  if(!BOOKINGS.some(b => b.id === id)) closeModal('modal-booking');
+  openBookingDeleteModal(id);
+}
+function setBookingCaptureLoading(show){
+  const loading = document.getElementById('bookingCaptureLoading');
+  loading.classList.toggle('hidden', !show);
+  loading.classList.toggle('flex', show);
+}
+async function handleBookingCaptureUpload(event){
+  const file = event.target.files?.[0];
+  const img = document.getElementById('bookingCapturePreviewImg');
+  const emptyHint = document.getElementById('bookingCaptureEmptyHint');
+  const clearBtn = document.getElementById('bookingCaptureClearBtn');
+  const sizeHint = document.getElementById('bookingCaptureSizeHint');
+  const dataUrlInput = document.getElementById('bookingCaptureDataUrl');
+  if(!file) return;
+  setBookingCaptureLoading(true);
+  sizeHint.className = 'text-[10px] text-slate-400 mt-1';
+  sizeHint.textContent = '';
+  try {
+    const compressed = await compressExpenseProof(file);
+    img.src = compressed.dataUrl;
+    img.classList.remove('hidden');
+    emptyHint.classList.add('hidden');
+    clearBtn.classList.remove('hidden');
+    dataUrlInput.value = compressed.dataUrl;
+    sizeHint.textContent = `Ukuran setelah dikompres: ${(compressed.size / 1024).toFixed(1)} KB`;
+  } catch(error) {
+    event.target.value = '';
+    sizeHint.className = 'text-[10px] text-rose-600 mt-1';
+    sizeHint.textContent = error.message || 'Gambar gagal dikompres.';
+  } finally {
+    setBookingCaptureLoading(false);
+  }
+}
+function clearBookingCapture(){
+  const input = document.getElementById('bookingCaptureInput');
+  const img = document.getElementById('bookingCapturePreviewImg');
+  const emptyHint = document.getElementById('bookingCaptureEmptyHint');
+  const clearBtn = document.getElementById('bookingCaptureClearBtn');
+  const sizeHint = document.getElementById('bookingCaptureSizeHint');
+  const dataUrlInput = document.getElementById('bookingCaptureDataUrl');
+  input.value = '';
+  img.removeAttribute('src');
+  img.classList.add('hidden');
+  emptyHint.classList.remove('hidden');
+  clearBtn.classList.add('hidden');
+  sizeHint.textContent = '';
+  dataUrlInput.value = '';
+  setBookingCaptureLoading(false);
+}
+function loadBookingCapture(dataUrl){
+  const img = document.getElementById('bookingCapturePreviewImg');
+  const emptyHint = document.getElementById('bookingCaptureEmptyHint');
+  const clearBtn = document.getElementById('bookingCaptureClearBtn');
+  const sizeHint = document.getElementById('bookingCaptureSizeHint');
+  const dataUrlInput = document.getElementById('bookingCaptureDataUrl');
+  if(!dataUrl) return;
+  img.src = dataUrl;
+  img.classList.remove('hidden');
+  emptyHint.classList.add('hidden');
+  clearBtn.classList.remove('hidden');
+  dataUrlInput.value = dataUrl;
+  sizeHint.className = 'text-[10px] text-slate-400 mt-1';
+  sizeHint.textContent = 'Capture tersimpan.';
 }
 function openBookingModal(bookingId=''){
   const form = document.getElementById('bookingForm');
   const booking = BOOKINGS.find(item => item.id === bookingId);
   const cancelled = isBookingCancelled(booking);
   form.reset();
+  clearBookingCapture();
+  if(booking?.captureImage) loadBookingCapture(booking.captureImage);
   populatePropSelects();
   const statusSelect = document.getElementById('newBookingStatus');
   const cancelledStatusOption = statusSelect.querySelector('option[value="Cancelled"]');
@@ -6301,6 +6709,15 @@ function openBookingModal(bookingId=''){
   document.getElementById('newBookingExtraBedQuantity').value = booking?.extraBedQuantity ?? 0;
   setCurrencyInputValue(document.getElementById('newBookingExtraBedPrice'), booking?.extraBedPrice ?? 0);
   setCurrencyInputValue(document.getElementById('newBookingGrossAmount'), booking?.grossAmount ?? 0);
+  populateBookingAgentSelect();
+  const bookingAgentSelect = document.getElementById('newBookingAgent');
+  if(booking?.agentId && !AGENTS.some(agent => agent.id === booking.agentId && Number(agent.active) === 1)){
+    bookingAgentSelect.appendChild(new Option(`${booking.agentName || 'Agen'} (nonaktif)`, booking.agentId));
+  }
+  bookingAgentSelect.value = booking?.agentId || '';
+  document.getElementById('newBookingAgentFeeFields').classList.toggle('hidden', !booking?.agentId);
+  document.getElementById('newBookingAgentFeeType').value = booking?.agentFeeType || 'amount';
+  setCurrencyInputValue(document.getElementById('newBookingAgentFeeValue'), booking?.agentFeeValue ?? 0);
   if(booking){
     document.getElementById('newBookingProp').value = booking.propId;
     document.getElementById('newBookingPlatform').value = booking.platform;
@@ -6317,6 +6734,7 @@ function openBookingModal(bookingId=''){
     syncBookingCancelAmounts('refund');
   }
   updateBookingExtraBedTotal();
+  updateBookingAgentFeeTotal();
   updateBookingFormForPropertyType();
   openModal('modal-booking');
 }
@@ -6363,12 +6781,44 @@ async function submitBooking(){
   const platformFeePct = 0;
   const status = document.getElementById('newBookingStatus').value;
   const note = document.getElementById('newBookingNote').value.trim();
+  const agentId = document.getElementById('newBookingAgent').value;
+  const agent = AGENTS.find(item => item.id === agentId);
+  const agentFeeType = document.getElementById('newBookingAgentFeeType').value;
+  const agentFeeValue = parseCurrencyInput(document.getElementById('newBookingAgentFeeValue').value);
   const statusElement = document.getElementById('bookingFormStatus');
   const button = document.getElementById('bookingSubmitButton');
   if(!prop || checkout <= checkin || !Number.isSafeInteger(amount) || amount <= 0 || !Number.isSafeInteger(extraBedQuantity) || extraBedQuantity < 0 || !Number.isSafeInteger(extraBedPrice) || extraBedPrice < 0 || !Number.isSafeInteger(grossAmount) || grossAmount < 0){
     statusElement.className = 'text-sm text-rose-600';
     statusElement.textContent = 'Properti, rentang tanggal, dan jumlah booking wajib valid.';
     return;
+  }
+  if(agentId && (!agent || !Number.isSafeInteger(agentFeeValue) || agentFeeValue < 0 || (agentFeeType === 'percent' && agentFeeValue > 100))){
+    statusElement.className = 'text-sm text-rose-600';
+    statusElement.textContent = 'Agen atau fee agen tidak valid.';
+    return;
+  }
+  const effectiveStatus = cancelledEdit ? editedBooking.status : status;
+  if(effectiveStatus !== 'Cancelled'){
+    const conflictBooking = BOOKINGS.find(booking =>
+      booking.propId === propId && booking.id !== editId && booking.status !== 'Cancelled' &&
+      checkin < booking.checkout && checkout > booking.checkin
+    );
+    if(conflictBooking){
+      statusElement.className = 'text-sm text-rose-600';
+      statusElement.textContent = `Properti ${prop.name} sudah ada booking lain yang tanggalnya bentrok: ${conflictBooking.guest || 'tamu lain'} (${fmtDate(conflictBooking.checkin)} - ${fmtDate(conflictBooking.checkout)}).`;
+      return;
+    }
+    if(extraBedTotalStock !== null && extraBedQuantity > 0){
+      const overlappingUsed = BOOKINGS
+        .filter(booking => booking.id !== editId && booking.status !== 'Cancelled' && Number(booking.extraBedQuantity) > 0 &&
+          checkin < booking.checkout && checkout > booking.checkin)
+        .reduce((sum, booking) => sum + Number(booking.extraBedQuantity || 0), 0);
+      if(overlappingUsed + extraBedQuantity > extraBedTotalStock){
+        statusElement.className = 'text-sm text-rose-600';
+        statusElement.textContent = `Stok extra bed tidak cukup pada tanggal tersebut. Tersedia ${Math.max(0, extraBedTotalStock - overlappingUsed)} dari total ${extraBedTotalStock} unit.`;
+        return;
+      }
+    }
   }
   if(cancelledEdit && !/^\d{4}$/.test(approvalPin)){
     statusElement.className = 'text-sm text-rose-600';
@@ -6383,9 +6833,12 @@ async function submitBooking(){
     statusElement.textContent = 'Potongan/refund tidak boleh lebih besar dari nilai booking + Extra Bed.';
     return;
   }
+  const captureImage = document.getElementById('bookingCaptureDataUrl').value;
+  const agentFeeAmount = agentId ? (agentFeeType === 'percent' ? Math.round(amount * agentFeeValue / 100) : agentFeeValue) : 0;
   const payload = {
     ...(editId ? { id:editId } : {}), propId, propName:prop.name, propCode:prop.code,
-    guest, phone, platform, status:cancelledEdit ? editedBooking.status : status, checkin, checkout, amount, grossAmount, managementType, extraBedQuantity, extraBedPrice, platformFeePct, note,
+    guest, phone, platform, status:cancelledEdit ? editedBooking.status : status, checkin, checkout, amount, grossAmount, managementType, extraBedQuantity, extraBedPrice, platformFeePct, note, captureImage,
+    agentId, agentFeeType, agentFeeValue,
     ...(cancelledEdit ? { pin:approvalPin, refund_amount:retainedRefund } : {})
   };
   button.disabled = true;
@@ -6402,7 +6855,8 @@ async function submitBooking(){
       propId, propName:prop.name, propCode:prop.code, guest, phone, platform,
       status:payload.status, checkin, checkout,
       nights:Math.round((Date.parse(`${checkout}T00:00:00Z`) - Date.parse(`${checkin}T00:00:00Z`)) / 86400000),
-      amount, grossAmount, extraBedQuantity, extraBedPrice, platformFeePct, note,
+      amount, grossAmount, extraBedQuantity, extraBedPrice, platformFeePct, note, captureImage,
+      agentId, agentName:agent?.name || '', agentFeeType:agentId ? agentFeeType : '', agentFeeValue:agentId ? agentFeeValue : 0, agentFeeAmount,
       cancellationReason:editedBooking?.cancellationReason || '',
       refundAmount:retainedRefund
     };
@@ -6748,13 +7202,39 @@ async function submitBookingImport(){
   refreshGeneratedShareCalculation();
 }
 
-async function deleteBooking(bookingId){
+let pendingBookingDeleteContext = null;
+function openBookingDeleteModal(bookingId, dayListIds){
   const booking = BOOKINGS.find(item => item.id === bookingId);
   if(!booking) return;
-  const label = `${bookingId} · ${booking.guest || 'Tamu'} · ${booking.propName || ''}`;
-  if(!confirm(`Hapus permanen booking ${label}? Tindakan ini tidak bisa dibatalkan.`)) return;
+  pendingBookingDeleteContext = { bookingId, dayListIds:Array.isArray(dayListIds) ? dayListIds : null };
+  document.getElementById('deleteBookingForm').reset();
+  document.getElementById('deleteBookingDescription').textContent = `Hapus permanen booking ${bookingId} · ${booking.guest || 'Tamu'} · ${booking.propName || ''}?`;
+  document.getElementById('deleteBookingStatus').textContent = '';
+  openModal('modal-delete-booking');
+}
+async function submitBookingDelete(event){
+  event.preventDefault();
+  const context = pendingBookingDeleteContext;
+  const pinInput = document.getElementById('deleteBookingPin');
+  const status = document.getElementById('deleteBookingStatus');
+  const button = document.getElementById('deleteBookingButton');
+  if(!context?.bookingId){
+    status.className = 'text-sm text-rose-600';
+    status.textContent = 'Booking tidak ditemukan.';
+    return;
+  }
+  if(!/^\d{4}$/.test(pinInput.value)){
+    status.className = 'text-sm text-rose-600';
+    status.textContent = 'Masukkan PIN Master tepat 4 digit.';
+    return;
+  }
+  button.disabled = true;
+  status.className = 'text-sm text-slate-500';
+  status.textContent = 'Memverifikasi PIN Master dan menghapus booking...';
   try {
-    await dashboardApi(`/dashboard/bookings/${encodeURIComponent(bookingId)}`, { method:'DELETE' });
+    await dashboardApi(`/dashboard/bookings/${encodeURIComponent(context.bookingId)}`, {
+      method:'DELETE', body:JSON.stringify({ pin:pinInput.value })
+    });
     await loadBookingData(currentDashboardAccount);
     await loadFinanceData();
     renderCalendar();
@@ -6762,9 +7242,21 @@ async function deleteBooking(bookingId){
     renderDashboard();
     if(currentView === 'owner') renderOwners();
     if(currentView === 'laporan') renderReport();
-    showToast(`Booking ${bookingId} dihapus permanen.`);
+    showToast(`Booking ${context.bookingId} dihapus permanen.`);
+    closeModal('modal-delete-booking');
+    closeModal('modal-booking');
+    if(context.dayListIds){
+      const remaining = context.dayListIds.filter(x => x !== context.bookingId);
+      if(remaining.length) showDayBookings(remaining);
+      else closeModal('modal-day-bookings');
+    }
+    pendingBookingDeleteContext = null;
   } catch(error) {
-    alert(`Gagal menghapus booking. ${error.message || 'Periksa koneksi lalu coba lagi.'}`);
+    status.className = 'text-sm text-rose-600';
+    status.textContent = error.message || 'Booking gagal dihapus. Periksa koneksi lalu coba lagi.';
+    pinInput.value = '';
+  } finally {
+    button.disabled = false;
   }
 }
 async function submitBookingCancellation(event){
@@ -6940,6 +7432,7 @@ async function submitContactMessage(event){
   const button = form.querySelector('button[type="submit"]');
   const status = document.getElementById('contactItStatus');
   const token = getDashboardToken();
+  const title = document.getElementById('contactItTitle').value.trim();
   const message = document.getElementById('contactItMessage').value.trim();
 
   if(!token){
@@ -6959,7 +7452,7 @@ async function submitContactMessage(event){
         'Content-Type': 'application/json',
         Authorization: `Bearer ${token}`
       },
-      body: JSON.stringify({ message })
+      body: JSON.stringify({ title, message })
     });
     const result = await response.json().catch(() => ({}));
     if(response.status === 401){
@@ -6991,11 +7484,20 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('crewForm').addEventListener('submit', submitCrewForm);
   document.getElementById('ownerForm').addEventListener('submit', submitOwner);
   document.getElementById('crewTableBody').addEventListener('click', handleCrewTableAction);
+  document.getElementById('agentForm').addEventListener('submit', submitAgentForm);
+  document.getElementById('agentTableBody').addEventListener('click', handleAgentTableAction);
+  document.getElementById('deleteAgentForm').addEventListener('submit', submitAgentDelete);
   document.getElementById('newExpCat').addEventListener('change', updateExpensePayeeField);
   document.getElementById('newExpProof').addEventListener('change', handleExpenseProofSelection);
   document.getElementById('newBookingExtraBedQuantity').addEventListener('input', updateBookingExtraBedTotal);
+  document.getElementById('newBookingCheckin').addEventListener('input', updateBookingExtraBedStockHint);
+  document.getElementById('newBookingCheckout').addEventListener('input', updateBookingExtraBedStockHint);
   document.getElementById('newBookingExtraBedPrice').addEventListener('input', updateBookingExtraBedTotal);
-  document.getElementById('newBookingAmount').addEventListener('input', () => syncBookingCancelAmounts('amount'));
+  document.getElementById('newBookingAgentFeeType').addEventListener('change', updateBookingAgentFeeTotal);
+  document.getElementById('newBookingAgentFeeValue').addEventListener('input', updateBookingAgentFeeTotal);
+  document.getElementById('agentFeeTypeInput').addEventListener('change', clampAgentDefaultFeeValue);
+  document.getElementById('agentFeeValueInput').addEventListener('input', clampAgentDefaultFeeValue);
+  document.getElementById('newBookingAmount').addEventListener('input', () => { syncBookingCancelAmounts('amount'); updateBookingAgentFeeTotal(); });
   document.getElementById('bookingRefundAmount').addEventListener('input', () => syncBookingCancelAmounts('refund'));
   document.getElementById('bookingNetAmount').addEventListener('input', () => syncBookingCancelAmounts('net'));
   document.getElementById('deleteFinanceForm').addEventListener('submit', submitFinanceDelete);
@@ -7026,6 +7528,7 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('editFinanceForm').addEventListener('submit', submitExpenseEdit);
   document.getElementById('editExpProof').addEventListener('change', handleEditExpenseProofSelection);
   document.getElementById('cancelBookingForm').addEventListener('submit', submitBookingCancellation);
+  document.getElementById('deleteBookingForm').addEventListener('submit', submitBookingDelete);
   document.getElementById('importBookingFile').addEventListener('change', handleBookingImportFile);
   document.getElementById('importBookingText').addEventListener('input', invalidateBookingImportPreview);
   setupPasswordToggles();

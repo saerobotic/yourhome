@@ -18,7 +18,7 @@ function getCorsHeaders(request) {
   const isLocalOrigin = /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin);
   return {
     ...CORS,
-    'Access-Control-Allow-Origin': ['https://yourhome.id', 'https://admin.yourhome.id', 'https://owner.yourhome.id'].includes(origin) || isLocalOrigin
+    'Access-Control-Allow-Origin': ['https://yourhome.id', 'https://admin.yourhome.id', 'https://owner.yourhome.id', 'https://agen.yourhome.id'].includes(origin) || isLocalOrigin
       ? origin
       : 'https://yourhome.id',
   };
@@ -645,9 +645,59 @@ async function getOwnerTokenPayload(request, secret) {
   }
 }
 
+// Dipakai bersama oleh POST dan PATCH booking: validasi agen (opsional) dan hitung fee-nya.
+// Melempar Error dengan pesan siap pakai untuk bad() kalau datanya tidak valid.
+async function resolveBookingAgentFee(env, body, amount) {
+  const agentId = String(body.agentId || '').trim();
+  if (!agentId) return { agentId: '', agentName: '', feeType: '', feeValue: 0, feeAmount: 0 };
+  // Tidak memfilter active=1: booking lama yang agennya sudah dinonaktifkan tetap harus bisa diedit
+  // (dropdown di form hanya menawarkan agen aktif untuk pilihan baru, jadi ini aman).
+  const agent = await env.DB.prepare('SELECT id, name FROM dashboard_agents WHERE id = ?').bind(agentId).first();
+  if (!agent) throw new Error('Agen tidak ditemukan.');
+  const feeType = body.agentFeeType === 'percent' ? 'percent' : 'amount';
+  const feeValue = Number(body.agentFeeValue || 0);
+  if (!Number.isSafeInteger(feeValue) || feeValue < 0 || (feeType === 'percent' && feeValue > 100)) {
+    throw new Error('Fee agen tidak valid.');
+  }
+  const feeAmount = feeType === 'percent' ? Math.round(amount * feeValue / 100) : feeValue;
+  return { agentId, agentName: agent.name, feeType, feeValue, feeAmount };
+}
+
 async function isAdminRequest(request, secret) {
   const tokenData = await getAdminTokenPayload(request, secret);
   return Boolean(tokenData && tokenData.role !== 'IT');
+}
+
+function isItSupportAccount(tokenData) {
+  return tokenData?.account_id === 'it' && tokenData?.role === 'IT';
+}
+
+async function createAgentToken(secret, agentId) {
+  const payload = base64UrlEncode(JSON.stringify({
+    scope: 'agent',
+    agent_id: agentId,
+    exp: Math.floor(Date.now() / 1000) + 24 * 60 * 60,
+  }));
+  return `${payload}.${await hmacSha256Hex(secret, payload)}`;
+}
+
+async function getAgentTokenPayload(request, secret) {
+  if (!secret) return null;
+  const authorization = request.headers.get('Authorization') || '';
+  const token = authorization.match(/^Bearer\s+(.+)$/i)?.[1];
+  if (!token) return null;
+  const [payload, signature] = token.split('.');
+  if (!payload || !signature) return null;
+  try {
+    const expectedSignature = await hmacSha256Hex(secret, payload);
+    if (!constantTimeEqual(signature, expectedSignature)) return null;
+    const data = JSON.parse(base64UrlDecode(payload));
+    return data.scope === 'agent' && typeof data.agent_id === 'string' && data.agent_id && Number(data.exp) > Math.floor(Date.now() / 1000)
+      ? data
+      : null;
+  } catch {
+    return null;
+  }
 }
 
 export default {
@@ -1306,6 +1356,38 @@ export default {
 
           await safelySyncCheckinPayrollExpenses(env, [{ crew, workDate:today }]);
 
+        const telegramToken = String(env.TELEGRAM_BOT_TOKEN || '').trim();
+        const telegramChatId = String(env.TELEGRAM_CHAT_ID || '').trim();
+        if (telegramToken && telegramChatId) {
+          const locationUrl = `https://maps.google.com/?q=${numericLat},${numericLng}`;
+          const telegramMessage = [
+            'CHECK-IN CREW BERHASIL',
+            `Crew: ${crew}`,
+            `Properti: ${unit}`,
+            `Pekerjaan: ${jobType}`,
+            `Tanggal: ${today}`,
+            `Waktu: ${createdAt}`,
+            `GPS: ${numericLat}, ${numericLng}${numericAccuracy == null ? '' : ` (akurasi ${numericAccuracy} m)`}`,
+            'Foto selfie: diterima',
+            `Foto hasil kerja: ${workPhotos.length}`,
+            `Lokasi: ${locationUrl}`,
+          ].join('\n');
+
+          try {
+            const telegramResponse = await fetch(`https://api.telegram.org/bot${telegramToken}/sendMessage`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ chat_id: telegramChatId, text: telegramMessage }),
+            });
+            const telegramResult = await telegramResponse.json().catch(() => ({}));
+            if (!telegramResponse.ok || telegramResult.ok !== true) {
+              console.error('Notifikasi check-in gagal dikirim ke Telegram:', telegramResult.description || telegramResponse.status);
+            }
+          } catch (error) {
+            console.error('Notifikasi check-in gagal dikirim ke Telegram:', error);
+          }
+        }
+
         return json({
           ok: true,
           data: {
@@ -1760,6 +1842,187 @@ export default {
           await env.DB.prepare('UPDATE crews SET crew_code = ?, name = ? WHERE id = ?').bind(crewCode, name, id).run();
         }
         return json({ ok:true, data:{ id, crew_code:crewCode, name, active:Number(crew.active) } });
+      }
+
+      // ================= AGEN / MARKETING (fee per booking + Agen Portal) =================
+      // Butuh migrations/migration-dashboard-agents.sql dijalankan di D1 sebelum endpoint ini dipakai.
+      if (path === '/dashboard/agents') {
+        const adminSecret = String(env.ADMIN_DASHBOARD_SECRET || '').trim();
+        const tokenData = await getAdminTokenPayload(request, adminSecret);
+        if (!hasDashboardRole(tokenData)) return bad('Login dashboard diperlukan', 401);
+
+        if (request.method === 'GET') {
+          let result;
+          try {
+            result = await env.DB.prepare(`
+              SELECT id, agent_code, name, phone, default_fee_type, default_fee_value, active
+              FROM dashboard_agents ORDER BY active DESC, name COLLATE NOCASE ASC
+            `).all();
+          } catch (error) {
+            if (/no such table: dashboard_agents/i.test(String(error?.message || error))) {
+              return bad('Daftar Agen belum disiapkan. Jalankan migration-dashboard-agents.sql di D1.', 503);
+            }
+            throw error;
+          }
+          return json({ ok:true, data:result.results || [] });
+        }
+
+        if (!hasManagementRole(tokenData)) return bad('Hanya Master atau Admin yang dapat mengelola agen.', 403);
+
+        if (request.method === 'POST') {
+          const body = await request.json();
+          const name = String(body.name || '').trim().replace(/\s+/g, ' ');
+          const phone = String(body.phone || '').trim();
+          const agentCode = String(body.agent_code || '').trim().toUpperCase();
+          const pin = String(body.pin || '').trim();
+          const defaultFeeType = body.default_fee_type === 'percent' ? 'percent' : 'amount';
+          const defaultFeeValue = Number(body.default_fee_value || 0);
+          if (name.length < 2 || name.length > 80 || phone.length > 30 || (agentCode && !/^[A-Z0-9_-]{3,20}$/.test(agentCode)) || !/^\d{6}$/.test(pin) ||
+              !Number.isSafeInteger(defaultFeeValue) || defaultFeeValue < 0 || (defaultFeeType === 'percent' && defaultFeeValue > 100)) {
+            return bad('Nama, telepon, dan PIN login tepat 6 digit wajib diisi. ID Agen opsional dan akan dibuat otomatis bila dikosongkan.');
+          }
+          let duplicateName;
+          try {
+            duplicateName = await env.DB.prepare('SELECT id FROM dashboard_agents WHERE name = ? COLLATE NOCASE AND active = 1').bind(name).first();
+          } catch (error) {
+            if (/no such table: dashboard_agents/i.test(String(error?.message || error))) {
+              return bad('Daftar Agen belum disiapkan. Jalankan migration-dashboard-agents.sql di D1.', 503);
+            }
+            throw error;
+          }
+          if (duplicateName) return bad('Nama agen tersebut sudah terdaftar.', 409);
+          const id = crypto.randomUUID();
+          const generatedCode = agentCode || `AG-${id.replace(/-/g, '').slice(0, 8).toUpperCase()}`;
+          const duplicateCode = await env.DB.prepare('SELECT id FROM dashboard_agents WHERE agent_code = ? COLLATE NOCASE').bind(generatedCode).first();
+          if (duplicateCode) return bad('Kode Agen tersebut sudah digunakan.', 409);
+          const now = new Date().toISOString();
+          await env.DB.prepare(`
+            INSERT INTO dashboard_agents (id, agent_code, name, phone, default_fee_type, default_fee_value, pin_hash, active, created_at, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, 1, ?, ?)
+          `).bind(id, generatedCode, name, phone, defaultFeeType, defaultFeeValue, await sha256Hex(pin), now, now).run();
+          return json({ ok:true, data:{ id, agent_code:generatedCode, name, phone, default_fee_type:defaultFeeType, default_fee_value:defaultFeeValue, active:1 } }, 201);
+        }
+
+        return bad('Metode agen tidak didukung.', 405);
+      }
+
+      const dashboardAgentMatch = path.match(/^\/dashboard\/agents\/([^/]+)$/);
+      if (dashboardAgentMatch && ['PATCH', 'DELETE'].includes(request.method)) {
+        const adminSecret = String(env.ADMIN_DASHBOARD_SECRET || '').trim();
+        const tokenData = await getAdminTokenPayload(request, adminSecret);
+        if (!hasManagementRole(tokenData)) return bad('Hanya Master atau Admin yang dapat mengelola agen.', 403);
+        const id = decodeURIComponent(dashboardAgentMatch[1]);
+        let agent;
+        try {
+          agent = await env.DB.prepare('SELECT id, agent_code, name, active FROM dashboard_agents WHERE id = ?').bind(id).first();
+        } catch (error) {
+          if (/no such table: dashboard_agents/i.test(String(error?.message || error))) {
+            return bad('Daftar Agen belum disiapkan. Jalankan migration-dashboard-agents.sql di D1.', 503);
+          }
+          throw error;
+        }
+        if (!agent) return bad('Agen tidak ditemukan.', 404);
+
+        if (request.method === 'DELETE') {
+          let body = {};
+          try { body = await request.json(); } catch {}
+          const pin = String(body.pin || '').trim();
+          if (!/^\d{4}$/.test(pin)) return bad('Masukkan PIN Master tepat 4 digit.', 400);
+          const master = await env.DB.prepare(`
+            SELECT delete_pin_salt, delete_pin_hash FROM dashboard_users
+            WHERE account_id = 'master' AND active = 1
+          `).first();
+          if (!master?.delete_pin_hash) return bad('PIN Master belum diinisialisasi. Login sebagai Master terlebih dahulu.', 409);
+          const attemptedHash = await hashDashboardPassword(pin, master.delete_pin_salt);
+          if (!constantTimeEqual(attemptedHash, master.delete_pin_hash)) return bad('PIN Master salah.', 403);
+          await env.DB.prepare('UPDATE dashboard_agents SET active = 0 WHERE id = ?').bind(id).run();
+          return json({ ok:true, data:{ id, active:0 } });
+        }
+
+        const body = await request.json();
+        const name = String(body.name || '').trim().replace(/\s+/g, ' ');
+        const agentCode = String(body.agent_code || '').trim().toUpperCase();
+        const phone = String(body.phone || '').trim();
+        const pin = String(body.pin || '').trim();
+        const defaultFeeType = body.default_fee_type === 'percent' ? 'percent' : 'amount';
+        const defaultFeeValue = Number(body.default_fee_value || 0);
+        if (name.length < 2 || name.length > 80 || !/^[A-Z0-9_-]{3,20}$/.test(agentCode) || phone.length > 30 || !Number.isSafeInteger(defaultFeeValue) || defaultFeeValue < 0 || (defaultFeeType === 'percent' && defaultFeeValue > 100)) {
+          return bad('Nama, ID Agen (3-20 karakter), telepon, dan fee default wajib valid.');
+        }
+        if (pin && !/^\d{6}$/.test(pin)) return bad('PIN Agen harus tepat 6 digit.');
+        const duplicate = await env.DB.prepare('SELECT id FROM dashboard_agents WHERE name = ? COLLATE NOCASE AND id <> ? LIMIT 1')
+          .bind(name, id).first();
+        if (duplicate) return bad('Nama agen tersebut sudah digunakan.', 409);
+        const duplicateCode = await env.DB.prepare('SELECT id FROM dashboard_agents WHERE agent_code = ? COLLATE NOCASE AND id <> ? LIMIT 1')
+          .bind(agentCode, id).first();
+        if (duplicateCode) return bad('ID Agen tersebut sudah digunakan.', 409);
+        if (pin) {
+          await env.DB.prepare(`
+            UPDATE dashboard_agents SET name = ?, agent_code = ?, phone = ?, default_fee_type = ?, default_fee_value = ?, pin_hash = ?, updated_at = ?
+            WHERE id = ?
+          `).bind(name, agentCode, phone, defaultFeeType, defaultFeeValue, await sha256Hex(pin), new Date().toISOString(), id).run();
+        } else {
+          await env.DB.prepare(`
+            UPDATE dashboard_agents SET name = ?, agent_code = ?, phone = ?, default_fee_type = ?, default_fee_value = ?, updated_at = ?
+            WHERE id = ?
+          `).bind(name, agentCode, phone, defaultFeeType, defaultFeeValue, new Date().toISOString(), id).run();
+        }
+        return json({ ok:true, data:{ id, agent_code:agentCode, name, phone, default_fee_type:defaultFeeType, default_fee_value:defaultFeeValue, active:Number(agent.active) } });
+      }
+
+      if (request.method === 'POST' && path === '/agent/login') {
+        const rate = await reserveLoginAttempt(env, request, 'agent-login');
+        if (rate.unavailable) return bad('Tabel pembatas login belum tersedia. Jalankan migration-auth-login-rate-limits.sql di D1.', 503);
+        if (rate.limited) return bad('Terlalu banyak percobaan login. Coba lagi dalam 15 menit.', 429);
+        const adminSecret = String(env.ADMIN_DASHBOARD_SECRET || '').trim();
+        if (!adminSecret) return bad('Secret sesi Worker belum dikonfigurasi.', 503);
+        const body = await request.json();
+        const agentCode = String(body.agent_code || '').trim();
+        const pin = String(body.pin || '').trim();
+        if (!agentCode || !pin) return bad('ID Agen dan PIN wajib diisi.');
+        let agent;
+        try {
+          agent = await env.DB.prepare(`
+            SELECT id, agent_code, name, pin_hash, active FROM dashboard_agents
+            WHERE agent_code = ? COLLATE NOCASE AND active = 1
+          `).bind(agentCode).first();
+        } catch (error) {
+          if (/no such table: dashboard_agents/i.test(String(error?.message || error))) {
+            return bad('Agen Portal belum disiapkan. Jalankan migration-dashboard-agents.sql di D1.', 503);
+          }
+          throw error;
+        }
+        if (!agent) return bad('PIN salah atau agen tidak aktif', 401);
+        const hash = await sha256Hex(pin);
+        if (!constantTimeEqual(hash, agent.pin_hash)) return bad('PIN salah atau agen tidak aktif', 401);
+        await clearLoginAttempts(env, request, 'agent-login');
+        return json({
+          ok:true, token:await createAgentToken(adminSecret, agent.id), expires_in:24 * 60 * 60,
+          data:{ agent_id:agent.id, agent_code:agent.agent_code, agent_name:agent.name },
+        });
+      }
+
+      if (request.method === 'GET' && path === '/agent/bookings') {
+        const adminSecret = String(env.ADMIN_DASHBOARD_SECRET || '').trim();
+        const agentSession = await getAgentTokenPayload(request, adminSecret);
+        if (!agentSession) return bad('Login Agen diperlukan.', 401);
+        const agent = await env.DB.prepare('SELECT id, agent_code, name FROM dashboard_agents WHERE id = ? AND active = 1')
+          .bind(agentSession.agent_id).first();
+        if (!agent) return bad('Akses Agen tidak aktif.', 401);
+        const result = await env.DB.prepare(`
+          SELECT id, property_name, property_code, guest, checkin, checkout, status,
+                 agent_fee_type, agent_fee_value, agent_fee_amount, created_at
+          FROM dashboard_bookings WHERE agent_id = ? ORDER BY checkin DESC
+        `).bind(agent.id).all();
+        return json({ ok:true, data:{
+          agent:{ id:agent.id, agent_code:agent.agent_code, name:agent.name },
+          bookings:(result.results || []).map(row => ({
+            id:row.id, propName:row.property_name, propCode:row.property_code, guest:row.guest,
+            checkin:row.checkin, checkout:row.checkout, status:row.status,
+            feeType:row.agent_fee_type, feeValue:Number(row.agent_fee_value || 0), feeAmount:Number(row.agent_fee_amount || 0),
+            createdAt:row.created_at,
+          })),
+        } });
       }
 
       if (request.method === 'POST' && path === '/dashboard/password') {
@@ -2259,6 +2522,31 @@ export default {
         return json({ ok:true });
       }
 
+      if (path === '/dashboard/extra-bed-stock') {
+        const adminSecret = String(env.ADMIN_DASHBOARD_SECRET || '').trim();
+        const tokenData = await getAdminTokenPayload(request, adminSecret);
+        if (!hasDashboardRole(tokenData)) return bad('Login dashboard diperlukan.', 401);
+
+        if (request.method === 'GET') {
+          const row = await env.DB.prepare(`SELECT value FROM site_settings WHERE key = 'extra_bed_total_stock'`).first();
+          return json({ ok:true, data:{ total: row ? Number(row.value) : null } });
+        }
+
+        if (request.method === 'PUT') {
+          if (!hasManagementRole(tokenData)) return bad('Hanya Master atau Admin yang dapat mengubah stok extra bed.', 403);
+          const body = await request.json();
+          const total = Number(body.total);
+          if (!Number.isSafeInteger(total) || total < 0 || total > 100000) return bad('Jumlah stok extra bed tidak valid.');
+          await env.DB.prepare(`
+            INSERT INTO site_settings (key, value, updated_at) VALUES ('extra_bed_total_stock', ?, ?)
+            ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at
+          `).bind(String(total), new Date().toISOString()).run();
+          return json({ ok:true, data:{ total } });
+        }
+
+        return bad('Metode stok extra bed tidak didukung.', 405);
+      }
+
       if (request.method === 'GET' && path === '/dashboard/bookings') {
         const adminSecret = String(env.ADMIN_DASHBOARD_SECRET || '').trim();
         const tokenData = await getAdminTokenPayload(request, adminSecret);
@@ -2271,6 +2559,9 @@ export default {
           extraBedQuantity:Number(row.extra_bed_quantity || 0), extraBedPrice:Number(row.extra_bed_price || 0),
           cleaningFee:Number(row.cleaning_fee), platformFeePct:Number(row.platform_fee_pct),
           note:row.note, cancellationReason:row.cancellation_reason, refundAmount:Number(row.refund_amount),
+          captureImage:row.capture_image || '',
+          agentId:row.agent_id || '', agentName:row.agent_name || '',
+          agentFeeType:row.agent_fee_type || '', agentFeeValue:Number(row.agent_fee_value || 0), agentFeeAmount:Number(row.agent_fee_amount || 0),
           createdAt:row.created_at,
         })) });
       }
@@ -2298,6 +2589,7 @@ export default {
         const cleaningFee = Number(body.cleaningFee || 0);
         const platformFeePct = Number(body.platformFeePct || 0);
         const note = String(body.note || '').trim();
+        const captureImage = String(body.captureImage || '').trim();
         const validStatuses = ['Inquiry', 'Confirmed', 'Checked-in', 'Checked-out', 'Cancelled'];
         const validPlatforms = ['Airbnb', 'Booking.com', 'Agoda', 'Tiket.com', 'Traveloka', 'Direct', 'Agen Offline', 'Website'];
         const validManagementTypes = ['managed', 'partner'];
@@ -2307,9 +2599,45 @@ export default {
         if (!/^\d{4}-\d{2}-\d{2}$/.test(checkin) || !/^\d{4}-\d{2}-\d{2}$/.test(checkout) || checkout <= checkin || !Number.isSafeInteger(amount) || amount <= 0 || !Number.isSafeInteger(grossAmount) || grossAmount < 0 || !Number.isSafeInteger(extraBedQuantity) || extraBedQuantity < 0 || !Number.isSafeInteger(extraBedPrice) || extraBedPrice < 0 || !Number.isSafeInteger(cleaningFee) || cleaningFee < 0 || !Number.isInteger(platformFeePct) || platformFeePct < 0 || platformFeePct > 50 || note.length > 500) {
           return bad('Tanggal, jumlah, biaya, atau catatan booking tidak valid.');
         }
+        if (captureImage && (!/^data:image\/(jpeg|jpg|png|webp);base64,/.test(captureImage) || captureImage.length > 250000)) {
+          return bad('Capture pesanan tidak valid atau terlalu besar.');
+        }
+        if (status !== 'Cancelled') {
+          const conflict = await env.DB.prepare(`
+            SELECT id, guest, checkin, checkout FROM dashboard_bookings
+            WHERE property_id = ? AND LOWER(status) NOT IN ('cancelled', 'canceled')
+              AND checkin < ? AND checkout > ?
+            LIMIT 1
+          `).bind(propertyId, checkout, checkin).first();
+          if (conflict) {
+            return bad(`Properti ${propertyName || propertyId} sudah ada booking lain yang tanggalnya bentrok: ${conflict.guest || 'tamu lain'} (${conflict.checkin} s/d ${conflict.checkout}).`, 409);
+          }
+        }
+        if (status !== 'Cancelled' && extraBedQuantity > 0) {
+          const stockRow = await env.DB.prepare(`SELECT value FROM site_settings WHERE key = 'extra_bed_total_stock'`).first();
+          if (stockRow) {
+            const totalStock = Number(stockRow.value);
+            const usedRow = await env.DB.prepare(`
+              SELECT COALESCE(SUM(extra_bed_quantity), 0) AS used FROM dashboard_bookings
+              WHERE LOWER(status) NOT IN ('cancelled', 'canceled') AND extra_bed_quantity > 0
+                AND checkin < ? AND checkout > ?
+            `).bind(checkout, checkin).first();
+            const used = Number(usedRow?.used || 0);
+            if (used + extraBedQuantity > totalStock) {
+              return bad(`Stok extra bed tidak cukup pada tanggal tersebut. Tersedia ${Math.max(0, totalStock - used)} dari total ${totalStock}.`, 409);
+            }
+          }
+        }
+        let bookingAgent;
+        try {
+          bookingAgent = await resolveBookingAgentFee(env, body, amount);
+        } catch (error) {
+          return bad(error.message, 400);
+        }
         const nights = Math.round((Date.parse(`${checkout}T00:00:00Z`) - Date.parse(`${checkin}T00:00:00Z`)) / 86400000);
         const now = new Date().toISOString();
         const incomeEntryId = `booking-income-${id}`;
+        const agentFeeEntryId = `booking-agent-fee-${id}`;
         const incomeCategoryId = managementType === 'partner' ? 'income-partner-fee' : 'income-booking';
         const incomeCategoryName = managementType === 'partner' ? 'Fee Mitra' : 'Booking';
         const incomeDescription = managementType === 'partner' ? `Fee Mitra ${id} - ${guest}` : `Booking ${id} - ${guest}`;
@@ -2318,10 +2646,13 @@ export default {
             INSERT OR IGNORE INTO dashboard_bookings (
               id, property_id, property_name, property_code, guest, guest_phone, platform, status,
               checkin, checkout, nights, amount, gross_amount, extra_bed_quantity, extra_bed_price, cleaning_fee, platform_fee_pct, note,
-              cancellation_reason, refund_amount, income_entry_id, created_by, created_at, updated_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, '', 0, ?, ?, ?, ?)
+              cancellation_reason, refund_amount, capture_image, agent_id, agent_name, agent_fee_type, agent_fee_value, agent_fee_amount,
+              income_entry_id, created_by, created_at, updated_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, '', 0, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
           `).bind(id, propertyId, propertyName, propertyCode, guest, phone, platform, status, checkin, checkout,
-            nights, amount, grossAmount, extraBedQuantity, extraBedPrice, cleaningFee, platformFeePct, note, incomeEntryId, tokenData.account_id || '', now, now),
+            nights, amount, grossAmount, extraBedQuantity, extraBedPrice, cleaningFee, platformFeePct, note, captureImage,
+            bookingAgent.agentId, bookingAgent.agentName, bookingAgent.feeType, bookingAgent.feeValue, bookingAgent.feeAmount,
+            incomeEntryId, tokenData.account_id || '', now, now),
           env.DB.prepare(`
             INSERT INTO finance_entries (
               id, kind, category_id, category_name, property_id, property_name,
@@ -2335,7 +2666,7 @@ export default {
               id, kind, category_id, category_name, property_id, property_name,
               entry_date, amount, description, payee, recurrence, created_by, created_at
             ) SELECT ?, 'income', 'income-extra-bed', 'Extra Bed', ?, ?, ?, ?, ?, ?, 'once', ?, ?
-              WHERE changes() = 1 AND ? <> 'Cancelled' AND ? > 0
+              WHERE EXISTS (SELECT 1 FROM dashboard_bookings WHERE id = ? AND status <> 'Cancelled') AND ? > 0
             ON CONFLICT(id) DO UPDATE SET
               property_id = excluded.property_id,
               property_name = excluded.property_name,
@@ -2344,7 +2675,22 @@ export default {
               payee = excluded.payee
           `).bind(`booking-extra-bed-${id}`, propertyId, propertyName, now.slice(0, 10),
             extraBedQuantity * extraBedPrice, `Extra Bed (${extraBedQuantity} x Rp ${extraBedPrice}) - Booking ${id}`, guest,
-            tokenData.account_id || '', now, status, extraBedQuantity * extraBedPrice),
+            tokenData.account_id || '', now, id, extraBedQuantity * extraBedPrice),
+          env.DB.prepare(`
+            INSERT INTO finance_entries (
+              id, kind, category_id, category_name, property_id, property_name,
+              entry_date, amount, description, payee, recurrence, created_by, created_at
+            ) SELECT ?, 'expense', 'expense-agent-fee', 'Fee Agen', ?, ?, ?, ?, ?, ?, 'once', ?, ?
+              WHERE EXISTS (SELECT 1 FROM dashboard_bookings WHERE id = ? AND status <> 'Cancelled') AND ? > 0
+            ON CONFLICT(id) DO UPDATE SET
+              property_id = excluded.property_id,
+              property_name = excluded.property_name,
+              amount = excluded.amount,
+              description = excluded.description,
+              payee = excluded.payee
+          `).bind(agentFeeEntryId, propertyId, propertyName, now.slice(0, 10),
+            bookingAgent.feeAmount, `Fee Agen ${bookingAgent.agentName} - Booking ${id}`, bookingAgent.agentName,
+            tokenData.account_id || '', now, id, bookingAgent.feeAmount),
         ]);
         return json({ ok:true, data:{ id, created_at:now } }, 201);
       }
@@ -2409,6 +2755,8 @@ export default {
               `Extra Bed (${booking.extra_bed_quantity} x Rp ${booking.extra_bed_price}) - Booking ${id} - Refund Rp ${extraBedRefundAmount}: ${reason}`,
               `booking-extra-bed-${id}`));
           }
+          // Booking batal: agen tidak berhak atas fee, hapus catatan pengeluarannya.
+          statements.push(env.DB.prepare(`DELETE FROM finance_entries WHERE id = ?`).bind(`booking-agent-fee-${id}`));
           const results = await env.DB.batch(statements);
           if (!results[0]?.meta?.changes) return bad('Booking sudah berubah. Muat ulang lalu coba lagi.', 409);
           return json({ ok:true, data:{ id, status:'Cancelled', refund_amount:refundAmount } });
@@ -2436,11 +2784,47 @@ export default {
         const cleaningFee = Number(body.cleaningFee || 0);
         const platformFeePct = Number(body.platformFeePct || 0);
         const note = String(body.note || '').trim();
+        const captureImage = String(body.captureImage || '').trim();
         const validStatuses = isCancelledBooking ? [booking.status] : ['Inquiry', 'Confirmed', 'Checked-in', 'Checked-out'];
         const validPlatforms = ['Airbnb', 'Booking.com', 'Agoda', 'Tiket.com', 'Traveloka', 'Direct', 'Agen Offline', 'Website'];
         const validManagementTypes = ['managed', 'partner'];
         if (!propertyId || propertyName.length > 160 || propertyCode.length > 30 || guest.length < 2 || guest.length > 120 || phone.length > 30 || !validPlatforms.includes(platform) || !validStatuses.includes(status) || !validManagementTypes.includes(managementType) || !/^\d{4}-\d{2}-\d{2}$/.test(checkin) || !/^\d{4}-\d{2}-\d{2}$/.test(checkout) || checkout <= checkin || !Number.isSafeInteger(amount) || amount <= 0 || !Number.isSafeInteger(grossAmount) || grossAmount < 0 || !Number.isSafeInteger(extraBedQuantity) || extraBedQuantity < 0 || !Number.isSafeInteger(extraBedPrice) || extraBedPrice < 0 || !Number.isSafeInteger(cleaningFee) || cleaningFee < 0 || !Number.isInteger(platformFeePct) || platformFeePct < 0 || platformFeePct > 50 || note.length > 500) {
           return bad('Data booking tidak valid.');
+        }
+        if (captureImage && (!/^data:image\/(jpeg|jpg|png|webp);base64,/.test(captureImage) || captureImage.length > 250000)) {
+          return bad('Capture pesanan tidak valid atau terlalu besar.');
+        }
+        if (!isCancelledBooking) {
+          const conflict = await env.DB.prepare(`
+            SELECT id, guest, checkin, checkout FROM dashboard_bookings
+            WHERE property_id = ? AND id <> ? AND LOWER(status) NOT IN ('cancelled', 'canceled')
+              AND checkin < ? AND checkout > ?
+            LIMIT 1
+          `).bind(propertyId, id, checkout, checkin).first();
+          if (conflict) {
+            return bad(`Properti ${propertyName || propertyId} sudah ada booking lain yang tanggalnya bentrok: ${conflict.guest || 'tamu lain'} (${conflict.checkin} s/d ${conflict.checkout}).`, 409);
+          }
+        }
+        if (!isCancelledBooking && extraBedQuantity > 0) {
+          const stockRow = await env.DB.prepare(`SELECT value FROM site_settings WHERE key = 'extra_bed_total_stock'`).first();
+          if (stockRow) {
+            const totalStock = Number(stockRow.value);
+            const usedRow = await env.DB.prepare(`
+              SELECT COALESCE(SUM(extra_bed_quantity), 0) AS used FROM dashboard_bookings
+              WHERE id <> ? AND LOWER(status) NOT IN ('cancelled', 'canceled') AND extra_bed_quantity > 0
+                AND checkin < ? AND checkout > ?
+            `).bind(id, checkout, checkin).first();
+            const used = Number(usedRow?.used || 0);
+            if (used + extraBedQuantity > totalStock) {
+              return bad(`Stok extra bed tidak cukup pada tanggal tersebut. Tersedia ${Math.max(0, totalStock - used)} dari total ${totalStock}.`, 409);
+            }
+          }
+        }
+        let bookingAgent;
+        try {
+          bookingAgent = await resolveBookingAgentFee(env, body, amount);
+        } catch (error) {
+          return bad(error.message, 400);
         }
         const nights = Math.round((Date.parse(`${checkout}T00:00:00Z`) - Date.parse(`${checkin}T00:00:00Z`)) / 86400000);
         const extraBedTotal = extraBedQuantity * extraBedPrice;
@@ -2460,10 +2844,13 @@ export default {
             UPDATE dashboard_bookings SET
               property_id = ?, property_name = ?, property_code = ?, guest = ?, guest_phone = ?, platform = ?, status = ?,
               checkin = ?, checkout = ?, nights = ?, amount = ?, gross_amount = ?, extra_bed_quantity = ?, extra_bed_price = ?,
-              cleaning_fee = ?, platform_fee_pct = ?, note = ?, updated_at = ?
+              cleaning_fee = ?, platform_fee_pct = ?, note = ?, capture_image = ?,
+              agent_id = ?, agent_name = ?, agent_fee_type = ?, agent_fee_value = ?, agent_fee_amount = ?, updated_at = ?
             WHERE id = ? AND status = ?
           `).bind(propertyId, propertyName, propertyCode, guest, phone, platform, status, checkin, checkout,
-            nights, amount, grossAmount, extraBedQuantity, extraBedPrice, cleaningFee, platformFeePct, note, now, id, booking.status),
+            nights, amount, grossAmount, extraBedQuantity, extraBedPrice, cleaningFee, platformFeePct, note, captureImage,
+            bookingAgent.agentId, bookingAgent.agentName, bookingAgent.feeType, bookingAgent.feeValue, bookingAgent.feeAmount,
+            now, id, booking.status),
           env.DB.prepare(`
             UPDATE finance_entries SET property_id = ?, property_name = ?, category_id = ?, category_name = ?, amount = ?, description = ?, payee = ?
             WHERE id = (SELECT income_entry_id FROM dashboard_bookings WHERE id = ?) AND kind = 'income' AND changes() = 1
@@ -2488,6 +2875,24 @@ export default {
           await env.DB.prepare(`DELETE FROM finance_entries WHERE id = ? AND category_id = 'income-extra-bed'`)
             .bind(`booking-extra-bed-${id}`).run();
         }
+        if (bookingAgent.feeAmount > 0) {
+          await env.DB.prepare(`
+            INSERT INTO finance_entries (
+              id, kind, category_id, category_name, property_id, property_name,
+              entry_date, amount, description, payee, recurrence, created_by, created_at
+            ) VALUES (?, 'expense', 'expense-agent-fee', 'Fee Agen', ?, ?, ?, ?, ?, ?, 'once', ?, ?)
+            ON CONFLICT(id) DO UPDATE SET
+              property_id = excluded.property_id,
+              property_name = excluded.property_name,
+              amount = excluded.amount,
+              description = excluded.description,
+              payee = excluded.payee
+          `).bind(`booking-agent-fee-${id}`, propertyId, propertyName, now.slice(0, 10), bookingAgent.feeAmount,
+            `Fee Agen ${bookingAgent.agentName} - Booking ${id}`, bookingAgent.agentName, tokenData.account_id || '', now).run();
+        } else {
+          await env.DB.prepare(`DELETE FROM finance_entries WHERE id = ? AND category_id = 'expense-agent-fee'`)
+            .bind(`booking-agent-fee-${id}`).run();
+        }
         return json({ ok:true, data:{ id } });
       }
 
@@ -2498,9 +2903,21 @@ export default {
         const id = decodeURIComponent(dashboardBookingMatch[1]);
         const booking = await env.DB.prepare('SELECT id, income_entry_id FROM dashboard_bookings WHERE id = ?').bind(id).first();
         if (!booking) return bad('Booking tidak ditemukan.', 404);
+        let deleteBody = {};
+        try { deleteBody = await request.json(); } catch {}
+        const deletePin = String(deleteBody.pin || '').trim();
+        if (!/^\d{4}$/.test(deletePin)) return bad('Masukkan PIN Master tepat 4 digit.', 400);
+        const masterForDelete = await env.DB.prepare(`
+          SELECT delete_pin_salt, delete_pin_hash FROM dashboard_users
+          WHERE account_id = 'master' AND active = 1
+        `).first();
+        if (!masterForDelete?.delete_pin_hash) return bad('PIN Master belum diinisialisasi. Login sebagai Master terlebih dahulu.', 409);
+        const attemptedDeletePinHash = await hashDashboardPassword(deletePin, masterForDelete.delete_pin_salt);
+        if (!constantTimeEqual(attemptedDeletePinHash, masterForDelete.delete_pin_hash)) return bad('PIN Master salah.', 403);
         await env.DB.batch([
           env.DB.prepare('DELETE FROM finance_entries WHERE id = ?').bind(booking.income_entry_id),
           env.DB.prepare('DELETE FROM finance_entries WHERE id = ?').bind(`booking-extra-bed-${id}`),
+          env.DB.prepare('DELETE FROM finance_entries WHERE id = ?').bind(`booking-agent-fee-${id}`),
           env.DB.prepare('DELETE FROM dashboard_bookings WHERE id = ?').bind(id),
         ]);
         return json({ ok:true, data:{ id, deleted:true } });
@@ -3387,18 +3804,107 @@ export default {
         return bad('Properti tidak dapat dihapus dari Admin Properti. Arsipkan melalui Dashboard.', 405);
       }
 
+      const itTicketMatch = path.match(/^\/it\/tickets\/([^/]+)$/);
+      if ((request.method === 'GET' && path === '/it/tickets') ||
+          (request.method === 'POST' && path === '/it/tickets') ||
+          (['PATCH', 'DELETE'].includes(request.method) && itTicketMatch)) {
+        const adminSecret = String(env.ADMIN_DASHBOARD_SECRET || '').trim();
+        const itSession = await getAdminTokenPayload(request, adminSecret);
+        if (!isItSupportAccount(itSession)) return bad('Akses khusus akun IT Support diperlukan.', 403);
+
+        if (request.method === 'GET') {
+          try {
+            const result = await env.DB.prepare(`
+              SELECT id, kind, title, description, source, reported_by, created_at,
+                status, completed_by, completed_at
+              FROM it_support_tickets
+              ORDER BY CASE status WHEN 'open' THEN 0 ELSE 1 END, created_at DESC
+              LIMIT 500
+            `).all();
+            return json({ ok:true, data:result.results || [] });
+          } catch (error) {
+            if (/no such table: it_support_tickets/i.test(String(error?.message || error))) {
+              return bad('Tabel antrean IT belum tersedia. Jalankan properties/migration-it-support-tickets.sql di D1.', 503);
+            }
+            throw error;
+          }
+        }
+
+        if (request.method === 'POST') {
+          const body = await request.json();
+          const kind = String(body.kind || '').trim();
+          const title = String(body.title || '').trim();
+          const description = String(body.description || '').trim();
+          if (!['bug', 'task'].includes(kind)) return bad('Jenis tiket tidak valid.');
+          if (!title || title.length > 160) return bad('Judul wajib diisi dan maksimal 160 karakter.');
+          if (!description || description.length > 4000) return bad('Catatan wajib diisi dan maksimal 4000 karakter.');
+
+          const id = crypto.randomUUID();
+          const createdAt = new Date().toISOString();
+          try {
+            await env.DB.prepare(`
+              INSERT INTO it_support_tickets (id, kind, title, description, source, reported_by, created_at, status)
+              VALUES (?, ?, ?, ?, 'input_it', 'it', ?, 'open')
+            `).bind(id, kind, title, description, createdAt).run();
+          } catch (error) {
+            if (/no such table: it_support_tickets/i.test(String(error?.message || error))) {
+              return bad('Tabel antrean IT belum tersedia. Jalankan properties/migration-it-support-tickets.sql di D1.', 503);
+            }
+            throw error;
+          }
+          return json({ ok:true, data:{ id, kind, title, description, source:'input_it', reported_by:'it', created_at:createdAt, status:'open' } }, 201);
+        }
+
+        const id = decodeURIComponent(itTicketMatch[1]);
+        const existing = await env.DB.prepare('SELECT id FROM it_support_tickets WHERE id = ?').bind(id).first();
+        if (!existing) return bad('Tiket tidak ditemukan.', 404);
+        if (request.method === 'DELETE') {
+          const deleted = await env.DB.prepare('DELETE FROM it_support_tickets WHERE id = ?').bind(id).run();
+          if (!deleted.meta?.changes) return bad('Tiket tidak ditemukan.', 404);
+          return json({ ok:true, data:{ id, deleted:true } });
+        }
+
+        const body = await request.json();
+        const hasEditFields = ['kind', 'title', 'description'].some(field => Object.prototype.hasOwnProperty.call(body, field));
+        if (hasEditFields) {
+          const kind = String(body.kind || '').trim();
+          const title = String(body.title || '').trim();
+          const description = String(body.description || '').trim();
+          if (!['bug', 'task'].includes(kind)) return bad('Jenis tiket tidak valid.');
+          if (!title || title.length > 160) return bad('Judul wajib diisi dan maksimal 160 karakter.');
+          if (!description || description.length > 4000) return bad('Catatan wajib diisi dan maksimal 4000 karakter.');
+          await env.DB.prepare(`
+            UPDATE it_support_tickets SET kind = ?, title = ?, description = ? WHERE id = ?
+          `).bind(kind, title, description, id).run();
+          return json({ ok:true, data:{ id, kind, title, description } });
+        }
+
+        const status = String(body.status || '').trim();
+        if (!['open', 'done'].includes(status)) return bad('Status tiket tidak valid.');
+        const completedAt = status === 'done' ? new Date().toISOString() : null;
+        await env.DB.prepare(`
+          UPDATE it_support_tickets
+          SET status = ?, completed_by = ?, completed_at = ?
+          WHERE id = ?
+        `).bind(status, status === 'done' ? 'it' : '', completedAt, id).run();
+        return json({ ok:true, data:{ id, status, completed_by:status === 'done' ? 'it' : '', completed_at:completedAt } });
+      }
+
       // Terima laporan bug atau pesan dari admin properti
       if (request.method === 'POST' && path === '/admin/contact-it') {
         const adminSecret = String(env.ADMIN_DASHBOARD_SECRET || '').trim();
-        if (!(await isAdminRequest(request, adminSecret))) {
+        const adminIdentity = await getAdminTokenPayload(request, adminSecret);
+        if (!adminIdentity || adminIdentity.role === 'IT') {
           return bad('Login admin diperlukan', 401);
         }
 
         const body = await request.json();
         const message = String(body.message || '').trim();
+        const submittedTitle = String(body.title || '').trim();
         if (!message || message.length > 2000) {
           return bad('Pesan wajib diisi dan maksimal 2000 karakter');
         }
+        if (submittedTitle.length > 160) return bad('Judul maksimal 160 karakter.');
 
         const telegramToken = String(env.TELEGRAM_BOT_TOKEN || '').trim();
         const telegramChatId = String(env.TELEGRAM_CHAT_ID || '').trim();
@@ -3421,12 +3927,25 @@ export default {
           `).bind(id, message, createdAt).run();
         }
 
+        const ticketTitle = submittedTitle || message.split(/\r?\n/, 1)[0].trim().slice(0, 160) || 'Laporan dari Lapor Bug';
+        try {
+          await env.DB.prepare(`
+            INSERT INTO it_support_tickets (id, kind, title, description, source, reported_by, created_at, status)
+            VALUES (?, 'bug', ?, ?, 'lapor_bug', ?, ?, 'open')
+          `).bind(crypto.randomUUID(), ticketTitle, message, adminIdentity.account_id || adminIdentity.role || 'staf', createdAt).run();
+        } catch (error) {
+          if (/no such table: it_support_tickets/i.test(String(error?.message || error))) {
+            return bad('Tabel antrean IT belum tersedia. Jalankan properties/migration-it-support-tickets.sql di D1.', 503);
+          }
+          throw error;
+        }
+
         const telegramResponse = await fetch(`https://api.telegram.org/bot${telegramToken}/sendMessage`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             chat_id: telegramChatId,
-            text: `Pesan Contact IT YOUR HOME\n\n${message}\n\n${createdAt}`,
+            text: `LAPOR BUG YOUR HOME\nJudul: ${ticketTitle}\n\n${message}\n\n${createdAt}`,
           }),
         });
         const telegramResult = await telegramResponse.json().catch(() => ({}));

@@ -314,6 +314,7 @@
     <section class="panel it-contact" id="contactItPanel">
       <div class="toolbar"><div><h2>Contact IT</h2><p class="hint">Laporkan bug atau kendala teknis kepada tim IT.</p></div></div>
       <form id="contactItForm">
+        <label class="field"><span class="meta-label">Judul</span><input id="contactItTitle" type="text" required maxlength="160" placeholder="Contoh: Foto properti gagal diperbarui"></label>
         <label class="field"><span class="meta-label">Pesan</span><textarea id="contactItMessage" required maxlength="2000" placeholder="Tulis kendala atau pesan untuk tim IT..."></textarea></label>
         <p id="contactItStatus" class="status" role="status" aria-live="polite"></p>
         <div class="form-actions"><button class="button primary" type="submit">Kirim Pesan</button></div>
@@ -328,7 +329,7 @@
   </main>
 
   <dialog id="contactItDialog" class="modal">
-    <div class="modal-content"><h2>Pesan Terkirim</h2><p>Pesan sudah dikirim ke Telegram IT.</p><div class="form-actions"><button class="button primary" id="closeContactItDialog" type="button">Tutup</button></div></div>
+    <div class="modal-content"><h2>Pesan Terkirim</h2><p>Pesan masuk antrean IT dan dikirim ke Telegram.</p><div class="form-actions"><button class="button primary" id="closeContactItDialog" type="button">Tutup</button></div></div>
   </dialog>
 
   <script>
@@ -425,7 +426,7 @@
       button.textContent = 'Mengirim...';
       el('contactItStatus').textContent = '';
       try {
-        await request(`${API_BASE}/admin/contact-it`, { method: 'POST', body: JSON.stringify({ message: el('contactItMessage').value.trim() }) });
+        await request(`${API_BASE}/admin/contact-it`, { method: 'POST', body: JSON.stringify({ title: el('contactItTitle').value.trim(), message: el('contactItMessage').value.trim() }) });
         form.reset();
         el('contactItDialog').showModal();
       } catch (error) {
@@ -678,10 +679,11 @@
       }
     }
     function loginAccountLabel(account){
-      const id = String(account.account_id || '');
+      const id = String(account.account_id || '').trim().toLowerCase();
       if(id === 'master') return 'Master';
       if(id === 'it') return 'IT Support';
       if(id === 'admin') return 'Admin';
+      if(id === 'admin-1') return 'Operasional';
       const adminMatch = id.match(/^admin-(\d+)$/);
       return adminMatch ? `Admin ${adminMatch[1]}` : id;
     }

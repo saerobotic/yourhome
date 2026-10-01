@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#202a25" />
+  <title>Antrean IT Support | YOUR HOME</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root{--ink:#202a25;--ink-soft:#435149;--muted:#758078;--page:#f2f3ef;--paper:#fff;--line:#dfe4de;--accent:#47664d;--accent-dark:#35523b;--accent-soft:#eaf1e9;--danger:#a34335;--danger-soft:#faece8;--blue:#315e78;--blue-soft:#eaf2f6;--gold:#a9782c;--gold-soft:#fbf3e5;--radius:10px}
+    *{box-sizing:border-box}body{margin:0;background:var(--page);color:var(--ink);font-family:'Plus Jakarta Sans',sans-serif;font-size:14px;line-height:1.5}button,input,select,textarea{font:inherit}button{cursor:pointer}button:disabled{cursor:wait;opacity:.6}.hidden{display:none!important}
+    .login-screen{min-height:100vh;display:grid;place-items:center;padding:24px;background:linear-gradient(145deg,#202a25,#33463a)}
+    .login-panel{width:min(420px,100%);background:var(--paper);border:1px solid rgba(255,255,255,.35);border-radius:14px;padding:30px;box-shadow:0 24px 70px rgba(13,23,17,.25)}
+    .brand-mark{width:42px;height:42px;display:grid;place-items:center;background:var(--accent-soft);color:var(--accent-dark);border-radius:10px;font-size:14px;font-weight:800;letter-spacing:0}
+    .eyebrow{margin:20px 0 5px;color:var(--accent);font-size:11px;font-weight:800;text-transform:uppercase}.login-panel h1{margin:0;font-size:25px;line-height:1.2}.subcopy{margin:8px 0 22px;color:var(--muted);font-size:13px}
+    .field{display:grid;gap:6px;margin-top:14px}.field label{font-size:12px;font-weight:700;color:var(--ink-soft)}.field input,.field select,.field textarea{width:100%;min-height:42px;padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:#fff;color:var(--ink);outline:none}.field textarea{min-height:118px;resize:vertical}.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(71,102,77,.14)}
+    .password-wrap{position:relative}.password-wrap input{padding-right:46px}.password-toggle{position:absolute;right:3px;top:3px;width:38px;height:36px;border:0;border-radius:6px;background:transparent;color:var(--muted);display:grid;place-items:center}.password-toggle:hover{background:var(--page);color:var(--ink)}
+    .primary-button{min-height:42px;padding:10px 15px;border:1px solid var(--accent);border-radius:8px;background:var(--accent);color:white;font-size:13px;font-weight:700}.primary-button:hover{background:var(--accent-dark)}.login-panel .primary-button{width:100%;margin-top:18px}
+    .notice{min-height:20px;margin:12px 0 0;color:var(--danger);font-size:12px} [role=status]:empty{display:none}
+    .app-header{background:var(--ink);color:white}.header-inner{max-width:1360px;margin:auto;padding:16px 24px;display:flex;align-items:center;gap:14px}.header-brand{display:flex;align-items:center;gap:11px;min-width:0}.header-brand .brand-mark{background:#e4ebdd;color:var(--ink)}.header-title{font-size:15px;font-weight:800}.header-subtitle{color:#c2cdc3;font-size:11px}.header-spacer{flex:1}.user-chip{padding:6px 10px;border:1px solid rgba(255,255,255,.22);border-radius:7px;color:#d8e5d7;font-size:11px;font-weight:800}.ghost-button{min-height:36px;padding:7px 11px;border:1px solid rgba(255,255,255,.25);border-radius:7px;background:transparent;color:white;font-size:12px;font-weight:700}.ghost-button:hover{background:rgba(255,255,255,.1)}
+    .workspace{max-width:1360px;margin:auto;padding:26px 24px 48px}.page-heading{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;margin-bottom:20px}.page-heading h1{margin:0;font-size:25px;line-height:1.2;letter-spacing:0}.page-heading p{margin:7px 0 0;color:var(--muted);font-size:13px}.stats{display:flex;gap:10px}.stat{min-width:116px;padding:10px 13px;border:1px solid var(--line);border-radius:8px;background:var(--paper)}.stat span{display:block;color:var(--muted);font-size:11px;font-weight:600}.stat strong{display:block;margin-top:2px;font-size:20px;font-variant-numeric:tabular-nums}.stat.open strong{color:var(--danger)}.stat.done strong{color:var(--accent)}
+    .columns{display:grid;grid-template-columns:minmax(280px,340px) minmax(0,1fr);gap:20px;align-items:start}.panel{background:var(--paper);border:1px solid var(--line);border-radius:var(--radius)}.panel-head{padding:16px 18px;border-bottom:1px solid var(--line)}.panel-head h2{margin:0;font-size:14px}.panel-head p{margin:4px 0 0;color:var(--muted);font-size:11px}.entry-form{padding:4px 18px 18px}.entry-form .primary-button{width:100%;margin-top:16px}.queue-panel{min-width:0}.queue-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px 16px;border-bottom:1px solid var(--line)}
+    .filter-tabs{display:inline-flex;gap:3px;padding:3px;border:1px solid var(--line);border-radius:8px;background:var(--page)}.filter-tabs button{min-height:32px;padding:6px 10px;border:0;border-radius:6px;background:transparent;color:var(--muted);font-size:11px;font-weight:700}.filter-tabs button[aria-pressed=true]{background:var(--paper);color:var(--ink);box-shadow:0 1px 3px rgba(20,30,22,.12)}.search-input{width:min(230px,42%);min-height:36px;padding:8px 10px;border:1px solid var(--line);border-radius:7px;background:#fff;font-size:12px;outline:none}.search-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(71,102,77,.12)}
+    .ticket-list{padding:0 12px}.ticket{display:grid;grid-template-columns:20px minmax(0,1fr);gap:8px;align-items:center;padding:6px 2px;border-bottom:1px solid var(--line)}.ticket:last-child{border-bottom:0}.ticket-check{width:17px;height:17px;margin:0;accent-color:var(--accent);cursor:pointer}.ticket-main{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:center;min-width:0}.ticket-content{display:grid;grid-template-columns:auto minmax(110px,190px) minmax(0,1fr) minmax(105px,145px);gap:8px;align-items:center;min-width:0}.ticket-title{min-width:0;margin:0;font-size:11px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.ticket-meta{min-width:0;color:var(--muted);font-size:9px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.badge{display:inline-flex;align-items:center;min-height:18px;padding:2px 6px;border-radius:5px;font-size:9px;font-weight:800}.badge.bug{background:var(--danger-soft);color:var(--danger)}.badge.task{background:var(--blue-soft);color:var(--blue)}.badge.source{background:var(--gold-soft);color:#76551d}.ticket-description{min-width:0;margin:0;color:var(--ink-soft);font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.ticket.done .ticket-title,.ticket.done .ticket-description,.ticket.done .ticket-meta{text-decoration:line-through;color:#929a93}.empty-state{padding:36px 18px;text-align:center;color:var(--muted);font-size:12px}.empty-state strong{display:block;margin-bottom:4px;color:var(--ink);font-size:13px}.queue-status{padding:0 12px 8px;color:var(--muted);font-size:11px}
+    .ticket-actions{display:flex;align-items:center;gap:4px;flex:0 0 auto}.ticket-edit,.ticket-delete{display:grid;place-items:center;width:27px;height:27px;padding:0;border:1px solid var(--line);border-radius:6px;background:var(--paper);color:var(--ink-soft)}.ticket-edit:hover{border-color:var(--accent);color:var(--accent-dark);background:var(--accent-soft)}.ticket-delete{color:var(--danger)}.ticket-delete:hover{border-color:var(--danger);background:var(--danger-soft)}.form-actions{display:flex;gap:8px;margin-top:16px}.entry-form .form-actions .primary-button{flex:1;width:auto;margin-top:0}.secondary-button{min-height:42px;padding:9px 12px;border:1px solid var(--line);border-radius:8px;background:var(--paper);color:var(--ink-soft);font-size:12px;font-weight:700}.secondary-button:hover{background:var(--page);color:var(--ink)}
+    .delete-dialog{width:min(440px,calc(100% - 28px));padding:0;border:1px solid var(--line);border-radius:12px;background:var(--paper);color:var(--ink);box-shadow:0 24px 70px rgba(18,28,21,.28)}.delete-dialog::backdrop{background:rgba(17,25,20,.58);backdrop-filter:blur(2px)}.delete-dialog form{padding:22px}.delete-dialog h2{margin:0;font-size:18px}.delete-dialog p{margin:7px 0 0;color:var(--muted);font-size:12px}.delete-dialog .field{margin-top:18px}.delete-dialog .dialog-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:16px}.danger-button{min-height:40px;padding:8px 13px;border:1px solid var(--danger);border-radius:7px;background:var(--danger);color:#fff;font-size:12px;font-weight:700}.danger-button:hover{background:#88382d}
+    @media(max-width:780px){.workspace{padding:20px 14px 36px}.header-inner{padding:13px 14px}.page-heading{align-items:flex-start;flex-direction:column}.stats{width:100%}.stat{flex:1;min-width:0}.columns{grid-template-columns:1fr;gap:14px}.queue-toolbar{align-items:flex-start;flex-direction:column}.search-input{width:100%}.ticket-content{grid-template-columns:auto minmax(0,1fr);gap:3px 7px}.ticket-description{grid-column:2;grid-row:2}.ticket-meta{display:none}.ticket-main{gap:2px 6px}}
+    @media(max-width:420px){.login-panel{padding:23px}.header-subtitle{display:none}.user-chip{display:none}.filter-tabs{width:100%}.filter-tabs button{flex:1}.stats{gap:7px}.stat{padding:9px}.stat strong{font-size:18px}.ticket-list{padding:0 8px}.ticket-actions{gap:3px}.ticket-edit,.ticket-delete{width:25px;height:25px}}
+  </style>
+</head>
+<body>
+  <section id="loginScreen" class="login-screen">
+    <form id="itLoginForm" class="login-panel">
+      <div class="brand-mark" aria-hidden="true">IT</div>
+      <p class="eyebrow">YOUR HOME · Internal</p>
+      <h1>IT Support</h1>
+      <p class="subcopy">Masuk menggunakan password akun IT Support.</p>
+      <div class="field">
+        <label for="itPassword">Password IT Support</label>
+        <span class="password-wrap">
+          <input id="itPassword" type="password" autocomplete="current-password" required maxlength="256" />
+          <button class="password-toggle" type="button" id="toggleItPassword" aria-label="Tampilkan password" title="Tampilkan password">
+            <svg data-eye-icon width="19" height="19" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>
+          </button>
+        </span>
+      </div>
+      <p id="loginNotice" class="notice" role="status" aria-live="polite"></p>
+      <button id="loginButton" class="primary-button" type="submit">Masuk</button>
+    </form>
+  </section>
+
+  <div id="appShell" class="hidden">
+    <header class="app-header">
+      <div class="header-inner">
+        <div class="header-brand"><div class="brand-mark" aria-hidden="true">IT</div><div><div class="header-title">YOUR HOME</div><div class="header-subtitle">Pusat tiket internal</div></div></div>
+        <div class="header-spacer"></div><span class="user-chip">IT SUPPORT</span>
+        <button id="logoutButton" class="ghost-button" type="button">Keluar</button>
+      </div>
+    </header>
+    <main class="workspace">
+      <div class="page-heading">
+        <div><h1>Antrean IT Support</h1><p>Kelola laporan bug dan tugas teknis dalam satu antrean.</p></div>
+        <div class="stats" aria-label="Ringkasan antrean">
+          <div class="stat open"><span>Belum selesai</span><strong id="openCount">0</strong></div>
+          <div class="stat done"><span>Selesai</span><strong id="doneCount">0</strong></div>
+        </div>
+      </div>
+      <div class="columns">
+        <section class="panel" aria-labelledby="newTicketTitle">
+          <div class="panel-head"><h2 id="newTicketTitle">Input tiket</h2><p>Catat bug atau tugas baru untuk antrean IT.</p></div>
+          <form id="ticketForm" class="entry-form">
+            <div class="field"><label for="ticketKind">Jenis</label><select id="ticketKind" required><option value="bug">Bug</option><option value="task">Tugas</option></select></div>
+            <div class="field"><label for="ticketTitle">Judul</label><input id="ticketTitle" type="text" maxlength="160" required placeholder="Contoh: Tombol simpan tidak merespons" /></div>
+            <div class="field"><label for="ticketDescription">Catatan</label><textarea id="ticketDescription" maxlength="4000" required placeholder="Tulis detail, langkah pengecekan, atau tindak lanjut..."></textarea></div>
+            <p id="ticketNotice" class="notice" role="status" aria-live="polite"></p>
+            <div class="form-actions"><button id="ticketSubmit" class="primary-button" type="submit">Tambah ke antrean</button><button id="ticketCancelEdit" class="secondary-button hidden" type="button">Batal</button></div>
+          </form>
+        </section>
+        <section class="panel queue-panel" aria-labelledby="queueTitle">
+          <div class="panel-head"><h2 id="queueTitle">Daftar tiket</h2><p>Tandai centang untuk menyelesaikan tiket. Tiket dapat dibuka kembali dari filter Selesai.</p></div>
+          <div class="queue-toolbar">
+            <div class="filter-tabs" role="group" aria-label="Filter status tiket">
+              <button type="button" data-filter="open" aria-pressed="true">Antrean</button>
+              <button type="button" data-filter="all" aria-pressed="false">Semua</button>
+              <button type="button" data-filter="done" aria-pressed="false">Selesai</button>
+            </div>
+            <input id="ticketSearch" class="search-input" type="search" placeholder="Cari tiket..." aria-label="Cari tiket" />
+          </div>
+          <p id="queueNotice" class="queue-status" role="status" aria-live="polite"></p>
+          <div id="ticketList" class="ticket-list"></div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <dialog id="ticketDeleteDialog" class="delete-dialog" aria-labelledby="ticketDeleteTitle">
+    <form id="ticketDeleteForm">
+      <h2 id="ticketDeleteTitle">Hapus tiket permanen?</h2>
+      <p id="ticketDeleteName"></p>
+      <p>Penghapusan permanen tidak dapat dibatalkan. Tindakan ini hanya tersedia untuk akun IT Support.</p>
+      <p id="ticketDeleteNotice" class="notice" role="status" aria-live="polite"></p>
+      <div class="dialog-actions"><button id="ticketDeleteCancel" class="secondary-button" type="button">Batal</button><button id="ticketDeleteConfirm" class="danger-button" type="submit">Hapus permanen</button></div>
+    </form>
+  </dialog>
+
+  <script>
+    const API_BASE='https://your-home-checkin-api.saerobotic.workers.dev';
+    const TOKEN_KEY='yourhome_it_support_token';
+    const el=id=>document.getElementById(id);
+    let tickets=[];
+    let activeFilter='open';
+    let searchTerm='';
+    let editingTicketId='';
+    let deletingTicketId='';
+    const esc=value=>String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
+    function showLogin(message=''){
+      el('appShell').classList.add('hidden');
+      el('loginScreen').classList.remove('hidden');
+      el('loginNotice').textContent=message;
+    }
+    function showApp(){el('loginScreen').classList.add('hidden');el('appShell').classList.remove('hidden')}
+    function clearSession(message=''){
+      sessionStorage.removeItem(TOKEN_KEY);
+      tickets=[];
+      showLogin(message);
+    }
+    async function ticketApi(path,options={}){
+      const token=sessionStorage.getItem(TOKEN_KEY)||'';
+      const response=await fetch(`${API_BASE}${path}`,{
+        ...options,
+        headers:{'Content-Type':'application/json',Authorization:`Bearer ${token}`,...(options.headers||{})},
+        cache:'no-store',
+      });
+      const result=await response.json().catch(()=>({}));
+      if(response.status===401){clearSession('Sesi IT tidak valid. Silakan masuk kembali.');throw new Error(result.error||'Sesi IT tidak valid.')}
+      if(!response.ok||result.ok===false)throw new Error(result.error||`HTTP ${response.status}`);
+      return result;
+    }
+    function formatDate(value){
+      const date=new Date(value);
+      return Number.isNaN(date.getTime())?'Tanggal tidak tersedia':date.toLocaleString('id-ID',{dateStyle:'medium',timeStyle:'short'});
+    }
+    function updateCounts(){
+      el('openCount').textContent=String(tickets.filter(ticket=>ticket.status==='open').length);
+      el('doneCount').textContent=String(tickets.filter(ticket=>ticket.status==='done').length);
+    }
+    function renderTickets(){
+      updateCounts();
+      const visible=tickets.filter(ticket=>{
+        const matchesFilter=activeFilter==='all'||ticket.status===activeFilter;
+        const searchText=`${ticket.title} ${ticket.description} ${ticket.reported_by}`.toLocaleLowerCase('id');
+        return matchesFilter&&searchText.includes(searchTerm);
+      });
+      if(!visible.length){
+        const emptyTitle=searchTerm?'Tidak ada hasil pencarian.':activeFilter==='done'?'Belum ada tiket selesai.':'Tidak ada tiket dalam antrean.';
+        el('ticketList').innerHTML=`<div class="empty-state"><strong>${emptyTitle}</strong>${searchTerm?'Coba kata kunci lain.':'Laporan baru akan muncul di sini.'}</div>`;
+        return;
+      }
+      el('ticketList').innerHTML=visible.map(ticket=>{
+        const isDone=ticket.status==='done';
+        const isBug=ticket.kind==='bug';
+        const source=ticket.source==='lapor_bug'?'Lapor Bug':'Input IT';
+        const reporter=ticket.reported_by?` · ${esc(ticket.reported_by)}`:'';
+        return `<article class="ticket${isDone?' done':''}">
+          <input class="ticket-check" type="checkbox" data-ticket-check="${esc(ticket.id)}" ${isDone?'checked':''} aria-label="${isDone?'Tandai belum selesai':'Tandai selesai'}: ${esc(ticket.title)}" />
+          <div class="ticket-main"><div class="ticket-content"><span class="badge ${isBug?'bug':'task'}">${isBug?'BUG':'TUGAS'}</span><h3 class="ticket-title" title="${esc(ticket.title)}">${esc(ticket.title)}</h3><p class="ticket-description" title="${esc(ticket.description)}">${esc(ticket.description)}</p><span class="ticket-meta" title="${source} · ${formatDate(ticket.created_at)}${reporter}">${source} · ${formatDate(ticket.created_at)}${reporter}${isDone?' · Selesai':''}</span></div><div class="ticket-actions"><button class="ticket-edit" type="button" data-ticket-edit="${esc(ticket.id)}" aria-label="Edit tiket: ${esc(ticket.title)}" title="Edit tiket"><svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L8 18l-4 1 1-4Z"/></svg></button><button class="ticket-delete" type="button" data-ticket-delete="${esc(ticket.id)}" aria-label="Hapus tiket: ${esc(ticket.title)}" title="Hapus tiket"><svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2m3 0-.8 14H5.8L5 6m4 4v6m6-6v6"/></svg></button></div></div>
+        </article>`;
+      }).join('');
+    }
+    async function loadTickets(){
+      el('queueNotice').textContent='Memuat antrean...';
+      try{
+        const result=await ticketApi('/it/tickets');
+        tickets=Array.isArray(result.data)?result.data:[];
+        el('queueNotice').textContent='';
+        renderTickets();
+      }catch(error){
+        el('queueNotice').textContent=error.message||'Antrean gagal dimuat.';
+      }
+    }
+    function beginTicketEdit(ticket){
+      editingTicketId=ticket.id;
+      el('ticketKind').value=ticket.kind;
+      el('ticketTitle').value=ticket.title;
+      el('ticketDescription').value=ticket.description;
+      el('newTicketTitle').textContent='Edit tiket';
+      el('ticketSubmit').textContent='Simpan perubahan';
+      el('ticketCancelEdit').classList.remove('hidden');
+      el('ticketNotice').textContent='';
+      el('ticketTitle').focus();
+    }
+    function cancelTicketEdit(){
+      editingTicketId='';
+      el('ticketForm').reset();
+      el('ticketKind').value='bug';
+      el('newTicketTitle').textContent='Input tiket';
+      el('ticketSubmit').textContent='Tambah ke antrean';
+      el('ticketCancelEdit').classList.add('hidden');
+      el('ticketNotice').textContent='';
+    }
+    function openTicketDeleteDialog(ticket){
+      deletingTicketId=ticket.id;
+      el('ticketDeleteName').textContent=ticket.title;
+      el('ticketDeleteNotice').textContent='';
+      el('ticketDeleteDialog').showModal();
+      el('ticketDeleteConfirm').focus();
+    }
+    function closeTicketDeleteDialog(){
+      el('ticketDeleteDialog').close();
+      deletingTicketId='';
+      el('ticketDeleteForm').reset();
+      el('ticketDeleteNotice').textContent='';
+    }
+    el('itLoginForm').addEventListener('submit',async event=>{
+      event.preventDefault();
+      const button=el('loginButton');
+      const password=el('itPassword');
+      button.disabled=true;
+      el('loginNotice').textContent='Memverifikasi akun IT...';
+      try{
+        const response=await fetch(`${API_BASE}/dashboard/login`,{
+          method:'POST',headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({account_id:'it',password:password.value}),cache:'no-store',
+        });
+        const result=await response.json().catch(()=>({}));
+        if(!response.ok||!result.ok||!result.token)throw new Error(result.error||'Login gagal.');
+        if(result.data?.account_id!=='it'||result.data?.role!=='IT')throw new Error('Halaman ini hanya untuk akun IT Support.');
+        sessionStorage.setItem(TOKEN_KEY,result.token);
+        password.value='';
+        showApp();
+        await loadTickets();
+      }catch(error){el('loginNotice').textContent=error.message||'Login gagal.'}
+      finally{button.disabled=false}
+    });
+    el('ticketForm').addEventListener('submit',async event=>{
+      event.preventDefault();
+      const button=el('ticketSubmit');
+      button.disabled=true;
+      el('ticketNotice').textContent='Menyimpan tiket...';
+      try{
+        const payload={kind:el('ticketKind').value,title:el('ticketTitle').value.trim(),description:el('ticketDescription').value.trim()};
+        if(editingTicketId){
+          await ticketApi(`/it/tickets/${encodeURIComponent(editingTicketId)}`,{method:'PATCH',body:JSON.stringify(payload)});
+          cancelTicketEdit();
+          el('ticketNotice').textContent='Perubahan tiket disimpan.';
+        }else{
+          await ticketApi('/it/tickets',{method:'POST',body:JSON.stringify(payload)});
+          el('ticketForm').reset();
+          el('ticketKind').value='bug';
+          el('ticketNotice').textContent='Tiket ditambahkan ke antrean.';
+          activeFilter='open';
+          document.querySelectorAll('[data-filter]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.filter==='open')));
+        }
+        await loadTickets();
+      }catch(error){el('ticketNotice').textContent=error.message||'Tiket gagal disimpan.'}
+      finally{button.disabled=false}
+    });
+    el('ticketCancelEdit').addEventListener('click',cancelTicketEdit);
+    el('ticketList').addEventListener('click',event=>{
+      const deleteButton=event.target.closest('[data-ticket-delete]');
+      if(deleteButton){
+        const ticket=tickets.find(item=>item.id===deleteButton.dataset.ticketDelete);
+        if(ticket)openTicketDeleteDialog(ticket);
+        return;
+      }
+      const button=event.target.closest('[data-ticket-edit]');
+      if(!button)return;
+      const ticket=tickets.find(item=>item.id===button.dataset.ticketEdit);
+      if(ticket)beginTicketEdit(ticket);
+    });
+    el('ticketDeleteCancel').addEventListener('click',closeTicketDeleteDialog);
+    el('ticketDeleteDialog').addEventListener('click',event=>{
+      if(event.target===el('ticketDeleteDialog'))closeTicketDeleteDialog();
+    });
+    el('ticketDeleteForm').addEventListener('submit',async event=>{
+      event.preventDefault();
+      if(!deletingTicketId)return;
+      const button=el('ticketDeleteConfirm');
+      button.disabled=true;
+      el('ticketDeleteNotice').textContent='Menghapus tiket...';
+      try{
+        const id=deletingTicketId;
+        await ticketApi(`/it/tickets/${encodeURIComponent(id)}`,{
+          method:'DELETE',
+        });
+        if(editingTicketId===id)cancelTicketEdit();
+        closeTicketDeleteDialog();
+        el('queueNotice').textContent='Tiket berhasil dihapus.';
+        await loadTickets();
+        el('queueNotice').textContent='Tiket berhasil dihapus.';
+      }catch(error){el('ticketDeleteNotice').textContent=error.message||'Tiket gagal dihapus.'}
+      finally{button.disabled=false}
+    });
+    el('ticketList').addEventListener('change',async event=>{
+      const checkbox=event.target.closest('[data-ticket-check]');
+      if(!checkbox)return;
+      checkbox.disabled=true;
+      try{
+        await ticketApi(`/it/tickets/${encodeURIComponent(checkbox.dataset.ticketCheck)}`,{
+          method:'PATCH',body:JSON.stringify({status:checkbox.checked?'done':'open'}),
+        });
+        await loadTickets();
+      }catch(error){
+        el('queueNotice').textContent=error.message||'Status tiket gagal diperbarui.';
+        checkbox.disabled=false;
+        checkbox.checked=!checkbox.checked;
+      }
+    });
+    document.querySelectorAll('[data-filter]').forEach(button=>button.addEventListener('click',()=>{
+      activeFilter=button.dataset.filter;
+      document.querySelectorAll('[data-filter]').forEach(item=>item.setAttribute('aria-pressed',String(item===button)));
+      renderTickets();
+    }));
+    el('ticketSearch').addEventListener('input',event=>{searchTerm=event.target.value.trim().toLocaleLowerCase('id');renderTickets()});
+    el('toggleItPassword').addEventListener('click',()=>{
+      const input=el('itPassword');
+      const visible=input.type==='password';
+      input.type=visible?'text':'password';
+      el('toggleItPassword').setAttribute('aria-label',visible?'Sembunyikan password':'Tampilkan password');
+      el('toggleItPassword').title=visible?'Sembunyikan password':'Tampilkan password';
+    });
+    el('logoutButton').addEventListener('click',()=>clearSession());
+    if(sessionStorage.getItem(TOKEN_KEY)){showApp();loadTickets()}
+  </script>
+</body>
+</html>

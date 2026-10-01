@@ -182,6 +182,14 @@ async function api(path, options = {}){
   return data;
 }
 
+function keyRoomLoginAccountLabel(accountId){
+  if(accountId === 'master') return 'Master';
+  if(accountId === 'admin') return 'Admin';
+  if(accountId === 'admin-1') return 'Operasional';
+  const adminMatch = String(accountId || '').match(/^admin-(\d+)$/);
+  return adminMatch ? `Admin ${adminMatch[1]}` : accountId;
+}
+
 async function loadLoginAccounts(){
   try {
     const response = await fetch(`${API_BASE}/dashboard/login-accounts`, { cache:'no-store' });
@@ -189,7 +197,7 @@ async function loadLoginAccounts(){
     const accounts = Array.isArray(result.data) ? result.data.filter(a => a.role !== 'IT') : [];
     if(!accounts.length) return;
     const select = el('loginAccount');
-    select.replaceChildren(...accounts.map(a => new Option(a.account_id === 'master' ? 'Master' : a.account_id, a.account_id)));
+    select.replaceChildren(...accounts.map(a => new Option(keyRoomLoginAccountLabel(a.account_id), a.account_id)));
   } catch(e) { console.warn('Daftar akun tidak dapat dimuat.', e); }
 }
 

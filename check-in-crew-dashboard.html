@@ -350,8 +350,12 @@
       .brand-mark{height:44px;max-width:110px;padding:5px 8px}
       .topbar h1{font-size:1.08rem}
       .topbar .subtitle{display:none}
-      .top-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
-      .top-actions .button{width:100%;padding:10px 8px;white-space:normal}
+      .top-actions{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-bottom:14px}
+      .top-actions .button{width:100%;padding:10px 6px;white-space:normal}
+      #exportPdfBtn,#laporBugTopBtn,#exportExcelBtn{grid-column:span 2}
+      #manualEntryBtn,#deleteAllBtn{grid-column:span 3}
+      #exportPdfBtn .btn-word,#exportExcelBtn .btn-word{display:none}
+      #exportPdfBtn .btn-icon,#exportExcelBtn .btn-icon{width:18px;height:18px}
       .view-btn{padding:10px 8px;font-size:.8rem}
       .summary{grid-template-columns:repeat(2,1fr);gap:9px}
       .summary .stat-wide{grid-column:1/-1}
@@ -474,8 +478,9 @@
     </header>
 
     <div class="top-actions">
-      <button class="button" id="exportPdfBtn" type="button">Download PDF</button>
-      <button class="button" id="exportExcelBtn" type="button">Download Excel</button>
+      <button class="button" id="exportPdfBtn" type="button" title="Download PDF"><svg class="btn-icon" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg><span class="btn-word">Download&nbsp;</span><span>PDF</span></button>
+      <button class="button" id="laporBugTopBtn" type="button"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="6" width="8" height="14" rx="4"/><path d="M9 12H4M20 12h-5M12 6V3M9 3l1.5 3M15 3l-1.5 3M5 15l3-1M19 15l-3-1M5 9l3 1M19 9l-3 1"/></svg><span>Lapor Bug</span></button>
+      <button class="button" id="exportExcelBtn" type="button" title="Download Excel"><svg class="btn-icon" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg><span class="btn-word">Download&nbsp;</span><span>Excel</span></button>
       <button class="button primary" id="manualEntryBtn" type="button">+ Tambah Data Manual</button>
       <button class="button danger" id="deleteAllBtn" type="button">Hapus Semua Data</button>
     </div>
@@ -483,7 +488,6 @@
     <nav class="view-switch" role="tablist" aria-label="Pilih tampilan dashboard">
       <button class="view-btn active" id="viewAbsensiBtn" type="button" role="tab" aria-selected="true" aria-controls="viewAbsensi"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><path d="M9 5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v1H9z"/><path d="m9 14 2 2 4-4"/></svg><span>Absensi &amp; Honor Crew</span></button>
       <button class="view-btn" id="viewPenugasanBtn" type="button" role="tab" aria-selected="false" aria-controls="viewPenugasan"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3v4m8-4v4M4 9h16"/><rect x="4" y="5" width="16" height="16" rx="2"/><path d="M9 14h2m3 0h1M9 17h1m3 0h2"/></svg><span>Penugasan &amp; Kalender</span></button>
-      <button class="view-btn" id="viewLaporBugBtn" type="button" role="tab" aria-selected="false" aria-controls="viewLaporBug"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="6" width="8" height="14" rx="4"/><path d="M9 12H4M20 12h-5M12 6V3M9 3l1.5 3M15 3l-1.5 3M5 15l3-1M19 15l-3-1M5 9l3 1M19 9l-3 1"/></svg><span>Lapor Bug</span></button>
     </nav>
 
     <div class="dashboard-view" id="viewAbsensi">
@@ -633,21 +637,6 @@
     </div><!-- /stack penugasan -->
     </div><!-- /viewPenugasan -->
 
-    <div class="dashboard-view hidden" id="viewLaporBug">
-    <div class="dashboard-column">
-      <section class="panel" style="max-width:560px">
-        <div><h2 class="cal-title">Lapor Bug</h2><p class="subtitle">Laporkan bug atau kendala teknis kepada tim IT.</p></div>
-        <label class="field" style="margin-top:16px"><span class="meta-label">Pesan</span>
-          <textarea id="bugMessage" maxlength="2000" placeholder="Tulis kendala atau pesan untuk tim IT..." style="min-height:120px;resize:vertical;width:100%;border:1px solid var(--line-strong);border-radius:var(--r);background:var(--paper);padding:9px 12px;color:var(--ink);font:inherit;font-size:.9rem;outline:none"></textarea>
-        </label>
-        <div class="admin-actions" style="margin-top:14px">
-          <button class="button primary" id="submitBugBtn" type="button">Kirim Pesan</button>
-        </div>
-        <p id="bugStatus" class="pin-message" role="status" aria-live="polite"></p>
-      </section>
-    </div>
-    </div><!-- /viewLaporBug -->
-
     <footer class="site-footer">
       <strong>YOUR HOME, Check In Crew Dashboard</strong>
       <div class="site-footer-meta">
@@ -728,6 +717,23 @@
         <label class="field"><span class="meta-label">Tanggal</span><input id="editDate" type="date" required /></label>
         <div class="edit-actions"><button class="button" type="button" data-close="editModal">Batal</button><button class="button primary" id="editSubmitBtn" type="submit">Simpan Perubahan</button></div>
       </form>
+    </div>
+  </div>
+  <div class="modal" id="laporBugModal" role="dialog" aria-modal="true" aria-labelledby="laporBugTitle">
+    <div class="modal-card" style="width:min(560px,100%)">
+      <div class="modal-head"><div><h2 id="laporBugTitle">Lapor Bug</h2><p class="subtitle">Laporkan bug atau kendala teknis kepada tim IT.</p></div><button class="close" type="button" data-close="laporBugModal" aria-label="Tutup">&times;</button></div>
+      <div style="padding:20px">
+        <label class="field"><span class="meta-label">Judul</span>
+          <input id="bugTitle" type="text" maxlength="160" required placeholder="Contoh: Gagal menyimpan data check-in" style="width:100%;border:1px solid var(--line-strong);border-radius:var(--r);background:var(--paper);padding:9px 12px;color:var(--ink);font:inherit;font-size:.9rem;outline:none" />
+        </label>
+        <label class="field"><span class="meta-label">Pesan</span>
+          <textarea id="bugMessage" maxlength="2000" placeholder="Tulis kendala atau pesan untuk tim IT..." style="min-height:120px;resize:vertical;width:100%;border:1px solid var(--line-strong);border-radius:var(--r);background:var(--paper);padding:9px 12px;color:var(--ink);font:inherit;font-size:.9rem;outline:none"></textarea>
+        </label>
+        <div class="admin-actions" style="margin-top:14px">
+          <button class="button primary" id="submitBugBtn" type="button">Kirim Pesan</button>
+        </div>
+        <p id="bugStatus" class="pin-message" role="status" aria-live="polite"></p>
+      </div>
     </div>
   </div>
   <div class="lightbox" id="lightbox"><button type="button" data-close="lightbox" aria-label="Tutup foto">&times;</button><img id="lightboxImage" alt="Foto diperbesar" /></div>
@@ -1962,6 +1968,7 @@
       if (id === 'master') return 'Master';
       if (id === 'it') return 'IT Support';
       if (id === 'admin') return 'Admin';
+      if (id === 'admin-1') return 'Operasional';
       const adminMatch = id.match(/^admin-(\d+)$/);
       return adminMatch ? `Admin ${adminMatch[1]}` : id;
     }
@@ -2079,35 +2086,51 @@
   const assignEl = id => document.getElementById(id);
   const DASHBOARD_VIEW_KEY = 'yourhome_dashboard_view';
   function switchDashboardView(view) {
-    const target = ['penugasan', 'laporbug'].includes(view) ? view : 'absensi';
+    const target = view === 'penugasan' ? 'penugasan' : 'absensi';
     assignEl('viewAbsensi').classList.toggle('hidden', target !== 'absensi');
     assignEl('viewPenugasan').classList.toggle('hidden', target !== 'penugasan');
-    assignEl('viewLaporBug').classList.toggle('hidden', target !== 'laporbug');
     const absensiBtn = assignEl('viewAbsensiBtn');
     const penugasanBtn = assignEl('viewPenugasanBtn');
-    const laporBugBtn = assignEl('viewLaporBugBtn');
     absensiBtn.classList.toggle('active', target === 'absensi');
     penugasanBtn.classList.toggle('active', target === 'penugasan');
-    laporBugBtn.classList.toggle('active', target === 'laporbug');
     absensiBtn.setAttribute('aria-selected', String(target === 'absensi'));
     penugasanBtn.setAttribute('aria-selected', String(target === 'penugasan'));
-    laporBugBtn.setAttribute('aria-selected', String(target === 'laporbug'));
     try { localStorage.setItem(DASHBOARD_VIEW_KEY, target); } catch {}
   }
   function currentDashboardView() {
     try {
       const saved = localStorage.getItem(DASHBOARD_VIEW_KEY);
-      if (saved === 'penugasan' || saved === 'absensi' || saved === 'laporbug') return saved;
+      if (saved === 'penugasan' || saved === 'absensi') return saved;
     } catch {}
     return 'absensi';
   }
-  async function submitBugReport() {
+  function openLaporBugModal() {
+    const title = assignEl('bugTitle');
     const textarea = assignEl('bugMessage');
     const status = assignEl('bugStatus');
+    const submitBtn = assignEl('submitBugBtn');
+    title.value = '';
+    title.disabled = false;
+    textarea.value = '';
+    textarea.disabled = false;
+    status.className = 'pin-message';
+    status.textContent = '';
+    submitBtn.textContent = 'Kirim Pesan';
+    submitBtn.disabled = false;
+    assignEl('laporBugModal').classList.add('open');
+  }
+  async function submitBugReport() {
+    const titleInput = assignEl('bugTitle');
+    const textarea = assignEl('bugMessage');
+    const status = assignEl('bugStatus');
+    const submitBtn = assignEl('submitBugBtn');
+    const title = titleInput.value.trim();
     const message = textarea.value.trim();
     status.className = 'pin-message';
+    if (!title) { status.textContent = 'Judul wajib diisi.'; return; }
     if (!message) { status.textContent = 'Tulis pesan terlebih dahulu.'; return; }
     status.textContent = 'Mengirim...';
+    submitBtn.disabled = true;
     try {
       const response = await fetch(`${API_BASE}/admin/contact-it`, {
         method: 'POST',
@@ -2115,16 +2138,22 @@
           'Content-Type': 'application/json',
           ...(state.adminToken ? { Authorization: `Bearer ${state.adminToken}` } : {}),
         },
-        body: JSON.stringify({ message }),
+        body: JSON.stringify({ title, message }),
       });
       const result = await response.json().catch(() => ({}));
       if (!response.ok || result.ok === false) throw new Error(result.error || 'Pesan gagal dikirim.');
       status.className = 'pin-message success';
-      status.textContent = 'Pesan sudah dikirim ke Telegram IT.';
+      status.textContent = 'Pesan masuk antrean IT dan dikirim ke Telegram.';
+      submitBtn.textContent = 'Terkirim';
+      titleInput.value = '';
+      titleInput.disabled = true;
       textarea.value = '';
+      textarea.disabled = true;
     } catch (error) {
       status.className = 'pin-message error';
       status.textContent = error.message || 'Pesan gagal dikirim.';
+      titleInput.disabled = false;
+      submitBtn.disabled = false;
     }
   }
   function assignSameProperty(left, right) {
@@ -2588,7 +2617,7 @@
     assignEl('taskDate').value = formatLocalDateKey();
     assignEl('viewAbsensiBtn').addEventListener('click', () => switchDashboardView('absensi'));
     assignEl('viewPenugasanBtn').addEventListener('click', () => switchDashboardView('penugasan'));
-    assignEl('viewLaporBugBtn').addEventListener('click', () => switchDashboardView('laporbug'));
+    assignEl('laporBugTopBtn').addEventListener('click', openLaporBugModal);
     assignEl('submitBugBtn').addEventListener('click', submitBugReport);
     switchDashboardView(currentDashboardView());
     refreshAssignCrewFilter();
