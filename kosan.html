@@ -233,6 +233,10 @@ input, select { font: inherit; color: inherit; }
   display: flex; align-items: center; justify-content: center;
 }
 .stat-card .icon svg { width: 22px; height: 22px; }
+.currency-mark { font-weight: 800; letter-spacing: -.02em; line-height: 1; }
+.stat-card .icon .currency-mark { font-size: 15px; font-weight: 800; }
+.nav-item .currency-mark { width: 20px; text-align: center; font-size: 13px; flex-shrink: 0; }
+.card-head h3 .currency-mark { font-size: 13px; color: var(--orange-600); }
 
 .card {
   background: #fff;
@@ -830,7 +834,7 @@ table tbody tr:last-child td { border-bottom: none; }
       Laporan
     </a>
     <a class="nav-item" data-view="pemasukan">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+      <span class="currency-mark" aria-hidden="true">Rp</span>
       Pemasukan
     </a>
     <a class="nav-item" data-view="pengeluaran">
@@ -848,6 +852,10 @@ table tbody tr:last-child td { border-bottom: none; }
     <a class="nav-item" data-view="mou">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/><path d="M9 7h7M9 11h7M9 15h4"/></svg>
       MOU Digital
+    </a>
+    <a class="nav-item" data-view="mou-data">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h13M8 12h13M8 18h13"/><path d="M3 6h.01M3 12h.01M3 18h.01"/></svg>
+      Data MOU
     </a>
     <a class="nav-item" data-view="invoice">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg>
@@ -1004,6 +1012,7 @@ table tbody tr:last-child td { border-bottom: none; }
           <option value="unpaid">Belum Bayar (Juli 2026)</option>
         </select>
       </div>
+      <div class="mou-hint hidden" id="penyewa-mou-alert" role="status" style="margin-bottom:12px;color:var(--red-600);font-weight:600"></div>
       <div class="card" style="padding:0; overflow:hidden;">
         <div class="table-wrap">
           <table id="penyewa-table">
@@ -1139,6 +1148,7 @@ table tbody tr:last-child td { border-bottom: none; }
             Pengeluaran Kosan De Orange
           </h3>
           <div class="actions">
+            <button class="btn btn-ghost kosan-sync-btn" type="button" onclick="openKosanDashboardSyncModal()" title="Hubungkan atau putuskan pemasukan & pengeluaran Kosan ke Dashboard (PIN Master)">Dasbor: ...</button>
             <button class="btn" onclick="openKosanExpenseModal()">+ Tambah Pengeluaran</button>
           </div>
         </div>
@@ -1166,10 +1176,12 @@ table tbody tr:last-child td { border-bottom: none; }
       <div class="card" style="padding:0; overflow:hidden;">
         <div class="card-head">
           <h3>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+            <span class="currency-mark" aria-hidden="true">Rp</span>
             Pemasukan Sewa Kos
           </h3>
           <div class="actions">
+            <button class="btn btn-ghost kosan-sync-btn" type="button" onclick="openKosanDashboardSyncModal()" title="Hubungkan atau putuskan pemasukan & pengeluaran Kosan ke Dashboard (PIN Master)">Dasbor: ...</button>
+            <button class="btn btn-ghost" onclick="openKosanDepositBackfillModal()">Catat Deposit Penyewa</button>
             <button class="btn" onclick="openRentPaymentModal()">+ Catat Pembayaran</button>
           </div>
         </div>
@@ -1250,8 +1262,9 @@ table tbody tr:last-child td { border-bottom: none; }
         <div class="mou-grid">
           <div class="mou-form-group">
             <label class="mou-label">Nama Kost / Gedung *</label>
-            <input type="text" class="mou-input" id="tk-building" list="tk-building-list" placeholder="Contoh: De Orange">
-            <datalist id="tk-building-list"></datalist>
+            <select class="mou-select" id="tk-building">
+              <option value="">— Pilih gedung —</option>
+            </select>
           </div>
           <div class="mou-form-group">
             <label class="mou-label" for="tk-room-number">Pilih Kamar *</label>
@@ -1267,11 +1280,11 @@ table tbody tr:last-child td { border-bottom: none; }
           </div>
           <div class="mou-form-group">
             <label class="mou-label" for="tk-price">Harga Sewa / Bulan (Rp) *</label>
-            <input type="text" class="mou-input" id="tk-price" inputmode="numeric" data-currency-input placeholder="1.200.000">
+            <input type="text" class="mou-input" id="tk-price" inputmode="numeric" data-currency-input value="0">
           </div>
           <div class="mou-form-group">
             <label class="mou-label" for="tk-depo">Deposit wajib (Rp) *</label>
-            <input type="text" class="mou-input" id="tk-depo" inputmode="numeric" data-currency-input placeholder="300.000" required>
+            <input type="text" class="mou-input" id="tk-depo" inputmode="numeric" data-currency-input value="0" required>
           </div>
           <div class="mou-form-group">
             <label class="mou-label" for="tk-start-date">Tanggal Mulai Sewa *</label>
@@ -1350,11 +1363,11 @@ table tbody tr:last-child td { border-bottom: none; }
           </div>
           <div class="mou-form-group">
             <label class="mou-label">Harga Sewa / Bulan (Rp) *</label>
-            <input type="number" class="mou-input" id="mou-harga" placeholder="1200000">
+            <input type="number" class="mou-input" id="mou-harga" value="0">
           </div>
           <div class="mou-form-group">
             <label class="mou-label">Deposit (Rp) *</label>
-            <input type="number" class="mou-input" id="mou-deposit" value="500000">
+            <input type="number" class="mou-input" id="mou-deposit" value="0">
           </div>
         </div>
       </div>
@@ -1463,20 +1476,21 @@ table tbody tr:last-child td { border-bottom: none; }
             <label class="mou-label">Foto KTP / Identitas *</label>
             <div class="mou-photo-slot" id="mou-photo-ktp-slot"><span class="muted">Belum ada foto KTP</span></div>
             <div class="mou-photo-actions">
-              <label class="btn btn-ghost">&#128247; Foto KTP<input type="file" accept="image/*" capture="environment" hidden onchange="mouHandlePhoto('ktp', event, 'Difoto langsung')"></label>
-              <label class="btn btn-ghost">&#128444;&#65039; Upload<input type="file" accept="image/*" hidden onchange="mouHandlePhoto('ktp', event, 'Diunggah dari galeri')"></label>
+              <button type="button" class="btn btn-ghost" onclick="document.getElementById('mou-ktp-upload').click()">&#128444;&#65039; Upload</button>
+              <input type="file" id="mou-ktp-upload" accept="image/*" hidden onchange="mouHandlePhoto('ktp', event, 'Diunggah dari galeri')">
               <button type="button" class="btn btn-ghost" onclick="mouRemovePhoto('ktp')">Hapus</button>
             </div>
+            <div class="mou-hint" id="mou-photo-ktp-status">Foto akan dikompres otomatis hingga di bawah 100 KB.</div>
           </div>
           <div class="mou-form-group">
             <label class="mou-label">Foto Diri Penghuni *</label>
             <div class="mou-photo-slot" id="mou-photo-selfie-slot"><span class="muted">Belum ada foto diri</span></div>
             <div class="mou-photo-actions">
-              <label class="btn btn-ghost">&#129331; Selfie<input type="file" accept="image/*" capture="user" hidden onchange="mouHandlePhoto('selfie', event, 'Selfie oleh penghuni')"></label>
-              <label class="btn btn-ghost">&#128247; Difoto Staf<input type="file" accept="image/*" capture="environment" hidden onchange="mouHandlePhoto('selfie', event, 'Difoto oleh staf')"></label>
-              <label class="btn btn-ghost">&#128444;&#65039; Upload<input type="file" accept="image/*" hidden onchange="mouHandlePhoto('selfie', event, 'Diunggah dari galeri')"></label>
+              <button type="button" class="btn btn-ghost" onclick="document.getElementById('mou-selfie-upload').click()">&#128444;&#65039; Upload</button>
+              <input type="file" id="mou-selfie-upload" accept="image/*" hidden onchange="mouHandlePhoto('selfie', event, 'Diunggah dari galeri')">
               <button type="button" class="btn btn-ghost" onclick="mouRemovePhoto('selfie')">Hapus</button>
             </div>
+            <div class="mou-hint" id="mou-photo-selfie-status">Foto akan dikompres otomatis hingga di bawah 100 KB.</div>
           </div>
         </div>
         <div class="mou-hint" style="margin-top:8px">Tips: pastikan KTP terbaca jelas (tidak silau/buram) dan wajah terlihat penuh tanpa masker/kacamata hitam. Foto otomatis dikompres agar ringan.</div>
@@ -1572,7 +1586,10 @@ table tbody tr:last-child td { border-bottom: none; }
           <span class="spacer"></span>
           <button class="btn btn-ghost" onclick="mouGeneratePreview()">👁 Preview Dokumen</button>
           <button class="btn" onclick="mouDownloadPDF()">⬇ Download PDF</button>
+          <button class="btn btn-ghost" id="mou-save-record-btn" onclick="mouSaveRecord()">Simpan MOU ke Database</button>
         </div>
+        <div class="mou-hint" id="mou-record-save-status" role="status" style="margin-top:10px">MOU belum disimpan ke database.</div>
+        <div class="mou-hint" id="mou-draft-status" role="status" style="margin-top:10px">Draft disimpan di penyimpanan browser pada perangkat ini, bukan ke D1/server.</div>
         <div id="mou-preview-wrapper" style="margin-top:18px">
           <div id="mou-preview-empty" style="padding:40px;text-align:center;color:var(--ink-500);font-size:13px">
             Klik "Preview Dokumen" untuk melihat hasil MOU sebelum diunduh.
@@ -1581,6 +1598,28 @@ table tbody tr:last-child td { border-bottom: none; }
         </div>
       </div>
 
+    </section>
+
+    <section class="view" id="view-mou-data">
+      <div class="card">
+        <div class="card-head">
+          <h3>Data MOU Tersimpan</h3>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button type="button" class="btn btn-ghost" onclick="initKosanMouRecordsView()">Muat Ulang</button>
+            <button type="button" class="btn" onclick="mouStartNew()">MOU Baru</button>
+          </div>
+        </div>
+        <div class="mou-hint">Data identitas dan foto hanya dapat diakses Master/Admin. Hapus permanen memerlukan PIN Master.</div>
+        <p id="mou-records-status" class="mou-hint" role="status">Memuat data MOU...</p>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>No. MOU</th><th>Tanggal</th><th>Kost / Kamar</th><th>Penghuni</th><th class="text-right">Harga / Bulan</th><th>Aksi</th></tr>
+            </thead>
+            <tbody id="mou-records-body"></tbody>
+          </table>
+        </div>
+      </div>
     </section>
 
     <!-- ============ GENERATE INVOICE ============ -->
@@ -1637,7 +1676,7 @@ table tbody tr:last-child td { border-bottom: none; }
           </div>
           <div class="mou-form-group">
             <label class="mou-label">Jumlah Dibayar (Rp) *</label>
-            <input type="number" class="mou-input" id="inv-jumlah" placeholder="1200000">
+            <input type="number" class="mou-input" id="inv-jumlah" value="0">
           </div>
           <div class="mou-form-group">
             <label class="mou-label">Metode Pembayaran</label>
@@ -4939,16 +4978,27 @@ const PAYMENT_MATRIX_PERIODS_2026 = KOSAN_MONTHS_ID.map((label, index) => ({
   label,
 }));
 const PERIOD_RANGE_LABEL = `${PERIODS[0].label} - ${CURRENT_PERIOD_LABEL}`;
+const YEAR_START_PERIOD = shiftBillingPeriod(CURRENT_PERIOD, -11);
+const YEAR_PERIOD_RANGE_LABEL = `${YEAR_START_PERIOD.label} - ${CURRENT_PERIOD_LABEL}`;
+const ROOM_HISTORY_MONTHS = 36;
+const ROOM_HISTORY_PERIODS = Array.from({ length:ROOM_HISTORY_MONTHS }, (_, index) =>
+  shiftBillingPeriod(CURRENT_PERIOD, index - ROOM_HISTORY_MONTHS + 1)
+);
 
 function extendStaticRoomPayments(buildings) {
   buildings.forEach(building => building.rooms.forEach(room => {
     const payments = new Map((room.payments || []).map(payment => [payment.period, payment]));
     const lastRecordedPeriod = [...payments.keys()].sort().at(-1) || '';
-    room.payments = PERIODS.map(period => payments.get(period.key) || {
-      period: period.key,
-      label: period.label,
-      status: period.key > lastRecordedPeriod ? 'unpaid' : 'none',
-      date: null,
+    room.payments = ROOM_HISTORY_PERIODS.map(period => {
+      const payment = payments.get(period.key);
+      if (payment) return { ...payment, recorded:payment.status !== 'none' };
+      return {
+        period: period.key,
+        label: period.label,
+        status: room.status === 'occupied' && period.key > lastRecordedPeriod ? 'unpaid' : 'none',
+        recorded: false,
+        date: null,
+      };
     });
   }));
 }
@@ -4999,6 +5049,7 @@ const VIEWS = {
   database:  { title: 'Database Kosan', sub: 'Data lengkap seluruh kamar & gedung' },
   'tambah-kamar': { title: 'Tambah Kamar/Penyewa', sub: 'Ajukan data baru & setujui sebelum masuk database' },
   mou:       { title: 'MOU Digital', sub: 'Surat pernyataan & MOU penghuni kost' },
+  'mou-data': { title: 'Data MOU', sub: 'Daftar MOU tersimpan di database' },
   invoice:   { title: 'Generate Invoice', sub: 'Buat & kirim kwitansi pembayaran kosan' },
   info:      { title: 'Info Kos', sub: 'Informasi & panduan' },
 };
@@ -5026,6 +5077,7 @@ function navigate(view) {
     renderHero();
     renderStats();
     refreshKosanDashboardExpense();
+    refreshKosanDashboardIncome();
     renderIncomeChart('all');
     renderStatusChart();
     renderRecentPayments();
@@ -5033,6 +5085,7 @@ function navigate(view) {
   }
   if (view === 'tambah-kamar') initTambahKamarView();
   if (view === 'mou') initMouView();
+  if (view === 'mou-data') initKosanMouRecordsView();
   if (view === 'invoice') initInvoiceView();
   window.scrollTo(0,0);
 }
@@ -5062,7 +5115,10 @@ function calcStats() {
   let incomeTotal = 0;
   ALL_ROOMS.forEach(r => {
     r.payments.forEach(p => {
-      if (p.status === 'paid' && p.period <= CURRENT_PERIOD) incomeTotal += p.amount || r.price;
+      if (p.status === 'paid' && p.period <= CURRENT_PERIOD) {
+        const amount = p.amount || r.price;
+        incomeTotal += amount;
+      }
     });
   });
   const occRate = total ? Math.round((occupied/total)*100) : 0;
@@ -5084,11 +5140,25 @@ function renderHero() {
 
 function renderStats() {
   const s = calcStats();
+  const netIncomeCurrent = kosanDashboardIncomeCurrent === null || kosanDashboardExpenseCurrent === null
+    ? null
+    : kosanDashboardIncomeCurrent - kosanDashboardExpenseCurrent;
+  const netIncomeValue = netIncomeCurrent === null
+    ? '...'
+    : netIncomeCurrent < 0 ? `-${fmtIDRShort(Math.abs(netIncomeCurrent))}` : fmtIDRShort(netIncomeCurrent);
+  const netIncomeYear = kosanDashboardIncomeYear === null || kosanDashboardExpenseYear === null
+    ? null
+    : kosanDashboardIncomeYear - kosanDashboardExpenseYear;
+  const netIncomeYearValue = netIncomeYear === null
+    ? '...'
+    : netIncomeYear < 0 ? `-${fmtIDRShort(Math.abs(netIncomeYear))}` : fmtIDRShort(netIncomeYear);
   const topCards = [
     {
-      label: 'Pendapatan ' + CURRENT_PERIOD_LABEL, value: fmtIDRShort(s.incomeCurrent), delta: `${s.paidCount} kamar lunas`,
-      accent: 'var(--orange-600)', accentBg: 'var(--orange-50)', onClick: "navigate('pembayaran')",
-      icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>'
+      label: 'Pemasukan ' + CURRENT_PERIOD_LABEL,
+      value: kosanDashboardIncomeCurrent === null ? '...' : fmtIDRShort(kosanDashboardIncomeCurrent),
+      delta: kosanDashboardIncomeCurrent === null ? 'memuat...' : `${kosanDashboardIncomeCount} transaksi · lihat di Pemasukan`,
+      accent: 'var(--orange-600)', accentBg: 'var(--orange-50)', onClick: "navigate('pemasukan')",
+      icon: '<span class="currency-mark" aria-hidden="true">Rp</span>'
     },
     {
       label: 'Pengeluaran ' + CURRENT_PERIOD_LABEL,
@@ -5098,15 +5168,16 @@ function renderStats() {
       icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 3H8a2 2 0 0 0-2 2v2h12V5a2 2 0 0 0-2-2z"/></svg>'
     },
     {
+      label: 'Total Pendapatan ' + CURRENT_PERIOD_LABEL, value: netIncomeValue,
+      delta: netIncomeCurrent === null ? 'memuat...' : 'Pemasukan - pengeluaran',
+      accent: 'var(--green-600)', accentBg: 'var(--green-100)', onClick: "navigate('pembayaran')",
+      icon: '<span class="currency-mark" aria-hidden="true">Rp</span>'
+    },
+    {
       label: 'Belum Bayar ' + CURRENT_PERIOD_LABEL, value: s.unpaidCount, delta: 'kamar perlu ditagih · klik untuk lihat daftarnya',
       accent: 'var(--red-600)', accentBg: 'var(--red-100)',
       onClick: "document.getElementById('penyewa-paystatus').value='unpaid'; navigate('penyewa');",
       icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>'
-    },
-    {
-      label: `Total Pendapatan ${PERIODS.length} Bulan`, value: fmtIDRShort(s.incomeTotal), delta: PERIOD_RANGE_LABEL,
-      accent: 'var(--amber-600)', accentBg: 'var(--amber-100)', onClick: "navigate('laporan')",
-      icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>'
     },
   ];
   const bottomCards = [
@@ -5127,6 +5198,13 @@ function renderStats() {
       accent: 'var(--ink-500)', accentBg: 'var(--ink-100)',
       onClick: "document.getElementById('kamar-status').value='vacant'; navigate('kamar');",
       icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="9" y1="9" x2="15" y2="9"/><line x1="9" y1="13" x2="15" y2="13"/></svg>'
+    },
+    {
+      label: 'Total Pendapatan 1 Tahun',
+      value: netIncomeYearValue,
+      delta: netIncomeYear === null ? 'memuat...' : `${YEAR_PERIOD_RANGE_LABEL} · bersih`,
+      accent: 'var(--amber-600)', accentBg: 'var(--amber-100)', onClick: "navigate('laporan')",
+      icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>'
     },
   ];
   const renderCards = cards => cards.map(c => `
@@ -5464,6 +5542,13 @@ function renderPenyewa() {
 
   rooms.sort((a, b) => a.tenant_name.localeCompare(b.tenant_name));
 
+  const missingMou = ALL_ROOMS.filter(r => r.tenant_name && kosanMouState(r) === 'missing');
+  const mouAlert = document.getElementById('penyewa-mou-alert');
+  mouAlert.textContent = missingMou.length
+    ? `${missingMou.length} penyewa belum mengisi MOU: ${missingMou.map(r => `${r.tenant_name} (${r.building} Kamar ${r.room_number})`).join(', ')}. Semua penyewa wajib mengisi MOU.`
+    : '';
+  mouAlert.classList.toggle('hidden', !missingMou.length);
+
   const tbody = document.getElementById('penyewa-tbody');
   if (!rooms.length) {
     tbody.innerHTML = `<tr><td colspan="7"><div class="empty">Tidak ada penyewa yang cocok.</div></td></tr>`;
@@ -5472,9 +5557,15 @@ function renderPenyewa() {
   tbody.innerHTML = rooms.map(r => {
     const cur = r.payments.find(x => x.period === CURRENT_PERIOD);
     const curStatus = cur ? cur.status : 'none';
+    const mouState = kosanMouState(r);
+    const mouBadge = mouState === 'missing'
+      ? ' <span class="badge unpaid" title="Penyewa ini belum punya MOU di database">MOU belum diisi</span>'
+      : mouState === 'name-mismatch'
+        ? ` <span class="badge" style="background:var(--amber-100);color:var(--amber-600)" title="Nama penghuni di MOU: ${escapePaymentHtml(kosanMouNames(r))}">Nama di MOU berbeda</span>`
+        : '';
     return `
       <tr>
-        <td class="cell-strong">${r.tenant_name}</td>
+        <td class="cell-strong">${r.tenant_name}${mouBadge}</td>
         <td>${r.building}</td>
         <td>Kamar ${r.room_number}</td>
         <td>${formatDepoCell(r.depo)}</td>
@@ -5482,11 +5573,59 @@ function renderPenyewa() {
         <td><span class="badge ${curStatus}">${payStatusLabel(curStatus)}</span></td>
         <td style="white-space:nowrap">
           ${curStatus !== 'paid' ? `<button class="btn-ghost btn" onclick="openPaymentCellModal('${r.building}','${r.room_number}','${CURRENT_PERIOD}')">Tagih / Catat Bayar</button>` : ''}
+          ${mouState === 'missing' ? `<button class="btn" onclick="mouFillForRoom('${r.building}','${r.room_number}')">Isi MOU</button>` : ''}
           <button class="btn-ghost btn" onclick="showRoomDetail('${r.building}','${r.room_number}')">Detail</button>
         </td>
       </tr>
     `;
   }).join('');
+}
+
+// Status MOU per penyewa. kosanMouRooms = Map "gedung|kamar" -> Set nama di MOU; null selama
+// belum berhasil dimuat (saat itu tidak ada penanda supaya tidak muncul peringatan palsu).
+let kosanMouRooms = null;
+
+function kosanMouRoomKey(building, roomNumber) {
+  return `${normalizeNameForMatch(building)}|${normalizeNameForMatch(roomNumber)}`;
+}
+
+function kosanMouState(room) {
+  if (!kosanMouRooms) return 'unknown';
+  const names = kosanMouRooms.get(kosanMouRoomKey(room.building, room.room_number));
+  if (!names) return 'missing';
+  return names.some(name => normalizeNameForMatch(name) === normalizeNameForMatch(room.tenant_name)) ? 'ok' : 'name-mismatch';
+}
+
+function kosanMouNames(room) {
+  return (kosanMouRooms?.get(kosanMouRoomKey(room.building, room.room_number)) || []).join(', ');
+}
+
+function kosanRoomTenantName(building, roomNumber) {
+  return ALL_ROOMS.find(room => room.building === building && String(room.room_number) === String(roomNumber))?.tenant_name || '';
+}
+
+async function loadKosanMouStatus() {
+  try {
+    const result = await kosanApi('/kosan/mous');
+    const map = new Map();
+    (Array.isArray(result.data) ? result.data : []).forEach(record => {
+      const key = kosanMouRoomKey(record.building, record.room_number);
+      if (!map.has(key)) map.set(key, []);
+      if (record.tenant_name) map.get(key).push(record.tenant_name);
+    });
+    kosanMouRooms = map;
+  } catch (error) {
+    kosanMouRooms = null;
+    console.warn('Status MOU penyewa tidak dapat dimuat.', error);
+  }
+  if (document.getElementById('view-penyewa')?.classList.contains('active')) renderPenyewa();
+}
+
+function mouFillForRoom(building, roomNumber) {
+  mouStartNew();
+  const select = document.getElementById('mou-tenant-select');
+  select.value = `${building}||${roomNumber}`;
+  onMouTenantSelect();
 }
 document.getElementById('penyewa-search').addEventListener('input', renderPenyewa);
 document.getElementById('penyewa-building').addEventListener('change', renderPenyewa);
@@ -5774,7 +5913,7 @@ async function loadKosanIncomeCategories() {
   const select = document.getElementById('kinc-cat');
   try {
     await ensureKdoProperty();
-    const result = await kosanApi('/admin/finance');
+    const result = await kosanApi('/admin/finance?scope=kosan');
     kosanIncomeCategories = (result.data.categories || [])
       .filter(category => category.kind === 'income' && category.id !== 'income-kosan-rent');
     if (!select) return;
@@ -5784,6 +5923,178 @@ async function loadKosanIncomeCategories() {
   } catch (error) {
     if (select) select.innerHTML = '<option value="">Gagal memuat kategori</option>';
     showToast(error.message || 'Kategori pemasukan gagal dimuat.');
+  }
+}
+
+const KOSAN_DEPOSIT_CATEGORY_NAME = 'Deposit Kos';
+
+function isKosanDepositEntry(entry) {
+  return entry?.category_name === KOSAN_DEPOSIT_CATEGORY_NAME;
+}
+
+async function ensureKosanDepositCategory() {
+  const findCategory = result => (result.data.categories || [])
+    .find(category => category.kind === 'income' && category.name === KOSAN_DEPOSIT_CATEGORY_NAME);
+  const existing = findCategory(await kosanApi('/admin/finance?scope=kosan'));
+  if (existing) return existing;
+  try {
+    const created = await kosanApi('/admin/finance/categories', {
+      method:'POST', body:JSON.stringify({ kind:'income', name:KOSAN_DEPOSIT_CATEGORY_NAME }),
+    });
+    return created.data;
+  } catch (error) {
+    // Kategori mungkin baru dibuat dari tab lain; baca ulang sebelum menyerah.
+    const retry = findCategory(await kosanApi('/admin/finance?scope=kosan'));
+    if (retry) return retry;
+    throw error;
+  }
+}
+
+async function recordKosanDepositIncome(room, amount, entryDate = getBillingDateKey()) {
+  await ensureKdoProperty();
+  const category = await ensureKosanDepositCategory();
+  await kosanApi('/admin/finance/entries', {
+    method:'POST',
+    body:JSON.stringify({
+      kind:'income', category_id:category.id,
+      property_id:kdoProperty.id, property_name:room.building,
+      entry_date:entryDate, amount,
+      description:kosanDepositDescription(room),
+      payee:String(room.tenant_name || '').slice(0, 120), recurrence:'once',
+    }),
+  });
+}
+
+// Saklar penghubung pemasukan & pengeluaran Kosan ke Dashboard (dasbord.html). Disimpan di
+// server (site_settings.kosan_dashboard_sync), diubah lewat PIN Master. null = belum terbaca.
+let kosanDashboardSyncOn = null;
+
+function renderKosanDashboardSyncButtons() {
+  document.querySelectorAll('.kosan-sync-btn').forEach(button => {
+    if (kosanDashboardSyncOn === null) { button.textContent = 'Dasbor: ?'; return; }
+    button.textContent = kosanDashboardSyncOn ? 'Dasbor: ON' : 'Dasbor: OFF';
+    button.style.color = kosanDashboardSyncOn ? 'var(--green-600)' : 'var(--red-600)';
+    button.style.fontWeight = '700';
+  });
+}
+
+async function loadKosanDashboardSync() {
+  try {
+    const response = await fetch(`${KOSAN_API_BASE}/settings`, { cache:'no-store' });
+    const payload = await response.json();
+    kosanDashboardSyncOn = payload.data?.kosan_dashboard_sync !== '0';
+  } catch (error) {
+    console.warn('Status koneksi Dashboard tidak dapat dimuat.', error);
+  }
+  renderKosanDashboardSyncButtons();
+}
+
+function openKosanDashboardSyncModal() {
+  const turningOn = kosanDashboardSyncOn === false;
+  document.getElementById('modal-title').textContent = 'Koneksi ke Dashboard';
+  document.getElementById('modal-body').innerHTML = `
+    <p style="margin-bottom:10px">Status sekarang: <strong style="color:${kosanDashboardSyncOn === false ? 'var(--red-600)' : 'var(--green-600)'}">${kosanDashboardSyncOn === false ? 'OFF (terputus)' : 'ON (terhubung)'}</strong></p>
+    <p class="mou-hint" style="margin-bottom:12px">${turningOn
+      ? 'Menyalakan koneksi membuat pemasukan dan pengeluaran Kosan De Orange (sewa, deposit, pengeluaran, honor crew) kembali dihitung di Dashboard dan laporan owner.'
+      : 'Mematikan koneksi membuat pemasukan dan pengeluaran Kosan De Orange tidak dihitung di Dashboard dan laporan owner. Data tidak dihapus dan tetap tampil di kosan.html.'}</p>
+    <div class="mou-form-group">
+      <label class="mou-label" for="ksync-pin">PIN Master (4 digit) *</label>
+      <input type="password" class="mou-input" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" id="ksync-pin" autocomplete="off">
+    </div>
+    <div class="mou-hint" id="ksync-message" role="status" style="margin-top:10px"></div>
+    <div class="mou-action-bar" style="margin-top:14px">
+      <button class="btn" id="ksync-submit" type="button" onclick="saveKosanDashboardSync(${turningOn})" ${turningOn ? '' : 'style="background:var(--red-600)"'}>${turningOn ? 'Nyalakan (ON)' : 'Matikan (OFF)'}</button>
+      <button class="btn btn-ghost" type="button" onclick="closeModal()">Batal</button>
+    </div>`;
+  document.getElementById('modal-overlay').classList.add('show');
+}
+
+async function saveKosanDashboardSync(enabled) {
+  const pin = document.getElementById('ksync-pin').value.trim();
+  const message = document.getElementById('ksync-message');
+  const button = document.getElementById('ksync-submit');
+  if (!/^\d{4}$/.test(pin)) { message.textContent = 'Masukkan PIN Master 4 digit.'; return; }
+  button.disabled = true;
+  message.textContent = 'Menyimpan...';
+  try {
+    await kosanApi('/kosan/dashboard-sync', { method:'POST', body:JSON.stringify({ enabled, pin }) });
+    kosanDashboardSyncOn = enabled;
+    renderKosanDashboardSyncButtons();
+    closeModal();
+    showToast(enabled ? 'Kosan terhubung ke Dashboard (ON).' : 'Kosan diputus dari Dashboard (OFF).');
+  } catch (error) {
+    message.textContent = error.message || 'Gagal menyimpan.';
+    button.disabled = false;
+  }
+}
+
+function kosanDepositDescription(room) {
+  return `Deposit ${room.building} Kamar ${room.room_number} - ${room.tenant_name}`.slice(0, 240);
+}
+
+// Daftar penyewa aktif yang depositnya belum ada di buku kas (mis. penyewa yang disetujui
+// sebelum deposit otomatis dicatat). Penyewa lama diberi centang default hanya kalau belum
+// pernah tercatat membayar sebelum bulan ini, yaitu penyewa baru.
+async function openKosanDepositBackfillModal() {
+  try {
+    await loadKosanIncomeData();
+  } catch (error) {
+    showToast(error.message || 'Data pemasukan gagal dimuat.');
+    return;
+  }
+  const recorded = new Set(kosanIncomeEntries.filter(isKosanDepositEntry).map(entry => entry.description));
+  const pending = ALL_ROOMS.filter(room => room.tenant_name && Number(room.depo?.amount) > 0 && !recorded.has(kosanDepositDescription(room)))
+    .sort((left, right) => left.building.localeCompare(right.building) || String(left.room_number).localeCompare(String(right.room_number), undefined, { numeric:true }));
+  const isNewTenant = room => !room.payments.some(payment => payment.status === 'paid' && payment.period < CURRENT_PERIOD);
+  document.getElementById('modal-title').textContent = 'Catat Deposit Penyewa';
+  document.getElementById('modal-body').innerHTML = pending.length ? `
+    <p class="mou-hint" style="margin-bottom:10px">Deposit dicatat sebagai pemasukan terpisah (kategori Deposit Kos) dan tidak dihitung ke total pendapatan sewa. Centang penyewa yang depositnya sudah diterima.</p>
+    <div class="mou-form-group" style="margin-bottom:10px">
+      <label class="mou-label" for="kdep-date">Tanggal Diterima *</label>
+      <input type="date" class="mou-input" id="kdep-date" value="${getBillingDateKey()}" max="${getBillingDateKey()}">
+    </div>
+    <div style="max-height:320px;overflow:auto;border:1px solid var(--ink-200);border-radius:8px">
+      ${pending.map(room => `
+        <label style="display:flex;gap:10px;align-items:center;padding:8px 12px;border-bottom:1px solid var(--ink-100);cursor:pointer">
+          <input type="checkbox" class="kdep-check" value="${escapePaymentHtml(rentRoomKey(room))}" ${isNewTenant(room) ? 'checked' : ''}>
+          <span style="flex:1"><strong>${escapePaymentHtml(room.tenant_name)}</strong><br><span class="muted" style="font-size:12px">${escapePaymentHtml(room.building)} · Kamar ${escapePaymentHtml(room.room_number)}</span></span>
+          <span class="cell-strong">${fmtIDR(Number(room.depo.amount))}</span>
+        </label>`).join('')}
+    </div>
+    <div class="mou-hint" id="kdep-message" role="status" style="margin-top:10px"></div>
+    <div class="mou-action-bar" style="margin-top:14px">
+      <button class="btn" id="kdep-submit" type="button" onclick="saveKosanDepositBackfill()">Catat Deposit Terpilih</button>
+      <button class="btn btn-ghost" type="button" onclick="closeModal()">Batal</button>
+    </div>
+  ` : '<p class="mou-hint">Semua deposit penyewa aktif sudah tercatat.</p>';
+  document.getElementById('modal-overlay').classList.add('show');
+}
+
+async function saveKosanDepositBackfill() {
+  const date = document.getElementById('kdep-date').value;
+  const keys = [...document.querySelectorAll('.kdep-check:checked')].map(input => input.value);
+  const message = document.getElementById('kdep-message');
+  const button = document.getElementById('kdep-submit');
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) { message.textContent = 'Tanggal diterima tidak valid.'; return; }
+  if (!keys.length) { message.textContent = 'Centang minimal satu penyewa.'; return; }
+  button.disabled = true;
+  let saved = 0;
+  try {
+    for (const key of keys) {
+      const room = findRentRoom(key);
+      if (!room) continue;
+      message.textContent = `Menyimpan deposit ${room.tenant_name} (${saved + 1}/${keys.length})...`;
+      await recordKosanDepositIncome(room, Number(room.depo.amount), date);
+      saved += 1;
+    }
+    closeModal();
+    showToast(`${saved} deposit tercatat di Pemasukan.`);
+    refreshKosanDashboardIncome();
+    if (document.getElementById('view-pemasukan')?.classList.contains('active')) initPemasukanView();
+  } catch (error) {
+    message.textContent = `${saved} tersimpan, lalu gagal: ${error.message || 'Deposit gagal disimpan.'}`;
+    button.disabled = false;
+    if (saved) initPemasukanView();
   }
 }
 
@@ -5895,7 +6206,7 @@ function openRentPaymentModal() {
         </div>
         <div class="mou-form-group">
           <label class="mou-label" for="kinc-amount">Jumlah (Rp) *</label>
-          <input type="text" class="mou-input" inputmode="numeric" pattern="[0-9.]*" data-currency-input id="kinc-amount" placeholder="100.000">
+          <input type="text" class="mou-input" inputmode="numeric" pattern="[0-9.]*" data-currency-input id="kinc-amount" value="0">
         </div>
         <div class="mou-form-group">
           <label class="mou-label" for="kinc-payee">Dibayar oleh (jika bukan penyewa)</label>
@@ -6383,9 +6694,19 @@ function showRoomDetail(building, roomNum) {
   if (!r) return;
   document.getElementById('modal-title').textContent = `Detail Kamar ${r.room_number} — ${r.building}`;
   const cur = r.payments.find(p => p.period === CURRENT_PERIOD);
+  const paymentDisplayStatus = status => r.status === 'vacant' && status !== 'paid'
+    ? { className:'none', label:'Belum Tersedia' }
+    : { className:status, label:payStatusLabel(status) };
+  const currentPaymentStatus = cur ? paymentDisplayStatus(cur.status) : null;
   const paidPayments = r.payments.filter(p => p.status === 'paid' && p.period <= CURRENT_PERIOD);
   const paidCount = paidPayments.length;
   const totalPaid = paidPayments.reduce((total, payment) => total + (payment.amount || r.price), 0);
+  const historyPayments = [...r.payments]
+    .filter(p => p.status === 'paid' || (r.status !== 'vacant' && (
+      p.status === 'checkout' || (p.recorded && p.status === 'unpaid') ||
+      (r.status === 'occupied' && p.period === CURRENT_PERIOD && p.status === 'unpaid')
+    )))
+    .sort((a, b) => b.period.localeCompare(a.period));
   const body = `
     <div class="kv"><div class="k">Gedung</div><div class="v">${r.building}</div></div>
     <div class="kv"><div class="k">Nomor Kamar</div><div class="v">Kamar ${r.room_number}</div></div>
@@ -6393,8 +6714,8 @@ function showRoomDetail(building, roomNum) {
     <div class="kv"><div class="k">Harga / Bulan</div><div class="v cell-strong">${fmtIDR(r.price)}</div></div>
     <div class="kv"><div class="k">Depo</div><div class="v">${r.depo && typeof r.depo === 'object' ? fmtIDR(r.depo.amount) + (r.depo.refundable ? ' (refundable)' : '') : (r.depo ? r.depo : 'Tanpa depo')}</div></div>
     <div class="kv"><div class="k">Status</div><div class="v"><span class="badge ${r.status}">${statusLabel(r.status)}</span></div></div>
-    <div class="kv"><div class="k">Pembayaran ${CURRENT_PERIOD_LABEL}</div><div class="v">${cur ? `<span class="badge ${cur.status}">${payStatusLabel(cur.status)}</span> ${cur.date ? ' &middot; ' + fmtDateID(cur.date) : ''}` : '<span class="muted">&mdash;</span>'}</div></div>
-    <div class="kv"><div class="k">Statistik</div><div class="v">${paidCount} dari ${PERIODS.length} bulan lunas &middot; Total ${fmtIDR(totalPaid)}</div></div>
+    <div class="kv"><div class="k">Pembayaran ${CURRENT_PERIOD_LABEL}</div><div class="v">${cur ? `<span class="badge ${currentPaymentStatus.className}">${currentPaymentStatus.label}</span> ${cur.date ? ' &middot; ' + fmtDateID(cur.date) : ''}` : '<span class="muted">&mdash;</span>'}</div></div>
+    ${paidCount > 0 ? `<div class="kv"><div class="k">Statistik</div><div class="v">${paidCount} dari ${ROOM_HISTORY_PERIODS.length} bulan lunas &middot; Total ${fmtIDR(totalPaid)}</div></div>` : ''}
     <h4>Riwayat Pembayaran</h4>
     <div class="table-wrap room-payment-history">
       <table>
@@ -6402,14 +6723,17 @@ function showRoomDetail(building, roomNum) {
           <tr><th>Periode</th><th>Status</th><th class="text-right">Jumlah</th><th>Tanggal Bayar</th></tr>
         </thead>
         <tbody>
-          ${[...r.payments].sort((a, b) => b.period.localeCompare(a.period)).map(p => `
+          ${historyPayments.length ? historyPayments.map(p => {
+            const displayStatus = paymentDisplayStatus(p.status);
+            return `
             <tr>
               <td class="cell-strong">${p.label}</td>
-              <td><span class="badge ${p.status}">${payStatusLabel(p.status)}</span>${p.method ? `<div class="cell-sub">${p.method}</div>` : ''}</td>
+              <td><span class="badge ${displayStatus.className}">${displayStatus.label}</span>${p.method ? `<div class="cell-sub">${p.method}</div>` : ''}</td>
               <td class="cell-num">${p.status === 'paid' ? fmtIDR(p.amount || r.price) : '&mdash;'}</td>
               <td>${p.date ? fmtDateID(p.date) : '<span class="muted">&mdash;</span>'}</td>
             </tr>
-          `).join('')}
+          `;
+          }).join('') : '<tr><td colspan="4" class="text-center muted">Belum ada riwayat pembayaran</td></tr>'}
         </tbody>
       </table>
     </div>
@@ -6540,19 +6864,46 @@ let kosanExpenseProofDataUrl = '';
 let kosanEditExpenseProofDataUrl = '';
 let kosanDashboardExpenseCurrent = null;
 let kosanDashboardExpenseCount = 0;
+let kosanDashboardExpenseYear = null;
+let kosanDashboardIncomeCurrent = null;
+let kosanDashboardIncomeCount = 0;
+let kosanDashboardIncomeYear = null;
 
 async function refreshKosanDashboardExpense(){
   try {
     await ensureKdoProperty();
     await loadKosanExpenseData();
-    const now = new Date();
-    const monthPrefix = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+    const monthPrefix = CURRENT_PERIOD;
     const thisMonth = kosanExpenseEntries.filter(e => String(e.entry_date || '').startsWith(monthPrefix));
     kosanDashboardExpenseCurrent = thisMonth.reduce((sum, e) => sum + Number(e.amount || 0), 0);
     kosanDashboardExpenseCount = thisMonth.length;
+    const expensesInYear = kosanExpenseEntries.filter(e => {
+      const period = String(e.entry_date || '').slice(0, 7);
+      return period >= YEAR_START_PERIOD.key && period <= monthPrefix;
+    });
+    kosanDashboardExpenseYear = expensesInYear.reduce((sum, e) => sum + Number(e.amount || 0), 0);
     if(document.getElementById('view-dashboard')?.classList.contains('active')) renderStats();
   } catch(error) {
     console.warn('Pengeluaran Kosan De Orange tidak dapat dimuat untuk Dashboard.', error);
+  }
+}
+
+async function refreshKosanDashboardIncome(){
+  try {
+    await loadKosanIncomeData();
+    const monthPrefix = CURRENT_PERIOD;
+    const operatingIncome = kosanIncomeEntries;
+    const thisMonth = operatingIncome.filter(e => String(e.entry_date || '').startsWith(monthPrefix));
+    kosanDashboardIncomeCurrent = thisMonth.reduce((sum, e) => sum + Number(e.amount || 0), 0);
+    kosanDashboardIncomeCount = thisMonth.length;
+    const incomeInYear = operatingIncome.filter(e => {
+      const period = String(e.entry_date || '').slice(0, 7);
+      return period >= YEAR_START_PERIOD.key && period <= monthPrefix;
+    });
+    kosanDashboardIncomeYear = incomeInYear.reduce((sum, e) => sum + Number(e.amount || 0), 0);
+    if(document.getElementById('view-dashboard')?.classList.contains('active')) renderStats();
+  } catch(error) {
+    console.warn('Pemasukan Kosan De Orange tidak dapat dimuat untuk Dashboard.', error);
   }
 }
 
@@ -6568,7 +6919,7 @@ async function ensureKdoProperty(){
 }
 
 async function loadKosanExpenseData(){
-  const result = await kosanApi('/admin/finance');
+  const result = await kosanApi('/admin/finance?scope=kosan');
   kosanExpenseCategories = (result.data.categories || []).filter(c => c.kind === 'expense');
   const allEntries = result.data.entries || [];
   const kdoName = normalizeNameForMatch(kdoProperty?.name || '');
@@ -6601,7 +6952,7 @@ function renderKosanExpenseStats(){
   for(const [name, val] of byCat){ if(val > topCatVal){ topCat = name; topCatVal = val; } }
   const cards = [
     {
-      label:'Total Pengeluaran Bulan Ini', value:fmtIDR(total), delta:`${thisMonth.length} transaksi`,
+      label:'Total Pengeluaran Bulan Ini', value:fmtIDR(total), delta:depositTotal ? `${thisMonth.length} transaksi · termasuk deposit ${fmtIDR(depositTotal)}` : `${thisMonth.length} transaksi`,
       accent:'var(--red-600)', accentBg:'var(--red-100)',
       icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 3H8a2 2 0 0 0-2 2v2h12V5a2 2 0 0 0-2-2z"/></svg>'
     },
@@ -6678,7 +7029,7 @@ let kosanIncomeBuildingFilter = 'all';
 
 async function loadKosanIncomeData(){
   await ensureKdoProperty();
-  const result = await kosanApi('/admin/finance');
+  const result = await kosanApi('/admin/finance?scope=kosan');
   const allEntries = result.data.entries || [];
   const kdoName = normalizeNameForMatch(kdoProperty.name);
   kosanIncomeEntries = allEntries.filter(entry => entry.kind === 'income' && (
@@ -6702,8 +7053,11 @@ async function initPemasukanView(){
 function renderKosanIncomeStats(){
   const now = new Date();
   const monthPrefix = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-  const thisMonth = kosanIncomeEntries.filter(e => String(e.entry_date || '').startsWith(monthPrefix));
+  const monthEntries = kosanIncomeEntries.filter(e => String(e.entry_date || '').startsWith(monthPrefix));
+  const depositThisMonth = monthEntries.filter(isKosanDepositEntry);
+  const thisMonth = monthEntries;
   const total = thisMonth.reduce((sum, e) => sum + Number(e.amount || 0), 0);
+  const depositTotal = depositThisMonth.reduce((sum, e) => sum + Number(e.amount || 0), 0);
   const byBuilding = new Map();
   thisMonth.forEach(e => byBuilding.set(e.property_name, (byBuilding.get(e.property_name) || 0) + Number(e.amount || 0)));
   let topBuilding = '—', topBuildingVal = 0;
@@ -6712,7 +7066,7 @@ function renderKosanIncomeStats(){
     {
       label:'Total Pemasukan Bulan Ini', value:fmtIDR(total), delta:`${thisMonth.length} transaksi`,
       accent:'var(--orange-600)', accentBg:'var(--orange-50)',
-      icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>'
+      icon:'<span class="currency-mark" aria-hidden="true">Rp</span>'
     },
     {
       label:'Gedung Terbesar', value:topBuilding, delta:topBuildingVal ? fmtIDR(topBuildingVal) : '—',
@@ -6720,7 +7074,7 @@ function renderKosanIncomeStats(){
       icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>'
     },
     {
-      label:'Transaksi Bulan Ini', value:String(thisMonth.length), delta:'item',
+      label:'Deposit Diterima Bulan Ini', value:fmtIDR(depositTotal), delta:`${depositThisMonth.length} transaksi · sudah termasuk di total pemasukan`,
       accent:'var(--green-600)', accentBg:'var(--green-100)',
       icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>'
     },
@@ -6761,7 +7115,7 @@ function renderKosanIncomeTable(){
       <td>${fmtDateID(e.entry_date)}</td>
       <td><span class="badge" style="background:var(--orange-50);color:var(--orange-700)">${escapeHtmlKosan(e.property_name)}</span></td>
       <td class="muted">${escapeHtmlKosan(e.payee || '-')}</td>
-      <td>${escapeHtmlKosan(e.description || '')}</td>
+      <td>${isKosanDepositEntry(e) ? '<span class="badge" style="background:var(--green-100);color:var(--green-600);margin-right:6px">Deposit</span>' : ''}${escapeHtmlKosan(e.description || '')}</td>
       <td class="text-right cell-strong" style="color:var(--green-600)">+ ${fmtIDR(Number(e.amount || 0))}</td>
       <td class="text-right" style="white-space:nowrap"><button class="btn-ghost btn" style="padding:4px 8px;font-size:11px;color:var(--red-600)" onclick="openKosanIncomeDeleteModal('${escapeHtmlKosan(e.id)}')">Hapus</button></td>
     </tr>`).join('');
@@ -6950,7 +7304,7 @@ function openKosanExpenseModal(){
         </div>
         <div class="mou-form-group">
           <label class="mou-label">Jumlah (Rp)</label>
-          <input type="text" class="mou-input" inputmode="numeric" pattern="[0-9.]*" data-currency-input id="kexp-amount" required placeholder="500.000">
+          <input type="text" class="mou-input" inputmode="numeric" pattern="[0-9.]*" data-currency-input id="kexp-amount" value="0" required>
         </div>
         <div class="mou-form-group">
           <label class="mou-label">Frekuensi</label>
@@ -7249,6 +7603,7 @@ const mouCanvases = {};
 const mouSignatures = { penghuni: { data: null, date: null }, management: { data: null, date: null } };
 
 function initMouView() {
+  mouUpdateSaveButton();
   if (!mouTenantSelectReady) { populateMouTenantSelect(); mouTenantSelectReady = true; }
   if (!mouPolicyRendered) { renderMouPolicyBox(); mouPolicyRendered = true; }
   if (!document.getElementById('mou-tanggal').value) {
@@ -7432,6 +7787,12 @@ function mouConfirmSignature(id) {
 // --- Form data & validasi ---
 // --- Foto KTP & foto diri penghuni ---
 const mouPhotos = { ktp:null, selfie:null };
+const MOU_FORM_FIELD_IDS = ['mou-nomor','mou-tanggal','mou-gedung','mou-kamar','mou-harga','mou-deposit',
+  'mou-bio-nama','mou-bio-gender','mou-bio-alamat-asal','mou-bio-ttl','mou-bio-status-kawin',
+  'mou-bio-hp','mou-bio-email','mou-bio-pekerjaan','mou-bio-alamat-kerja','mou-bio-kampus',
+  'mou-bio-ayah','mou-bio-ibu','mou-bio-kendaraan','mou-bio-platnomor','mou-bio-kontak-darurat',
+  'mou-bio-hp-darurat','mou-bio-ikatan','mou-management-nama'];
+let mouEditingId = '';
 const MOU_PHOTO_EMPTY_LABEL = { ktp:'Belum ada foto KTP', selfie:'Belum ada foto diri' };
 
 function mouDrawWatermark(ctx, width, height) {
@@ -7463,8 +7824,16 @@ async function mouCompressPhoto(file, withWatermark) {
       ctx.fillRect(0, 0, canvas.width, canvas.height);
       ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
       if (withWatermark) mouDrawWatermark(ctx, canvas.width, canvas.height);
-      const dataUrl = canvas.toDataURL('image/jpeg', quality);
-      if (dataUrl.length * 0.75 < maxBytes) return { data:dataUrl, width:canvas.width, height:canvas.height };
+      const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', quality));
+      if (blob && blob.size < maxBytes) {
+        const data = await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(String(reader.result));
+          reader.onerror = () => reject(new Error('Foto gagal diproses.'));
+          reader.readAsDataURL(blob);
+        });
+        return { data, width:canvas.width, height:canvas.height, size:blob.size };
+      }
       if (quality > 0.45) quality -= 0.1;
       else { scale *= 0.82; quality = 0.8; }
     }
@@ -7490,12 +7859,16 @@ async function mouHandlePhoto(kind, event, by) {
   event.target.value = '';
   if (!file) return;
   const slot = document.getElementById(`mou-photo-${kind}-slot`);
+  const status = document.getElementById(`mou-photo-${kind}-status`);
   slot.innerHTML = '<span class="muted">Memproses foto...</span>';
+  if (status) status.textContent = 'Memproses dan mengompres foto...';
   try {
     const compressed = await mouCompressPhoto(file, kind === 'ktp');
     mouPhotos[kind] = { ...compressed, by, date:new Date().toLocaleString('id-ID', { dateStyle:'medium', timeStyle:'short' }) };
+    if (status) status.textContent = `Foto siap · ${(compressed.size / 1024).toFixed(1)} KB (maksimal 100 KB).`;
     showToast(kind === 'ktp' ? 'Foto KTP tersimpan (sudah diberi watermark).' : 'Foto diri tersimpan.');
   } catch (error) {
+    if (status) status.textContent = error.message || 'Foto gagal diproses.';
     showToast(error.message || 'Foto gagal diproses.');
   }
   mouRenderPhoto(kind);
@@ -7503,6 +7876,8 @@ async function mouHandlePhoto(kind, event, by) {
 
 function mouRemovePhoto(kind) {
   mouPhotos[kind] = null;
+  const status = document.getElementById(`mou-photo-${kind}-status`);
+  if (status) status.textContent = 'Foto akan dikompres otomatis hingga di bawah 100 KB.';
   mouRenderPhoto(kind);
 }
 
@@ -7539,24 +7914,35 @@ function mouGetFormData() {
 }
 
 function mouValidate() {
-  const requiredIds = ['mou-nomor','mou-tanggal','mou-gedung','mou-kamar','mou-harga','mou-bio-nama','mou-bio-hp','mou-bio-kontak-darurat','mou-bio-hp-darurat'];
-  let missing = 0;
-  requiredIds.forEach(id => {
+  const requiredFields = [
+    ['mou-nomor', 'Nomor MOU'], ['mou-tanggal', 'Tanggal'], ['mou-gedung', 'Nama kost/gedung'],
+    ['mou-kamar', 'Nomor kamar'], ['mou-harga', 'Harga sewa'], ['mou-bio-nama', 'Nama penghuni'],
+    ['mou-bio-hp', 'No. HP penghuni'], ['mou-bio-kontak-darurat', 'Nama kontak darurat'],
+    ['mou-bio-hp-darurat', 'No. HP kontak darurat'],
+  ];
+  const missing = [];
+  const missingFieldIds = [];
+  requiredFields.forEach(([id, label]) => {
     const el = document.getElementById(id);
-    if (!el.value || !el.value.toString().trim()) { el.classList.add('error'); missing++; }
+    if (!el.value || !el.value.toString().trim()) {
+      el.classList.add('error');
+      missing.push(label);
+      missingFieldIds.push(id);
+    }
     else el.classList.remove('error');
   });
-  if (!document.getElementById('mou-agree-checkbox').checked) missing++;
-  if (!mouSignatures.penghuni.data) missing++;
-  if (!mouSignatures.management.data) missing++;
+  if (!document.getElementById('mou-agree-checkbox').checked) missing.push('persetujuan');
+  if (!mouSignatures.penghuni.data) missing.push('tanda tangan penghuni');
+  if (!mouSignatures.management.data) missing.push('tanda tangan management');
   ['ktp', 'selfie'].forEach(kind => {
     if (!mouPhotos[kind]) {
       document.getElementById(`mou-photo-${kind}-slot`)?.classList.add('error');
-      missing++;
+      missing.push(kind === 'ktp' ? 'foto KTP' : 'foto diri');
     }
   });
-  if (missing > 0) {
-    showToast('Lengkapi semua field wajib (*), foto KTP & foto diri, centang persetujuan, dan kedua tanda tangan');
+  if (missing.length > 0) {
+    showToast(`MOU belum lengkap. Lengkapi: ${missing.join(', ')}.`);
+    document.getElementById(missingFieldIds[0] || 'mou-agree-checkbox')?.focus();
     return false;
   }
   return true;
@@ -7660,6 +8046,19 @@ function mouGeneratePreview() {
 // --- Ekspor PDF ---
 function mouDownloadPDF() {
   if (!mouValidate()) return;
+  if (!window.jspdf?.jsPDF) {
+    showToast('Pustaka PDF gagal dimuat. Periksa koneksi internet lalu coba lagi.');
+    return;
+  }
+  try {
+    mouBuildAndDownloadPDF();
+  } catch (error) {
+    console.error('MOU PDF gagal dibuat:', error);
+    showToast(error.message ? `PDF gagal dibuat: ${error.message}` : 'PDF gagal dibuat. Coba lagi.');
+  }
+}
+
+function mouBuildAndDownloadPDF() {
   mouGeneratePreview();
 
   const { jsPDF } = window.jspdf;
@@ -7889,11 +8288,15 @@ function mouSaveDraft() {
     agree: document.getElementById('mou-agree-checkbox').checked,
     signatures: mouSignatures,
     photos: mouPhotos,
+    saved_at: new Date().toISOString(),
   };
   try {
     localStorage.setItem('mou_draft', JSON.stringify(draft));
+    const savedAt = new Date(draft.saved_at).toLocaleString('id-ID', { dateStyle:'medium', timeStyle:'short' });
+    document.getElementById('mou-draft-status').textContent = `Draft tersimpan di browser/perangkat ini · ${savedAt}`;
     showToast('Draft MOU disimpan ke browser');
   } catch(e) {
+    document.getElementById('mou-draft-status').textContent = `Draft gagal disimpan: ${e.message || 'penyimpanan browser tidak tersedia.'}`;
     showToast('Gagal menyimpan draft');
   }
 }
@@ -7931,9 +8334,169 @@ function mouLoadDraft() {
         }
       }
     });
+    const savedAt = draft.saved_at ? new Date(draft.saved_at).toLocaleString('id-ID', { dateStyle:'medium', timeStyle:'short' }) : '';
+    document.getElementById('mou-draft-status').textContent = savedAt
+      ? `Draft dimuat dari browser/perangkat ini · disimpan ${savedAt}`
+      : 'Draft dimuat dari penyimpanan browser pada perangkat ini.';
     showToast('Draft MOU berhasil dimuat');
   } catch(e) {
+    document.getElementById('mou-draft-status').textContent = `Draft gagal dimuat: ${e.message || 'data draft tidak dapat dibaca.'}`;
     showToast('Gagal memuat draft');
+  }
+}
+
+function mouUpdateSaveButton(){
+  const button = document.getElementById('mou-save-record-btn');
+  if (button) button.textContent = mouEditingId ? 'Simpan Perubahan' : 'Simpan MOU ke Database';
+}
+
+function mouGetStoredRecord(){
+  const fields = {};
+  MOU_FORM_FIELD_IDS.forEach(id => { fields[id] = document.getElementById(id).value; });
+  return {
+    fields,
+    agree:document.getElementById('mou-agree-checkbox').checked,
+    signatures:mouSignatures,
+    photos:mouPhotos,
+  };
+}
+
+function mouApplyStoredRecord(record){
+  Object.entries(record.fields || {}).forEach(([id, value]) => {
+    const field = document.getElementById(id);
+    if (field) field.value = value;
+  });
+  document.getElementById('mou-agree-checkbox').checked = record.agree === true;
+  ['ktp', 'selfie'].forEach(kind => {
+    const photo = record.photos?.[kind];
+    mouPhotos[kind] = photo?.data ? photo : null;
+    mouRenderPhoto(kind);
+    const status = document.getElementById(`mou-photo-${kind}-status`);
+    if (status) status.textContent = photo?.data
+      ? `Foto tersimpan · ${((photo.size || 0) / 1024).toFixed(1)} KB (maksimal 100 KB).`
+      : 'Foto akan dikompres otomatis hingga di bawah 100 KB.';
+  });
+  ['penghuni', 'management'].forEach(id => {
+    const signature = record.signatures?.[id];
+    if (!signature?.data) {
+      mouClearSignature(id);
+      return;
+    }
+    mouSignatures[id] = signature;
+    document.getElementById(`mou-wrap-${id}`).classList.remove('active');
+    document.getElementById(`mou-wrap-${id}`).classList.add('signed');
+    const status = document.getElementById(`mou-sigstatus-${id}`);
+    if (status) { status.textContent = '✓ Tersimpan'; status.className = 'mou-sig-status done'; }
+    const saved = document.getElementById(`mou-saved-${id}`);
+    if (saved) saved.innerHTML = `<img src="${signature.data}" class="mou-saved-sig-preview">`;
+    const canvas = mouCanvases[id];
+    if (canvas) {
+      const image = new Image();
+      image.onload = () => canvas.ctx.drawImage(image, 0, 0, canvas.canvas.width, canvas.canvas.height);
+      image.src = signature.data;
+    }
+  });
+}
+
+function mouStartNew(){
+  navigate('mou');
+  mouEditingId = '';
+  MOU_FORM_FIELD_IDS.forEach(id => {
+    const field = document.getElementById(id);
+    field.value = ['mou-harga', 'mou-deposit'].includes(id) ? '0' : '';
+  });
+  document.getElementById('mou-tanggal').valueAsDate = new Date();
+  document.getElementById('mou-agree-checkbox').checked = false;
+  mouRemovePhoto('ktp');
+  mouRemovePhoto('selfie');
+  mouClearSignature('penghuni');
+  mouClearSignature('management');
+  document.getElementById('mou-record-save-status').textContent = 'MOU baru belum disimpan ke database.';
+  mouUpdateSaveButton();
+}
+
+async function mouSaveRecord(){
+  if (!mouValidate()) return;
+  const status = document.getElementById('mou-record-save-status');
+  const button = document.getElementById('mou-save-record-btn');
+  const method = mouEditingId ? 'PUT' : 'POST';
+  const path = mouEditingId ? `/kosan/mous/${encodeURIComponent(mouEditingId)}` : '/kosan/mous';
+  status.textContent = 'Menyimpan MOU ke D1...';
+  button.disabled = true;
+  try {
+    const result = await kosanApi(path, { method, body:JSON.stringify({ record:mouGetStoredRecord() }) });
+    mouEditingId = result.data.id;
+    status.textContent = `MOU ${result.data.mou_number} · ${result.data.tenant_name} tersimpan di database.`;
+    mouUpdateSaveButton();
+    showToast('MOU berhasil disimpan ke database.');
+    loadKosanMouStatus();
+  } catch(error) {
+    status.textContent = error.message || 'MOU gagal disimpan ke database.';
+    showToast(status.textContent);
+  } finally {
+    button.disabled = false;
+  }
+}
+
+async function initKosanMouRecordsView(){
+  const status = document.getElementById('mou-records-status');
+  const body = document.getElementById('mou-records-body');
+  status.textContent = 'Memuat MOU dari database...';
+  body.innerHTML = '';
+  try {
+    const result = await kosanApi('/kosan/mous');
+    const records = Array.isArray(result.data) ? result.data : [];
+    if (!records.length) {
+      body.innerHTML = '<tr><td colspan="6" class="text-center muted" style="padding:28px">Belum ada MOU tersimpan di database.</td></tr>';
+    } else {
+      body.innerHTML = records.map(record => `
+        <tr>
+          <td class="cell-strong">${escapePaymentHtml(record.mou_number)}</td>
+          <td>${fmtDateID(record.agreement_date)}</td>
+          <td>${escapePaymentHtml(record.building)} · Kamar ${escapePaymentHtml(record.room_number)}</td>
+          <td>${escapePaymentHtml(kosanRoomTenantName(record.building, record.room_number) || record.tenant_name)}</td>
+          <td class="text-right">${fmtIDR(Number(record.price || 0))}</td>
+          <td style="white-space:nowrap">
+            <button type="button" class="btn btn-ghost" onclick="mouEditRecord('${escapePaymentHtml(record.id)}')">Edit</button>
+            <button type="button" class="btn btn-ghost" style="color:var(--red-600)" onclick="mouDeleteRecord('${escapePaymentHtml(record.id)}')">Hapus</button>
+          </td>
+        </tr>
+      `).join('');
+    }
+    status.textContent = `${records.length} MOU tersimpan di D1.`;
+  } catch(error) {
+    status.textContent = error.message || 'Daftar MOU gagal dimuat.';
+  }
+}
+
+async function mouEditRecord(id){
+  try {
+    const result = await kosanApi(`/kosan/mous/${encodeURIComponent(id)}`);
+    navigate('mou');
+    mouEditingId = result.data.id;
+    mouApplyStoredRecord(result.data.record);
+    document.getElementById('mou-record-save-status').textContent = `Mengedit MOU ${result.data.mou_number}. Simpan perubahan untuk memperbarui record di D1.`;
+    mouUpdateSaveButton();
+    window.scrollTo(0, 0);
+  } catch(error) {
+    showToast(error.message || 'Data MOU gagal dimuat untuk diedit.');
+  }
+}
+
+async function mouDeleteRecord(id){
+  const row = [...document.querySelectorAll('#mou-records-body tr')].find(item => item.querySelector('button')?.getAttribute('onclick')?.includes(id));
+  const label = row?.cells?.[0]?.textContent || 'MOU ini';
+  if (!confirm(`Hapus permanen ${label} dari database? Foto dan tanda tangan dalam record ini juga akan dihapus.`)) return;
+  const pin = prompt('Masukkan PIN Master 4 digit untuk menghapus MOU:');
+  if (pin === null) return;
+  try {
+    await kosanApi(`/kosan/mous/${encodeURIComponent(id)}`, { method:'DELETE', body:JSON.stringify({ pin }) });
+    if (mouEditingId === id) mouEditingId = '';
+    showToast('MOU berhasil dihapus dari database.');
+    await loadKosanMouStatus();
+    await initKosanMouRecordsView();
+  } catch(error) {
+    showToast(error.message || 'MOU gagal dihapus.');
   }
 }
 
@@ -7964,8 +8527,13 @@ function populateBuildingSelects() {
     sel.innerHTML = '<option value="">Semua Gedung</option>' + bOpts;
     if (names.includes(current)) sel.value = current;
   });
-  const list = document.getElementById('tk-building-list');
-  if (list) list.innerHTML = names.map(name => `<option value="${name}"></option>`).join('');
+  const tkBuilding = document.getElementById('tk-building');
+  if (tkBuilding) {
+    const current = tkBuilding.value;
+    tkBuilding.innerHTML = '<option value="">— Pilih gedung —</option>' +
+      names.map(name => `<option value="${name}">${name}</option>`).join('');
+    if (names.includes(current)) tkBuilding.value = current;
+  }
   tkPopulateRoomOptions();
 }
 
@@ -8056,6 +8624,7 @@ async function loadKosanRoomsFromDb() {
       populateMouTenantSelect();
       mouTenantSelectReady = true;
     }
+    loadKosanMouStatus();
     return true;
   } catch (e) {
     console.warn('Gagal memuat data kamar dari database. Pastikan migration-kosan-rooms.sql, migration-kosan-payment-batches.sql, dan migration-kosan-rent-income-category.sql sudah dijalankan di D1 serta Worker terbaru sudah dideploy.', e);
@@ -8110,12 +8679,10 @@ function tkAccountLabel(accountId) {
 }
 
 function initTambahKamarView() {
-  const list = document.getElementById('tk-building-list');
-  if (list) list.innerHTML = [...new Set(BUILDINGS.map(b => b.name))].map(name => `<option value="${name}"></option>`).join('');
   const buildingInput = document.getElementById('tk-building');
   const roomSelect = document.getElementById('tk-room-number');
   const newRoomInput = document.getElementById('tk-new-room-number');
-  buildingInput.oninput = tkPopulateRoomOptions;
+  buildingInput.onchange = tkPopulateRoomOptions;
   roomSelect.onchange = () => {
     const isNewRoom = roomSelect.value === '__new__';
     newRoomInput.classList.toggle('hidden', !isNewRoom);
@@ -8138,12 +8705,17 @@ function tkPopulateRoomOptions() {
   const availability = document.getElementById('tk-room-availability');
   if (!buildingInput || !roomSelect || !availability) return;
   const building = buildingInput.value.trim();
-  const rooms = ALL_ROOMS
-    .filter(room => !building || room.building === building)
+  if (!building) {
+    roomSelect.replaceChildren(new Option('— Pilih gedung terlebih dahulu —', ''));
+    roomSelect.disabled = true;
+    availability.textContent = 'Pilih gedung untuk memuat daftar kamar yang tersedia.';
+    return;
+  }
+  const rooms = ALL_ROOMS.filter(room => room.building === building)
     .slice()
-    .sort((left, right) => left.room_number.localeCompare(right.room_number, undefined, { numeric:true }));
+    .sort((left, right) => String(left.room_number).localeCompare(String(right.room_number), undefined, { numeric:true }));
   const selected = roomSelect.value;
-  const options = [new Option(building ? '— Pilih kamar —' : '— Pilih gedung atau kamar —', '')];
+  const options = [new Option('— Pilih kamar —', '')];
   const roomsByBuilding = new Map();
   rooms.forEach(room => {
     if (!roomsByBuilding.has(room.building)) roomsByBuilding.set(room.building, []);
@@ -8164,10 +8736,11 @@ function tkPopulateRoomOptions() {
   });
   options.push(new Option('＋ Ajukan nomor kamar baru…', '__new__'));
   roomSelect.replaceChildren(...options);
+  roomSelect.disabled = false;
   if ([...roomSelect.options].some(option => option.value === selected)) roomSelect.value = selected;
   const vacantCount = rooms.filter(room => room.status === 'vacant').length;
   availability.textContent = rooms.length
-    ? `${vacantCount} kamar kosong tersedia. Kamar terisi/check-out tidak dapat dipilih. Nomor baru bisa diketik manual.`
+    ? `${vacantCount} kamar kosong tersedia. Kamar terisi/check-out tidak dapat dipilih. Nomor baru bisa diajukan.`
     : 'Belum ada kamar terdaftar di gedung ini. Pilih “Ajukan nomor kamar baru…” untuk menambahkan nomor baru.';
 }
 
@@ -8220,11 +8793,13 @@ async function tkGenerate() {
     });
     statusEl.textContent = 'Pengajuan terkirim, menunggu approval Master/Admin.';
     showToast('Pengajuan berhasil di-generate, menunggu approval');
-    ['tk-building','tk-tenant-name','tk-price','tk-notes','tk-new-room-number'].forEach(id => { document.getElementById(id).value = ''; });
+    ['tk-building','tk-tenant-name','tk-notes','tk-new-room-number'].forEach(id => { document.getElementById(id).value = ''; });
+    document.getElementById('tk-price').value = '0';
     document.getElementById('tk-room-number').value = '';
     document.getElementById('tk-new-room-number').classList.add('hidden');
     tkPopulateRoomOptions();
-    ['tk-depo','tk-start-date'].forEach(id => { document.getElementById(id).value = ''; });
+    document.getElementById('tk-depo').value = '0';
+    document.getElementById('tk-start-date').value = '';
     tkLoadQueue();
   } catch (e) {
     statusEl.textContent = e.message || 'Gagal menghubungi server.';
@@ -8263,10 +8838,55 @@ async function tkDecide(id, action) {
       const roomsLoaded = await loadKosanRoomsFromDb();
       populateBuildingSelects();
       renderStats();
-      const roomLoaded = result.data?.room_id && ALL_ROOMS.some(room => room.id === result.data.room_id);
-      showToast(roomsLoaded && roomLoaded
-        ? 'Pengajuan disetujui & masuk Database Kosan dan pilihan MOU'
-        : 'Persetujuan tersimpan, tetapi data kamar belum terbaca dari D1. Muat ulang; jika tetap belum muncul, periksa Worker/D1.');
+      const approvedRoom = result.data?.room_id && ALL_ROOMS.find(room => room.id === result.data.room_id);
+      if (roomsLoaded && approvedRoom) {
+        // Sewa bulan pertama langsung dicatat Lunas supaya masuk Pemasukan. Bulan mulai sewa
+        // = baris "unpaid" paling awal yang dibuat saat approve (deposit tidak dihitung).
+        const firstUnpaid = approvedRoom.payments
+          .filter(payment => payment.status === 'unpaid')
+          .map(payment => payment.period).sort()[0];
+        try {
+          // Tanpa baris "unpaid" berarti mulai sewa jatuh di bulan depan; sewa dicatat nanti
+          // lewat Catat Pembayaran, jangan dipaksa ke bulan berjalan.
+          if (firstUnpaid) {
+            await kosanApi('/kosan/room-payments', {
+              method:'POST',
+              body:JSON.stringify({
+                ...rentPaymentRoomPayload(approvedRoom), start_period:firstUnpaid, months_paid:1,
+                received_date:getBillingDateKey(), method:'Tunai',
+                notes:'Sewa bulan pertama (otomatis saat pengajuan penyewa disetujui)',
+              }),
+            });
+          }
+          // Deposit ikut masuk rekening, tetapi dicatat sebagai transaksi terpisah (kategori
+          // "Deposit Kos") supaya tidak bercampur dengan pendapatan sewa.
+          const depositAmount = Number(approvedRoom.depo?.amount) || 0;
+          let depositNote = '';
+          if (depositAmount > 0) {
+            try {
+              await recordKosanDepositIncome(approvedRoom, depositAmount);
+              depositNote = ` Deposit ${fmtIDR(depositAmount)} tercatat terpisah.`;
+            } catch (depositError) {
+              depositNote = ` Deposit gagal dicatat (${depositError.message}); catat manual lewat Pemasukan Lain.`;
+            }
+          }
+          await loadKosanRoomsFromDb();
+          populateBuildingSelects();
+          renderStats();
+          if (typeof renderPembayaran === 'function') renderPembayaran();
+          if (typeof renderHero === 'function') renderHero();
+          if (chartIncome) renderIncomeChart('all');
+          refreshKosanDashboardIncome();
+          if (document.getElementById('view-pemasukan')?.classList.contains('active')) initPemasukanView();
+          showToast(firstUnpaid
+            ? `Pengajuan disetujui; sewa ${fmtIDR(approvedRoom.price)} bulan pertama masuk Pemasukan.${depositNote}`
+            : `Pengajuan disetujui. Mulai sewa bulan depan, jadi sewa belum dicatat; catat lewat Catat Pembayaran saat dibayar.${depositNote}`);
+        } catch (paymentError) {
+          showToast(`Pengajuan disetujui, tetapi pemasukan sewa pertama gagal dicatat: ${paymentError.message}. Catat manual lewat Catat Pembayaran.`);
+        }
+      } else {
+        showToast('Persetujuan tersimpan, tetapi data kamar belum terbaca dari D1. Muat ulang; jika tetap belum muncul, periksa Worker/D1.');
+      }
     } else {
       showToast('Pengajuan ditolak');
     }
@@ -8579,8 +9199,7 @@ async function kosanLogin(event) {
     if (data.data?.role === 'IT') throw new Error('Akun IT tidak memiliki akses ke Manajemen Kosan.');
     sessionStorage.setItem(KOSAN_ADMIN_TOKEN_KEY, data.token);
     document.getElementById('kosanLoginPassword').value = '';
-    showKosanApp();
-    init();
+    await showKosanAppAndInit();
   } catch (e) {
     msg.textContent = e.message;
   } finally {
@@ -8597,14 +9216,24 @@ document.getElementById('kosanTogglePassword').addEventListener('click', () => {
   button.title = isVisible ? 'Tampilkan password' : 'Sembunyikan password';
 });
 
-function boot() {
+async function boot() {
   loadKosanLogos();
   if (getDashboardToken()) {
-    showKosanApp();
-    init();
+    await showKosanAppAndInit();
   } else {
     showKosanLoginScreen();
     kosanLoadLoginAccounts();
+  }
+}
+
+async function showKosanAppAndInit(){
+  showKosanApp();
+  try {
+    await init();
+  } catch(error) {
+    console.error('Dashboard Kosan gagal dimuat:', error);
+    sessionStorage.removeItem(KOSAN_ADMIN_TOKEN_KEY);
+    showKosanLoginScreen(`Dashboard gagal dimuat: ${error.message || 'terjadi kesalahan.'} Silakan login kembali.`);
   }
 }
 
@@ -8613,6 +9242,7 @@ function boot() {
 // ==========================================================
 async function init() {
   setupCurrencyInputs(document);
+  loadKosanDashboardSync();
   await loadKosanRoomsFromDb();
   populateBuildingSelects();
   document.querySelector('#penyewa-paystatus option[value="paid"]').textContent = `Sudah Bayar (${CURRENT_PERIOD_LABEL})`;
@@ -8636,8 +9266,11 @@ async function init() {
   renderHero();
   renderStats();
   refreshKosanDashboardExpense();
-  renderIncomeChart('all');
-  renderStatusChart();
+  refreshKosanDashboardIncome();
+  try { renderIncomeChart('all'); }
+  catch(error) { console.warn('Grafik pendapatan tidak dapat dimuat.', error); }
+  try { renderStatusChart(); }
+  catch(error) { console.warn('Grafik status kamar tidak dapat dimuat.', error); }
   renderRecentPayments();
   renderOverdue();
 }

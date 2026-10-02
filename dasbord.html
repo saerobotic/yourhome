@@ -1963,6 +1963,8 @@ const BOOKINGS = [];
 const EXPENSES = [];
 const OWNER_CREW_EXPENSES = [];
 const INCOMES = [];
+// Saldo awal, booking (dihitung dari data booking), dan deposit kos (uang titipan, bukan pendapatan) tidak masuk pemasukan tambahan laporan.
+const REPORT_EXCLUDED_INCOME = ['income-opening-balance', 'income-booking', 'income-deposit-kos'];
 const BOOKINGS_PER_PAGE = 10;
 
 /* Users for management */
@@ -3052,6 +3054,11 @@ function normalizePropertyNameForMatch(value){
 function financeEntryMatchesProperty(entry, property){
   if(entry.propId && entry.propId === property.id) return true;
   const entryName = normalizePropertyNameForMatch(entry.propName);
+  // Sewa kos dicatat dari kosan.html dengan nama gedung (mis. "De Orange") tanpa property_id,
+  // sedangkan propertinya bernama "Kosan De Orange Kost"; cocokkan lewat nama gedung.
+  if(entry.categoryId === 'income-kosan-rent'){
+    return Boolean(entryName && normalizePropertyNameForMatch(property.name).includes(entryName));
+  }
   return Boolean(entryName && entryName === normalizePropertyNameForMatch(property.name));
 }
 function getPropExpenses(propId, period=currentPeriod){
@@ -3299,7 +3306,7 @@ function renderDashboard(){
   const monthBookings = BOOKINGS.filter(b => isDateInReportPeriod(b.checkin));
   const activeMonthBookings = monthBookings.filter(b => !isBookingCancelled(b));
   const bookingRevenue = monthBookings.reduce((sum, booking) => sum + getBookingNetAmount(booking), 0);
-  const extraIncome = INCOMES.filter(entry => isDateInReportPeriod(entry.date) && !['income-opening-balance', 'income-booking'].includes(entry.categoryId))
+  const extraIncome = INCOMES.filter(entry => isDateInReportPeriod(entry.date) && !REPORT_EXCLUDED_INCOME.includes(entry.categoryId))
     .reduce((sum, entry) => sum + entry.amount, 0);
   const totalRevenue = bookingRevenue + extraIncome;
   const totalExpense = EXPENSES.filter(e=>isDateInReportPeriod(e.date)).reduce((s,e)=>s+e.amount,0);
@@ -3328,7 +3335,7 @@ function renderDashboard(){
     const allBookings = BOOKINGS.filter(b => b.propId === p.id && isDateInReportPeriod(b.checkin));
     const bk = allBookings.filter(b => !isBookingCancelled(b));
     const bookingRev = allBookings.reduce((sum, booking) => sum + getBookingNetAmount(booking), 0);
-    const otherIncome = INCOMES.filter(entry => financeEntryMatchesProperty(entry, p) && !['income-opening-balance', 'income-booking'].includes(entry.categoryId) && isDateInReportPeriod(entry.date))
+    const otherIncome = INCOMES.filter(entry => financeEntryMatchesProperty(entry, p) && !REPORT_EXCLUDED_INCOME.includes(entry.categoryId) && isDateInReportPeriod(entry.date))
       .reduce((sum, entry) => sum + entry.amount, 0);
     const rev = bookingRev + otherIncome;
     const exp = getPropExpenses(p.id).reduce((s,e)=>s+e.amount,0);
@@ -3386,7 +3393,7 @@ function initCharts(){
   const months = monthKeys.map(month => new Date(`${month}-01T00:00:00`).toLocaleDateString('id-ID', { month:'short', year:dashboardChartMonths > 6 ? '2-digit' : undefined }));
   const revData = monthKeys.map(month =>
     BOOKINGS.filter(booking => booking.checkin.startsWith(month)).reduce((sum, booking) => sum + getBookingNetAmount(booking), 0) +
-    INCOMES.filter(entry => entry.date.startsWith(month) && !['income-opening-balance', 'income-booking'].includes(entry.categoryId)).reduce((sum, entry) => sum + entry.amount, 0)
+    INCOMES.filter(entry => entry.date.startsWith(month) && !REPORT_EXCLUDED_INCOME.includes(entry.categoryId)).reduce((sum, entry) => sum + entry.amount, 0)
   );
   const expData = monthKeys.map(month => EXPENSES.filter(expense => expense.date.startsWith(month)).reduce((sum, expense) => sum + expense.amount, 0));
 
@@ -3438,7 +3445,7 @@ function initCharts(){
   const dailyRevData = dayLabels.map((_, i) => {
     const dayKey = `${currentMonthKey}-${String(i + 1).padStart(2, '0')}`;
     return BOOKINGS.filter(booking => booking.checkin === dayKey).reduce((sum, booking) => sum + getBookingNetAmount(booking), 0) +
-      INCOMES.filter(entry => entry.date === dayKey && !['income-opening-balance', 'income-booking'].includes(entry.categoryId)).reduce((sum, entry) => sum + entry.amount, 0);
+      INCOMES.filter(entry => entry.date === dayKey && !REPORT_EXCLUDED_INCOME.includes(entry.categoryId)).reduce((sum, entry) => sum + entry.amount, 0);
   });
   document.getElementById('chartDailySub').textContent = new Date(`${currentMonthKey}-01T00:00:00`).toLocaleDateString('id-ID', { month:'long', year:'numeric' });
   if(charts.dailyRevenue) charts.dailyRevenue.destroy();
@@ -3586,7 +3593,7 @@ function renderProperties(){
   grid.innerHTML = filtered.map((p, filteredIndex) => {
     const allBookings = BOOKINGS.filter(b => b.propId === p.id && isDateInReportPeriod(b.checkin));
     const bk = allBookings.filter(b => !isBookingCancelled(b));
-    const rev = allBookings.reduce((sum, booking) => sum + getBookingNetAmount(booking), 0) + INCOMES.filter(entry => financeEntryMatchesProperty(entry, p) && !['income-opening-balance', 'income-booking'].includes(entry.categoryId) && isDateInReportPeriod(entry.date)).reduce((sum, entry) => sum + entry.amount, 0);
+    const rev = allBookings.reduce((sum, booking) => sum + getBookingNetAmount(booking), 0) + INCOMES.filter(entry => financeEntryMatchesProperty(entry, p) && !REPORT_EXCLUDED_INCOME.includes(entry.categoryId) && isDateInReportPeriod(entry.date)).reduce((sum, entry) => sum + entry.amount, 0);
     const exp = getPropExpenses(p.id).reduce((s,e)=>s+e.amount,0);
     const occ = Math.min(95, Math.round(bk.length/30*140));
     const propertyGradient = propertyGradientOf(p);
@@ -4147,7 +4154,7 @@ async function loadFinanceData(){
   OWNER_CREW_EXPENSES.splice(0, OWNER_CREW_EXPENSES.length, ...expenseEntries.filter(entry => entry.created_by === 'checkin-payroll').map(mapExpenseEntry));
   INCOMES.splice(0, INCOMES.length, ...financeEntries.filter(entry => entry.kind === 'income').map(entry => ({
     id:entry.id, date:entry.entry_date, propId:entry.property_id || '', propName:entry.property_name || '',
-    cat:entry.category_name, categoryId:entry.category_id, desc:entry.description, payee:entry.payee,
+    cat:entry.category_name, categoryId:entry.category_name === 'Deposit Kos' ? 'income-deposit-kos' : entry.category_id, desc:entry.description, payee:entry.payee,
     amount:Number(entry.amount), recurrence:'once'
   })));
   populateFinanceCategorySelects();
@@ -5489,7 +5496,7 @@ function renderOwners(){
     const properties = getOwnerProps(owner.id);
     const totalRevenue = properties.reduce((sum, property) => {
       const bookings = BOOKINGS.filter(item => item.propId === property.id && isDateInReportPeriod(item.checkin));
-      const extraIncome = INCOMES.filter(entry => financeEntryMatchesProperty(entry, property) && !['income-opening-balance', 'income-booking'].includes(entry.categoryId) && isDateInReportPeriod(entry.date))
+      const extraIncome = INCOMES.filter(entry => financeEntryMatchesProperty(entry, property) && !REPORT_EXCLUDED_INCOME.includes(entry.categoryId) && isDateInReportPeriod(entry.date))
         .reduce((subtotal, entry) => subtotal + entry.amount, 0);
       return sum + bookings.reduce((subtotal, booking) => subtotal + computeRevenue(booking), 0) + extraIncome;
     }, 0);
@@ -5552,7 +5559,7 @@ function renderReport(){
       ...OWNER_CREW_EXPENSES.filter(expense => financeEntryMatchesProperty(expense, p) && isDateInCustomReportRange(expense.date, range)),
     ];
     const grossRev = periodBookings.reduce((sum, booking) => sum + getBookingNetAmount(booking), 0);
-    const otherIncome = INCOMES.filter(entry => financeEntryMatchesProperty(entry, p) && !['income-opening-balance', 'income-booking'].includes(entry.categoryId) && isDateInCustomReportRange(entry.date, range))
+    const otherIncome = INCOMES.filter(entry => financeEntryMatchesProperty(entry, p) && !REPORT_EXCLUDED_INCOME.includes(entry.categoryId) && isDateInCustomReportRange(entry.date, range))
       .reduce((sum, entry) => sum + entry.amount, 0);
     const expTotal = expenses.reduce((s,e)=>s+e.amount,0);
     return { p, share:share*100, bookings:bookings.length, grossRev, otherIncome, expTotal };
@@ -6212,7 +6219,7 @@ function generateOwnerShareCalculation(){
     const bookings = BOOKINGS.filter(item => item.propId === property.id && isDateInCustomReportRange(item.checkin, range));
     const bookingRevenue = bookings.reduce((sum, item) => sum + getBookingNetAmount(item), 0);
     const platformFee = bookingRevenue * platformFeePercent / 100;
-    const incomeEntries = INCOMES.filter(item => financeEntryMatchesProperty(item, property) && !['income-opening-balance', 'income-booking'].includes(item.categoryId) && isDateInCustomReportRange(item.date, range));
+    const incomeEntries = INCOMES.filter(item => financeEntryMatchesProperty(item, property) && !REPORT_EXCLUDED_INCOME.includes(item.categoryId) && isDateInCustomReportRange(item.date, range));
     const otherIncome = incomeEntries.reduce((sum, item) => sum + Number(item.amount || 0), 0);
     const expenses = EXPENSES.filter(item => financeEntryMatchesProperty(item, property) && isDateInCustomReportRange(item.date, range));
     const crewExpenses = OWNER_CREW_EXPENSES.filter(item => financeEntryMatchesProperty(item, property) && isDateInCustomReportRange(item.date, range));

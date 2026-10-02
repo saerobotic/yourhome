@@ -22,7 +22,7 @@ function getCorsHeaders(request) {
       ? origin
       : 'https://yourhome.id',
   };
-}
+} 
 
 function json(data, status = 200) {
   return new Response(JSON.stringify(data), {
@@ -85,10 +85,12 @@ function getKosanCurrentPeriod() {
   return `${year}-${month}`;
 }
 
-const KOSAN_CURRENT_PERIOD = getKosanCurrentPeriod();
-const KOSAN_PERIODS = (() => {
-  const [endYear, endMonth] = KOSAN_CURRENT_PERIOD.split('-').map(Number);
-  const cursor = new Date(Date.UTC(2025, 2, 1));
+// Dihitung per request di dalam fetch(): jam di scope global Worker beku, jadi periode
+// yang dihitung saat modul dimuat bisa basi dan menolak pembayaran bulan berjalan.
+function buildKosanPeriods(currentPeriod) {
+  const [endYear, endMonth] = currentPeriod.split('-').map(Number);
+  const startDate = new Date(Date.UTC(endYear, endMonth - 1 - 35, 1));
+  const cursor = new Date(Date.UTC(startDate.getUTCFullYear(), startDate.getUTCMonth(), 1));
   const periods = [];
   while (cursor.getUTCFullYear() < endYear ||
     (cursor.getUTCFullYear() === endYear && cursor.getUTCMonth() + 1 <= endMonth)) {
@@ -101,7 +103,7 @@ const KOSAN_PERIODS = (() => {
     cursor.setUTCMonth(cursor.getUTCMonth() + 1);
   }
   return periods;
-})();
+}
 
 function getKosanPeriod(key) {
   const match = String(key || '').match(/^(\d{4})-(0[1-9]|1[0-2])$/);
@@ -724,6 +726,8 @@ export default {
 
     const url = new URL(request.url);
     let path = url.pathname;
+    const KOSAN_CURRENT_PERIOD = getKosanCurrentPeriod();
+    const KOSAN_PERIODS = buildKosanPeriods(KOSAN_CURRENT_PERIOD);
 
     if (path.length > 1 && path.endsWith('/')) {
       path = path.slice(0, -1);
@@ -1122,7 +1126,7 @@ export default {
       if (request.method === 'GET' && path === '/settings') {
         const result = await env.DB.prepare(`
           SELECT key, value FROM site_settings
-          WHERE key IN ('header_logo', 'footer_logo', 'dashboard_logo', 'footer_location', 'footer_phone', 'footer_email', 'footer_instagram', 'linktree_links')
+          WHERE key IN ('header_logo', 'footer_logo', 'dashboard_logo', 'footer_location', 'footer_phone', 'footer_email', 'footer_instagram', 'linktree_links', 'kosan_dashboard_sync')
         `).all();
         return json({
           ok: true,
@@ -3698,11 +3702,36 @@ export default {
       if (request.method === 'GET' && path === '/admin/finance') {
         const adminSecret = String(env.ADMIN_DASHBOARD_SECRET || '').trim();
         if (!(await getAdminTokenPayload(request, adminSecret))) return bad('Login admin diperlukan', 401);
-        const [categoryResult, entryResult] = await Promise.all([
+        const [categoryResult, entryResult, syncSetting] = await Promise.all([
           env.DB.prepare('SELECT id, kind, name FROM finance_categories WHERE active = 1 ORDER BY kind, name COLLATE NOCASE').all(),
           env.DB.prepare('SELECT * FROM finance_entries ORDER BY entry_date DESC, created_at DESC LIMIT 2000').all(),
+          env.DB.prepare(`SELECT value FROM site_settings WHERE key = 'kosan_dashboard_sync'`).first(),
         ]);
-        return json({ ok: true, data: { categories: categoryResult.results || [], entries: entryResult.results || [] } });
+        let entries = entryResult.results || [];
+        // Saklar OFF dari kosan.html: pemasukan & pengeluaran Kosan disembunyikan dari semua
+        // pembaca (Dashboard, laporan owner), kecuali kosan.html sendiri yang meminta ?scope=kosan.
+        if (syncSetting?.value === '0' && url.searchParams.get('scope') !== 'kosan') {
+          let kosanPropertyId = '';
+          let kosanPropertyName = 'kosan de orange kost';
+          try {
+            const management = await env.DB.prepare(`SELECT data_json FROM dashboard_management_data WHERE id = 'main'`).first();
+            const kosanProperty = (JSON.parse(management?.data_json || '{}').properties || [])
+              .find(property => String(property?.code || '').toUpperCase() === 'KDO');
+            if (kosanProperty) {
+              kosanPropertyId = String(kosanProperty.id || '');
+              kosanPropertyName = String(kosanProperty.name || kosanPropertyName).trim().toLowerCase();
+            }
+          } catch {
+            // Data Dashboard tidak terbaca: pakai pencocokan kategori dan nama bawaan.
+          }
+          entries = entries.filter(entry => !(
+            entry.category_id === 'income-kosan-rent' ||
+            entry.category_name === 'Deposit Kos' ||
+            (kosanPropertyId && entry.property_id === kosanPropertyId) ||
+            String(entry.property_name || '').trim().toLowerCase() === kosanPropertyName
+          ));
+        }
+        return json({ ok: true, data: { categories: categoryResult.results || [], entries } });
       }
 
       if (request.method === 'POST' && path === '/admin/finance/categories') {
@@ -3840,6 +3869,129 @@ export default {
         return json({ ok: true, data: { id } });
       }
 
+      const kosanMouMatch = path.match(/^\/kosan\/mous(?:\/([^/]+))?$/);
+      if (kosanMouMatch && ['GET', 'POST', 'PUT', 'DELETE'].includes(request.method)) {
+        const adminSecret = String(env.ADMIN_DASHBOARD_SECRET || '').trim();
+        const tokenData = await getAdminTokenPayload(request, adminSecret);
+        if (!hasManagementRole(tokenData)) return bad('Hanya Master atau Admin yang dapat mengakses data MOU.', 403);
+        const recordId = kosanMouMatch[1] ? decodeURIComponent(kosanMouMatch[1]) : '';
+
+        try {
+          if (request.method === 'GET') {
+            if (recordId) {
+              const row = await env.DB.prepare('SELECT * FROM kosan_mou_records WHERE id = ?').bind(recordId).first();
+              if (!row) return bad('Data MOU tidak ditemukan.', 404);
+              let record;
+              try { record = JSON.parse(row.data_json); }
+              catch { return bad('Data MOU rusak dan tidak dapat dibaca.', 500); }
+              return json({ ok:true, data:{
+                id:row.id, mou_number:row.mou_number, agreement_date:row.agreement_date,
+                building:row.building, room_number:row.room_number, tenant_name:row.tenant_name,
+                price:Number(row.price), deposit:Number(row.deposit), created_at:row.created_at,
+                updated_at:row.updated_at, record,
+              } });
+            }
+            const result = await env.DB.prepare(`
+              SELECT id, mou_number, agreement_date, building, room_number,
+                COALESCE(NULLIF(tenant_name, ''), json_extract(data_json, '$.fields."mou-bio-nama"'), '') AS tenant_name,
+                     price, deposit, created_at, updated_at
+              FROM kosan_mou_records ORDER BY updated_at DESC LIMIT 500
+            `).all();
+            return json({ ok:true, data:result.results || [] });
+          }
+
+          if (request.method === 'DELETE') {
+            if (!recordId) return bad('ID MOU wajib diisi.');
+            const body = await request.json().catch(() => ({}));
+            const pin = String(body.pin || '').trim();
+            if (!/^\d{4}$/.test(pin)) return bad('Masukkan PIN Master 4 digit untuk menghapus MOU.');
+            const master = await env.DB.prepare(`
+              SELECT delete_pin_salt, delete_pin_hash FROM dashboard_users
+              WHERE account_id = 'master' AND active = 1
+            `).first();
+            if (!master?.delete_pin_hash) return bad('PIN Master belum diinisialisasi.', 409);
+            const attemptedPinHash = await hashDashboardPassword(pin, master.delete_pin_salt);
+            if (!constantTimeEqual(attemptedPinHash, master.delete_pin_hash)) return bad('PIN Master salah.', 403);
+            const deleted = await env.DB.prepare('DELETE FROM kosan_mou_records WHERE id = ?').bind(recordId).run();
+            if (!deleted.meta?.changes) return bad('Data MOU tidak ditemukan.', 404);
+            return json({ ok:true, data:{ id:recordId, deleted:true } });
+          }
+
+          if (request.method === 'PUT' && !recordId) return bad('ID MOU wajib diisi untuk memperbarui data.');
+          if (request.method === 'POST' && recordId) return bad('Gunakan POST untuk membuat MOU baru.');
+          const body = await request.json();
+          const record = body.record && typeof body.record === 'object' && !Array.isArray(body.record) ? body.record : null;
+          const fields = record?.fields;
+          const requiredFields = ['mou-nomor','mou-tanggal','mou-gedung','mou-kamar','mou-harga','mou-deposit',
+            'mou-bio-nama','mou-bio-hp','mou-bio-kontak-darurat','mou-bio-hp-darurat'];
+          if (!fields || !requiredFields.every(id => typeof fields[id] === 'string' && fields[id].trim()) ||
+              !Object.values(fields || {}).every(value => typeof value === 'string' && value.length <= 2000)) {
+            return bad('Lengkapi data wajib MOU dan pastikan teks maksimal 2.000 karakter.');
+          }
+          if (!/^\d{4}-\d{2}-\d{2}$/.test(fields['mou-tanggal'])) return bad('Tanggal MOU tidak valid.');
+          const price = Number(fields['mou-harga']);
+          const deposit = Number(fields['mou-deposit']);
+          if (!Number.isSafeInteger(price) || price <= 0 || !Number.isSafeInteger(deposit) || deposit < 0) {
+            return bad('Harga sewa atau deposit MOU tidak valid.');
+          }
+          if (record.agree !== true) return bad('Persetujuan MOU wajib dicentang sebelum disimpan.');
+          const validPhoto = photo => {
+            if (!photo || typeof photo.data !== 'string') return false;
+            try {
+              const parsed = parseDataUrl(photo.data);
+              return parsed.contentType === 'image/jpeg' && parsed.bytes.byteLength < 100 * 1024;
+            } catch { return false; }
+          };
+          if (!validPhoto(record.photos?.ktp) || !validPhoto(record.photos?.selfie)) {
+            return bad('Foto KTP dan foto diri wajib berupa JPEG hasil kompresi di bawah 100 KB.');
+          }
+          const validSignature = signature => {
+            if (!signature || typeof signature.data !== 'string') return false;
+            try {
+              const parsed = parseDataUrl(signature.data);
+              return parsed.contentType === 'image/png' && parsed.bytes.byteLength < 300 * 1024;
+            } catch { return false; }
+          };
+          if (!validSignature(record.signatures?.penghuni) || !validSignature(record.signatures?.management)) {
+            return bad('Tanda tangan penghuni dan management wajib dikonfirmasi.');
+          }
+          const dataJson = JSON.stringify(record);
+          if (new TextEncoder().encode(dataJson).byteLength > 1024 * 1024) return bad('Data MOU melebihi batas 1 MB.');
+          const mouNumber = fields['mou-nomor'].trim().slice(0, 100);
+          const building = fields['mou-gedung'].trim().slice(0, 160);
+          const roomNumber = fields['mou-kamar'].trim().slice(0, 60);
+          const tenantName = fields['mou-bio-nama'].trim().slice(0, 160);
+          const now = new Date().toISOString();
+
+          if (request.method === 'POST') {
+            const id = `mou-${crypto.randomUUID()}`;
+            await env.DB.prepare(`
+              INSERT INTO kosan_mou_records (
+                id, mou_number, agreement_date, building, room_number, tenant_name, price, deposit,
+                data_json, created_by, created_at, updated_at
+              ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            `).bind(id, mouNumber, fields['mou-tanggal'], building, roomNumber, tenantName, price, deposit,
+              dataJson, tokenData.account_id || '', now, now).run();
+            return json({ ok:true, data:{ id, mou_number:mouNumber, tenant_name:tenantName, created_at:now } }, 201);
+          }
+
+          const updated = await env.DB.prepare(`
+            UPDATE kosan_mou_records SET
+              mou_number = ?, agreement_date = ?, building = ?, room_number = ?, tenant_name = ?,
+              price = ?, deposit = ?, data_json = ?, updated_at = ?
+            WHERE id = ?
+          `).bind(mouNumber, fields['mou-tanggal'], building, roomNumber, tenantName, price, deposit,
+            dataJson, now, recordId).run();
+          if (!updated.meta?.changes) return bad('Data MOU tidak ditemukan.', 404);
+          return json({ ok:true, data:{ id:recordId, mou_number:mouNumber, tenant_name:tenantName, updated_at:now } });
+        } catch (error) {
+          if (/no such table: kosan_mou_records/i.test(String(error?.message || error))) {
+            return bad('Penyimpanan MOU belum disiapkan. Jalankan migration-kosan-mou-records.sql di D1.', 503);
+          }
+          throw error;
+        }
+      }
+
       // ================= KOSAN ROOMS (Kamar/Penyewa/Pembayaran kos) =================
       // Butuh migrations/migration-kosan-rooms.sql dijalankan di D1 sebelum endpoint ini dipakai.
       if (request.method === 'GET' && path === '/kosan/rooms') {
@@ -3889,7 +4041,9 @@ export default {
             const row = existing.get(period.key);
             const batch = batchesByRoomPeriod.get(`${room.id}\u0000${period.key}`);
             return {
-              period:period.key, label:period.label, status:row?.status || 'unpaid', date:row?.date || null,
+              period:period.key, label:period.label,
+              status:row?.status || (room.status === 'occupied' ? 'unpaid' : 'none'),
+              recorded:Boolean(row), date:row?.date || null,
               amount:batch ? Math.round(Number(batch.total_amount) / Number(batch.months_paid)) : null,
               method:batch?.method || '', notes:batch?.notes || '', batch_id:batch?.id || '',
             };
@@ -4057,7 +4211,7 @@ export default {
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?, ?)
           `).bind(id, building, buildingCode, roomNumber, tenantName, price, depo, status, notes, startDate, String(tokenData.account_id || ''), new Date().toISOString()).run();
         } catch (error) {
-          if (/no such column: start_date/i.test(String(error?.message || error))) {
+          if (/(?:no such column:|no column named)\s*start_date/i.test(String(error?.message || error))) {
             return bad('Kolom tanggal mulai sewa belum tersedia. Jalankan migration-kosan-room-requests-start-date.sql di D1.', 503);
           }
           throw error;
@@ -4207,6 +4361,33 @@ export default {
         );
         await env.DB.batch(statements);
         return json({ ok:true, data:{ building, room_number:roomNumber } });
+      }
+
+      // Saklar ON/OFF penghubung pemasukan & pengeluaran Kosan ke Dashboard (dasbord.html).
+      // Nilai disimpan di site_settings ('1' = terhubung, '0' = terputus; kosong = terhubung).
+      // Mengubahnya wajib PIN Master; dibaca publik lewat GET /settings.
+      if (request.method === 'POST' && path === '/kosan/dashboard-sync') {
+        const adminSecret = String(env.ADMIN_DASHBOARD_SECRET || '').trim();
+        const tokenData = await getAdminTokenPayload(request, adminSecret);
+        if (!hasManagementRole(tokenData)) return bad('Hanya Master atau Admin yang dapat mengubah koneksi Dashboard.', 403);
+        const rate = await reserveLoginAttempt(env, request, 'kosan-dashboard-sync');
+        if (rate.limited) return bad('Terlalu banyak percobaan. Coba lagi dalam 15 menit.', 429);
+        const body = await request.json();
+        if (typeof body.enabled !== 'boolean') return bad('Status koneksi tidak valid.');
+        const pin = String(body.pin || '').trim();
+        if (!/^\d{4}$/.test(pin)) return bad('Masukkan PIN Master tepat 4 digit.', 400);
+        const master = await env.DB.prepare(`
+          SELECT delete_pin_salt, delete_pin_hash FROM dashboard_users
+          WHERE account_id = 'master' AND active = 1
+        `).first();
+        if (!master?.delete_pin_hash) return bad('PIN Master belum diinisialisasi. Login sebagai Master terlebih dahulu.', 409);
+        const attemptedPinHash = await hashDashboardPassword(pin, master.delete_pin_salt);
+        if (!constantTimeEqual(attemptedPinHash, master.delete_pin_hash)) return bad('PIN Master salah.', 403);
+        await env.DB.prepare(`
+          INSERT INTO site_settings (key, value, updated_at) VALUES ('kosan_dashboard_sync', ?, ?)
+          ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at
+        `).bind(body.enabled ? '1' : '0', new Date().toISOString()).run();
+        return json({ ok:true, data:{ enabled:body.enabled } });
       }
 
       // ================= GUEST FEEDBACK (form-kritik-saran.html) =================
