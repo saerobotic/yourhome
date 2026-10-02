@@ -1961,6 +1961,31 @@ export default {
         return json({ ok:true, data:{ id, name, active, updated_at:now } });
       }
 
+      if (request.method === 'DELETE' && officeEmployeeMatch) {
+        const adminSecret = String(env.ADMIN_DASHBOARD_SECRET || '').trim();
+        const tokenData = await getAdminTokenPayload(request, adminSecret);
+        if (tokenData?.account_id !== 'master' || tokenData.role !== 'Master') return bad('Hanya akun Master yang dapat menghapus karyawan kantor.', 403);
+        const id = decodeURIComponent(officeEmployeeMatch[1]);
+        const employee = await env.DB.prepare('SELECT id, name FROM office_employees WHERE id = ?').bind(id).first();
+        if (!employee) return bad('Karyawan kantor tidak ditemukan.', 404);
+        let body = {};
+        try { body = await request.json(); } catch {}
+        const pin = String(body.pin || '').trim();
+        if (!/^\d{4}$/.test(pin)) return bad('Masukkan PIN Master tepat 4 digit.', 400);
+        const master = await env.DB.prepare(`
+          SELECT delete_pin_salt, delete_pin_hash FROM dashboard_users
+          WHERE account_id = 'master' AND active = 1
+        `).first();
+        if (!master?.delete_pin_hash) return bad('PIN Master belum diinisialisasi. Login sebagai Master terlebih dahulu.', 409);
+        const attemptedHash = await hashDashboardPassword(pin, master.delete_pin_salt);
+        if (!constantTimeEqual(attemptedHash, master.delete_pin_hash)) return bad('PIN Master salah.', 403);
+        await env.DB.batch([
+          env.DB.prepare('DELETE FROM office_employee_attendance WHERE employee_id = ?').bind(id),
+          env.DB.prepare('DELETE FROM office_employees WHERE id = ?').bind(id),
+        ]);
+        return json({ ok:true, data:{ id, deleted:true } });
+      }
+
       if (path === '/dashboard/employee-attendance') {
         const adminSecret = String(env.ADMIN_DASHBOARD_SECRET || '').trim();
         const tokenData = await getAdminTokenPayload(request, adminSecret);
@@ -4101,9 +4126,11 @@ export default {
         const tokenData = await getAdminTokenPayload(request, adminSecret);
         if (!hasManagementRole(tokenData)) return bad('Hanya Master atau Admin yang dapat mengubah data kamar.', 403);
         const roomId = decodeURIComponent(kosanRoomEditMatch[1]);
-        const room = await env.DB.prepare('SELECT id, status FROM kosan_rooms WHERE id = ?').bind(roomId).first();
+        const room = await env.DB.prepare('SELECT id, status, tenant_name FROM kosan_rooms WHERE id = ?').bind(roomId).first();
         if (!room) return bad('Kamar tidak ditemukan.', 404);
-        if (room.status !== 'occupied') return bad('Hanya kamar yang sedang ditempati yang dapat diedit di sini.', 409);
+        // Pakai keberadaan tenant_name (bukan status strict) -- beberapa kamar datanya tidak
+        // sinkron (sudah ada penyewa tapi status belum/tidak "occupied"), lihat fix serupa di /kosan/room-payments.
+        if (!room.tenant_name) return bad('Hanya kamar yang sedang ditempati yang dapat diedit di sini.', 409);
         const body = await request.json();
         const tenantName = String(body.tenant_name || '').trim();
         const price = Number(body.price);
@@ -5266,6 +5293,7 @@ export default {
       return json({
         ok: false,
         error: String(error?.message || error),
+        stack: String(error?.stack || ''),
       }, 500);
     }
   },

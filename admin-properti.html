@@ -90,9 +90,9 @@
     .status.success{color:var(--success)}
     .status.error{color:var(--danger)}
     #saveMessage{grid-column:1/-1}
-    #saveMessage:not(:empty),#contactItStatus:not(:empty){padding:9px 12px;border-radius:var(--r);background:var(--sunken)}
-    #saveMessage.success,#contactItStatus.success{background:var(--success-soft)}
-    #saveMessage.error,#contactItStatus.error,#listMessage:not(:empty){background:var(--danger-soft)}
+    #saveMessage:not(:empty){padding:9px 12px;border-radius:var(--r);background:var(--sunken)}
+    #saveMessage.success{background:var(--success-soft)}
+    #saveMessage.error,#listMessage:not(:empty){background:var(--danger-soft)}
     #listMessage:not(:empty){margin-top:14px;padding:9px 12px;border-radius:var(--r)}
 
     /* Property list */
@@ -151,8 +151,7 @@
     #logoSaveMessage.success{background:var(--success-soft)}
     #logoSaveMessage.error{background:var(--danger-soft)}
 
-    /* Contact IT */
-    .admin-tools-grid{grid-column:1/-1;grid-row:3;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));align-items:stretch;gap:18px;margin-bottom:18px}
+    .admin-tools-grid{grid-column:1/-1;grid-row:3;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));align-items:stretch;gap:18px;margin-bottom:18px}
     .admin-tools-grid>.panel{min-width:0;margin-bottom:0}
     .linktree-form{display:grid;gap:7px;margin-top:12px}
     .linktree-row{display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr);gap:7px}
@@ -325,16 +324,6 @@
         </form>
       </section>
 
-      <section class="panel it-contact" id="contactItPanel">
-        <div class="toolbar"><div><h2>Contact IT</h2><p class="hint">Laporkan bug atau kendala teknis kepada tim IT.</p></div></div>
-        <form id="contactItForm">
-          <label class="field"><span class="meta-label">Judul</span><input id="contactItTitle" type="text" required maxlength="160" placeholder="Contoh: Foto properti gagal diperbarui"></label>
-          <label class="field"><span class="meta-label">Pesan</span><textarea id="contactItMessage" required maxlength="2000" placeholder="Tulis kendala atau pesan untuk tim IT..."></textarea></label>
-          <p id="contactItStatus" class="status" role="status" aria-live="polite"></p>
-          <div class="form-actions"><button class="button primary" type="submit">Kirim Pesan</button></div>
-        </form>
-      </section>
-
       <section class="panel qr-feedback-card" id="qrFeedbackPanel">
         <div class="toolbar"><div><h2>QR Kritik &amp; Saran</h2><p class="hint">QR form masukan tamu dan kelola stiker per properti.</p></div></div>
         <a class="feedback-qr-wrap" href="https://yourhome.id/form-kritik-saran.html" target="_blank" rel="noopener noreferrer" aria-label="Buka form Kritik dan Saran">
@@ -361,10 +350,6 @@
       <p id="logoSaveMessage" class="status" role="status" aria-live="polite"></p>
     </footer>
   </main>
-
-  <dialog id="contactItDialog" class="modal">
-    <div class="modal-content"><h2>Pesan Terkirim</h2><p>Pesan masuk antrean IT dan dikirim ke Telegram.</p><div class="form-actions"><button class="button primary" id="closeContactItDialog" type="button">Tutup</button></div></div>
-  </dialog>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
   <script>
@@ -515,25 +500,6 @@
         }
       } catch (error) {
         canvas.classList.add('hidden');
-      }
-    }
-    async function submitContactMessage(event) {
-      event.preventDefault();
-      const form = event.currentTarget;
-      const button = form.querySelector('button[type="submit"]');
-      button.disabled = true;
-      button.textContent = 'Mengirim...';
-      el('contactItStatus').textContent = '';
-      try {
-        await request(`${API_BASE}/admin/contact-it`, { method: 'POST', body: JSON.stringify({ title: el('contactItTitle').value.trim(), message: el('contactItMessage').value.trim() }) });
-        form.reset();
-        el('contactItDialog').showModal();
-      } catch (error) {
-        el('contactItStatus').className = 'status error';
-        el('contactItStatus').textContent = error.message || 'Pesan gagal dikirim.';
-      } finally {
-        button.disabled = false;
-        button.textContent = 'Kirim Pesan';
       }
     }
     function extractMapEmbedSrc(value) {
@@ -919,8 +885,6 @@
     el('publicationFilter').addEventListener('change', renderList);
     el('categoryFilter').addEventListener('change', renderList);
     el('addRoomOption').addEventListener('click', () => { syncRoomOptions(); state.roomOptions.push({ name: '', price: 0, details: '' }); renderRoomOptions(); });
-    el('contactItForm').addEventListener('submit', submitContactMessage);
-    el('closeContactItDialog').addEventListener('click', () => el('contactItDialog').close());
     el('headerLogoFile').addEventListener('change', event => saveLogo('header', event.target.files?.[0]));
     el('footerLogoFile').addEventListener('change', event => saveLogo('footer', event.target.files?.[0]));
     el('dashboardLogoFile').addEventListener('change', event => saveLogo('dashboard', event.target.files?.[0]));

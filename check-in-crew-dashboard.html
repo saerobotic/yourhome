@@ -352,7 +352,7 @@
       .topbar .subtitle{display:none}
       .top-actions{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-bottom:14px}
       .top-actions .button{width:100%;padding:10px 6px;white-space:normal}
-      #exportPdfBtn,#laporBugTopBtn,#exportExcelBtn{grid-column:span 2}
+      #exportPdfBtn,#exportExcelBtn{grid-column:span 2}
       #manualEntryBtn,#deleteAllBtn{grid-column:span 3}
       #exportPdfBtn .btn-word,#exportExcelBtn .btn-word{display:none}
       #exportPdfBtn .btn-icon,#exportExcelBtn .btn-icon{width:18px;height:18px}
@@ -479,7 +479,6 @@
 
     <div class="top-actions">
       <button class="button" id="exportPdfBtn" type="button" title="Download PDF"><svg class="btn-icon" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg><span class="btn-word">Download&nbsp;</span><span>PDF</span></button>
-      <button class="button" id="laporBugTopBtn" type="button"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="6" width="8" height="14" rx="4"/><path d="M9 12H4M20 12h-5M12 6V3M9 3l1.5 3M15 3l-1.5 3M5 15l3-1M19 15l-3-1M5 9l3 1M19 9l-3 1"/></svg><span>Lapor Bug</span></button>
       <button class="button" id="exportExcelBtn" type="button" title="Download Excel"><svg class="btn-icon" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg><span class="btn-word">Download&nbsp;</span><span>Excel</span></button>
       <button class="button primary" id="manualEntryBtn" type="button">+ Tambah Data Manual</button>
       <button class="button danger" id="deleteAllBtn" type="button" style="display:none">Hapus Semua Data</button>
@@ -717,23 +716,6 @@
         <label class="field"><span class="meta-label">Tanggal</span><input id="editDate" type="date" required /></label>
         <div class="edit-actions"><button class="button" type="button" data-close="editModal">Batal</button><button class="button primary" id="editSubmitBtn" type="submit">Simpan Perubahan</button></div>
       </form>
-    </div>
-  </div>
-  <div class="modal" id="laporBugModal" role="dialog" aria-modal="true" aria-labelledby="laporBugTitle">
-    <div class="modal-card" style="width:min(560px,100%)">
-      <div class="modal-head"><div><h2 id="laporBugTitle">Lapor Bug</h2><p class="subtitle">Laporkan bug atau kendala teknis kepada tim IT.</p></div><button class="close" type="button" data-close="laporBugModal" aria-label="Tutup">&times;</button></div>
-      <div style="padding:20px">
-        <label class="field"><span class="meta-label">Judul</span>
-          <input id="bugTitle" type="text" maxlength="160" required placeholder="Contoh: Gagal menyimpan data check-in" style="width:100%;border:1px solid var(--line-strong);border-radius:var(--r);background:var(--paper);padding:9px 12px;color:var(--ink);font:inherit;font-size:.9rem;outline:none" />
-        </label>
-        <label class="field"><span class="meta-label">Pesan</span>
-          <textarea id="bugMessage" maxlength="2000" placeholder="Tulis kendala atau pesan untuk tim IT..." style="min-height:120px;resize:vertical;width:100%;border:1px solid var(--line-strong);border-radius:var(--r);background:var(--paper);padding:9px 12px;color:var(--ink);font:inherit;font-size:.9rem;outline:none"></textarea>
-        </label>
-        <div class="admin-actions" style="margin-top:14px">
-          <button class="button primary" id="submitBugBtn" type="button">Kirim Pesan</button>
-        </div>
-        <p id="bugStatus" class="pin-message" role="status" aria-live="polite"></p>
-      </div>
     </div>
   </div>
   <div class="lightbox" id="lightbox"><button type="button" data-close="lightbox" aria-label="Tutup foto">&times;</button><img id="lightboxImage" alt="Foto diperbesar" /></div>
@@ -2116,58 +2098,6 @@
     } catch {}
     return 'absensi';
   }
-  function openLaporBugModal() {
-    const title = assignEl('bugTitle');
-    const textarea = assignEl('bugMessage');
-    const status = assignEl('bugStatus');
-    const submitBtn = assignEl('submitBugBtn');
-    title.value = '';
-    title.disabled = false;
-    textarea.value = '';
-    textarea.disabled = false;
-    status.className = 'pin-message';
-    status.textContent = '';
-    submitBtn.textContent = 'Kirim Pesan';
-    submitBtn.disabled = false;
-    assignEl('laporBugModal').classList.add('open');
-  }
-  async function submitBugReport() {
-    const titleInput = assignEl('bugTitle');
-    const textarea = assignEl('bugMessage');
-    const status = assignEl('bugStatus');
-    const submitBtn = assignEl('submitBugBtn');
-    const title = titleInput.value.trim();
-    const message = textarea.value.trim();
-    status.className = 'pin-message';
-    if (!title) { status.textContent = 'Judul wajib diisi.'; return; }
-    if (!message) { status.textContent = 'Tulis pesan terlebih dahulu.'; return; }
-    status.textContent = 'Mengirim...';
-    submitBtn.disabled = true;
-    try {
-      const response = await fetch(`${API_BASE}/admin/contact-it`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(state.adminToken ? { Authorization: `Bearer ${state.adminToken}` } : {}),
-        },
-        body: JSON.stringify({ title, message }),
-      });
-      const result = await response.json().catch(() => ({}));
-      if (!response.ok || result.ok === false) throw new Error(result.error || 'Pesan gagal dikirim.');
-      status.className = 'pin-message success';
-      status.textContent = 'Pesan masuk antrean IT dan dikirim ke Telegram.';
-      submitBtn.textContent = 'Terkirim';
-      titleInput.value = '';
-      titleInput.disabled = true;
-      textarea.value = '';
-      textarea.disabled = true;
-    } catch (error) {
-      status.className = 'pin-message error';
-      status.textContent = error.message || 'Pesan gagal dikirim.';
-      titleInput.disabled = false;
-      submitBtn.disabled = false;
-    }
-  }
   function assignSameProperty(left, right) {
     return String(left || '').trim().toLocaleLowerCase('id') === String(right || '').trim().toLocaleLowerCase('id');
   }
@@ -2634,8 +2564,6 @@
     assignEl('taskDate').value = formatLocalDateKey();
     assignEl('viewAbsensiBtn').addEventListener('click', () => switchDashboardView('absensi'));
     assignEl('viewPenugasanBtn').addEventListener('click', () => switchDashboardView('penugasan'));
-    assignEl('laporBugTopBtn').addEventListener('click', openLaporBugModal);
-    assignEl('submitBugBtn').addEventListener('click', submitBugReport);
     switchDashboardView(currentDashboardView());
     refreshAssignCrewFilter();
     renderAssignmentTable();

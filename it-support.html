@@ -25,8 +25,10 @@
     .filter-tabs{display:inline-flex;gap:3px;padding:3px;border:1px solid var(--line);border-radius:8px;background:var(--page)}.filter-tabs button{min-height:32px;padding:6px 10px;border:0;border-radius:6px;background:transparent;color:var(--muted);font-size:11px;font-weight:700}.filter-tabs button[aria-pressed=true]{background:var(--paper);color:var(--ink);box-shadow:0 1px 3px rgba(20,30,22,.12)}.search-input{width:min(230px,42%);min-height:36px;padding:8px 10px;border:1px solid var(--line);border-radius:7px;background:#fff;font-size:12px;outline:none}.search-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(71,102,77,.12)}
     .ticket-list{padding:0 12px}.ticket{display:grid;grid-template-columns:20px minmax(0,1fr);gap:8px;align-items:center;padding:6px 2px;border-bottom:1px solid var(--line)}.ticket:last-child{border-bottom:0}.ticket-check{width:17px;height:17px;margin:0;accent-color:var(--accent);cursor:pointer}.ticket-main{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:center;min-width:0}.ticket-content{display:grid;grid-template-columns:auto minmax(110px,190px) minmax(0,1fr) minmax(105px,145px);gap:8px;align-items:center;min-width:0}.ticket-title{min-width:0;margin:0;font-size:11px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.ticket-meta{min-width:0;color:var(--muted);font-size:9px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.badge{display:inline-flex;align-items:center;min-height:18px;padding:2px 6px;border-radius:5px;font-size:9px;font-weight:800}.badge.bug{background:var(--danger-soft);color:var(--danger)}.badge.task{background:var(--blue-soft);color:var(--blue)}.badge.source{background:var(--gold-soft);color:#76551d}.ticket-description{min-width:0;margin:0;color:var(--ink-soft);font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.ticket.done .ticket-title,.ticket.done .ticket-description,.ticket.done .ticket-meta{text-decoration:line-through;color:#929a93}.empty-state{padding:36px 18px;text-align:center;color:var(--muted);font-size:12px}.empty-state strong{display:block;margin-bottom:4px;color:var(--ink);font-size:13px}.queue-status{padding:0 12px 8px;color:var(--muted);font-size:11px}
     .ticket-actions{display:flex;align-items:center;gap:4px;flex:0 0 auto}.ticket-edit,.ticket-delete{display:grid;place-items:center;width:27px;height:27px;padding:0;border:1px solid var(--line);border-radius:6px;background:var(--paper);color:var(--ink-soft)}.ticket-edit:hover{border-color:var(--accent);color:var(--accent-dark);background:var(--accent-soft)}.ticket-delete{color:var(--danger)}.ticket-delete:hover{border-color:var(--danger);background:var(--danger-soft)}.form-actions{display:flex;gap:8px;margin-top:16px}.entry-form .form-actions .primary-button{flex:1;width:auto;margin-top:0}.secondary-button{min-height:42px;padding:9px 12px;border:1px solid var(--line);border-radius:8px;background:var(--paper);color:var(--ink-soft);font-size:12px;font-weight:700}.secondary-button:hover{background:var(--page);color:var(--ink)}
+    .workspace-switcher{margin-bottom:16px}.workspace-switcher button{min-width:124px}.workspace-panel[hidden]{display:none!important}.checklist-panel{overflow:hidden}.checklist-toolbar{display:flex;align-items:center;gap:14px;padding:14px 18px;border-bottom:1px solid var(--line)}.checklist-progress{flex:1;min-width:0}.checklist-progress-label{display:flex;justify-content:space-between;gap:10px;margin-bottom:6px;color:var(--muted);font-size:11px;font-weight:700}.checklist-progress-label strong{color:var(--ink);font-variant-numeric:tabular-nums}.checklist-progress progress{display:block;width:100%;height:7px;overflow:hidden;border:0;border-radius:999px;background:var(--page);accent-color:var(--accent)}.checklist-progress progress::-webkit-progress-bar{border-radius:999px;background:var(--page)}.checklist-progress progress::-webkit-progress-value{border-radius:999px;background:var(--accent)}.checklist-progress progress::-moz-progress-bar{border-radius:999px;background:var(--accent)}.checklist-reset{min-height:34px;padding:6px 10px;font-size:11px}.checklist-intro{margin:0;padding:12px 18px;background:var(--gold-soft);color:#76551d;font-size:11px}.checklist-groups{padding:0 18px 8px}.checklist-group{padding:15px 0;border-top:1px solid var(--line)}.checklist-group:first-child{border-top:0}.checklist-group h3{margin:0 0 8px;font-size:12px}.checklist-item{display:grid;grid-template-columns:18px minmax(0,1fr);gap:9px;align-items:start;padding:9px 0;border-top:1px solid #eef0ec;cursor:pointer}.checklist-item input{width:16px;height:16px;margin:2px 0 0;accent-color:var(--accent);cursor:pointer}.checklist-item span{color:var(--ink-soft);font-size:11px;line-height:1.5}.checklist-item input:checked+span{color:var(--muted);text-decoration:line-through}.checklist-note{margin:0;padding:12px 18px;border-top:1px solid var(--line);color:var(--muted);font-size:10px}
     .delete-dialog{width:min(440px,calc(100% - 28px));padding:0;border:1px solid var(--line);border-radius:12px;background:var(--paper);color:var(--ink);box-shadow:0 24px 70px rgba(18,28,21,.28)}.delete-dialog::backdrop{background:rgba(17,25,20,.58);backdrop-filter:blur(2px)}.delete-dialog form{padding:22px}.delete-dialog h2{margin:0;font-size:18px}.delete-dialog p{margin:7px 0 0;color:var(--muted);font-size:12px}.delete-dialog .field{margin-top:18px}.delete-dialog .dialog-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:16px}.danger-button{min-height:40px;padding:8px 13px;border:1px solid var(--danger);border-radius:7px;background:var(--danger);color:#fff;font-size:12px;font-weight:700}.danger-button:hover{background:#88382d}
     @media(max-width:780px){.workspace{padding:20px 14px 36px}.header-inner{padding:13px 14px}.page-heading{align-items:flex-start;flex-direction:column}.stats{width:100%}.stat{flex:1;min-width:0}.columns{grid-template-columns:1fr;gap:14px}.queue-toolbar{align-items:flex-start;flex-direction:column}.search-input{width:100%}.ticket-content{grid-template-columns:auto minmax(0,1fr);gap:3px 7px}.ticket-description{grid-column:2;grid-row:2}.ticket-meta{display:none}.ticket-main{gap:2px 6px}}
+    @media(max-width:520px){.checklist-toolbar{align-items:stretch;flex-direction:column;gap:10px}.checklist-reset{width:100%}.workspace-switcher button{min-width:0;flex:1}}
     @media(max-width:420px){.login-panel{padding:23px}.header-subtitle{display:none}.user-chip{display:none}.filter-tabs{width:100%}.filter-tabs button{flex:1}.stats{gap:7px}.stat{padding:9px}.stat strong{font-size:18px}.ticket-list{padding:0 8px}.ticket-actions{gap:3px}.ticket-edit,.ticket-delete{width:25px;height:25px}}
   </style>
 </head>
@@ -67,7 +69,11 @@
           <div class="stat done"><span>Selesai</span><strong id="doneCount">0</strong></div>
         </div>
       </div>
-      <div class="columns">
+      <nav class="filter-tabs workspace-switcher" aria-label="Menu IT Support" role="group">
+        <button type="button" data-workspace-button="tickets" aria-pressed="true">Antrean Tiket</button>
+        <button type="button" data-workspace-button="checklist" aria-pressed="false">Simulasi &amp; Ceklis</button>
+      </nav>
+      <div id="ticketWorkspace" class="workspace-panel columns" data-workspace="tickets">
         <section class="panel" aria-labelledby="newTicketTitle">
           <div class="panel-head"><h2 id="newTicketTitle">Input tiket</h2><p>Catat bug atau tugas baru untuk antrean IT.</p></div>
           <form id="ticketForm" class="entry-form">
@@ -92,6 +98,135 @@
           <div id="ticketList" class="ticket-list"></div>
         </section>
       </div>
+      <section id="checklistWorkspace" class="workspace-panel panel checklist-panel hidden" data-workspace="checklist" aria-labelledby="checklistTitle">
+        <div class="panel-head"><h2 id="checklistTitle">Simulasi Menyeluruh YOUR HOME</h2><p>Cek satu per satu setelah skenario selesai diuji.</p></div>
+        <div class="checklist-toolbar">
+          <div class="checklist-progress"><div class="checklist-progress-label"><span>Progres ceklis</span><strong id="checklistProgressText">0 dari 0 selesai</strong></div><progress id="checklistProgress" max="1" value="0" aria-label="Progres checklist simulasi"></progress></div>
+          <button id="resetChecklistButton" class="secondary-button checklist-reset" type="button">Reset progres</button>
+        </div>
+        <p class="checklist-intro">Jalankan di lingkungan dan akun uji. Jangan melakukan penghapusan, pembatalan, atau perubahan data percobaan di produksi.</p>
+        <div class="checklist-groups">
+          <section class="checklist-group" aria-labelledby="checklistAccessTitle">
+            <h3 id="checklistAccessTitle">Akses dan sesi</h3>
+            <label class="checklist-item"><input type="checkbox" data-checklist-id="access-test-env"><span>Pastikan lingkungan uji dan data percobaan sudah disiapkan sebelum memulai.</span></label>
+            <label class="checklist-item"><input type="checkbox" data-checklist-id="access-roles"><span>Uji login Master, Operasional, Admin, IT, Crew, Owner, dan Agen; pastikan setiap akun hanya melihat menu serta data sesuai hak aksesnya.</span></label>
+            <label class="checklist-item"><input type="checkbox" data-checklist-id="access-session"><span>Uji logout dan sesi kedaluwarsa; halaman terlindungi meminta login kembali dan tidak tetap bisa dipakai dengan sesi lama.</span></label>
+          </section>
+          <section class="checklist-group" aria-labelledby="checklistPropertyTitle">
+            <h3 id="checklistPropertyTitle">Properti dan kode</h3>
+            <label class="checklist-item"><input type="checkbox" data-checklist-id="property-code-dashboard"><span>Ganti kode properti dari Pengaturan Dashboard, muat ulang, lalu login kembali; kode baru tetap tampil.</span></label>
+            <label class="checklist-item"><input type="checkbox" data-checklist-id="property-code-page"><span>Periksa kode yang sama dari halaman Ganti Kode Properti; perubahan dari salah satu halaman terlihat di halaman lainnya.</span></label>
+            <label class="checklist-item"><input type="checkbox" data-checklist-id="property-code-duplicate"><span>Coba simpan kode yang sudah dipakai properti lain; sistem menolak duplikasi dan data lama tidak berubah.</span></label>
+            <label class="checklist-item"><input type="checkbox" data-checklist-id="property-code-sync"><span>Setelah ubah kode, tunggu sinkronisasi Dashboard dan pastikan kode tidak kembali ke nilai lama.</span></label>
+            <label class="checklist-item"><input type="checkbox" data-checklist-id="property-archive"><span>Arsipkan dan pulihkan properti uji; status, pilihan properti, dan visibilitasnya konsisten di Dashboard.</span></label>
+          </section>
+          <section class="checklist-group" aria-labelledby="checklistAdminPropertyTitle">
+            <h3 id="checklistAdminPropertyTitle">Admin Properti / Admin Website</h3>
+            <label class="checklist-item"><input type="checkbox" data-checklist-id="admin-property-access"><span>Uji login staf berwenang dan IT; akun yang tidak berwenang tidak dapat membuka atau menyimpan katalog properti.</span></label>
+            <label class="checklist-item"><input type="checkbox" data-checklist-id="admin-property-filter"><span>Filter daftar menurut kategori dan status; properti aktif, draft, dan arsip masuk ke hasil yang tepat.</span></label>
+            <label class="checklist-item"><input type="checkbox" data-checklist-id="admin-property-draft-publish"><span>Simpan properti uji sebagai Draft; pastikan tidak tampil publik. Lengkapi syarat lalu Publish dan pastikan tampil di website.</span></label>
+            <label class="checklist-item"><input type="checkbox" data-checklist-id="admin-property-kosan"><span>Untuk kategori Kosan, tambah/edit tipe kamar, harga bulanan, dan fasilitas; simpan lalu muat ulang untuk memastikan nilainya bertahan.</span></label>
+            <label class="checklist-item"><input type="checkbox" data-checklist-id="admin-property-images"><span>Ganti foto utama, tambah/hapus dan ubah urutan foto galeri; simpan lalu cek hasil dan tautan gambar di website publik.</span></label>
+            <label class="checklist-item"><input type="checkbox" data-checklist-id="admin-property-content"><span>Edit lokasi, deskripsi, Google Maps, dan urutan tampil; pastikan website memuat nilai baru setelah disimpan.</span></label>
+            <label class="checklist-item"><input type="checkbox" data-checklist-id="admin-property-linktree"><span>Ubah Linktree uji; tautan tersimpan dan muncul di Portal Admin dengan tujuan yang benar.</span></label>
+            <label class="checklist-item"><input type="checkbox" data-checklist-id="admin-property-brand-feedback"><span>Periksa QR kritik/saran per properti serta logo dan kontak website; perubahan tampil di halaman publik yang sesuai.</span></label>
+          </section>
+          <section class="checklist-group" aria-labelledby="checklistBookingTitle">
+            <h3 id="checklistBookingTitle">Booking dan keuangan</h3>
+            <label class="checklist-item"><input type="checkbox" data-checklist-id="booking-create"><span>Buat booking uji; detailnya muncul di daftar dan kalender dengan properti, tamu, tanggal, serta nominal yang benar.</span></label>
+            <label class="checklist-item"><input type="checkbox" data-checklist-id="booking-conflict"><span>Coba booking pada tanggal/properti yang bentrok; validasi menampilkan konflik dan tidak membuat data ganda.</span></label>
+            <label class="checklist-item"><input type="checkbox" data-checklist-id="booking-extra-bed"><span>Uji jumlah extra bed melewati stok dan tidak melewati stok; hanya jumlah yang valid dapat disimpan.</span></label>
+            <label class="checklist-item"><input type="checkbox" data-checklist-id="booking-edit-cancel"><span>Edit dan batalkan booking uji; status, pemasukan terkait, serta angka ringkasan mengikuti perubahan satu kali.</span></label>
+            <label class="checklist-item"><input type="checkbox" data-checklist-id="finance-entry"><span>Catat pemasukan dan pengeluaran uji, termasuk kategori serta bukti bila digunakan; nilai dan properti tercatat benar.</span></label>
+            <label class="checklist-item"><input type="checkbox" data-checklist-id="finance-report"><span>Bandingkan laporan periode dan ringkasan keuangan dengan transaksi uji; tidak ada transaksi terhitung ganda atau hilang.</span></label>
+          </section>
+          <section class="checklist-group" aria-labelledby="checklistMainDashboardTitle">
+            <h3 id="checklistMainDashboardTitle">Dashboard Operasional (dasbord.html)</h3>
+            <label class="checklist-item"><input type="checkbox" data-checklist-id="main-dashboard-access"><span>Uji role Master, Operasional, Admin, dan IT; menu serta aksi Pengaturan, properti, dan keuangan sesuai hak akses.</span></label>
+            <label class="checklist-item"><input type="checkbox" data-checklist-id="main-dashboard-summary"><span>Bandingkan kartu ringkasan Dashboard dengan daftar booking dan transaksi pada periode yang sama; angka dan filter periode konsisten.</span></label>
+            <label class="checklist-item"><input type="checkbox" data-checklist-id="main-dashboard-catalog"><span>Tambah/edit Owner atau properti uji; data bertahan setelah refresh dan tersinkron dengan Admin Properti tanpa menimpa kode.</span></label>
+            <label class="checklist-item"><input type="checkbox" data-checklist-id="main-dashboard-booking-calendar"><span>Buat dan ubah booking uji; kalender, daftar booking, status, properti, serta ringkasan ikut diperbarui dengan benar.</span></label>
+            <label class="checklist-item"><input type="checkbox" data-checklist-id="main-dashboard-finance"><span>Catat transaksi uji dan periksa kategori, properti, bukti, filter tanggal, serta hasilnya pada Omset dan Keuangan.</span></label>
+            <label class="checklist-item"><input type="checkbox" data-checklist-id="main-dashboard-owner-agent"><span>Generate laporan Owner dan Agen uji; rentang tanggal, booking, fee, dan pemilik/penerima laporan sesuai pilihan.</span></label>
+            <label class="checklist-item"><input type="checkbox" data-checklist-id="main-dashboard-documents"><span>Uji Kalkulator Bagi Hasil dan Nota Lunas; nominal terhitung benar dan PDF dapat dibuka dengan isi yang sesuai.</span></label>
+            <label class="checklist-item"><input type="checkbox" data-checklist-id="main-dashboard-inventory"><span>Periksa Inventaris dan Absensi Karyawan; data uji muncul di daftar, indikator, serta riwayat/dashboard yang sesuai.</span></label>
+          </section>
+          <section class="checklist-group" aria-labelledby="checklistKosanTitle">
+            <h3 id="checklistKosanTitle">Manajemen Kosan (kosan.html)</h3>
+            <label class="checklist-item"><input type="checkbox" data-checklist-id="kosan-access"><span>Uji login dan batas akses role; akun tanpa izin tidak dapat membuka data kamar, penyewa, atau pembayaran.</span></label>
+            <label class="checklist-item"><input type="checkbox" data-checklist-id="kosan-dashboard"><span>Bandingkan ringkasan Kosan dengan kamar terisi/kosong, pembayaran, dan pengeluaran pada periode uji.</span></label>
+            <label class="checklist-item"><input type="checkbox" data-checklist-id="kosan-room"><span>Tambah/edit kamar uji; nomor, gedung, tipe, harga, dan status tetap benar setelah refresh.</span></label>
+            <label class="checklist-item"><input type="checkbox" data-checklist-id="kosan-tenant"><span>Tambah penyewa uji ke kamar kosong; data kontak, masa sewa, tarif, dan status kamar saling cocok.</span></label>
+            <label class="checklist-item"><input type="checkbox" data-checklist-id="kosan-tenant-change"><span>Uji perpanjangan, pindah kamar, dan keluar dengan data uji; kamar lama/baru dan tanggal sewa diperbarui tanpa menghapus riwayat.</span></label>
+            <label class="checklist-item"><input type="checkbox" data-checklist-id="kosan-rent-payment"><span>Catat pembayaran sewa untuk periode uji; kamar, penyewa, nominal, periode, status, dan bukti pembayaran benar serta tidak terduplikasi.</span></label>
+            <label class="checklist-item"><input type="checkbox" data-checklist-id="kosan-payment-batch"><span>Uji pembayaran per kamar dan pembayaran batch; hanya kamar/nominal yang dipilih berubah, dan pengulangan tidak membuat transaksi ganda.</span></label>
+            <label class="checklist-item"><input type="checkbox" data-checklist-id="kosan-reports"><span>Cocokkan tunggakan, riwayat pembayaran, laporan bulanan, pemasukan, dan pengeluaran dengan transaksi uji.</span></label>
+            <label class="checklist-item"><input type="checkbox" data-checklist-id="kosan-expense-income"><span>Tambah pemasukan lain dan pengeluaran uji beserta kategori; nilai tercatat satu kali dan muncul di laporan yang tepat.</span></label>
+            <label class="checklist-item"><input type="checkbox" data-checklist-id="kosan-mou"><span>Buat MOU penyewa uji; validasi data wajib, isi dokumen, tanda tangan, draft/final, serta pratinjau/unduhan benar.</span></label>
+            <label class="checklist-item"><input type="checkbox" data-checklist-id="kosan-invoice"><span>Buat dan unduh invoice uji; identitas, kamar, periode, rincian, jatuh tempo, dan total tagihan benar.</span></label>
+            <label class="checklist-item"><input type="checkbox" data-checklist-id="kosan-refresh"><span>Muat ulang halaman dan buka sesi lain; status kamar, penyewa, pembayaran, dan laporan tetap konsisten.</span></label>
+          </section>
+          <section class="checklist-group" aria-labelledby="checklistCrewAppTitle">
+            <h3 id="checklistCrewAppTitle">Halaman Check In Crew</h3>
+            <label class="checklist-item"><input type="checkbox" data-checklist-id="crew-login"><span>Login sebagai Crew uji; nama akun dan properti yang tersedia sesuai, lalu akun lain tidak dapat membuka riwayat Crew ini.</span></label>
+            <label class="checklist-item"><input type="checkbox" data-checklist-id="crew-gps-denied"><span>Tolak izin lokasi atau matikan GPS; aplikasi memberi pesan jelas dan tidak menyimpan check-in tanpa lokasi.</span></label>
+            <label class="checklist-item"><input type="checkbox" data-checklist-id="crew-selfie"><span>Ambil selfie, periksa pratinjau, lalu coba ambil ulang; foto yang tersimpan adalah foto terakhir dan kamera ditutup setelah selesai.</span></label>
+            <label class="checklist-item"><input type="checkbox" data-checklist-id="crew-checkin"><span>Lakukan check-in uji dengan GPS dan selfie; waktu, properti, jenis pekerjaan, lokasi, dan foto tersimpan di riwayat hari ini.</span></label>
+            <label class="checklist-item"><input type="checkbox" data-checklist-id="crew-offline"><span>Dengan check-in uji, putuskan jaringan saat kirim lalu sambungkan kembali; antrean terkirim otomatis satu kali tanpa duplikasi.</span></label>
+            <label class="checklist-item"><input type="checkbox" data-checklist-id="crew-documentation"><span>Buka Dokumentasi Saya; riwayat hanya milik Crew yang login, tautan GPS dan foto dapat dibuka.</span></label>
+            <label class="checklist-item"><input type="checkbox" data-checklist-id="crew-task"><span>Buka Tugas Hari Ini; daftar hanya berisi tugas tanpa tampilan selfie/check-in, lalu tandai tugas dan pastikan statusnya berubah sesuai aturan check-in.</span></label>
+            <label class="checklist-item"><input type="checkbox" data-checklist-id="crew-inventory"><span>Isi dan kirim Cek Inventaris uji; pastikan properti, kondisi barang, dan bukti foto (jika diminta) tersimpan.</span></label>
+            <label class="checklist-item"><input type="checkbox" data-checklist-id="crew-checkout"><span>Lakukan check-out dari akun yang sama; waktu pulang dan durasi tercatat tanpa menggandakan check-in.</span></label>
+          </section>
+          <section class="checklist-group" aria-labelledby="checklistCrewDashboardTitle">
+            <h3 id="checklistCrewDashboardTitle">Dashboard Check In Crew</h3>
+            <label class="checklist-item"><input type="checkbox" data-checklist-id="crew-dashboard-login"><span>Login sebagai staf berwenang; halaman membuka Absensi &amp; Honor Crew dan role yang tidak berwenang ditolak.</span></label>
+            <label class="checklist-item"><input type="checkbox" data-checklist-id="crew-dashboard-record"><span>Temukan check-in uji di Riwayat Pekerjaan; crew, properti, pekerjaan, waktu, honor, GPS, foto, dan sumber cocok dengan kiriman Crew.</span></label>
+            <label class="checklist-item"><input type="checkbox" data-checklist-id="crew-dashboard-detail"><span>Buka detail pekerjaan; selfie bukti lokasi, foto hasil kerja, dan tautan koordinat GPS tampil dengan benar.</span></label>
+            <label class="checklist-item"><input type="checkbox" data-checklist-id="crew-dashboard-filter"><span>Filter periode dan Crew; jumlah riwayat, ringkasan, slip, dan rekap bulanan mengikuti filter yang dipilih.</span></label>
+            <label class="checklist-item"><input type="checkbox" data-checklist-id="crew-dashboard-honor"><span>Periksa slip gaji dan rekap; tanggal check-in unik, hari tidak check-in, potongan, gaji dibayar, serta tambahan sesuai aturan hitung.</span></label>
+            <label class="checklist-item"><input type="checkbox" data-checklist-id="crew-dashboard-export"><span>Ekspor laporan uji ke format yang tersedia; file dapat dibuka dan jumlah/nominalnya cocok dengan tampilan.</span></label>
+            <label class="checklist-item"><input type="checkbox" data-checklist-id="crew-dashboard-edit"><span>Edit data check-in uji dan muat ulang; perubahan tercermin di riwayat serta rekap terkait.</span></label>
+            <label class="checklist-item"><input type="checkbox" data-checklist-id="crew-dashboard-task"><span>Buat tugas dari kalender properti; tugas muncul di Daftar Tugas dan Tugas Hari Ini milik Crew yang dituju.</span></label>
+            <label class="checklist-item"><input type="checkbox" data-checklist-id="crew-dashboard-booking-conflict"><span>Coba jadwalkan tugas pada tanggal/properti yang sudah dibooking; peringatan bentrok terlihat dan tugas tidak tersimpan jika konflik.</span></label>
+            <label class="checklist-item"><input type="checkbox" data-checklist-id="crew-dashboard-task-update"><span>Edit atau hapus tugas uji, lalu cek halaman Crew; status dan daftar tugas tersinkron setelah refresh.</span></label>
+          </section>
+          <section class="checklist-group" aria-labelledby="checklistOfficeAttendanceTitle">
+            <h3 id="checklistOfficeAttendanceTitle">Absensi kantor dan pengeluaran Crew</h3>
+            <label class="checklist-item"><input type="checkbox" data-checklist-id="office-attendance"><span>Uji absen karyawan kantor masuk dan pulang; waktu serta durasi kerja tercatat dengan benar.</span></label>
+            <label class="checklist-item"><input type="checkbox" data-checklist-id="crew-expense"><span>Uji pengeluaran Gaji dengan penerima Crew; nama penerima dan transaksi tampil benar di keuangan.</span></label>
+          </section>
+          <section class="checklist-group" aria-labelledby="checklistPortalTitle">
+            <h3 id="checklistPortalTitle">Owner dan Agen</h3>
+            <label class="checklist-item"><input type="checkbox" data-checklist-id="owner-portal"><span>Login Owner Portal dengan akun uji; laporan hanya menampilkan Owner yang dipilih dan bulan yang diminta.</span></label>
+            <label class="checklist-item"><input type="checkbox" data-checklist-id="owner-portal-export"><span>Unduh laporan Owner dalam PDF dan Excel; periode, rincian booking/pemasukan/pengeluaran, dan total cocok dengan laporan final.</span></label>
+            <label class="checklist-item"><input type="checkbox" data-checklist-id="agent-portal"><span>Login Agen Portal dengan ID Agen dan PIN uji; daftar hanya menampilkan booking milik Agen tersebut.</span></label>
+            <label class="checklist-item"><input type="checkbox" data-checklist-id="agent-portal-filter"><span>Filter bulan dan cocokkan status booking, jumlah booking, serta total fee dengan laporan Dashboard Agen.</span></label>
+          </section>
+          <section class="checklist-group" aria-labelledby="checklistPublicTitle">
+            <h3 id="checklistPublicTitle">Website Publik dan Kritik &amp; Saran</h3>
+            <label class="checklist-item"><input type="checkbox" data-checklist-id="public-home"><span>Buka website utama di desktop dan HP; logo, gambar, daftar properti aktif, tautan detail, dan tombol kontak tampil serta berfungsi.</span></label>
+            <label class="checklist-item"><input type="checkbox" data-checklist-id="public-property-status"><span>Publish atau ubah Draft properti uji; hanya properti yang seharusnya aktif muncul di katalog publik dengan data terbaru.</span></label>
+            <label class="checklist-item"><input type="checkbox" data-checklist-id="feedback-form-validation"><span>Jalankan form Kritik &amp; Saran tahap demi tahap; properti, kolom wajib, rating/NPS, validasi, dan konfirmasi kirim berfungsi.</span></label>
+            <label class="checklist-item"><input type="checkbox" data-checklist-id="feedback-qr-prefill"><span>Scan/buka QR uji per properti; nama properti terisi otomatis dan cocok dengan stiker yang dicetak.</span></label>
+            <label class="checklist-item"><input type="checkbox" data-checklist-id="feedback-admin"><span>Pastikan masukan uji masuk ke Admin QR dengan properti, rating, NPS, kontak, status baca, dan tindak lanjut yang benar.</span></label>
+            <label class="checklist-item"><input type="checkbox" data-checklist-id="feedback-print"><span>Uji filter dan cetak QR per kategori/seluruh properti; hasil cetak terbaca dan URL QR membuka form yang benar.</span></label>
+          </section>
+          <section class="checklist-group" aria-labelledby="checklistPortalHubTitle">
+            <h3 id="checklistPortalHubTitle">Hub Admin, Panduan, dan Artikel</h3>
+            <label class="checklist-item"><input type="checkbox" data-checklist-id="admin-hub"><span>Login ke Admin YOUR HOME; menu menuju halaman yang benar, Linktree tersimpan, indikator masukan/IT sesuai, dan tombol absensi bekerja.</span></label>
+            <label class="checklist-item"><input type="checkbox" data-checklist-id="panduan-page"><span>Buka Panduan di desktop dan HP; daftar isi, tautan, gambar, dan langkah sesuai dengan versi fitur yang aktif.</span></label>
+            <label class="checklist-item"><input type="checkbox" data-checklist-id="article-page"><span>Buka halaman Artikel; artikel, gambar, kategori, dan tautan baca tidak rusak di desktop maupun HP.</span></label>
+            <label class="checklist-item"><input type="checkbox" data-checklist-id="vtech-public-page"><span>Buka halaman V-Tech Indonesia di desktop dan HP; bagian layanan, gambar, navigasi, dan tautan kontak tampil serta berfungsi.</span></label>
+          </section>
+          <section class="checklist-group" aria-labelledby="checklistItTitle">
+            <h3 id="checklistItTitle">Lapor dan dukungan IT</h3>
+            <label class="checklist-item"><input type="checkbox" data-checklist-id="it-ticket"><span>Kirim laporan uji dari Lapor ke IT Support; tiket muncul di antrean IT dengan isi dan identitas pelapor yang benar.</span></label>
+            <label class="checklist-item"><input type="checkbox" data-checklist-id="it-reply"><span>Balas tiket sebagai IT, periksa balasan di akun pelapor, lalu tandai selesai dan buka kembali tiket.</span></label>
+          </section>
+        </div>
+        <p id="checklistSaveNotice" class="checklist-note" role="status" aria-live="polite">Progres tersimpan di browser ini.</p>
+      </section>
     </main>
   </div>
 
@@ -121,6 +256,7 @@
   <script>
     const API_BASE='https://your-home-checkin-api.saerobotic.workers.dev';
     const TOKEN_KEY='yourhome_it_support_token';
+    const CHECKLIST_STORAGE_KEY='yourhome_it_simulation_checklist_v1';
     const el=id=>document.getElementById(id);
     let tickets=[];
     let activeFilter='open';
@@ -181,6 +317,38 @@
           <div class="ticket-main"><div class="ticket-content"><span class="badge ${isBug?'bug':'task'}">${isBug?'BUG':'TUGAS'}</span><h3 class="ticket-title" title="${esc(ticket.title)}">${esc(ticket.title)}</h3><p class="ticket-description" title="${esc(ticket.description)}">${esc(ticket.description)}</p><span class="ticket-meta" title="${source} · ${formatDate(ticket.created_at)}${reporter}">${source} · ${formatDate(ticket.created_at)}${reporter}${isDone?' · Selesai':''}</span></div><div class="ticket-actions"><button class="ticket-edit" type="button" data-ticket-messages="${esc(ticket.id)}" aria-label="Balas tiket: ${esc(ticket.title)}" title="Balas tiket"><svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg></button><button class="ticket-edit" type="button" data-ticket-edit="${esc(ticket.id)}" aria-label="Edit tiket: ${esc(ticket.title)}" title="Edit tiket"><svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L8 18l-4 1 1-4Z"/></svg></button><button class="ticket-delete" type="button" data-ticket-delete="${esc(ticket.id)}" aria-label="Hapus tiket: ${esc(ticket.title)}" title="Hapus tiket"><svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2m3 0-.8 14H5.8L5 6m4 4v6m6-6v6"/></svg></button></div></div>
         </article>`;
       }).join('');
+    }
+    function setWorkspace(name){
+      document.querySelectorAll('[data-workspace]').forEach(panel=>panel.classList.toggle('hidden',panel.dataset.workspace!==name));
+      document.querySelectorAll('[data-workspace-button]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.workspaceButton===name)));
+    }
+    function updateChecklistProgress(){
+      const checkboxes=[...document.querySelectorAll('[data-checklist-id]')];
+      const completed=checkboxes.filter(checkbox=>checkbox.checked).length;
+      el('checklistProgress').max=checkboxes.length||1;
+      el('checklistProgress').value=completed;
+      el('checklistProgressText').textContent=`${completed} dari ${checkboxes.length} selesai`;
+      const state=Object.fromEntries(checkboxes.map(checkbox=>[checkbox.dataset.checklistId,checkbox.checked]));
+      try{
+        localStorage.setItem(CHECKLIST_STORAGE_KEY,JSON.stringify(state));
+        el('checklistSaveNotice').textContent='Progres tersimpan di browser ini.';
+      }catch{
+        el('checklistSaveNotice').textContent='Penyimpanan browser tidak tersedia; progres tidak akan bertahan setelah halaman ditutup.';
+      }
+    }
+    function initializeChecklist(){
+      let saved={};
+      try{saved=JSON.parse(localStorage.getItem(CHECKLIST_STORAGE_KEY)||'{}')||{}}catch{}
+      document.querySelectorAll('[data-checklist-id]').forEach(checkbox=>{
+        checkbox.checked=saved[checkbox.dataset.checklistId]===true;
+        checkbox.addEventListener('change',updateChecklistProgress);
+      });
+      updateChecklistProgress();
+      el('resetChecklistButton').addEventListener('click',()=>{
+        if(!window.confirm('Reset semua centang simulasi di browser ini?'))return;
+        document.querySelectorAll('[data-checklist-id]').forEach(checkbox=>{checkbox.checked=false});
+        updateChecklistProgress();
+      });
     }
     async function loadTickets(){
       el('queueNotice').textContent='Memuat antrean...';
@@ -380,6 +548,8 @@
       document.querySelectorAll('[data-filter]').forEach(item=>item.setAttribute('aria-pressed',String(item===button)));
       renderTickets();
     }));
+    document.querySelectorAll('[data-workspace-button]').forEach(button=>button.addEventListener('click',()=>setWorkspace(button.dataset.workspaceButton)));
+    initializeChecklist();
     el('ticketSearch').addEventListener('input',event=>{searchTerm=event.target.value.trim().toLocaleLowerCase('id');renderTickets()});
     el('toggleItPassword').addEventListener('click',()=>{
       const input=el('itPassword');

@@ -378,6 +378,10 @@ table tbody tr:last-child td { border-bottom: none; }
 .payment-cell.unpaid { background: var(--red-100);   color: var(--red-600); }
 .payment-cell.none   { background: var(--ink-100);   color: var(--ink-400); }
 .payment-cell.checkout { background: var(--blue-100); color: var(--blue-600); }
+.payment-cell.vacant { background: var(--red-100); color: var(--red-600); cursor: default !important; }
+.room-occupancy { display: inline-flex; margin-top: 3px; padding: 2px 6px; border-radius: 999px; font-size: 10px; font-weight: 700; }
+.room-occupancy.occupied { background: var(--green-100); color: var(--green-600); }
+.room-occupancy.vacant { background: var(--red-100); color: var(--red-600); }
 .payment-cell .tip {
   position: absolute;
   bottom: 130%; left: 50%; transform: translateX(-50%);
@@ -825,6 +829,10 @@ table tbody tr:last-child td { border-bottom: none; }
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
       Laporan
     </a>
+    <a class="nav-item" data-view="pemasukan">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+      Pemasukan
+    </a>
     <a class="nav-item" data-view="pengeluaran">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 3H8a2 2 0 0 0-2 2v2h12V5a2 2 0 0 0-2-2z"/><path d="M12 11v6M9 14h6"/></svg>
       Pengeluaran
@@ -849,10 +857,6 @@ table tbody tr:last-child td { border-bottom: none; }
     <a class="nav-item" data-view="info">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
       Info Kos
-    </a>
-    <a class="nav-item" data-view="lapor-bug">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="6" width="8" height="14" rx="4"/><path d="M9 12H4M20 12h-5M12 6V3M9 3l1.5 3M15 3l-1.5 3M5 15l3-1M19 15l-3-1M5 9l3 1M19 9l-3 1"/></svg>
-      Lapor Bug
     </a>
   </nav>
   <div class="sidebar-foot">
@@ -1153,6 +1157,36 @@ table tbody tr:last-child td { border-bottom: none; }
         </div>
       </div>
       <p class="mou-hint" style="margin-top:10px">Honor Crew tercatat otomatis dari Check In Crew dan tidak bisa diedit di sini &mdash; perbarui datanya lewat menu Check In Crew.</p>
+    </section>
+
+    <!-- ============ PEMASUKAN KOSAN (Sewa) ============ -->
+    <section class="view" id="view-pemasukan">
+      <div class="stat-grid" id="inc-stat-grid"></div>
+
+      <div class="card" style="padding:0; overflow:hidden;">
+        <div class="card-head">
+          <h3>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+            Pemasukan Sewa Kos
+          </h3>
+          <div class="actions">
+            <button class="btn" onclick="openRentPaymentModal()">+ Catat Pembayaran</button>
+          </div>
+        </div>
+        <div class="filters" style="border-top:1px solid var(--ink-200);border-bottom:1px solid var(--ink-200);">
+          <div class="tabs" id="inc-building-filter">
+            <button data-building="all" class="active" onclick="filterKosanIncomeBuilding(this,'all')">Semua Gedung</button>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Tanggal</th><th>Gedung</th><th>Penyewa</th><th>Keterangan</th><th class="text-right">Jumlah</th></tr>
+            </thead>
+            <tbody id="inc-table-body"></tbody>
+          </table>
+        </div>
+      </div>
     </section>
 
     <!-- ============ DATABASE KOSAN ============ -->
@@ -1742,27 +1776,6 @@ table tbody tr:last-child td { border-bottom: none; }
             <div style="font-weight:700; color:var(--amber-600); margin-bottom:6px;">4. Pembayaran</div>
             <div style="font-size:12px; color:var(--ink-700);">Matriks pembayaran <span id="payment-matrix-period-count">17</span> bulan. Hover untuk lihat tanggal bayar. Filter per periode.</div>
           </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- ============ LAPOR BUG ============ -->
-    <section class="view" id="view-lapor-bug">
-      <div class="card" style="max-width:560px">
-        <div class="card-head">
-          <h3>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="6" width="8" height="14" rx="4"/><path d="M9 12H4M20 12h-5M12 6V3M9 3l1.5 3M15 3l-1.5 3M5 15l3-1M19 15l-3-1M5 9l3 1M19 9l-3 1"/></svg>
-            Lapor Bug
-          </h3>
-        </div>
-        <p style="font-size:13px;color:var(--ink-500);margin-bottom:16px">Laporkan bug atau kendala teknis kepada tim IT.</p>
-        <div class="mou-form-group">
-          <label class="mou-label">Pesan</label>
-          <textarea class="mou-textarea" id="bug-message" maxlength="2000" placeholder="Tulis kendala atau pesan untuk tim IT..."></textarea>
-        </div>
-        <div class="mou-action-bar" style="margin-top:14px">
-          <button class="btn" onclick="submitBugReport()">Kirim Pesan</button>
-          <div class="mou-hint" id="bug-status" style="margin-top:0"></div>
         </div>
       </div>
     </section>
@@ -4935,6 +4948,10 @@ const CURRENT_PERIOD_LABEL = (() => {
 const PERIODS = buildKosanPeriods(CURRENT_PERIOD);
 const PAYMENT_ENTRY_PERIODS = buildKosanPeriods(shiftBillingPeriod(CURRENT_PERIOD, 12).key);
 let PAYMENT_PERIODS = [...PERIODS];
+const PAYMENT_MATRIX_PERIODS_2026 = KOSAN_MONTHS_ID.map((label, index) => ({
+  key:`2026-${String(index + 1).padStart(2, '0')}`,
+  label,
+}));
 const PERIOD_RANGE_LABEL = `${PERIODS[0].label} - ${CURRENT_PERIOD_LABEL}`;
 
 function extendStaticRoomPayments(buildings) {
@@ -4991,13 +5008,13 @@ const VIEWS = {
   penyewa:   { title: 'Penyewa', sub: 'Daftar penyewa aktif & riwayat' },
   pembayaran:{ title: 'Pembayaran', sub: 'Tracking pembayaran sewa bulanan' },
   laporan:   { title: 'Laporan', sub: 'Analisa pendapatan & hunian' },
+  pemasukan: { title: 'Pemasukan', sub: 'Daftar pemasukan sewa kos yang sudah tercatat' },
   pengeluaran: { title: 'Pengeluaran', sub: 'Catat pengeluaran operasional Kosan De Orange (honor crew otomatis dari Check In Crew)' },
   database:  { title: 'Database Kosan', sub: 'Data lengkap seluruh kamar & gedung' },
   'tambah-kamar': { title: 'Tambah Kamar/Penyewa', sub: 'Ajukan data baru & setujui sebelum masuk database' },
   mou:       { title: 'MOU Digital', sub: 'Surat pernyataan & MOU penghuni kost' },
   invoice:   { title: 'Generate Invoice', sub: 'Buat & kirim kwitansi pembayaran kosan' },
   info:      { title: 'Info Kos', sub: 'Informasi & panduan' },
-  'lapor-bug': { title: 'Lapor Bug', sub: 'Laporkan kendala teknis ke tim IT' },
 };
 
 function navigate(view) {
@@ -5016,6 +5033,7 @@ function navigate(view) {
   if (view === 'penyewa') renderPenyewa();
   if (view === 'pembayaran') renderPembayaran();
   if (view === 'laporan') renderLaporan();
+  if (view === 'pemasukan') initPemasukanView();
   if (view === 'pengeluaran') initPengeluaranView();
   if (view === 'database') renderDatabase();
   if (view === 'tambah-kamar') initTambahKamarView();
@@ -5041,7 +5059,9 @@ function calcStats() {
   ALL_ROOMS.forEach(r => {
     const p = r.payments.find(x => x.period === CURRENT_PERIOD);
     if (p && p.status === 'paid') { incomeCurrent += p.amount || r.price; paidCount++; }
-    else if (p && p.status === 'unpaid') { unpaidCount++; }
+    // Kamar kosong/checkout tidak punya penyewa untuk ditagih, meski catatan pembayarannya
+    // belum pernah diisi (defaultnya "unpaid") -- jadi cuma kamar terisi yang dihitung di sini.
+    else if (r.status === 'occupied' && p && p.status === 'unpaid') { unpaidCount++; }
   });
   // Total all-time income
   let incomeTotal = 0;
@@ -5072,46 +5092,50 @@ function renderStats() {
   const topCards = [
     {
       label: 'Pendapatan ' + CURRENT_PERIOD_LABEL, value: fmtIDRShort(s.incomeCurrent), delta: `${s.paidCount} kamar lunas`,
-      accent: 'var(--orange-600)', accentBg: 'var(--orange-50)',
+      accent: 'var(--orange-600)', accentBg: 'var(--orange-50)', onClick: "navigate('pembayaran')",
       icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>'
     },
     {
       label: 'Pengeluaran ' + CURRENT_PERIOD_LABEL,
       value: kosanDashboardExpenseCurrent === null ? '...' : fmtIDRShort(kosanDashboardExpenseCurrent),
       delta: kosanDashboardExpenseCurrent === null ? 'memuat...' : `${kosanDashboardExpenseCount} transaksi · lihat di Pengeluaran`,
-      accent: 'var(--red-600)', accentBg: 'var(--red-100)',
+      accent: 'var(--red-600)', accentBg: 'var(--red-100)', onClick: "navigate('pengeluaran')",
       icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 3H8a2 2 0 0 0-2 2v2h12V5a2 2 0 0 0-2-2z"/></svg>'
     },
     {
-      label: 'Belum Bayar ' + CURRENT_PERIOD_LABEL, value: s.unpaidCount, delta: 'kamar perlu ditagih',
+      label: 'Belum Bayar ' + CURRENT_PERIOD_LABEL, value: s.unpaidCount, delta: 'kamar perlu ditagih · klik untuk lihat daftarnya',
       accent: 'var(--red-600)', accentBg: 'var(--red-100)',
+      onClick: "document.getElementById('penyewa-paystatus').value='unpaid'; navigate('penyewa');",
       icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>'
     },
     {
       label: `Total Pendapatan ${PERIODS.length} Bulan`, value: fmtIDRShort(s.incomeTotal), delta: PERIOD_RANGE_LABEL,
-      accent: 'var(--amber-600)', accentBg: 'var(--amber-100)',
+      accent: 'var(--amber-600)', accentBg: 'var(--amber-100)', onClick: "navigate('laporan')",
       icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>'
     },
   ];
   const bottomCards = [
     {
-      label: 'Total Kamar', value: s.total, delta: `${BUILDINGS.length} gedung dikelola`,
+      label: 'Total Kamar', value: s.total, delta: `${BUILDINGS.length} gedung dikelola · klik untuk lihat semua`,
       accent: 'var(--orange-600)', accentBg: 'var(--orange-50)',
+      onClick: "document.getElementById('kamar-status').value=''; navigate('kamar');",
       icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>'
     },
     {
-      label: 'Kamar Terisi', value: s.occupied, delta: `${s.occRate}% tingkat hunian`,
+      label: 'Kamar Terisi', value: s.occupied, delta: `${s.occRate}% tingkat hunian · klik untuk lihat daftarnya`,
       accent: 'var(--green-600)', accentBg: 'var(--green-100)',
+      onClick: "document.getElementById('kamar-status').value='occupied'; navigate('kamar');",
       icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>'
     },
     {
-      label: 'Kamar Kosong', value: s.vacant + s.checkout, delta: `${s.vacant} kosong, ${s.checkout} checkout`,
+      label: 'Kamar Kosong', value: s.vacant + s.checkout, delta: `${s.vacant} kosong, ${s.checkout} checkout · klik untuk lihat daftarnya`,
       accent: 'var(--ink-500)', accentBg: 'var(--ink-100)',
+      onClick: "document.getElementById('kamar-status').value='vacant'; navigate('kamar');",
       icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="9" y1="9" x2="15" y2="9"/><line x1="9" y1="13" x2="15" y2="13"/></svg>'
     },
   ];
   const renderCards = cards => cards.map(c => `
-    <div class="stat-card" style="--accent:${c.accent}; --accent-bg:${c.accentBg}">
+    <div class="stat-card" style="--accent:${c.accent}; --accent-bg:${c.accentBg}; ${c.onClick ? 'cursor:pointer;' : ''}" ${c.onClick ? `onclick="${c.onClick}" role="button" tabindex="0" onkeydown="if(event.key==='Enter'){${c.onClick}}"` : ''}>
       <div class="label">${c.label}</div>
       <div class="value">${c.value}</div>
       <div class="delta">${c.delta}</div>
@@ -5363,8 +5387,8 @@ function renderKamar() {
                   <td><span class="cell-strong">${r.building}</span></td>
                   <td class="cell-strong">Kamar ${r.room_number}</td>
                   <td>${r.tenant_name ? `<div class="cell-strong">${r.tenant_name}</div>` : `<span class="muted">&mdash;</span>`}</td>
-                  <td>${formatDepoCell(r.depo)}</td>
-                  <td class="cell-num cell-strong">${fmtIDR(r.price)}</td>
+                  <td>${r.tenant_name ? formatDepoCell(r.depo) : '<span class="muted">&mdash;</span>'}</td>
+                  <td class="cell-num cell-strong">${fmtIDR(r.tenant_name ? r.price : 0)}</td>
                   <td><span class="badge ${r.status}">${statusLabel(r.status)}</span></td>
                   <td>${formatLastPayment(r)}</td>
                   <td><button class="btn-ghost btn" onclick="showRoomDetail('${r.building}','${r.room_number}')">Detail</button></td>
@@ -5378,7 +5402,11 @@ function renderKamar() {
   }
 }
 function roomCardHTML(r) {
-  const lastPay = [...r.payments].reverse().find(p => p.status === 'paid');
+  // Kamar yang tidak terisi tidak punya penyewa/harga berjalan, meski data lama (harga,
+  // depo, riwayat bayar) masih tersimpan di baliknya -- disembunyikan di sini supaya tidak
+  // kelihatan seperti kamar itu masih ada tagihan/penyewa aktif.
+  const isOccupied = r.status === 'occupied';
+  const lastPay = isOccupied ? [...r.payments].reverse().find(p => p.status === 'paid') : null;
   return `
     <div class="room-card" onclick="showRoomDetail('${r.building}','${r.room_number}')">
       <div class="rc-head">
@@ -5388,9 +5416,9 @@ function roomCardHTML(r) {
         </div>
         <span class="badge ${r.status}">${statusLabel(r.status)}</span>
       </div>
-      <div class="rc-tenant">${r.tenant_name ? r.tenant_name : '<span class="muted">Kosong</span>'}</div>
-      <div class="rc-price">${fmtIDR(r.price)}<span style="font-size:11px; color:var(--ink-500); font-weight:500;"> /bulan</span></div>
-      ${r.depo ? `<div class="rc-depo">Depo: ${typeof r.depo === 'object' ? fmtIDR(r.depo.amount) + (r.depo.refundable ? ' (refundable)' : '') : r.depo}</div>` : '<div class="rc-depo">Tanpa depo</div>'}
+      <div class="rc-tenant">${isOccupied && r.tenant_name ? r.tenant_name : '<span class="muted">Kosong</span>'}</div>
+      <div class="rc-price">${fmtIDR(isOccupied ? r.price : 0)}<span style="font-size:11px; color:var(--ink-500); font-weight:500;"> /bulan</span></div>
+      ${isOccupied && r.depo ? `<div class="rc-depo">Depo: ${typeof r.depo === 'object' ? fmtIDR(r.depo.amount) + (r.depo.refundable ? ' (refundable)' : '') : r.depo}</div>` : '<div class="rc-depo">Tanpa depo</div>'}
       ${lastPay ? `<div style="margin-top:8px; font-size:11px; color:var(--green-600);">Bayar terakhir: ${fmtDateID(lastPay.date)} &middot; ${lastPay.label}</div>` : ''}
     </div>
   `;
@@ -5403,6 +5431,7 @@ function formatDepoCell(depo) {
   return String(depo);
 }
 function formatLastPayment(r) {
+  if (r.status !== 'occupied') return '<span class="muted">&mdash;</span>';
   const lastPay = [...r.payments].reverse().find(p => p.status === 'paid');
   if (!lastPay) return '<span class="muted">&mdash;</span>';
   return `<div class="cell-strong" style="color:var(--green-600);">${fmtDateID(lastPay.date)}</div><div class="cell-sub">${lastPay.label}</div>`;
@@ -5456,7 +5485,10 @@ function renderPenyewa() {
         <td>${formatDepoCell(r.depo)}</td>
         <td class="cell-num">${fmtIDR(r.price)}</td>
         <td><span class="badge ${curStatus}">${payStatusLabel(curStatus)}</span></td>
-        <td><button class="btn-ghost btn" onclick="showRoomDetail('${r.building}','${r.room_number}')">Detail</button></td>
+        <td style="white-space:nowrap">
+          ${curStatus !== 'paid' ? `<button class="btn-ghost btn" onclick="openPaymentCellModal('${r.building}','${r.room_number}','${CURRENT_PERIOD}')">Tagih / Catat Bayar</button>` : ''}
+          <button class="btn-ghost btn" onclick="showRoomDetail('${r.building}','${r.room_number}')">Detail</button>
+        </td>
       </tr>
     `;
   }).join('');
@@ -5553,13 +5585,21 @@ document.getElementById('database-status').addEventListener('change', renderData
 let payMode = 'matrix';
 let payPeriod = CURRENT_PERIOD;
 
+function isKosanRoomOccupied(room) {
+  return room.status !== 'checkout' && Boolean(String(room.tenant_name || '').trim());
+}
+
 function renderPembayaran() {
-  document.getElementById('pay-matrix-period-label').textContent = '— ' + (PAYMENT_PERIODS.find(p => p.key === payPeriod)?.label || '');
+  document.getElementById('pay-matrix-period-label').textContent = payMode === 'matrix'
+    ? '— 2026'
+    : '— ' + (PAYMENT_PERIODS.find(p => p.key === payPeriod)?.label || '');
 
   const building = document.getElementById('pay-building').value;
   const q = document.getElementById('pay-search').value.trim().toLowerCase();
 
-  let rooms = ALL_ROOMS.filter(r => r.status === 'occupied');
+  let rooms = ALL_ROOMS.filter(r => payMode === 'matrix'
+    ? r.status !== 'checkout'
+    : isKosanRoomOccupied(r));
   if (building) rooms = rooms.filter(r => r.building === building);
   if (q) rooms = rooms.filter(r => {
     return (r.tenant_name || '').toLowerCase().includes(q) ||
@@ -5577,32 +5617,38 @@ function renderPembayaran() {
   } else {
     renderPayList(rooms);
   }
-  renderPaySummary(rooms);
+  renderPaySummary(rooms.filter(isKosanRoomOccupied));
 }
 
 function renderPayMatrix(rooms) {
-  // Head: Gedung/Kamar + 17 period columns
+  // Head: Gedung/Kamar + bulan kalender 2026.
   const head = document.getElementById('pay-matrix-head');
   head.innerHTML = `
     <tr>
       <th class="room-col">Gedung / Kamar</th>
       <th>Penyewa</th>
-      ${PAYMENT_PERIODS.map(p => `<th title="${p.label}">${p.label.split(' ')[0].slice(0,3)}<br><span style="font-size:10px;color:var(--ink-400);">'${p.label.split(' ')[1].slice(2)}</span></th>`).join('')}
+      ${PAYMENT_MATRIX_PERIODS_2026.map(period => `<th title="${period.label}">${period.label}</th>`).join('')}
     </tr>
   `;
   const body = document.getElementById('pay-matrix-body');
   if (!rooms.length) {
-    body.innerHTML = `<tr><td colspan="${PAYMENT_PERIODS.length + 2}"><div class="empty">Tidak ada kamar yang cocok.</div></td></tr>`;
+    body.innerHTML = `<tr><td colspan="${PAYMENT_MATRIX_PERIODS_2026.length + 2}"><div class="empty">Tidak ada kamar yang cocok.</div></td></tr>`;
     return;
   }
-  body.innerHTML = rooms.map(r => `
+  body.innerHTML = rooms.map(r => {
+    const occupied = isKosanRoomOccupied(r);
+    return `
     <tr>
       <td class="room-col">
         <div class="cell-strong">Kamar ${r.room_number}</div>
         <div class="cell-sub">${r.building}</div>
+        <span class="room-occupancy ${occupied ? 'occupied' : 'vacant'}">${occupied ? 'Terisi' : 'Kosong'}</span>
       </td>
-      <td>${r.tenant_name ? `<div class="cell-strong">${r.tenant_name}</div><div class="cell-sub">${fmtIDR(r.price)}</div>` : '<span class="muted">&mdash;</span>'}</td>
-      ${PAYMENT_PERIODS.map(period => {
+      <td>${occupied ? `<div class="cell-strong">${escapePaymentHtml(r.tenant_name.trim())}</div><div class="cell-sub">${fmtIDR(r.price)}</div>` : '<span class="muted">&mdash;</span>'}</td>
+      ${PAYMENT_MATRIX_PERIODS_2026.map(period => {
+        if (!occupied) {
+          return `<td><div class="payment-cell vacant" title="Kamar kosong ${period.label}">—</div></td>`;
+        }
         const p = r.payments.find(payment => payment.period === period.key) || { ...period, status:'none', date:null };
         const sym = p.status === 'paid' ? '✓' : p.status === 'unpaid' ? '!' : p.status === 'checkout' ? 'CO' : '·';
         const tip = p.status === 'paid' ? `Lunas ${p.label} — ${fmtDateID(p.date)}` :
@@ -5612,7 +5658,8 @@ function renderPayMatrix(rooms) {
         return `<td><div class="payment-cell ${p.status}" style="cursor:pointer" onclick="openPaymentCellModal('${r.building}','${r.room_number}','${period.key}')"><span>${sym}</span><span class="tip">${tip}</span></div></td>`;
       }).join('')}
     </tr>
-  `).join('');
+  `;
+  }).join('');
 }
 
 function renderPayList(rooms) {
@@ -6063,16 +6110,24 @@ function openPaymentCellModal(building, roomNumber, periodKey) {
     showToast('Data kamar tidak ditemukan. Muat ulang halaman.');
     return;
   }
+  if (!isKosanRoomOccupied(room)) {
+    showToast('Kamar kosong atau sudah check-out; pembayaran tidak dapat dicatat.');
+    return;
+  }
   const period = PAYMENT_PERIODS.find(item => item.key === periodKey);
   const payment = room.payments.find(item => item.period === periodKey)
     || { period:periodKey, label:period?.label || periodKey, status:'none', date:null };
-  const canMarkPaid = room.status === 'occupied' && room.price > 0 && room.tenant_name && !['paid', 'checkout'].includes(payment.status);
+  // Pakai keberadaan tenant_name sebagai syarat (bukan room.status) -- beberapa kamar
+  // datanya tidak sinkron (sudah ada penyewa tapi status belum/tidak "occupied"), dan
+  // daftar Penyewa/Belum Bayar sendiri menyaring berdasarkan tenant_name, bukan status.
+  const canMarkPaid = isKosanRoomOccupied(room) && room.price > 0 && !['paid', 'checkout'].includes(payment.status);
   const today = getBillingDateKey();
 
   document.getElementById('modal-title').textContent = `${payment.label} — Kamar ${room.room_number} · ${room.building}`;
   document.getElementById('modal-body').innerHTML = `
     <div class="kv"><div class="k">Penyewa</div><div class="v">${escapePaymentHtml(room.tenant_name) || '<span class="muted">Tidak ada / kosong</span>'}</div></div>
     <div class="kv"><div class="k">Harga / Bulan</div><div class="v cell-strong">${fmtIDR(room.price)}</div></div>
+    ${room.tenant_name ? `<div class="kv"><div class="k">Depo</div><div class="v">${fmtIDR(room.depo?.amount || 0)} ${room.id ? `<button class="btn-ghost btn" style="padding:2px 8px;font-size:11px" onclick="openRoomEditModal('${escapePaymentHtml(room.building)}','${escapePaymentHtml(room.room_number)}')">✎ Edit</button>` : ''}</div></div>` : ''}
     <div class="kv"><div class="k">Status</div><div class="v"><span class="badge ${payment.status}">${payStatusLabel(payment.status)}</span>${payment.date ? ' &middot; ' + fmtDateID(payment.date) : ''}${payment.method ? ` &middot; ${escapePaymentHtml(payment.method)}` : ''}</div></div>
     ${canMarkPaid ? `
       <h4>Catat Pembayaran</h4>
@@ -6099,7 +6154,7 @@ function openPaymentCellModal(building, roomNumber, periodKey) {
         <button class="btn" id="cell-pay-submit" type="button" onclick="markPaymentCellPaid('${escapePaymentHtml(rentRoomKey(room))}','${periodKey}')">&#10003; Tandai Sudah Bayar</button>
       </div>
     ` : ''}
-    ${room.status === 'occupied' ? `
+    ${room.tenant_name ? `
       <h4>Kirim Notif ke Penghuni</h4>
       <div class="mou-grid">
         <div class="mou-form-group span-2">
@@ -6361,7 +6416,7 @@ function showRoomDetail(building, roomNum) {
         </tbody>
       </table>
     </div>
-    ${r.status === 'occupied' ? `
+    ${r.tenant_name ? `
       <div style="margin-top:18px;padding-top:16px;border-top:1px solid var(--ink-200);display:flex;gap:8px;flex-wrap:wrap">
         <button class="btn btn-ghost" onclick="openRoomEditModal('${escapePaymentHtml(r.building)}','${escapePaymentHtml(r.room_number)}')">✎ Edit Harga / Deposit</button>
         <button class="btn" style="background:var(--red-600)" onclick="confirmCheckout('${r.building}','${r.room_number}')">🚪 Check-out Penyewa</button>
@@ -6614,6 +6669,98 @@ function renderKosanExpenseTable(){
         <td class="text-right" style="white-space:nowrap">${actionCell}</td>
       </tr>`;
   }).join('');
+}
+
+// ==========================================================
+// PEMASUKAN KOSAN (Sewa) -- baca finance_entries kind='income'
+// category_id='income-kosan-rent' (ditulis oleh POST /kosan/room-payments).
+// property_id selalu NULL di situ, jadi dicocokkan lewat property_name = nama gedung.
+// ==========================================================
+let kosanIncomeEntries = [];
+let kosanIncomeBuildingFilter = 'all';
+
+async function loadKosanIncomeData(){
+  const result = await kosanApi('/admin/finance');
+  const allEntries = result.data.entries || [];
+  kosanIncomeEntries = allEntries.filter(entry => entry.kind === 'income' && entry.category_id === 'income-kosan-rent');
+}
+
+async function initPemasukanView(){
+  try {
+    await loadKosanIncomeData();
+    renderKosanIncomeStats();
+    renderKosanIncomeBuildingFilter();
+    renderKosanIncomeTable();
+  } catch(error) {
+    showToast(error.message || 'Gagal memuat data pemasukan.');
+  }
+}
+
+function renderKosanIncomeStats(){
+  const now = new Date();
+  const monthPrefix = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+  const thisMonth = kosanIncomeEntries.filter(e => String(e.entry_date || '').startsWith(monthPrefix));
+  const total = thisMonth.reduce((sum, e) => sum + Number(e.amount || 0), 0);
+  const byBuilding = new Map();
+  thisMonth.forEach(e => byBuilding.set(e.property_name, (byBuilding.get(e.property_name) || 0) + Number(e.amount || 0)));
+  let topBuilding = '—', topBuildingVal = 0;
+  for(const [name, val] of byBuilding){ if(val > topBuildingVal){ topBuilding = name; topBuildingVal = val; } }
+  const cards = [
+    {
+      label:'Total Pemasukan Bulan Ini', value:fmtIDR(total), delta:`${thisMonth.length} transaksi`,
+      accent:'var(--orange-600)', accentBg:'var(--orange-50)',
+      icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>'
+    },
+    {
+      label:'Gedung Terbesar', value:topBuilding, delta:topBuildingVal ? fmtIDR(topBuildingVal) : '—',
+      accent:'var(--amber-600)', accentBg:'var(--amber-100)',
+      icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>'
+    },
+    {
+      label:'Transaksi Bulan Ini', value:String(thisMonth.length), delta:'item',
+      accent:'var(--green-600)', accentBg:'var(--green-100)',
+      icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>'
+    },
+  ];
+  document.getElementById('inc-stat-grid').innerHTML = cards.map(c => `
+    <div class="stat-card" style="--accent:${c.accent}; --accent-bg:${c.accentBg}">
+      <div class="label">${c.label}</div>
+      <div class="value">${c.value}</div>
+      <div class="delta">${c.delta}</div>
+      <div class="icon" style="background:${c.accentBg}; color:${c.accent}">${c.icon}</div>
+    </div>
+  `).join('');
+}
+
+function renderKosanIncomeBuildingFilter(){
+  const container = document.getElementById('inc-building-filter');
+  const buildings = [...new Set(kosanIncomeEntries.map(e => e.property_name).filter(Boolean))].sort();
+  container.innerHTML = `<button data-building="all" class="${kosanIncomeBuildingFilter === 'all' ? 'active' : ''}" onclick="filterKosanIncomeBuilding(this,'all')">Semua Gedung</button>` +
+    buildings.map(b => `<button data-building="${escapeHtmlKosan(b)}" class="${kosanIncomeBuildingFilter === b ? 'active' : ''}" onclick="filterKosanIncomeBuilding(this,'${escapeHtmlKosan(b)}')">${escapeHtmlKosan(b)}</button>`).join('');
+}
+function filterKosanIncomeBuilding(btn, building){
+  kosanIncomeBuildingFilter = building;
+  document.querySelectorAll('#inc-building-filter button').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderKosanIncomeTable();
+}
+
+function renderKosanIncomeTable(){
+  let filtered = [...kosanIncomeEntries].sort((a, b) => (b.entry_date || '').localeCompare(a.entry_date || '') || (b.created_at || '').localeCompare(a.created_at || ''));
+  if(kosanIncomeBuildingFilter !== 'all') filtered = filtered.filter(e => e.property_name === kosanIncomeBuildingFilter);
+  const tbody = document.getElementById('inc-table-body');
+  if(!filtered.length){
+    tbody.innerHTML = '<tr><td colspan="5" class="text-center" style="padding:40px;color:var(--ink-400)">Belum ada pemasukan tercatat</td></tr>';
+    return;
+  }
+  tbody.innerHTML = filtered.map(e => `
+    <tr>
+      <td>${fmtDateID(e.entry_date)}</td>
+      <td><span class="badge" style="background:var(--orange-50);color:var(--orange-700)">${escapeHtmlKosan(e.property_name)}</span></td>
+      <td class="muted">${escapeHtmlKosan(e.payee || '-')}</td>
+      <td>${escapeHtmlKosan(e.description || '')}</td>
+      <td class="text-right cell-strong" style="color:var(--green-600)">+ ${fmtIDR(Number(e.amount || 0))}</td>
+    </tr>`).join('');
 }
 
 function kosanPopulateCategorySelect(select){
@@ -8302,29 +8449,6 @@ function invoiceSendWhatsApp() {
   const pesan = document.getElementById('inv-wa-pesan').value.trim() || invoiceDefaultMessage();
   const url = `https://wa.me/${wa}?text=${encodeURIComponent(pesan)}`;
   window.open(url, '_blank');
-}
-
-// ==========================================================
-// LAPOR BUG (logika sama dengan Contact IT di admin-properti.html)
-// ==========================================================
-async function submitBugReport() {
-  const textarea = document.getElementById('bug-message');
-  const status = document.getElementById('bug-status');
-  const message = textarea.value.trim();
-  if (!message) { status.textContent = 'Tulis pesan terlebih dahulu.'; return; }
-  status.textContent = 'Mengirim...';
-  try {
-    await kosanApi('/admin/contact-it', {
-      method: 'POST',
-      body: JSON.stringify({ message }),
-    });
-    status.textContent = 'Pesan masuk antrean IT dan dikirim ke Telegram.';
-    showToast('Pesan berhasil dikirim ke tim IT');
-    textarea.value = '';
-  } catch (e) {
-    status.textContent = e.message;
-    showToast('Gagal mengirim pesan: ' + e.message);
-  }
 }
 
 // Ambil logo (versi putih) dari pengaturan yang sama dengan Admin Properti/Dashboard

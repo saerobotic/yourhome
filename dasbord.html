@@ -73,6 +73,8 @@
   input:focus,select:focus,textarea:focus{outline:none;border-color:#6366f1;box-shadow:0 0 0 3px rgba(99,102,241,.15);}
   #dashboardApp[hidden]{display:none;}
   .finance-row[hidden]{display:none;}
+  .settings-section{display:flex;flex-direction:column;}
+  .settings-section[hidden]{display:none;}
 </style>
 </head>
 <body class="text-slate-800">
@@ -198,10 +200,6 @@
       <button id="settingsNavItem" onclick="switchView('pengaturan')" class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left">
         <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
         <span>Pengaturan</span>
-      </button>
-      <button onclick="switchView('bantuan')" class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left">
-        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.399-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-        <span>Lapor Bug</span>
       </button>
     </nav>
 
@@ -1105,32 +1103,6 @@
         <form id="staffChatForm" class="border-t border-slate-100 p-3"><div class="flex items-end gap-2"><label class="sr-only" for="staffChatMessage">Pesan</label><textarea id="staffChatMessage" required maxlength="2000" rows="2" placeholder="Tulis pesan..." class="min-h-[42px] flex-1 resize-none border border-slate-200 rounded-lg px-3 py-2 text-sm focus:border-brand-600"></textarea><button id="staffChatSendButton" type="submit" class="shrink-0 bg-brand-600 hover:bg-brand-700 disabled:opacity-60 text-white p-2.5 rounded-lg" aria-label="Kirim pesan" title="Kirim pesan"><svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4 20-7z"/></svg></button></div><p id="staffChatStatus" class="min-h-4 mt-1.5 text-[11px]" role="status" aria-live="polite"></p></form>
       </div>
 
-      <!-- =========================================== -->
-      <!-- CONTACT IT VIEW                             -->
-      <!-- =========================================== -->
-      <div id="view-bantuan" class="view">
-        <section class="bg-white rounded-2xl p-5 sm:p-6 border border-slate-100">
-          <div class="mb-5">
-            <h2 class="text-lg font-bold text-slate-900">Contact IT</h2>
-            <p class="text-sm text-slate-500 mt-1">Laporkan bug atau kendala teknis kepada tim IT sebagai akun yang sedang login.</p>
-          </div>
-          <form id="contactItForm" class="max-w-2xl space-y-4">
-            <label class="block">
-              <span class="block text-sm font-semibold text-slate-700 mb-1.5">Judul</span>
-              <input id="contactItTitle" type="text" required maxlength="160" placeholder="Contoh: Kendala login akun Admin" class="w-full border border-slate-200 rounded-lg px-3 py-2.5 text-sm text-slate-700 placeholder:text-slate-400 focus:border-brand-600">
-            </label>
-            <label class="block">
-              <span class="block text-sm font-semibold text-slate-700 mb-1.5">Pesan</span>
-              <textarea id="contactItMessage" required maxlength="2000" rows="6" placeholder="Tulis kendala atau pesan untuk tim IT..." class="w-full resize-y border border-slate-200 rounded-lg px-3 py-2.5 text-sm text-slate-700 placeholder:text-slate-400 focus:border-brand-600"></textarea>
-            </label>
-            <p id="contactItStatus" class="text-sm" role="status" aria-live="polite"></p>
-            <button type="submit" class="inline-flex items-center gap-2 bg-brand-600 hover:bg-brand-700 disabled:opacity-60 text-white text-sm font-semibold px-4 py-2.5 rounded-lg">
-              <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4 20-7z"/></svg>
-              Kirim Pesan
-            </button>
-          </form>
-        </section>
-      </div>
 
       <!-- =========================================== -->
       <!-- PENGATURAN VIEW                              -->
@@ -1138,11 +1110,10 @@
       <div id="view-pengaturan" class="view">
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
           <!-- Baris 1, kolom 1: Manajemen Pengguna -->
-          <div id="userManagementPanel" class="bg-white rounded-2xl border border-slate-100 overflow-hidden">
+          <div id="userManagementPanel" class="settings-section bg-white rounded-2xl border border-slate-100 overflow-hidden">
             <div class="p-5 pb-3 flex items-center justify-between">
               <div>
                 <h3 class="font-bold text-slate-900">Manajemen Pengguna</h3>
-                <p class="text-xs text-slate-500">Role: Master dan Admin</p>
               </div>
               <div class="flex items-center gap-3"><button id="createAdminButton" type="button" onclick="openCreateAdminModal()" class="hidden text-xs font-semibold text-brand-600 hover:text-brand-700">Tambah Admin</button><button onclick="openProfileModal()" class="text-xs font-semibold text-brand-600 hover:text-brand-700">Edit Profil</button></div>
             </div>
@@ -1161,23 +1132,24 @@
                 <tbody id="userTableBody" class="divide-y divide-slate-100"></tbody>
               </table>
             </div>
+            <p class="mt-auto border-t border-slate-100 px-5 py-3 text-xs text-slate-500">Role: Master dan Admin</p>
           </div>
 
           <!-- Baris 1, kolom 2: Daftar Crew -->
-          <section id="crewManagementPanel" class="bg-white rounded-xl border border-slate-100 overflow-hidden">
+          <section id="crewManagementPanel" class="settings-section bg-white rounded-xl border border-slate-100 overflow-hidden">
             <div class="p-5 pb-3 flex items-center justify-between gap-3">
-              <div><h3 class="font-bold text-slate-900">Daftar Crew</h3><p class="text-xs text-slate-500">Crew untuk login Check In Crew dan pilihan penerima pengeluaran Gaji.</p></div>
+              <div><h3 class="font-bold text-slate-900">Daftar Crew</h3></div>
               <button type="button" onclick="openCrewModal()" class="inline-flex items-center gap-2 bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold px-3 py-2 rounded-lg"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 4v16m8-8H4"/></svg>Tambah Karyawan</button>
             </div>
             <p id="crewManagementStatus" class="px-5 text-sm" role="status" aria-live="polite"></p>
             <div class="overflow-x-auto overflow-y-auto max-h-[260px]"><table class="w-full text-sm"><thead class="bg-slate-50 text-slate-500 text-xs uppercase sticky top-0"><tr><th class="text-left px-5 py-3">Nama</th><th class="text-left px-3 py-3">Status</th><th class="text-right px-5 py-3">Aksi</th></tr></thead><tbody id="crewTableBody" class="divide-y divide-slate-100"></tbody></table></div>
+            <p class="mt-auto border-t border-slate-100 px-5 py-3 text-xs text-slate-500">Crew untuk login Check In Crew dan pilihan penerima pengeluaran Gaji.</p>
           </section>
 
           <!-- Baris 1, kolom 3: Karyawan Kantor -->
-          <section id="officeEmployeePanel" class="bg-white rounded-xl border border-slate-100 overflow-hidden" hidden>
+          <section id="officeEmployeePanel" class="settings-section bg-white rounded-xl border border-slate-100 overflow-hidden" hidden>
             <div class="p-5 pb-3">
               <h3 class="font-bold text-slate-900">Karyawan Kantor</h3>
-              <p class="text-xs text-slate-500 mt-1">Nama karyawan kantor untuk tombol Absen Masuk di Admin Portal. Terpisah dari Crew.</p>
             </div>
             <form id="officeEmployeeForm" class="px-5 pb-4">
               <input id="officeEmployeeEditId" type="hidden">
@@ -1186,10 +1158,11 @@
               <p id="officeEmployeeStatus" class="text-sm mt-2" role="status" aria-live="polite"></p>
             </form>
             <div class="overflow-x-auto overflow-y-auto max-h-[260px]"><table class="w-full text-sm"><thead class="bg-slate-50 text-slate-500 text-xs uppercase sticky top-0"><tr><th class="text-left px-5 py-3">Nama</th><th class="text-left px-3 py-3">Status</th><th class="text-right px-5 py-3">Aksi</th></tr></thead><tbody id="officeEmployeeTableBody" class="divide-y divide-slate-100"></tbody></table></div>
+            <p class="mt-auto border-t border-slate-100 px-5 py-3 text-xs text-slate-500">Nama karyawan kantor untuk tombol Absen Masuk di Admin Portal. Terpisah dari Crew.</p>
           </section>
 
           <!-- Baris 2, kolom 1: Ganti Kode Properti -->
-          <div id="propertyCodeSettingsCard" class="bg-white rounded-2xl p-4 border border-slate-100" hidden>
+          <div id="propertyCodeSettingsCard" class="settings-section bg-white rounded-2xl p-4 border border-slate-100" hidden>
             <div class="flex items-center justify-between gap-2 mb-2">
               <h3 class="font-bold text-slate-900 text-sm">Ganti Kode Properti</h3>
               <button type="button" onclick="loadPropertyCodes()" class="text-[11px] font-semibold text-slate-500 hover:text-slate-700">Muat Ulang</button>
@@ -1210,27 +1183,29 @@
             </div>
             <p id="propertyCodeStatus" class="text-[11px] mt-1.5" role="status" aria-live="polite"></p>
             <button type="button" onclick="submitPropertyCodeChanges()" class="mt-1 w-full bg-brand-600 hover:bg-brand-700 text-white text-xs font-semibold px-3 py-1.5 rounded-lg">Simpan Perubahan</button>
+            <p class="mt-auto border-t border-slate-100 pt-3 text-xs text-slate-500">Ubah kode singkat properti yang digunakan di dashboard.</p>
           </div>
 
           <!-- Baris 2, kolom 2: Daftar Agen -->
-          <section id="agentManagementPanel" class="bg-white rounded-xl border border-slate-100 overflow-hidden">
+          <section id="agentManagementPanel" class="settings-section bg-white rounded-xl border border-slate-100 overflow-hidden">
             <div class="p-5 pb-3 flex items-center justify-between gap-3">
-              <div><h3 class="font-bold text-slate-900">Daftar Agen / Marketing</h3><p class="text-xs text-slate-500">Dipilih di form booking untuk mencatat fee agen. Agen bisa login di Agen Portal untuk lihat fee mereka.</p></div>
+              <div><h3 class="font-bold text-slate-900">Daftar Agen / Marketing</h3></div>
               <button type="button" onclick="openAgentModal()" class="inline-flex items-center gap-2 bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold px-3 py-2 rounded-lg"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 4v16m8-8H4"/></svg>Tambah Agen</button>
             </div>
             <p id="agentManagementStatus" class="px-5 text-sm" role="status" aria-live="polite"></p>
             <div class="overflow-x-auto overflow-y-auto max-h-[260px]"><table class="w-full text-sm"><thead class="bg-slate-50 text-slate-500 text-xs uppercase sticky top-0"><tr><th class="text-left px-5 py-3">Nama</th><th class="text-left px-3 py-3">ID Agen</th><th class="text-left px-3 py-3">Fee Default</th><th class="text-left px-3 py-3">Portal</th><th class="text-right px-5 py-3">Aksi</th></tr></thead><tbody id="agentTableBody" class="divide-y divide-slate-100"></tbody></table></div>
+            <p class="mt-auto border-t border-slate-100 px-5 py-3 text-xs text-slate-500">Dipilih di form booking untuk mencatat fee agen. Agen bisa login di Agen Portal untuk lihat fee mereka.</p>
           </section>
 
           <!-- Baris 2, kolom 3: Stok Extra Bed -->
-          <div class="bg-white rounded-2xl p-5 border border-slate-100">
-            <h3 class="font-bold text-slate-900 mb-1">Stok Extra Bed</h3>
-            <p class="text-xs text-slate-500 mb-3">Total unit extra bed fisik yang dimiliki. Dipakai untuk menolak booking kalau jumlah extra bed yang dipesan bentrok tanggal di semua properti melebihi stok ini.</p>
+          <div class="settings-section bg-white rounded-2xl p-5 border border-slate-100">
+            <h3 class="font-bold text-slate-900">Stok Extra Bed</h3>
             <div class="flex items-center gap-2">
               <input id="extraBedStockInput" type="number" min="0" step="1" placeholder="Belum diatur" class="w-full text-sm border border-slate-200 rounded-lg px-3 py-2.5">
               <button type="button" onclick="saveExtraBedStock()" class="shrink-0 bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold px-3 py-2.5 rounded-lg">Simpan</button>
             </div>
             <p id="extraBedStockStatus" class="text-xs mt-2" role="status" aria-live="polite"></p>
+            <p class="mt-auto border-t border-slate-100 pt-3 text-xs text-slate-500">Total unit extra bed fisik yang dimiliki. Dipakai untuk menolak booking kalau jumlah extra bed yang dipesan bentrok tanggal di semua properti melebihi stok ini.</p>
           </div>
         </div>
       </div>
@@ -1532,7 +1507,7 @@
       </div>
       <div>
         <label class="text-xs text-slate-500 font-semibold">Properti</label>
-        <select id="newExpProp" class="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 bg-white mt-0.5"></select>
+        <select id="newExpProp" onchange="blockKosPropertySelection(this)" class="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 bg-white mt-0.5"></select>
       </div>
       <div>
         <label class="text-xs text-slate-500 font-semibold">Keterangan (opsional)</label>
@@ -1574,7 +1549,7 @@
     <div class="p-5 border-b border-slate-100 flex items-center justify-between sticky top-0 bg-white"><div><h3 class="font-bold text-lg text-slate-900">Tambah Pemasukan</h3><p class="text-xs text-slate-500">Untuk pemasukan di luar transaksi booking.</p></div><button onclick="closeModal('modal-income')" aria-label="Tutup" class="p-1 hover:bg-slate-100 rounded-lg"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg></button></div>
     <form id="incomeEntryForm" onsubmit="event.preventDefault();submitFinanceEntry('income');" class="p-5 space-y-3">
       <div class="grid grid-cols-2 gap-3"><label class="block"><span class="text-xs text-slate-500 font-semibold">Tanggal</span><input id="newIncomeDate" type="date" required class="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 mt-0.5"></label><label class="block"><span class="text-xs text-slate-500 font-semibold">Kategori</span><span class="flex gap-2 mt-0.5"><select id="newIncomeCategory" required class="min-w-0 flex-1 text-sm border border-slate-200 rounded-lg px-3 py-2 bg-white"></select><button type="button" onclick="openCategoryModal('income')" title="Tambah kategori pemasukan" class="px-3 border border-slate-200 rounded-lg text-slate-600 hover:bg-slate-50">+</button></span></label></div>
-      <label class="block"><span class="text-xs text-slate-500 font-semibold">Properti (opsional untuk saldo awal)</span><select id="newIncomeProperty" class="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 bg-white mt-0.5"></select></label>
+      <label class="block"><span class="text-xs text-slate-500 font-semibold">Properti (opsional untuk saldo awal)</span><select id="newIncomeProperty" onchange="blockKosPropertySelection(this)" class="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 bg-white mt-0.5"></select></label>
       <label class="block"><span class="text-xs text-slate-500 font-semibold">Keterangan</span><input id="newIncomeDescription" required maxlength="240" placeholder="cth: Extra bed pesanan tamu" class="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 mt-0.5"></label>
       <div class="grid grid-cols-2 gap-3"><label class="block"><span class="text-xs text-slate-500 font-semibold">Sumber / Penerima</span><input id="newIncomePayee" maxlength="120" placeholder="cth: Tamu kamar 2" class="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 mt-0.5"></label><label class="block"><span class="text-xs text-slate-500 font-semibold">Jumlah (Rp)</span><input id="newIncomeAmount" type="text" inputmode="numeric" pattern="[0-9.]*" data-currency-input required class="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 mt-0.5"></label></div>
       <p id="incomeFormStatus" class="text-sm" role="status" aria-live="polite"></p>
@@ -1892,16 +1867,6 @@
   </div>
 </div>
 
-<dialog id="contactItDialog" class="w-[calc(100%-2rem)] max-w-md rounded-xl border-0 p-0 shadow-2xl backdrop:bg-slate-900/50">
-  <div class="p-6">
-    <h2 class="text-lg font-bold text-slate-900">Pesan Terkirim</h2>
-    <p class="mt-2 text-sm text-slate-600">Pesan masuk antrean IT dan dikirim ke Telegram.</p>
-    <div class="mt-5 flex justify-end">
-      <button id="closeContactItDialog" class="bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold px-4 py-2 rounded-lg" type="button">Tutup</button>
-    </div>
-  </div>
-</dialog>
-
 <!-- Toast -->
 <div id="toast" class="toast"></div>
 
@@ -2102,7 +2067,6 @@ function showDashboardApp(account){
   document.getElementById('inventoryNavItem').classList.toggle('hidden', account.role === 'IT');
   document.getElementById('adminLoginScreen').classList.add('hidden');
   document.getElementById('dashboardApp').hidden = false;
-  updateContactItAccess();
 }
 
 function showDashboardLogin(message=''){
@@ -3003,7 +2967,6 @@ const VIEW_META = {
   'owner': { title:'Owner', sub:'Daftar pemilik properti dengan persentase kepemilikan' },
   'absensi-karyawan': { title:'Absensi Karyawan', sub:'Pantau absen masuk karyawan kantor via selfie dan lokasi' },
   'inventaris': { title:'Inventaris', sub:'Daftar barang per properti dan riwayat ceklis kondisi dari Crew' },
-  'bantuan': { title:'Bantuan', sub:'Laporkan bug atau kendala teknis kepada tim IT' },
   'pengaturan': { title:'Pengaturan', sub:'User role, komisi & konfigurasi sistem' }
 };
 function switchView(name){
@@ -3365,7 +3328,7 @@ function renderDashboard(){
     const allBookings = BOOKINGS.filter(b => b.propId === p.id && isDateInReportPeriod(b.checkin));
     const bk = allBookings.filter(b => !isBookingCancelled(b));
     const bookingRev = allBookings.reduce((sum, booking) => sum + getBookingNetAmount(booking), 0);
-    const otherIncome = INCOMES.filter(entry => entry.propId === p.id && !['income-opening-balance', 'income-booking'].includes(entry.categoryId) && isDateInReportPeriod(entry.date))
+    const otherIncome = INCOMES.filter(entry => financeEntryMatchesProperty(entry, p) && !['income-opening-balance', 'income-booking'].includes(entry.categoryId) && isDateInReportPeriod(entry.date))
       .reduce((sum, entry) => sum + entry.amount, 0);
     const rev = bookingRev + otherIncome;
     const exp = getPropExpenses(p.id).reduce((s,e)=>s+e.amount,0);
@@ -3596,17 +3559,34 @@ function setChartTab(btn,months){
 }
 
 /* ============== PROPERTIES ============== */
+function getFilteredProperties(){
+  const activeProperties = PROPERTIES.filter(property => property.active !== false);
+  return currentPropFilter === 'archived'
+    ? PROPERTIES.filter(property => property.active === false)
+    : currentPropFilter === 'all' ? activeProperties : activeProperties.filter(property => property.type === currentPropFilter);
+}
+function movePropertyOrder(propertyId, direction){
+  if(!['Master', 'Admin'].includes(currentDashboardAccount?.role)) return;
+  const filtered = getFilteredProperties();
+  const filteredIndex = filtered.findIndex(p => p.id === propertyId);
+  const neighborFilteredIndex = direction === 'up' ? filteredIndex - 1 : filteredIndex + 1;
+  if(filteredIndex === -1 || neighborFilteredIndex < 0 || neighborFilteredIndex >= filtered.length) return;
+  const neighborId = filtered[neighborFilteredIndex].id;
+  const globalIndex = PROPERTIES.findIndex(p => p.id === propertyId);
+  const neighborGlobalIndex = PROPERTIES.findIndex(p => p.id === neighborId);
+  [PROPERTIES[globalIndex], PROPERTIES[neighborGlobalIndex]] = [PROPERTIES[neighborGlobalIndex], PROPERTIES[globalIndex]];
+  renderProperties();
+  persistDashboardData({ skipCloudSync:true });
+  scheduleDashboardManagementSync();
+}
 function renderProperties(){
   const grid = document.getElementById('propertiGrid');
   updatePropertyCounts();
-  const activeProperties = PROPERTIES.filter(property => property.active !== false);
-  const filtered = currentPropFilter === 'archived'
-    ? PROPERTIES.filter(property => property.active === false)
-    : currentPropFilter === 'all' ? activeProperties : activeProperties.filter(property => property.type === currentPropFilter);
-  grid.innerHTML = filtered.map(p => {
+  const filtered = getFilteredProperties();
+  grid.innerHTML = filtered.map((p, filteredIndex) => {
     const allBookings = BOOKINGS.filter(b => b.propId === p.id && isDateInReportPeriod(b.checkin));
     const bk = allBookings.filter(b => !isBookingCancelled(b));
-    const rev = allBookings.reduce((sum, booking) => sum + getBookingNetAmount(booking), 0) + INCOMES.filter(entry => entry.propId === p.id && !['income-opening-balance', 'income-booking'].includes(entry.categoryId) && isDateInReportPeriod(entry.date)).reduce((sum, entry) => sum + entry.amount, 0);
+    const rev = allBookings.reduce((sum, booking) => sum + getBookingNetAmount(booking), 0) + INCOMES.filter(entry => financeEntryMatchesProperty(entry, p) && !['income-opening-balance', 'income-booking'].includes(entry.categoryId) && isDateInReportPeriod(entry.date)).reduce((sum, entry) => sum + entry.amount, 0);
     const exp = getPropExpenses(p.id).reduce((s,e)=>s+e.amount,0);
     const occ = Math.min(95, Math.round(bk.length/30*140));
     const propertyGradient = propertyGradientOf(p);
@@ -3646,6 +3626,8 @@ function renderProperties(){
               <p class="text-xs text-slate-500 truncate">${escapeHtml(p.area)}</p>
             </div>
             <div class="flex items-center gap-1 flex-wrap justify-end">
+              ${canManageProperties ? `<button type="button" onclick="movePropertyOrder('${escapeHtml(p.id)}','up')" ${filteredIndex === 0 ? 'disabled' : ''} aria-label="Pindah ${escapeHtml(p.name)} ke atas" title="Pindah ke atas" class="p-1.5 rounded-md text-slate-400 hover:text-brand-700 hover:bg-brand-50 disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-slate-400"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 19V5M5 12l7-7 7 7"/></svg></button>
+              <button type="button" onclick="movePropertyOrder('${escapeHtml(p.id)}','down')" ${filteredIndex === filtered.length - 1 ? 'disabled' : ''} aria-label="Pindah ${escapeHtml(p.name)} ke bawah" title="Pindah ke bawah" class="p-1.5 rounded-md text-slate-400 hover:text-brand-700 hover:bg-brand-50 disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-slate-400"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 5v14M19 12l-7 7-7-7"/></svg></button>` : ''}
               <button type="button" onclick="openPropertyModal('${escapeHtml(p.id)}')" aria-label="Edit ${escapeHtml(p.name)}" class="inline-flex items-center gap-1.5 px-2 py-1 text-xs font-semibold text-slate-600 hover:text-brand-700 hover:bg-brand-50 rounded-md"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 013 3L8 18l-4 1 1-4Z"/></svg>Edit</button>
               ${statusActions.join('')}
             </div>
@@ -3997,7 +3979,9 @@ function renderCalendar(){
   const body = document.getElementById('calendarBody');
   const propertyCategory = document.getElementById('filterPropBooking')?.value || 'all';
   const platformFilter = document.getElementById('filterPlatformBooking')?.value || 'all';
-  const activeProperties = PROPERTIES.filter(property => property.active !== false);
+  // Properti kos tidak pernah punya booking di sini (transaksinya lewat kosan.html), jadi baris
+  // kalendernya cuma akan kosong terus -- dikeluarkan supaya kalender tidak penuh baris kosong.
+  const activeProperties = PROPERTIES.filter(property => property.active !== false && property.type !== 'kos');
   const calendarProperties = propertyCategory === 'all'
     ? activeProperties
     : activeProperties.filter(property => property.type === propertyCategory);
@@ -4049,21 +4033,22 @@ function changeMonth(delta){
   renderCalendar();
 }
 function populatePropSelects(){
-  const fillPropertySelect = (select, includeAll=false, includeGeneral=false, excludeCodes=[]) => {
+  const fillPropertySelect = (select, includeAll=false, includeGeneral=false, excludeTypes=[]) => {
     if(!select) return;
     const selected = select.value;
     const options = [];
     if(includeAll) options.push(new Option('Semua Properti', 'all'));
     if(includeGeneral) options.push(new Option('Operasional Umum / tanpa properti', ''));
-    options.push(...PROPERTIES.filter(property => property.active !== false && !excludeCodes.includes(property.code)).map(property => new Option(`${property.name} (${property.code})`, property.id)));
+    options.push(...PROPERTIES.filter(property => property.active !== false && !excludeTypes.includes(property.type)).map(property => new Option(`${property.name} (${property.code})`, property.id)));
     select.replaceChildren(...options);
     if(Array.from(select.options).some(option => option.value === selected)) select.value = selected;
   };
   const filter2 = document.getElementById('filterPropExp');
   fillPropertySelect(filter2, true);
+  // Properti kos tetap muncul di dropdown (supaya tidak membingungkan/hilang begitu saja), tapi
+  // dropdown-nya punya onchange yang memperingatkan & membatalkan pilihan -- lihat blockKosPropertySelection().
   fillPropertySelect(document.getElementById('newBookingProp'));
-  // Pengeluaran Kosan De Orange (KDO) hanya bisa diinput dari kosan.html, bukan dari sini.
-  fillPropertySelect(document.getElementById('newExpProp'), false, true, ['KDO']);
+  fillPropertySelect(document.getElementById('newExpProp'), false, true);
   fillPropertySelect(document.getElementById('newIncomeProperty'), false, true);
   populateNotaPropertySelect();
 }
@@ -4195,7 +4180,7 @@ function renderOfficeEmployees(){
     return `<tr>
       <td class="px-5 py-3 font-medium text-slate-800">${escapeHtml(employee.name)}</td>
       <td class="px-3 py-3"><span class="badge ${active ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-500'}">${active ? 'Aktif' : 'Nonaktif'}</span></td>
-      <td class="px-5 py-3 text-right whitespace-nowrap"><button type="button" data-office-employee-action="edit" data-office-employee-id="${escapeHtml(employee.id)}" class="text-xs font-semibold text-brand-600 hover:text-brand-800">Edit</button><button type="button" data-office-employee-action="toggle" data-office-employee-id="${escapeHtml(employee.id)}" class="ml-3 text-xs font-semibold ${active ? 'text-rose-600 hover:text-rose-800' : 'text-emerald-700 hover:text-emerald-900'}">${active ? 'Nonaktifkan' : 'Aktifkan'}</button></td>
+      <td class="px-5 py-3 text-right whitespace-nowrap"><button type="button" data-office-employee-action="edit" data-office-employee-id="${escapeHtml(employee.id)}" class="text-xs font-semibold text-brand-600 hover:text-brand-800">Edit</button><button type="button" data-office-employee-action="toggle" data-office-employee-id="${escapeHtml(employee.id)}" class="ml-3 text-xs font-semibold ${active ? 'text-rose-600 hover:text-rose-800' : 'text-emerald-700 hover:text-emerald-900'}">${active ? 'Nonaktifkan' : 'Aktifkan'}</button><button type="button" data-office-employee-action="delete" data-office-employee-id="${escapeHtml(employee.id)}" class="ml-3 text-xs font-semibold text-rose-800 hover:text-rose-900 underline">Hapus</button></td>
     </tr>`;
   }).join('') : '<tr><td colspan="3" class="px-5 py-8 text-center text-sm text-slate-400">Belum ada karyawan kantor. Tambahkan nama di atas.</td></tr>';
 }
@@ -4245,6 +4230,26 @@ async function handleOfficeEmployeeAction(event){
     document.getElementById('officeEmployeeCancelEdit').classList.remove('hidden');
     document.getElementById('officeEmployeeStatus').textContent = '';
     document.getElementById('officeEmployeeName').focus();
+    return;
+  }
+  if(button.dataset.officeEmployeeAction === 'delete'){
+    if(!window.confirm(`Hapus permanen karyawan ${employee.name}? Ini akan menghapus riwayat absennya juga dan tidak dapat dibatalkan.`)) return;
+    const pin = window.prompt('Masukkan PIN Master (4 digit) untuk menghapus karyawan ini beserta riwayat absennya:');
+    if(pin === null) return;
+    button.disabled = true;
+    try {
+      await dashboardApi(`/dashboard/office-employees/${encodeURIComponent(employee.id)}`, {
+        method:'DELETE', body:JSON.stringify({ pin:pin.trim() }),
+      });
+      await loadOfficeEmployees();
+      document.getElementById('officeEmployeeStatus').className = 'text-sm mt-2 text-emerald-700';
+      document.getElementById('officeEmployeeStatus').textContent = `Karyawan ${employee.name} dan riwayat absennya berhasil dihapus.`;
+    } catch(error) {
+      document.getElementById('officeEmployeeStatus').className = 'text-sm mt-2 text-rose-600';
+      document.getElementById('officeEmployeeStatus').textContent = error.message || 'Karyawan gagal dihapus.';
+    } finally {
+      button.disabled = false;
+    }
     return;
   }
   const active = Number(employee.active) === 1;
@@ -5484,7 +5489,7 @@ function renderOwners(){
     const properties = getOwnerProps(owner.id);
     const totalRevenue = properties.reduce((sum, property) => {
       const bookings = BOOKINGS.filter(item => item.propId === property.id && isDateInReportPeriod(item.checkin));
-      const extraIncome = INCOMES.filter(entry => entry.propId === property.id && !['income-opening-balance', 'income-booking'].includes(entry.categoryId) && isDateInReportPeriod(entry.date))
+      const extraIncome = INCOMES.filter(entry => financeEntryMatchesProperty(entry, property) && !['income-opening-balance', 'income-booking'].includes(entry.categoryId) && isDateInReportPeriod(entry.date))
         .reduce((subtotal, entry) => subtotal + entry.amount, 0);
       return sum + bookings.reduce((subtotal, booking) => subtotal + computeRevenue(booking), 0) + extraIncome;
     }, 0);
@@ -5547,7 +5552,7 @@ function renderReport(){
       ...OWNER_CREW_EXPENSES.filter(expense => financeEntryMatchesProperty(expense, p) && isDateInCustomReportRange(expense.date, range)),
     ];
     const grossRev = periodBookings.reduce((sum, booking) => sum + getBookingNetAmount(booking), 0);
-    const otherIncome = INCOMES.filter(entry => entry.propId === p.id && !['income-opening-balance', 'income-booking'].includes(entry.categoryId) && isDateInCustomReportRange(entry.date, range))
+    const otherIncome = INCOMES.filter(entry => financeEntryMatchesProperty(entry, p) && !['income-opening-balance', 'income-booking'].includes(entry.categoryId) && isDateInCustomReportRange(entry.date, range))
       .reduce((sum, entry) => sum + entry.amount, 0);
     const expTotal = expenses.reduce((s,e)=>s+e.amount,0);
     return { p, share:share*100, bookings:bookings.length, grossRev, otherIncome, expTotal };
@@ -6207,7 +6212,7 @@ function generateOwnerShareCalculation(){
     const bookings = BOOKINGS.filter(item => item.propId === property.id && isDateInCustomReportRange(item.checkin, range));
     const bookingRevenue = bookings.reduce((sum, item) => sum + getBookingNetAmount(item), 0);
     const platformFee = bookingRevenue * platformFeePercent / 100;
-    const incomeEntries = INCOMES.filter(item => item.propId === property.id && !['income-opening-balance', 'income-booking'].includes(item.categoryId) && isDateInCustomReportRange(item.date, range));
+    const incomeEntries = INCOMES.filter(item => financeEntryMatchesProperty(item, property) && !['income-opening-balance', 'income-booking'].includes(item.categoryId) && isDateInCustomReportRange(item.date, range));
     const otherIncome = incomeEntries.reduce((sum, item) => sum + Number(item.amount || 0), 0);
     const expenses = EXPENSES.filter(item => financeEntryMatchesProperty(item, property) && isDateInCustomReportRange(item.date, range));
     const crewExpenses = OWNER_CREW_EXPENSES.filter(item => financeEntryMatchesProperty(item, property) && isDateInCustomReportRange(item.date, range));
@@ -8153,7 +8158,16 @@ function openBookingModal(bookingId=''){
   openModal('modal-booking');
 }
 
+function blockKosPropertySelection(select){
+  const property = PROPERTIES.find(item => item.id === select.value);
+  if(property?.type !== 'kos') return false;
+  select.value = '';
+  window.alert(`${property.name} adalah properti kos.\n\nTransaksi kos (booking, sewa, pemasukan, maupun pengeluaran) hanya bisa dicatat lewat menu Manajemen Kosan, bukan dari Dasbord ini.\n\nSilakan buka Manajemen Kosan untuk mencatat transaksi ini.`);
+  return true;
+}
+
 function updateBookingFormForPropertyType(){
+  if(blockKosPropertySelection(document.getElementById('newBookingProp'))) return;
   const propId = document.getElementById('newBookingProp').value;
   const property = PROPERTIES.find(item => item.id === propId);
   const isPartner = property?.managementType === 'partner';
@@ -8718,9 +8732,6 @@ async function submitBookingCancellation(event){
     button.disabled = false;
   }
 }
-function updateContactItAccess(){
-  document.getElementById('contactItForm').classList.toggle('hidden', !getDashboardToken());
-}
 async function toggleStaffChat(){
   const widget = document.getElementById('staffChatWidget');
   const opening = widget.classList.contains('hidden');
@@ -8841,51 +8852,6 @@ async function clearStaffChat(){
     button.disabled = false;
   }
 }
-async function submitContactMessage(event){
-  event.preventDefault();
-  const form = event.currentTarget;
-  const button = form.querySelector('button[type="submit"]');
-  const status = document.getElementById('contactItStatus');
-  const token = getDashboardToken();
-  const title = document.getElementById('contactItTitle').value.trim();
-  const message = document.getElementById('contactItMessage').value.trim();
-
-  if(!token){
-    status.className = 'text-sm text-rose-600';
-    status.textContent = 'Sesi login berakhir. Silakan login kembali.';
-    updateContactItAccess();
-    return;
-  }
-
-  button.disabled = true;
-  status.className = 'text-sm text-slate-500';
-  status.textContent = 'Mengirim pesan...';
-  try {
-    const response = await fetch(`${API_BASE}/admin/contact-it`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`
-      },
-      body: JSON.stringify({ title, message })
-    });
-    const result = await response.json().catch(() => ({}));
-    if(response.status === 401){
-      logoutDashboard();
-      return;
-    }
-    if(!response.ok || result.ok === false) throw new Error(result.error || result.message || `HTTP ${response.status}`);
-    form.reset();
-    status.textContent = '';
-    document.getElementById('contactItDialog').showModal();
-  } catch(error) {
-    status.className = 'text-sm text-rose-600';
-    status.textContent = error.message || 'Pesan gagal dikirim.';
-  } finally {
-    button.disabled = false;
-  }
-}
-
 /* ============== INIT ============== */
 document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('dashboardLoginForm').addEventListener('submit', loginDashboard);
@@ -8953,7 +8919,6 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('importBookingText').addEventListener('input', invalidateBookingImportPreview);
   setupPasswordToggles();
   setupCurrencyInputs();
-  document.getElementById('contactItForm').addEventListener('submit', submitContactMessage);
   const staffChatForm = document.getElementById('staffChatForm');
   const staffChatMessage = document.getElementById('staffChatMessage');
   staffChatForm.addEventListener('submit', sendStaffChat);
@@ -8963,7 +8928,6 @@ document.addEventListener('DOMContentLoaded', () => {
       staffChatForm.requestSubmit();
     }
   });
-  document.getElementById('closeContactItDialog').addEventListener('click', () => document.getElementById('contactItDialog').close());
   fetch('https://your-home-checkin-api.saerobotic.workers.dev/settings', { cache: 'no-store' })
     .then(response => response.json())
     .then(payload => {
