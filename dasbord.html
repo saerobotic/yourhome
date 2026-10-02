@@ -190,6 +190,10 @@
         <span>Chat Internal</span>
         <span id="staffChatUnreadIndicator" class="hidden ml-auto w-2.5 h-2.5 rounded-full bg-rose-400 ring-2 ring-slate-900" aria-label="Ada pesan chat belum dibaca" title="Ada pesan belum dibaca"></span>
       </button>
+      <button id="propertyCodeNavItem" onclick="switchView('ganti-kode-properti')" class="nav-item hidden w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left">
+        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M7 7h.01M7 3h5.586a1 1 0 01.707.293l7.414 7.414a1 1 0 010 1.414l-5.586 5.586a1 1 0 01-1.414 0L6.293 10.293A1 1 0 016 9.586V4a1 1 0 011-1z"/></svg>
+        <span>Ganti Kode Properti</span>
+      </button>
       <button id="settingsNavItem" onclick="switchView('pengaturan')" class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left">
         <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
         <span>Pengaturan</span>
@@ -768,6 +772,85 @@
           <p class="text-sm text-slate-500 mb-4">Karyawan aktif yang belum klik absen masuk pada tanggal yang dipilih.</p>
           <div id="attendanceMissingList" class="flex flex-wrap gap-2 text-sm"></div>
         </section>
+
+        <section class="bg-white rounded-2xl p-5 sm:p-6 border border-slate-100 mt-6">
+          <div class="flex flex-wrap items-end justify-between gap-3 mb-5">
+            <div>
+              <h2 class="text-lg font-bold text-slate-900">Riwayat Per Karyawan</h2>
+              <p class="text-sm text-slate-500 mt-1">Rekap absen dan total jam kerja satu karyawan dalam periode bulan.</p>
+            </div>
+            <div class="flex flex-wrap items-end gap-2">
+              <label class="block">
+                <span class="block text-xs font-semibold text-slate-600 mb-1">Karyawan</span>
+                <select id="attendanceHistoryEmployee" onchange="loadEmployeeAttendanceHistory()" class="border border-slate-200 rounded-lg px-3 py-2 text-sm bg-white min-w-[180px]"></select>
+              </label>
+              <label class="block">
+                <span class="block text-xs font-semibold text-slate-600 mb-1">Bulan</span>
+                <input id="attendanceHistoryMonth" type="month" onchange="loadEmployeeAttendanceHistory()" class="border border-slate-200 rounded-lg px-3 py-2 text-sm">
+              </label>
+              <button type="button" onclick="loadEmployeeAttendanceHistory()" class="h-[38px] bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-semibold px-3 rounded-lg">Muat Ulang</button>
+            </div>
+          </div>
+          <p id="attendanceHistoryStatus" class="text-sm text-slate-500 mb-3" role="status" aria-live="polite"></p>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-5">
+            <div class="stat-card bg-slate-50 rounded-2xl p-4 border border-slate-100" style="--accent:#4f46e5">
+              <p class="text-xs font-semibold text-slate-500 uppercase tracking-wide">Total Hari Masuk</p>
+              <p id="attendanceHistoryDaysCount" class="text-2xl font-extrabold text-slate-900 mt-1">0</p>
+            </div>
+            <div class="stat-card bg-slate-50 rounded-2xl p-4 border border-slate-100" style="--accent:#10b981">
+              <p class="text-xs font-semibold text-slate-500 uppercase tracking-wide">Total Jam Kerja</p>
+              <p id="attendanceHistoryTotalHours" class="text-2xl font-extrabold text-slate-900 mt-1">0 jam</p>
+            </div>
+            <div class="stat-card bg-slate-50 rounded-2xl p-4 border border-slate-100" style="--accent:#f59e0b">
+              <p class="text-xs font-semibold text-slate-500 uppercase tracking-wide">Rata-rata Jam/Hari</p>
+              <p id="attendanceHistoryAvgHours" class="text-2xl font-extrabold text-slate-900 mt-1">0 jam</p>
+            </div>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+              <thead class="bg-slate-50 text-slate-500 text-xs uppercase">
+                <tr>
+                  <th class="text-left px-4 py-3">Tanggal</th>
+                  <th class="text-left px-4 py-3">Masuk</th>
+                  <th class="text-left px-4 py-3">Pulang</th>
+                  <th class="text-left px-4 py-3">Lama Kerja</th>
+                </tr>
+              </thead>
+              <tbody id="attendanceHistoryTableBody" class="divide-y divide-slate-100"></tbody>
+            </table>
+          </div>
+        </section>
+      </div>
+
+      <!-- =========================================== -->
+      <!-- GANTI KODE PROPERTI VIEW                     -->
+      <!-- =========================================== -->
+      <div id="view-ganti-kode-properti" class="view">
+        <section class="bg-white rounded-2xl p-5 sm:p-6 border border-slate-100">
+          <div class="flex flex-wrap items-start justify-between gap-3 mb-5">
+            <div>
+              <h2 class="text-lg font-bold text-slate-900">Ganti Kode Properti</h2>
+              <p class="text-sm text-slate-500 mt-1">Centang "Tetap" untuk kode yang tidak berubah. Uncheck "Tetap" lalu isi kolom "Ganti Jadi" untuk kode yang mau diganti. Tersimpan langsung ke database yang sama dengan Booking dan Laporan.</p>
+            </div>
+            <button type="button" onclick="loadPropertyCodes()" class="h-[38px] bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-semibold px-3 rounded-lg">Muat Ulang</button>
+          </div>
+          <input id="propertyCodeSearch" type="text" oninput="renderPropertyCodeList()" placeholder="Cari nama properti..." class="w-full border border-slate-200 rounded-lg px-3 py-2.5 text-sm mb-4">
+          <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+              <thead class="bg-slate-50 text-slate-500 text-xs uppercase">
+                <tr>
+                  <th class="text-left px-4 py-3">Properti</th>
+                  <th class="text-center px-4 py-3">Kode Saat Ini</th>
+                  <th class="text-center px-4 py-3">Tetap</th>
+                  <th class="text-center px-4 py-3">Ganti Jadi</th>
+                </tr>
+              </thead>
+              <tbody id="propertyCodeTableBody" class="divide-y divide-slate-100"></tbody>
+            </table>
+          </div>
+          <p id="propertyCodeStatus" class="text-sm mt-3" role="status" aria-live="polite"></p>
+          <button type="button" onclick="submitPropertyCodeChanges()" class="mt-1 bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold px-4 py-2.5 rounded-lg">Simpan Perubahan</button>
+        </section>
       </div>
 
       <!-- =========================================== -->
@@ -1230,6 +1313,14 @@
       </div>
       <p id="newBookingExtraBedTotal" class="text-xs text-slate-500">Total Extra Bed: Rp 0. Dicatat terpisah dari nilai booking.</p>
       <p id="newBookingExtraBedStockHint" class="text-xs"></p>
+      <div id="newBookingExtraBedPaymentField" class="hidden">
+        <label class="text-xs text-slate-500 font-semibold">Pembayaran Extra Bed</label>
+        <select id="newBookingExtraBedPaymentStatus" class="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 bg-white mt-0.5">
+          <option value="paid">Sudah dibayar</option>
+          <option value="pending">Bayar nanti (COD saat check-in)</option>
+        </select>
+        <p class="text-xs text-slate-500 mt-1">Pilih "Bayar nanti" kalau tamu baru akan bayar extra bed di lokasi. Dashboard akan menandai booking ini dan mengingatkan Crew di properti.</p>
+      </div>
       <div>
         <label class="text-xs text-slate-500 font-semibold">Agen / Marketing (opsional)</label>
         <select id="newBookingAgent" onchange="handleBookingAgentChange()" class="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 bg-white mt-0.5"><option value="">Tidak ada agen</option></select>
@@ -1962,6 +2053,7 @@ function showDashboardApp(account){
   }
   document.getElementById('addPropertyButton').classList.toggle('hidden', account.role === 'IT');
   document.getElementById('settingsNavItem').classList.toggle('hidden', account.role === 'IT');
+  document.getElementById('propertyCodeNavItem').classList.toggle('hidden', !['master', 'admin-1'].includes(account.account_id));
   document.getElementById('adminLoginScreen').classList.add('hidden');
   document.getElementById('dashboardApp').hidden = false;
   updateContactItAccess();
@@ -2864,6 +2956,7 @@ const VIEW_META = {
   'nota-lunas': { title:'Nota Lunas', sub:'Buat nota lunas tamu, unduh PDF, lalu kirim ke WhatsApp (tidak disimpan ke sistem)' },
   'owner': { title:'Owner', sub:'Daftar pemilik properti dengan persentase kepemilikan' },
   'absensi-karyawan': { title:'Absensi Karyawan', sub:'Pantau absen masuk karyawan kantor via selfie dan lokasi' },
+  'ganti-kode-properti': { title:'Ganti Kode Properti', sub:'Ubah kode properti yang dipakai di Booking, Laporan, dan tempat lain' },
   'bantuan': { title:'Bantuan', sub:'Laporkan bug atau kendala teknis kepada tim IT' },
   'pengaturan': { title:'Pengaturan', sub:'User role, komisi & konfigurasi sistem' }
 };
@@ -2891,8 +2984,11 @@ function switchView(name){
   if(name==='nota-lunas') prepareNotaForm();
   if(name==='absensi-karyawan'){
     document.getElementById('attendanceDateFilter').value = new Date().toLocaleDateString('en-CA', { timeZone:'Asia/Jakarta' });
+    const historyMonth = document.getElementById('attendanceHistoryMonth');
+    if(!historyMonth.value) historyMonth.value = new Date().toLocaleDateString('en-CA', { timeZone:'Asia/Jakarta' }).slice(0,7);
     loadAttendanceDashboard();
   }
+  if(name==='ganti-kode-properti') loadPropertyCodes();
   if(name==='pengaturan'){ renderUsers(); loadExtraBedStock(); }
   /* Close mobile sidebar */
   if(window.innerWidth < 1024){
@@ -3951,6 +4047,7 @@ function renderBookingsTable(){
         <td class="px-3 py-3">
           <div class="font-semibold text-slate-900 text-sm">${escapeHtml(b.guest)}</div>
           <div class="text-xs text-slate-400">${b.nights} malam${b.phone?' · '+escapeHtml(b.phone):''}${b.note?' · '+escapeHtml(b.note):''}</div>
+          ${b.extraBedPaymentStatus === 'pending' && !isBookingCancelled(b) ? `<span class="badge bg-amber-50 text-amber-700 mt-1 inline-flex">Extra Bed Belum Dibayar (${fmtRp(Number(b.extraBedQuantity || 0) * Number(b.extraBedPrice || 0))})</span>` : ''}
         </td>
         <td class="px-3 py-3 hidden md:table-cell text-sm text-slate-600">${escapeHtml(b.propName)}</td>
         <td class="px-3 py-3 hidden lg:table-cell text-sm text-slate-600">${fmtDate(b.checkin)} → ${fmtDate(b.checkout)}</td>
@@ -3958,12 +4055,30 @@ function renderBookingsTable(){
         <td class="px-3 py-3"><span class="badge ${isBookingCancelled(b) ? STATUS_STYLES.Cancelled : STATUS_STYLES[b.status] || ''}">${escapeHtml(b.status)}</span>${isBookingCancelled(b)?`<div class="mt-1 max-w-48 text-[10px] text-rose-600">${escapeHtml(b.cancellationReason)} · Refund ${fmtRp(b.refundAmount || 0)}</div>`:''}</td>
         <td class="px-5 py-3 text-right font-bold text-slate-900">${fmtRp(getBookingNetAmount(b))}${isBookingCancelled(b)?`<div class="text-[10px] font-normal text-slate-400">Nilai awal ${fmtRp(b.amount)}</div>`:''}</td>
         <td class="px-3 py-3 whitespace-nowrap text-xs text-slate-600">${fmtBookingCreatedAt(b.createdAt || b.created_at)}</td>
-        <td class="px-3 py-3 text-right whitespace-nowrap">${currentDashboardAccount?.role !== 'IT' ? `<button type="button" onclick="openBookingModal('${b.id}')" title="${isBookingCancelled(b) ? 'Edit memerlukan PIN Master' : 'Edit booking'}" class="text-xs font-semibold text-brand-600 hover:text-brand-800">Edit</button>${isBookingCancelled(b) ? '' : `<button type="button" onclick="openBookingCancelModal('${b.id}')" class="ml-3 text-xs font-semibold text-rose-600 hover:text-rose-800">Cancel</button>`}<button type="button" onclick="openBookingDeleteModal('${b.id}')" title="Hapus permanen booking (perlu PIN Master)" class="ml-3 text-xs font-semibold text-rose-800 hover:text-rose-900 underline">Delete</button>` : '—'}</td>
+        <td class="px-3 py-3 text-right whitespace-nowrap">${currentDashboardAccount?.role !== 'IT' ? `${b.extraBedPaymentStatus === 'pending' && !isBookingCancelled(b) ? `<button type="button" onclick="sendExtraBedReminderWhatsApp('${b.id}')" title="Kirim pengingat bayar Extra Bed ke tamu" class="mr-3 text-xs font-semibold text-emerald-700 hover:text-emerald-900">Ingatkan Tamu</button>` : ''}<button type="button" onclick="openBookingModal('${b.id}')" title="${isBookingCancelled(b) ? 'Edit memerlukan PIN Master' : 'Edit booking'}" class="text-xs font-semibold text-brand-600 hover:text-brand-800">Edit</button>${isBookingCancelled(b) ? '' : `<button type="button" onclick="openBookingCancelModal('${b.id}')" class="ml-3 text-xs font-semibold text-rose-600 hover:text-rose-800">Cancel</button>`}<button type="button" onclick="openBookingDeleteModal('${b.id}')" title="Hapus permanen booking (perlu PIN Master)" class="ml-3 text-xs font-semibold text-rose-800 hover:text-rose-900 underline">Delete</button>` : '—'}</td>
       </tr>`).join('');
 }
 function changeBookingPage(direction){
   currentBookingPage += direction;
   renderBookingsTable();
+}
+
+function sendExtraBedReminderWhatsApp(bookingId){
+  const booking = BOOKINGS.find(item => item.id === bookingId);
+  if(!booking) return;
+  const phone = normalizeWhatsAppPhone(booking.phone);
+  if(!/^\d{8,15}$/.test(phone)){
+    showToast('Nomor WhatsApp tamu belum diisi atau tidak valid. Edit booking untuk menambahkan nomornya.');
+    return;
+  }
+  const extraBedTotal = Number(booking.extraBedQuantity || 0) * Number(booking.extraBedPrice || 0);
+  const message = [
+    `Halo ${booking.guest}, ini dari YOUR HOME.`,
+    `Mengingatkan untuk pembayaran Extra Bed (${booking.extraBedQuantity} unit) sebesar ${fmtRp(extraBedTotal)} di ${booking.propName}.`,
+    `Pembayaran bisa dilakukan langsung di lokasi saat check-in/check-out. Terima kasih.`,
+  ].join('\n');
+  const popup = window.open(`https://wa.me/${phone}?text=${encodeURIComponent(message)}`, '_blank');
+  if(popup) popup.opener = null;
 }
 
 async function loadFinanceData(){
@@ -4102,10 +4217,12 @@ async function loadAttendanceDashboard(){
     attendanceEmployeesCache = Array.isArray(employeeResult.data) ? employeeResult.data : [];
     const records = Array.isArray(attendanceResult.data?.records) ? attendanceResult.data.records : [];
     renderAttendanceDashboard(records);
+    populateAttendanceHistoryEmployeeSelect();
     status.textContent = '';
   } catch(error) {
     attendanceEmployeesCache = [];
     renderAttendanceDashboard([]);
+    populateAttendanceHistoryEmployeeSelect();
     status.textContent = error.message || 'Data absensi gagal dimuat.';
   }
 }
@@ -4178,6 +4295,169 @@ async function resetAttendanceRecord(id, employeeName){
   }
 }
 
+function populateAttendanceHistoryEmployeeSelect(){
+  const select = document.getElementById('attendanceHistoryEmployee');
+  if(!select) return;
+  const previous = select.value;
+  const employees = [...attendanceEmployeesCache].sort((a,b) => a.name.localeCompare(b.name, 'id'));
+  select.innerHTML = employees.length
+    ? employees.map(employee => `<option value="${employee.id}">${escapeHtml(employee.name)}${Number(employee.active) !== 1 ? ' (nonaktif)' : ''}</option>`).join('')
+    : '<option value="">Belum ada karyawan</option>';
+  if(previous && employees.some(employee => employee.id === previous)) select.value = previous;
+  loadEmployeeAttendanceHistory();
+}
+
+function getMonthDateRange(monthValue){
+  const [yearStr, monthStr] = monthValue.split('-');
+  const year = Number(yearStr);
+  const month = Number(monthStr);
+  const lastDay = new Date(year, month, 0).getDate();
+  return { start:`${yearStr}-${monthStr}-01`, end:`${yearStr}-${monthStr}-${String(lastDay).padStart(2,'0')}` };
+}
+
+function formatHoursFromSeconds(seconds){
+  const totalMinutes = Math.round((seconds || 0) / 60);
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+  return `${hours} jam ${String(minutes).padStart(2,'0')} menit`;
+}
+
+async function loadEmployeeAttendanceHistory(){
+  const status = document.getElementById('attendanceHistoryStatus');
+  const select = document.getElementById('attendanceHistoryEmployee');
+  const monthInput = document.getElementById('attendanceHistoryMonth');
+  if(!monthInput.value) monthInput.value = new Date().toLocaleDateString('en-CA', { timeZone:'Asia/Jakarta' }).slice(0,7);
+  const employeeId = select.value;
+  if(!employeeId){
+    status.textContent = 'Pilih karyawan terlebih dahulu.';
+    renderEmployeeAttendanceHistory([], null);
+    return;
+  }
+  const { start, end } = getMonthDateRange(monthInput.value);
+  status.textContent = 'Memuat riwayat...';
+  try {
+    const result = await dashboardApi(`/dashboard/employee-attendance?employee_id=${encodeURIComponent(employeeId)}&start=${start}&end=${end}`);
+    const records = Array.isArray(result.data?.records) ? result.data.records : [];
+    renderEmployeeAttendanceHistory(records, result.data?.summary || null);
+    status.textContent = '';
+  } catch(error) {
+    renderEmployeeAttendanceHistory([], null);
+    status.textContent = error.message || 'Riwayat absen gagal dimuat.';
+  }
+}
+
+function renderEmployeeAttendanceHistory(records, summary){
+  const tableBody = document.getElementById('attendanceHistoryTableBody');
+  tableBody.innerHTML = records.length ? records.map(record => {
+    const dateLabel = new Date(`${record.work_date}T00:00:00`).toLocaleDateString('id-ID', { weekday:'short', day:'2-digit', month:'short', year:'numeric' });
+    const checkInTime = new Date(record.checked_in_at).toLocaleTimeString('id-ID', { hour:'2-digit', minute:'2-digit', timeZone:'Asia/Jakarta' });
+    const checkOutTime = record.checked_out_at ? new Date(record.checked_out_at).toLocaleTimeString('id-ID', { hour:'2-digit', minute:'2-digit', timeZone:'Asia/Jakarta' }) : '';
+    const duration = record.checked_out_at ? formatAttendanceDuration(record.checked_in_at, record.checked_out_at) : '-';
+    return `<tr>
+      <td class="px-4 py-3 whitespace-nowrap">${dateLabel}</td>
+      <td class="px-4 py-3 whitespace-nowrap">${checkInTime} WIB</td>
+      <td class="px-4 py-3 whitespace-nowrap">${record.checked_out_at ? `${checkOutTime} WIB` : '<span class="text-amber-600 font-semibold">Belum pulang</span>'}</td>
+      <td class="px-4 py-3 whitespace-nowrap">${duration}</td>
+    </tr>`;
+  }).join('') : '<tr><td colspan="4" class="px-4 py-8 text-center text-sm text-slate-400">Tidak ada data absen pada periode ini.</td></tr>';
+
+  document.getElementById('attendanceHistoryDaysCount').textContent = records.length;
+  document.getElementById('attendanceHistoryTotalHours').textContent = formatHoursFromSeconds(summary?.total_seconds);
+  document.getElementById('attendanceHistoryAvgHours').textContent = formatHoursFromSeconds(summary?.avg_seconds_per_day);
+}
+
+/* ============== GANTI KODE PROPERTI (Master/admin-1 saja, lihat propertyCodeNavItem) ============== */
+const PROPERTY_CODE_CATEGORY_LABEL = { villa:'Villa', apartment:'Apartemen', guesthouse:'Guest House', kos:'Kosan' };
+let propertyCodeList = [];
+
+async function loadPropertyCodes(){
+  const status = document.getElementById('propertyCodeStatus');
+  status.className = 'text-sm mt-3 text-slate-500';
+  status.textContent = 'Memuat daftar properti...';
+  try {
+    const result = await dashboardApi('/property-codes');
+    propertyCodeList = Array.isArray(result.data) ? result.data : [];
+    renderPropertyCodeList();
+    status.textContent = '';
+  } catch(error) {
+    propertyCodeList = [];
+    document.getElementById('propertyCodeTableBody').innerHTML = '';
+    status.className = 'text-sm mt-3 text-rose-600';
+    status.textContent = error.message || 'Daftar properti gagal dimuat.';
+  }
+}
+
+function renderPropertyCodeList(){
+  const query = document.getElementById('propertyCodeSearch').value.trim().toLowerCase();
+  const filtered = propertyCodeList.filter(p => !query || p.name.toLowerCase().includes(query));
+  const tableBody = document.getElementById('propertyCodeTableBody');
+  tableBody.innerHTML = filtered.length ? filtered.map(p => `
+    <tr data-row-id="${escapeHtml(p.id)}">
+      <td class="px-4 py-3">
+        <div class="font-medium ${p.archived ? 'text-slate-400' : 'text-slate-800'}">${escapeHtml(p.name)}</div>
+        <div class="text-xs text-slate-400">${escapeHtml(PROPERTY_CODE_CATEGORY_LABEL[p.category] || p.category || '')}${p.archived ? ' · Arsip' : ''}</div>
+      </td>
+      <td class="px-4 py-3 text-center font-semibold text-slate-700">${escapeHtml(p.property_code || '—')}</td>
+      <td class="px-4 py-3 text-center"><input type="checkbox" checked data-tetap-id="${escapeHtml(p.id)}" class="w-4 h-4"></td>
+      <td class="px-4 py-3 text-center">
+        <input type="text" maxlength="20" data-id="${escapeHtml(p.id)}" value="" placeholder="kode baru" disabled class="w-28 text-center uppercase border border-slate-200 rounded-lg px-2 py-1.5 text-sm disabled:bg-slate-50 disabled:text-slate-300">
+      </td>
+    </tr>`).join('') : '<tr><td colspan="4" class="px-4 py-8 text-center text-sm text-slate-400">Tidak ada properti yang cocok.</td></tr>';
+  tableBody.querySelectorAll('input[data-tetap-id]').forEach(checkbox => {
+    const input = checkbox.closest('tr').querySelector('input[data-id]');
+    checkbox.addEventListener('change', () => {
+      input.disabled = checkbox.checked;
+      if(checkbox.checked) input.value = '';
+      else input.focus();
+    });
+  });
+  tableBody.querySelectorAll('input[data-id]').forEach(input => {
+    input.addEventListener('input', () => { input.value = input.value.toUpperCase(); });
+  });
+}
+
+function collectPropertyCodeChanges(){
+  const changes = [];
+  document.querySelectorAll('#propertyCodeTableBody input[data-id]').forEach(input => {
+    if(input.disabled) return;
+    const property = propertyCodeList.find(p => p.id === input.dataset.id);
+    const newCode = input.value.trim();
+    if(property && newCode && newCode !== (property.property_code || '').trim().toUpperCase()){
+      changes.push({ id:property.id, name:property.name, old_code:property.property_code || '—', new_code:newCode });
+    }
+  });
+  return changes;
+}
+
+async function submitPropertyCodeChanges(){
+  const status = document.getElementById('propertyCodeStatus');
+  const changes = collectPropertyCodeChanges();
+  if(!changes.length){
+    status.className = 'text-sm mt-3 text-rose-600';
+    status.textContent = 'Belum ada kode yang diubah. Uncheck "Tetap" lalu isi kode baru dulu.';
+    return;
+  }
+  const summary = changes.map(c => `${c.name}: ${c.old_code} → ${c.new_code}`).join('\n');
+  if(!window.confirm(`Konfirmasi perubahan kode berikut?\n\n${summary}`)) return;
+  status.className = 'text-sm mt-3 text-slate-500';
+  status.textContent = 'Menyimpan perubahan...';
+  try {
+    await dashboardApi('/property-codes', {
+      method:'POST',
+      body:JSON.stringify({
+        submitted_by:currentDashboardAccount?.display_name || '',
+        changes:changes.map(c => ({ id:c.id, new_code:c.new_code })),
+      }),
+    });
+    showToast('Kode properti berhasil diperbarui.');
+    status.textContent = '';
+    await loadPropertyCodes();
+  } catch(error) {
+    status.className = 'text-sm mt-3 text-rose-600';
+    status.textContent = error.message || 'Gagal menyimpan perubahan.';
+  }
+}
+
 function populateEmployeeSelect(){
   const select = document.getElementById('newExpEmployee');
   if(!select) return;
@@ -4199,9 +4479,17 @@ function renderCrewTable(){
     </tr>`).join('') : '<tr><td colspan="3" class="px-5 py-8 text-center text-sm text-slate-400">Belum ada karyawan aktif.</td></tr>';
 }
 
+function shouldHideFinanceCategory(category, kind){
+  if(kind !== 'income' || !category || typeof category.name !== 'string') return false;
+  return category.name.trim().toLowerCase() === 'sewa kos';
+}
+
+function getVisibleFinanceCategories(kind){
+  return financeCategories.filter(category => category.kind === kind && !shouldHideFinanceCategory(category, kind));
+}
+
 function populateFinanceCategorySelects(){
-  const optionsFor = kind => financeCategories.filter(category => category.kind === kind)
-    .map(category => new Option(category.name, category.id));
+  const optionsFor = kind => getVisibleFinanceCategories(kind).map(category => new Option(category.name, category.id));
   const expenseSelect = document.getElementById('newExpCat');
   const incomeSelect = document.getElementById('newIncomeCategory');
   if(expenseSelect){
@@ -4211,8 +4499,14 @@ function populateFinanceCategorySelects(){
   }
   if(incomeSelect){
     const selected = incomeSelect.value;
+    const visibleIncomeCategories = getVisibleFinanceCategories('income');
     incomeSelect.replaceChildren(...optionsFor('income'));
-    if(financeCategories.some(category => category.id === selected && category.kind === 'income')) incomeSelect.value = selected;
+    if(visibleIncomeCategories.length === 0){
+      incomeSelect.replaceChildren(new Option('Belum ada kategori pemasukan', ''));
+      return;
+    }
+    if(visibleIncomeCategories.some(category => category.id === selected)) incomeSelect.value = selected;
+    else incomeSelect.value = visibleIncomeCategories[0].id;
   }
 }
 
@@ -7344,6 +7638,7 @@ function updateBookingExtraBedTotal(){
   const quantity = Number(document.getElementById('newBookingExtraBedQuantity').value) || 0;
   const price = parseCurrencyInput(document.getElementById('newBookingExtraBedPrice').value);
   document.getElementById('newBookingExtraBedTotal').textContent = `Total Extra Bed: ${fmtRp(quantity * price)}. Dicatat terpisah dari nilai booking.`;
+  document.getElementById('newBookingExtraBedPaymentField').classList.toggle('hidden', quantity <= 0);
   syncBookingCancelAmounts('amount');
   updateBookingExtraBedStockHint();
 }
@@ -7530,6 +7825,7 @@ function openBookingModal(bookingId=''){
   document.getElementById('newBookingCheckout').value = booking?.checkout || new Date(Date.now() + 86400000).toISOString().slice(0, 10);
   document.getElementById('newBookingExtraBedQuantity').value = booking?.extraBedQuantity ?? 0;
   setCurrencyInputValue(document.getElementById('newBookingExtraBedPrice'), booking?.extraBedPrice ?? 0);
+  document.getElementById('newBookingExtraBedPaymentStatus').value = booking?.extraBedPaymentStatus === 'pending' ? 'pending' : 'paid';
   setCurrencyInputValue(document.getElementById('newBookingGrossAmount'), booking?.grossAmount ?? 0);
   populateBookingAgentSelect();
   const bookingAgentSelect = document.getElementById('newBookingAgent');
@@ -7600,6 +7896,7 @@ async function submitBooking(){
   const grossAmount = managementType === 'partner' ? parseCurrencyInput(document.getElementById('newBookingGrossAmount').value) : 0;
   const extraBedQuantity = Number(document.getElementById('newBookingExtraBedQuantity').value) || 0;
   const extraBedPrice = parseCurrencyInput(document.getElementById('newBookingExtraBedPrice').value);
+  const extraBedPaymentStatus = extraBedQuantity > 0 && document.getElementById('newBookingExtraBedPaymentStatus').value === 'pending' ? 'pending' : 'paid';
   const platformFeePct = 0;
   const status = document.getElementById('newBookingStatus').value;
   const note = document.getElementById('newBookingNote').value.trim();
@@ -7659,7 +7956,7 @@ async function submitBooking(){
   const agentFeeAmount = agentId ? (agentFeeType === 'percent' ? Math.round(amount * agentFeeValue / 100) : agentFeeValue) : 0;
   const payload = {
     ...(editId ? { id:editId } : {}), propId, propName:prop.name, propCode:prop.code,
-    guest, phone, platform, status:cancelledEdit ? editedBooking.status : status, checkin, checkout, amount, grossAmount, managementType, extraBedQuantity, extraBedPrice, platformFeePct, note, captureImage,
+    guest, phone, platform, status:cancelledEdit ? editedBooking.status : status, checkin, checkout, amount, grossAmount, managementType, extraBedQuantity, extraBedPrice, extraBedPaymentStatus, platformFeePct, note, captureImage,
     agentId, agentFeeType, agentFeeValue,
     ...(cancelledEdit ? { pin:approvalPin, refund_amount:retainedRefund } : {})
   };
@@ -7677,7 +7974,7 @@ async function submitBooking(){
       propId, propName:prop.name, propCode:prop.code, guest, phone, platform,
       status:payload.status, checkin, checkout,
       nights:Math.round((Date.parse(`${checkout}T00:00:00Z`) - Date.parse(`${checkin}T00:00:00Z`)) / 86400000),
-      amount, grossAmount, extraBedQuantity, extraBedPrice, platformFeePct, note, captureImage,
+      amount, grossAmount, extraBedQuantity, extraBedPrice, extraBedPaymentStatus, platformFeePct, note, captureImage,
       agentId, agentName:agent?.name || '', agentFeeType:agentId ? agentFeeType : '', agentFeeValue:agentId ? agentFeeValue : 0, agentFeeAmount,
       cancellationReason:editedBooking?.cancellationReason || '',
       refundAmount:retainedRefund
@@ -8430,10 +8727,10 @@ document.addEventListener('DOMContentLoaded', () => {
     } catch(error) {
       console.warn('Refresh data dashboard otomatis gagal.', error);
     }
-  }, 30000);
+  }, 60000);
   setInterval(() => {
     if(currentDashboardAccount && !document.hidden) loadStaffChat();
-  }, 4000);
+  }, 15000);
 });
 
 /* ESC to close modal */

@@ -575,6 +575,12 @@ function hasManagementRole(tokenData) {
   return ['Master', 'Admin'].includes(tokenData?.role);
 }
 
+// Ganti Kode Properti: dibatasi ke Master dan akun admin-1 (ditampilkan sebagai
+// "Operasional" di Member Area), bukan ke seluruh role Admin/IT.
+function canEditPropertyCodes(tokenData) {
+  return ['master', 'admin-1'].includes(tokenData?.account_id);
+}
+
 async function getAdminTokenPayload(request, secret) {
   if (!secret) return null;
   const authorization = request.headers.get('Authorization') || '';
@@ -901,10 +907,13 @@ export default {
       }
 
       // Ambil properti aktif untuk website publik
-      // ================= GANTI KODE PROPERTI (form untuk pihak management, tanpa login) =================
-      // Link dibagikan langsung ke management; GET menampilkan nama + kode saat ini, POST menyimpan
-      // perubahan dan mengirim notifikasi Telegram ke Sigit. Dibatasi rate limit karena publik.
+      // ================= GANTI KODE PROPERTI =================
+      // Login Dashboard (Master atau admin-1/"Operasional") wajib sebelum GET nama+kode
+      // atau POST perubahan. POST tetap mengirim notifikasi Telegram ke Sigit.
       if (request.method === 'GET' && path === '/property-codes') {
+        const adminSecret = String(env.ADMIN_DASHBOARD_SECRET || '').trim();
+        const tokenData = await getAdminTokenPayload(request, adminSecret);
+        if (!canEditPropertyCodes(tokenData)) return bad('Login Master atau Operasional diperlukan.', 401);
         const result = await env.DB.prepare(`
           SELECT id, dashboard_id, property_code, publication_status, active, name, category
           FROM properties ORDER BY name COLLATE NOCASE
@@ -916,6 +925,9 @@ export default {
       }
 
       if (request.method === 'POST' && path === '/property-codes') {
+        const adminSecret = String(env.ADMIN_DASHBOARD_SECRET || '').trim();
+        const tokenData = await getAdminTokenPayload(request, adminSecret);
+        if (!canEditPropertyCodes(tokenData)) return bad('Login Master atau Operasional diperlukan.', 401);
         const rate = await reserveLoginAttempt(env, request, 'property-code-change');
         if (rate.limited) return bad('Terlalu banyak percobaan. Coba lagi dalam 15 menit.', 429);
         const body = await request.json();
@@ -1071,6 +1083,29 @@ export default {
           })
           .sort((left, right) => left.name.localeCompare(right.name, 'id'))
           .map(property => ({ id:String(property.id || ''), name:property.name.trim(), type:String(property.type || property.category || '') }));
+
+        // Tandai properti yang punya tagihan Extra Bed belum dibayar hari ini, supaya Crew
+        // yang check-in di lokasi diingatkan menagih ke tamu (lihat migration-dashboard-extra-bed-payment-status.sql).
+        const todayParts = Object.fromEntries(new Intl.DateTimeFormat('en-CA', {
+          timeZone:'Asia/Jakarta', year:'numeric', month:'2-digit', day:'2-digit',
+        }).formatToParts(new Date()).filter(part => part.type !== 'literal').map(part => [part.type, part.value]));
+        const today = `${todayParts.year}-${todayParts.month}-${todayParts.day}`;
+        try {
+          const pendingResult = await env.DB.prepare(`
+            SELECT property_name, SUM(extra_bed_quantity * extra_bed_price) AS pending_amount
+            FROM dashboard_bookings
+            WHERE extra_bed_payment_status = 'pending' AND extra_bed_quantity > 0
+              AND LOWER(status) NOT IN ('cancelled', 'canceled') AND checkin <= ? AND checkout > ?
+            GROUP BY property_name
+          `).bind(today, today).all();
+          const pendingByName = new Map((pendingResult.results || []).map(row => [row.property_name.trim().toLocaleLowerCase('id'), Number(row.pending_amount || 0)]));
+          properties.forEach(property => {
+            const pendingAmount = pendingByName.get(property.name.trim().toLocaleLowerCase('id'));
+            if (pendingAmount) { property.pending_extra_bed = true; property.pending_extra_bed_amount = pendingAmount; }
+          });
+        } catch (error) {
+          if (!/no such column: extra_bed_payment_status/i.test(String(error?.message || error))) throw error;
+        }
         return json({ ok:true, data:properties });
       }
 
@@ -1928,6 +1963,47 @@ export default {
         const workDate = `${dateParts.year}-${dateParts.month}-${dateParts.day}`;
 
         if (request.method === 'GET') {
+          const employeeIdParam = String(url.searchParams.get('employee_id') || '').trim();
+          if (employeeIdParam) {
+            const startParam = String(url.searchParams.get('start') || '').trim();
+            const endParam = String(url.searchParams.get('end') || '').trim();
+            const rangeStart = /^\d{4}-\d{2}-\d{2}$/.test(startParam) ? startParam : workDate;
+            const rangeEnd = /^\d{4}-\d{2}-\d{2}$/.test(endParam) ? endParam : workDate;
+            try {
+              const result = await env.DB.prepare(`
+                SELECT id, employee_id, employee_name, work_date, checked_in_at, checked_out_at,
+                       lat, lng, accuracy, checkout_lat, checkout_lng, checkout_accuracy,
+                       selfie_url, checkout_selfie_url
+                FROM office_employee_attendance
+                WHERE employee_id = ? AND work_date BETWEEN ? AND ?
+                ORDER BY work_date DESC
+              `).bind(employeeIdParam, rangeStart, rangeEnd).all();
+              let totalSeconds = 0;
+              let completedDays = 0;
+              const records = (result.results || []).map(record => {
+                const checkedInAt = Date.parse(record.checked_in_at);
+                const checkedOutAt = record.checked_out_at ? Date.parse(record.checked_out_at) : null;
+                const workedSeconds = record.checked_out_at && Number.isFinite(checkedInAt) && Number.isFinite(checkedOutAt)
+                  ? Math.max(0, Math.floor((checkedOutAt - checkedInAt) / 1000))
+                  : null;
+                if (workedSeconds != null) { totalSeconds += workedSeconds; completedDays += 1; }
+                return { ...record, worked_seconds:workedSeconds };
+              });
+              const summary = {
+                total_seconds:totalSeconds,
+                days_count:records.length,
+                completed_days:completedDays,
+                avg_seconds_per_day: completedDays ? Math.round(totalSeconds / completedDays) : 0,
+              };
+              return json({ ok:true, data:{ employee_id:employeeIdParam, start:rangeStart, end:rangeEnd, records, summary } });
+            } catch (error) {
+              if (/no such table: office_employee_attendance/i.test(String(error?.message || error))) {
+                return bad('Absensi karyawan kantor belum disiapkan. Jalankan migration-dashboard-office-employees.sql di D1.', 503);
+              }
+              throw error;
+            }
+          }
+
           const requestedDate = String(url.searchParams.get('date') || '').trim();
           const queryDate = /^\d{4}-\d{2}-\d{2}$/.test(requestedDate) ? requestedDate : workDate;
           try {
@@ -2901,6 +2977,7 @@ export default {
           guest:row.guest, phone:row.guest_phone || '', platform:row.platform, status:row.status, checkin:row.checkin,
           checkout:row.checkout, nights:Number(row.nights), amount:Number(row.amount), grossAmount:Number(row.gross_amount || 0),
           extraBedQuantity:Number(row.extra_bed_quantity || 0), extraBedPrice:Number(row.extra_bed_price || 0),
+          extraBedPaymentStatus:row.extra_bed_payment_status === 'pending' ? 'pending' : 'paid',
           cleaningFee:Number(row.cleaning_fee), platformFeePct:Number(row.platform_fee_pct),
           note:row.note, cancellationReason:row.cancellation_reason, refundAmount:Number(row.refund_amount),
           captureImage:row.capture_image || '',
@@ -2930,6 +3007,7 @@ export default {
         const grossAmount = Number(body.grossAmount || 0);
         const extraBedQuantity = Number(body.extraBedQuantity || 0);
         const extraBedPrice = Number(body.extraBedPrice || 0);
+        const extraBedPaymentStatus = extraBedQuantity > 0 && body.extraBedPaymentStatus === 'pending' ? 'pending' : 'paid';
         const cleaningFee = Number(body.cleaningFee || 0);
         const platformFeePct = Number(body.platformFeePct || 0);
         const note = String(body.note || '').trim();
@@ -2989,12 +3067,12 @@ export default {
           env.DB.prepare(`
             INSERT OR IGNORE INTO dashboard_bookings (
               id, property_id, property_name, property_code, guest, guest_phone, platform, status,
-              checkin, checkout, nights, amount, gross_amount, extra_bed_quantity, extra_bed_price, cleaning_fee, platform_fee_pct, note,
+              checkin, checkout, nights, amount, gross_amount, extra_bed_quantity, extra_bed_price, extra_bed_payment_status, cleaning_fee, platform_fee_pct, note,
               cancellation_reason, refund_amount, capture_image, agent_id, agent_name, agent_fee_type, agent_fee_value, agent_fee_amount,
               income_entry_id, created_by, created_at, updated_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, '', 0, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, '', 0, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
           `).bind(id, propertyId, propertyName, propertyCode, guest, phone, platform, status, checkin, checkout,
-            nights, amount, grossAmount, extraBedQuantity, extraBedPrice, cleaningFee, platformFeePct, note, captureImage,
+            nights, amount, grossAmount, extraBedQuantity, extraBedPrice, extraBedPaymentStatus, cleaningFee, platformFeePct, note, captureImage,
             bookingAgent.agentId, bookingAgent.agentName, bookingAgent.feeType, bookingAgent.feeValue, bookingAgent.feeAmount,
             incomeEntryId, tokenData.account_id || '', now, now),
           env.DB.prepare(`
@@ -3125,6 +3203,7 @@ export default {
         const grossAmount = Number(body.grossAmount || 0);
         const extraBedQuantity = Number(body.extraBedQuantity || 0);
         const extraBedPrice = Number(body.extraBedPrice || 0);
+        const extraBedPaymentStatus = extraBedQuantity > 0 && body.extraBedPaymentStatus === 'pending' ? 'pending' : 'paid';
         const cleaningFee = Number(body.cleaningFee || 0);
         const platformFeePct = Number(body.platformFeePct || 0);
         const note = String(body.note || '').trim();
@@ -3187,12 +3266,12 @@ export default {
           env.DB.prepare(`
             UPDATE dashboard_bookings SET
               property_id = ?, property_name = ?, property_code = ?, guest = ?, guest_phone = ?, platform = ?, status = ?,
-              checkin = ?, checkout = ?, nights = ?, amount = ?, gross_amount = ?, extra_bed_quantity = ?, extra_bed_price = ?,
+              checkin = ?, checkout = ?, nights = ?, amount = ?, gross_amount = ?, extra_bed_quantity = ?, extra_bed_price = ?, extra_bed_payment_status = ?,
               cleaning_fee = ?, platform_fee_pct = ?, note = ?, capture_image = ?,
               agent_id = ?, agent_name = ?, agent_fee_type = ?, agent_fee_value = ?, agent_fee_amount = ?, updated_at = ?
             WHERE id = ? AND status = ?
           `).bind(propertyId, propertyName, propertyCode, guest, phone, platform, status, checkin, checkout,
-            nights, amount, grossAmount, extraBedQuantity, extraBedPrice, cleaningFee, platformFeePct, note, captureImage,
+            nights, amount, grossAmount, extraBedQuantity, extraBedPrice, extraBedPaymentStatus, cleaningFee, platformFeePct, note, captureImage,
             bookingAgent.agentId, bookingAgent.agentName, bookingAgent.feeType, bookingAgent.feeValue, bookingAgent.feeAmount,
             now, id, booking.status),
           env.DB.prepare(`

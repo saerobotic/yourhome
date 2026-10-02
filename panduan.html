@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#0f172a" />
+  <title>Buku Panduan | YOUR HOME</title>
+  <style>
+    :root {
+      --coffee: #0f172a;
+      --terracotta: #4f46e5;
+      --cream: #f6f7fb;
+      --paper: #ffffff;
+      --line: #e2e8f0;
+      --muted: #64748b;
+      --green: #059669;
+      --amber: #d97706;
+      --shadow: 0 14px 34px rgba(15, 23, 42, .12);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: radial-gradient(circle at top right, #e0e7ff, transparent 34%), var(--cream);
+      color: var(--coffee);
+      font-family: Poppins, Arial, sans-serif;
+      line-height: 1.6;
+    }
+    a { color: var(--terracotta); }
+    header.top {
+      background: var(--coffee);
+      color: #fff;
+      padding: 20px 24px;
+    }
+    .top-inner { max-width: 980px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap; }
+    .top-inner h1 { margin: 0; font-size: 1.3rem; }
+    .top-inner p { margin: 4px 0 0; color: #cbd5e1; font-size: .82rem; }
+    .back-link { color: #e0e7ff; font-size: .82rem; text-decoration: none; border: 1px solid rgba(255,255,255,.25); padding: 7px 12px; border-radius: 8px; white-space: nowrap; }
+    .back-link:hover { background: rgba(255,255,255,.08); }
+    .wrap { max-width: 980px; margin: 0 auto; padding: 28px 20px 70px; }
+    nav.toc {
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      box-shadow: var(--shadow);
+      padding: 16px 18px;
+      margin-bottom: 24px;
+    }
+    nav.toc h2 { margin: 0 0 10px; font-size: .78rem; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); }
+    nav.toc ol { margin: 0; padding-left: 20px; columns: 2; column-gap: 24px; }
+    nav.toc li { margin-bottom: 6px; font-size: .88rem; break-inside: avoid; }
+    section.card {
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      box-shadow: var(--shadow);
+      padding: 24px 26px;
+      margin-bottom: 20px;
+      scroll-margin-top: 16px;
+    }
+    section.card h2 { margin: 0 0 12px; font-size: 1.15rem; color: var(--coffee); }
+    section.card h3 { margin: 18px 0 6px; font-size: .95rem; }
+    section.card p { margin: 0 0 10px; color: #1e293b; font-size: .92rem; }
+    section.card ul, section.card ol { margin: 0 0 10px; padding-left: 22px; font-size: .92rem; }
+    section.card li { margin-bottom: 5px; }
+    table.ref { width: 100%; border-collapse: collapse; margin: 10px 0 14px; font-size: .86rem; }
+    table.ref th, table.ref td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+    table.ref th { color: var(--muted); font-weight: 700; font-size: .76rem; text-transform: uppercase; }
+    .badge-pin { display: inline-block; background: #fef3c7; color: #92400e; font-size: .76rem; font-weight: 700; padding: 2px 8px; border-radius: 999px; }
+    footer.foot { max-width: 980px; margin: 0 auto; padding: 10px 20px 40px; color: var(--muted); font-size: .78rem; text-align: center; }
+    @media (max-width: 640px) {
+      nav.toc ol { columns: 1; }
+      section.card { padding: 18px 18px; }
+    }
+  </style>
+</head>
+<body>
+  <header class="top">
+    <div class="top-inner">
+      <div>
+        <h1>Buku Panduan Sistem YOUR HOME</h1>
+        <p>Untuk Crew, Admin, dan Operasional &middot; diperbarui 2 Oktober 2026</p>
+      </div>
+      <a class="back-link" href="/admin_yourhome/">&larr; Kembali ke Portal Staf</a>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <nav class="toc" aria-label="Daftar isi">
+      <h2>Daftar Isi</h2>
+      <ol>
+        <li><a href="#pendahuluan">Pendahuluan</a></li>
+        <li><a href="#portal-staf">Portal Staf</a></li>
+        <li><a href="#booking">Dasbord &mdash; Booking</a></li>
+        <li><a href="#keuangan">Dasbord &mdash; Keuangan &amp; Laporan</a></li>
+        <li><a href="#absensi">Absensi Karyawan Kantor</a></li>
+        <li><a href="#checkin-crew">Check-in Crew</a></li>
+        <li><a href="#kosan">Manajemen Kosan</a></li>
+        <li><a href="#akun">Akun &amp; Keamanan</a></li>
+        <li><a href="#lapor-bug">Lapor Bug &amp; Bantuan IT</a></li>
+      </ol>
+    </nav>
+
+    <section class="card" id="pendahuluan">
+      <h2>Pendahuluan</h2>
+      <p>YOUR HOME adalah sistem satu pintu untuk mengelola operasional seluruh properti (villa, apartemen, guesthouse, kos) &mdash; mulai dari booking tamu, keuangan, pekerjaan crew di lapangan, sampai absensi karyawan kantor. Semua halaman diakses lewat Portal Staf di admin.yourhome.id.</p>
+      <p>Tiga peran utama dan alat kerja hariannya:</p>
+      <ul>
+        <li><strong>Crew lapangan</strong> &mdash; pakai halaman Check-in Crew untuk mencatat pekerjaan (foto + lokasi GPS); honor dihitung otomatis dari data check-in.</li>
+        <li><strong>Admin / Operasional</strong> &mdash; pakai Dasbord Management untuk kelola booking, keuangan, laporan Owner dan Agen, serta Manajemen Kosan.</li>
+        <li><strong>Master</strong> &mdash; akses penuh ke semuanya, plus PIN Master 4 digit yang wajib dimasukkan untuk tindakan sensitif (hapus data, batalkan booking, reset absensi, dll).</li>
+      </ul>
+      <p>Buku ini disusun mengikuti urutan: Portal Staf dulu (pintu masuk), lalu tiap fitur di Dasbord, lalu Check-in Crew, Kosan, dan terakhir soal akun/keamanan.</p>
+    </section>
+
+    <section class="card" id="portal-staf">
+      <h2>Portal Staf (admin.yourhome.id)</h2>
+      <p>Ini pintu masuk pertama untuk semua staf. Login pakai ID Staf + password Dashboard (akun Master/Admin/IT dibuat lewat Dasbord Management).</p>
+      <p>Menu yang tersedia di Portal Staf:</p>
+      <table class="ref">
+        <thead><tr><th>Menu</th><th>Fungsi</th></tr></thead>
+        <tbody>
+          <tr><td>Website Utama</td><td>Halaman depan yourhome.id yang dilihat tamu</td></tr>
+          <tr><td>Admin Website (Input Data)</td><td>Edit nama, harga, foto, dan metadata properti di website publik</td></tr>
+          <tr><td>Manajemen Kosan</td><td>Kelola kamar, penyewa, dan pembayaran sewa kos</td></tr>
+          <tr><td>Dashboard Check-in Crew</td><td>Lihat riwayat dan rekap kerja crew lapangan</td></tr>
+          <tr><td>Owner Portal</td><td>Portal khusus pemilik properti untuk lihat laporan bagi hasil</td></tr>
+          <tr><td>Agen Portal</td><td>Portal agen/marketing untuk pantau booking dan fee mereka</td></tr>
+          <tr><td>Dasbord Management</td><td>Dashboard operasional utama &mdash; booking, keuangan, laporan</td></tr>
+          <tr><td>Check-in Crew</td><td>Halaman crew lapangan untuk check-in pekerjaan</td></tr>
+        </tbody>
+      </table>
+      <p>Di bagian footer Portal Staf juga ada kotak <strong>&ldquo;Klik Absen Karyawan&rdquo;</strong> untuk absen masuk/pulang karyawan kantor (lihat bagian Absensi Karyawan), serta tiga kotak pengingat masa aktif domain, jadwal upgrade database, dan masa aktif hosting &mdash; ini murni pengingat internal, tidak perlu ditindaklanjuti kecuali mendekati tanggal kedaluwarsa.</p>
+    </section>
+
+    <section class="card" id="booking">
+      <h2>Dasbord Management &mdash; Booking</h2>
+      <p>Menu <strong>Booking</strong> menampilkan kalender ketersediaan per properti. Menu <strong>Daftar Booking</strong> menampilkan semua booking dalam tabel yang bisa difilter dan dicari.</p>
+      <h3>Menambah booking baru</h3>
+      <ol>
+        <li>Klik &ldquo;Booking Baru&rdquo;, pilih properti dan isi tanggal check-in/check-out.</li>
+        <li>Isi nama tamu, platform booking (Airbnb, Booking.com, Direct, dll), dan nilai booking.</li>
+        <li>Kalau tamu minta Extra Bed: isi jumlah dan harga per unit. Jika tamu belum bayar saat ini, pilih &ldquo;Bayar nanti (COD saat check-in)&rdquo; &mdash; booking ditandai belum lunas dan crew di lokasi otomatis diingatkan menagih saat check-in.</li>
+        <li>Simpan &mdash; pemasukan booking otomatis masuk ke menu Keuangan.</li>
+      </ol>
+      <h3>Mengelola booking yang sudah ada</h3>
+      <ul>
+        <li><strong>Edit</strong> &mdash; ubah data booking kapan saja. Booking yang sudah dibatalkan butuh <span class="badge-pin">PIN Master</span> untuk diedit lagi.</li>
+        <li><strong>Cancel</strong> &mdash; isi alasan pembatalan dan nominal refund ke tamu. Sisa nilai yang tidak dikembalikan otomatis tercatat sebagai pemasukan bersih (bukan nilai booking penuh).</li>
+        <li><strong>Delete</strong> &mdash; hapus permanen, hanya untuk kesalahan input, wajib <span class="badge-pin">PIN Master</span>, tidak bisa dibatalkan setelah dihapus.</li>
+      </ul>
+      <p><strong>Tagihan Extra Bed belum dibayar</strong> muncul sebagai badge kuning di Daftar Booking. Klik tombol &ldquo;Ingatkan Tamu&rdquo; untuk mengirim pesan WhatsApp pengingat pembayaran langsung ke nomor tamu.</p>
+    </section>
+
+    <section class="card" id="keuangan">
+      <h2>Dasbord Management &mdash; Keuangan &amp; Laporan</h2>
+      <p><strong>Keuangan</strong> mencatat pemasukan dan pengeluaran di luar booking (booking otomatis tercatat sendiri saat dibuat). Pengeluaran bisa diset berulang (mingguan/bulanan/tahunan) dan boleh dilampiri foto bukti. Mengedit atau menghapus pengeluaran yang sudah tercatat wajib <span class="badge-pin">PIN Master</span>.</p>
+      <p><strong>Omset</strong> menampilkan rekap pemasukan bulanan Januari&ndash;Desember per tahun untuk memantau tren cepat.</p>
+      <p>Menu laporan lainnya:</p>
+      <table class="ref">
+        <thead><tr><th>Menu</th><th>Untuk siapa</th><th>Isinya</th></tr></thead>
+        <tbody>
+          <tr><td>Laporan Owner</td><td>Pemilik properti</td><td>Pendapatan booking, pemasukan lain, fee platform, pengeluaran operasional, dan bagian owner sesuai persentase, per bulan</td></tr>
+          <tr><td>Laporan Agen</td><td>Agen / marketing</td><td>Rekap booking yang dibawa agen beserta fee yang mereka dapat</td></tr>
+          <tr><td>Kalkulator Bagi Hasil</td><td>Admin / Master</td><td>Hitung otomatis pembagian bulanan sesuai perjanjian dengan owner</td></tr>
+          <tr><td>Nota Lunas</td><td>Admin / Operasional</td><td>Buat nota lunas untuk tamu, unduh PDF, kirim ke WhatsApp &mdash; tidak disimpan ke sistem</td></tr>
+        </tbody>
+      </table>
+      <p>Setelah Laporan Owner suatu bulan disetujui dan dibayarkan, klik <strong>&ldquo;Jadikan Laporan Akhir&rdquo;</strong> untuk menguncinya &mdash; bulan yang sudah final tidak bisa diubah lagi tanpa <span class="badge-pin">PIN Master</span>.</p>
+    </section>
+
+    <section class="card" id="absensi">
+      <h2>Absensi Karyawan Kantor</h2>
+      <h3>Cara karyawan absen</h3>
+      <p>(kotak &ldquo;Klik Absen Karyawan&rdquo; di Portal Staf)</p>
+      <ol>
+        <li>Klik nama sendiri.</li>
+        <li>Ambil selfie dan izinkan akses lokasi (GPS).</li>
+        <li>Klik &ldquo;Simpan Absen Masuk&rdquo; &mdash; tombol berubah hijau dengan jam berjalan yang menunjukkan lama bekerja.</li>
+        <li>Saat selesai kerja, klik nama yang sama lagi, ambil selfie + lokasi sekali lagi, lalu &ldquo;Simpan Absen Pulang&rdquo;. Tombol berubah merah dan terkunci untuk hari itu.</li>
+      </ol>
+      <h3>Cara Admin/Master memantau</h3>
+      <p>(Dasbord Management &rarr; menu Absensi Karyawan)</p>
+      <ul>
+        <li>Filter tanggal untuk melihat siapa sudah/belum absen pada hari tertentu.</li>
+        <li>Lihat jam masuk, jam pulang, total jam kerja, dan foto selfie masuk maupun pulang.</li>
+        <li>Tombol <strong>Reset</strong> menghapus data absen yang salah input &mdash; wajib <span class="badge-pin">PIN Master</span>.</li>
+      </ul>
+      <p><strong>Menambah atau menonaktifkan nama karyawan</strong>: menu Pengaturan &rarr; Karyawan Kantor (khusus akun Master, maksimal 4 karyawan aktif sekaligus).</p>
+    </section>
+
+    <section class="card" id="checkin-crew">
+      <h2>Check-in Crew</h2>
+      <h3>Cara crew check-in</h3>
+      <p>(halaman Check-in Crew, login pakai ID Crew + PIN 6 digit)</p>
+      <ol>
+        <li>Pilih properti yang dikerjakan dan jenis pekerjaan.</li>
+        <li>Ambil selfie dan minimal 1 foto hasil kerja.</li>
+        <li>Aktifkan GPS lalu kirim &mdash; data tercatat otomatis dengan waktu dan lokasi.</li>
+      </ol>
+      <p><strong>Honor otomatis</strong>: setiap hari kerja, honor Rp100.000 dibagi rata ke semua properti yang dikerjakan crew itu pada hari yang sama, lalu tercatat otomatis sebagai pengeluaran di menu Keuangan &mdash; tidak perlu diinput manual.</p>
+      <h3>Dashboard Check-in Crew</h3>
+      <p>(untuk Admin memantau, link terpisah dari Dasbord Management)</p>
+      <ul>
+        <li>Riwayat Pekerjaan &mdash; semua check-in dengan filter bulan, tanggal, crew, properti, dan jenis pekerjaan.</li>
+        <li>Slip Gaji Bulanan &mdash; rekap hari kerja, hari tidak check-in, dan potongan per crew.</li>
+        <li>Rekap Bulanan Semua Crew &mdash; ringkasan satu halaman untuk semua crew.</li>
+        <li>Kelola Data Crew &mdash; tambah/edit nama, ID Crew, dan PIN login (khusus Master/Admin).</li>
+      </ul>
+    </section>
+
+    <section class="card" id="kosan">
+      <h2>Manajemen Kosan</h2>
+      <ul>
+        <li><strong>Kelola Kamar</strong> &mdash; tambah kamar baru dengan nama kost/gedung, nomor kamar, nama penyewa, harga sewa, deposit, dan tanggal mulai sewa. Kamar baru butuh persetujuan Master/Admin dulu sebelum aktif.</li>
+        <li><strong>Catat Pembayaran</strong> &mdash; pilih kamar, bulan mulai, jumlah bulan yang dibayar, tanggal diterima, dan metode pembayaran (Transfer/Tunai/dll). Pemasukan otomatis tercatat di menu Keuangan sebagai &ldquo;Sewa Kos&rdquo;.</li>
+        <li><strong>Checkout</strong> &mdash; saat penyewa pindah, tandai kamar kosong (vacant) lewat menu checkout supaya kamar siap disewakan lagi dan riwayat pembayaran penyewa lama tidak tertukar dengan penyewa baru.</li>
+      </ul>
+    </section>
+
+    <section class="card" id="akun">
+      <h2>Akun &amp; Keamanan</h2>
+      <p>Tiga peran akun di Dasbord Management:</p>
+      <table class="ref">
+        <thead><tr><th>Peran</th><th>Bisa apa</th></tr></thead>
+        <tbody>
+          <tr><td>Master</td><td>Akses penuh ke semua menu; satu-satunya yang bisa menambah akun Admin, mengatur PIN Master, dan kelola Karyawan Kantor</td></tr>
+          <tr><td>Admin</td><td>Kelola booking, keuangan, laporan, kosan, dan agen &mdash; tidak bisa kelola akun staf lain</td></tr>
+          <tr><td>IT</td><td>Hanya untuk dukungan teknis (lihat tiket Lapor Bug); tidak bisa mengedit data booking atau keuangan</td></tr>
+        </tbody>
+      </table>
+      <p><strong>PIN Master</strong> (4 digit, terpisah dari password login) wajib dimasukkan untuk tindakan yang sulit dibatalkan:</p>
+      <ul>
+        <li>Membatalkan atau menghapus booking</li>
+        <li>Mengedit booking yang sudah dibatalkan</li>
+        <li>Menghapus transaksi keuangan</li>
+        <li>Mereset data absensi karyawan</li>
+        <li>Menghapus atau menonaktifkan akun staf maupun crew</li>
+      </ul>
+      <p>Ganti PIN Master lewat menu Pengaturan &rarr; Profil Akun, hanya bisa dilakukan oleh akun Master.</p>
+    </section>
+
+    <section class="card" id="lapor-bug">
+      <h2>Lapor Bug &amp; Bantuan IT</h2>
+      <p>Kalau ada kendala teknis atau bug, staf (selain IT) lapor lewat menu <strong>Bantuan</strong> di Dasbord Management:</p>
+      <ol>
+        <li>Isi judul singkat dan jelaskan kendalanya.</li>
+        <li>Kirim &mdash; laporan otomatis masuk ke antrean IT Support dan mengirim notifikasi ke tim IT.</li>
+      </ol>
+      <p>Tim IT memantau semua laporan lewat halaman terpisah <strong>Antrean IT Support</strong>, khusus untuk akun bertipe IT (Admin dan Master tidak melihat antrean ini). Halaman itu menampilkan:</p>
+      <ul>
+        <li>Tiket dari staf (sumber &ldquo;Lapor Bug&rdquo;) dan tiket yang dibuat IT sendiri (sumber &ldquo;Input IT&rdquo;).</li>
+        <li>Jenis tiket: Bug atau Tugas.</li>
+        <li>Centang untuk menandai tiket selesai; bisa dibuka kembali lewat filter Selesai kalau ternyata belum tuntas.</li>
+      </ul>
+    </section>
+  </main>
+
+  <footer class="foot">&copy; 2026 YOUR HOME &middot; Buku panduan internal, bukan untuk disebarkan ke pihak luar.</footer>
+</body>
+</html>

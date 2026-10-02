@@ -335,6 +335,7 @@
             <option value="">— Pilih properti —</option>
           </select>
           <p id="checkinPropertiesStatus" class="text-xs text-gray-500 mt-1.5" role="status" aria-live="polite">Daftar properti akan dimuat dari Dashboard setelah login.</p>
+          <p id="extraBedPendingNotice" class="hidden mt-2 rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-800" role="status" aria-live="polite"></p>
         </div>
 
         <!-- Dropdown Jenis Pekerjaan -->
@@ -743,6 +744,21 @@
     if (showTasks) renderCrewTasks();
   }
 
+  let checkinPendingExtraBedByProperty = new Map();
+
+  function updateExtraBedPendingNotice() {
+    const notice = document.getElementById('extraBedPendingNotice');
+    const selectedProperty = document.getElementById('unitInput').value;
+    const pendingAmount = checkinPendingExtraBedByProperty.get(selectedProperty);
+    if (!selectedProperty || !pendingAmount) {
+      notice.classList.add('hidden');
+      notice.textContent = '';
+      return;
+    }
+    notice.textContent = `Tagihan Extra Bed di properti ini belum dibayar tamu (Rp ${pendingAmount.toLocaleString('id-ID')}). Mohon tagih saat check-in/check-out.`;
+    notice.classList.remove('hidden');
+  }
+
   async function loadCheckinProperties({ silent = false } = {}) {
     const status = document.getElementById('checkinPropertiesStatus');
     const select = document.getElementById('unitInput');
@@ -754,6 +770,9 @@
     try {
       const response = await api('/checkin/properties', { cache:'no-store' });
       const properties = Array.isArray(response.data) ? response.data : [];
+      checkinPendingExtraBedByProperty = new Map(
+        properties.filter(property => property.pending_extra_bed).map(property => [property.name, Number(property.pending_extra_bed_amount || 0)])
+      );
       const labels = { apartment:'Apartemen', villa:'Villa', guesthouse:'Guest House', 'guest-house':'Guest House', kos:'Kosan', kosan:'Kosan' };
       const groups = new Map();
       properties.forEach(property => {
@@ -786,6 +805,7 @@
       if (properties.some(property => property.name === selectedDocumentationProperty)) documentationFilter.value = selectedDocumentationProperty;
       status.textContent = properties.length ? `${properties.length} properti aktif dari Dashboard.` : 'Belum ada properti aktif di Dashboard.';
       validateForm();
+      updateExtraBedPendingNotice();
       if (!silent) showToast('Daftar properti berhasil diperbarui.', 'success');
       return true;
     } catch (error) {
@@ -1103,6 +1123,7 @@
 
     document.getElementById('unitInput').addEventListener('change', () => {
       validateForm();
+      updateExtraBedPendingNotice();
     });
 
     // --- CHECK-IN: validasi form real-time ---
