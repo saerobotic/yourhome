@@ -86,7 +86,30 @@ h1,h2{font-family:'Playfair Display',Georgia,serif;font-weight:700;color:var(--c
   </div>
 </div>
 
-<div class="container">
+<div class="container" id="loginSection">
+  <div class="card">
+    <h2 style="margin-bottom:4px;font-size:1.15rem">Login Diperlukan</h2>
+    <p style="color:var(--grey);font-size:.84rem;margin-bottom:16px">Hanya akun Master dan Operasional yang dapat mengubah kode properti.</p>
+    <form id="loginForm">
+      <div class="field">
+        <label for="loginAccount">ID Staf</label>
+        <select id="loginAccount" required></select>
+      </div>
+      <div class="field">
+        <label for="loginPassword">Password</label>
+        <input id="loginPassword" type="password" required autocomplete="current-password" />
+      </div>
+      <p id="loginStatus" class="status" role="status" aria-live="polite"></p>
+      <button class="btn btn-primary" id="loginSubmitBtn" type="submit">Masuk</button>
+    </form>
+  </div>
+</div>
+
+<div class="container" id="appSection" hidden>
+  <div class="card" style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:0">
+    <span style="font-size:.82rem;color:var(--grey)">Masuk sebagai <strong id="loggedInName" style="color:var(--coffee-d)"></strong></span>
+    <button type="button" id="logoutBtn" style="background:none;border:none;color:var(--red);font:inherit;font-size:.82rem;font-weight:700;cursor:pointer">Keluar</button>
+  </div>
   <div class="card">
     <div class="field">
       <label for="submittedBy">Nama Anda (opsional)</label>
@@ -180,7 +203,8 @@ function renderList() {
 
 async function loadProperties() {
   try {
-    const response = await fetch(`${API_BASE}/property-codes`, { cache:'no-store' });
+    const response = await fetch(`${API_BASE}/property-codes`, { cache:'no-store', headers: authHeaders() });
+    if (response.status === 401) { showLogin('Sesi berakhir. Silakan login kembali.'); return; }
     const result = await response.json().catch(() => ({}));
     if (!response.ok || !result.ok) throw new Error(result.error || 'Gagal memuat daftar properti.');
     properties = Array.isArray(result.data) ? result.data : [];
@@ -189,6 +213,96 @@ async function loadProperties() {
     el('propList').innerHTML = `<div class="loading">${escapeHtml(error.message || 'Gagal memuat daftar properti.')}</div>`;
   }
 }
+
+/* ============== LOGIN (Master dan admin-1 / "Operasional" saja) ============== */
+const SESSION_KEY = 'yourhome_property_code_session';
+const ALLOWED_LOGIN_ACCOUNTS = { master:'Master', 'admin-1':'Operasional' };
+let authToken = '';
+
+function authHeaders() {
+  return authToken ? { Authorization: `Bearer ${authToken}` } : {};
+}
+
+function decodeToken(token) {
+  try {
+    const payload = String(token).split('.')[0].replace(/-/g, '+').replace(/_/g, '/');
+    const binary = atob(payload + '='.repeat((4 - payload.length % 4) % 4));
+    return JSON.parse(binary);
+  } catch { return null; }
+}
+
+async function loadLoginAccounts() {
+  const select = el('loginAccount');
+  let accounts = [];
+  try {
+    const response = await fetch(`${API_BASE}/dashboard/login-accounts`, { cache:'no-store' });
+    const result = await response.json().catch(() => ({}));
+    accounts = Array.isArray(result.data) ? result.data.filter(a => ALLOWED_LOGIN_ACCOUNTS[a.account_id]) : [];
+  } catch { /* fallback ke daftar tetap di bawah */ }
+  if (!accounts.length) accounts = Object.keys(ALLOWED_LOGIN_ACCOUNTS).map(account_id => ({ account_id }));
+  select.innerHTML = accounts.map(a => `<option value="${a.account_id}">${ALLOWED_LOGIN_ACCOUNTS[a.account_id] || a.account_id}</option>`).join('');
+}
+
+function showLogin(message) {
+  authToken = '';
+  try { sessionStorage.removeItem(SESSION_KEY); } catch {}
+  el('appSection').hidden = true;
+  el('loginSection').hidden = false;
+  el('loginForm').reset();
+  const status = el('loginStatus');
+  if (message) { status.className = 'status error'; status.textContent = message; }
+  else { status.className = 'status'; status.textContent = ''; }
+  loadLoginAccounts();
+}
+
+function showApp() {
+  el('loginSection').hidden = true;
+  el('appSection').hidden = false;
+  const payload = decodeToken(authToken);
+  el('loggedInName').textContent = ALLOWED_LOGIN_ACCOUNTS[payload?.account_id] || payload?.account_id || '';
+  loadProperties();
+}
+
+async function handleLogin(event) {
+  event.preventDefault();
+  const status = el('loginStatus');
+  const button = el('loginSubmitBtn');
+  button.disabled = true;
+  status.className = 'status';
+  status.textContent = 'Memverifikasi...';
+  try {
+    const response = await fetch(`${API_BASE}/dashboard/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ account_id: el('loginAccount').value, password: el('loginPassword').value }),
+    });
+    const result = await response.json().catch(() => ({}));
+    if (!response.ok || !result.ok || !result.token) throw new Error(result.error || 'Login gagal.');
+    authToken = result.token;
+    try { sessionStorage.setItem(SESSION_KEY, authToken); } catch {}
+    showApp();
+  } catch (error) {
+    status.className = 'status error';
+    status.textContent = error.message || 'Login gagal.';
+  } finally {
+    button.disabled = false;
+  }
+}
+
+function initAuth() {
+  let token = '';
+  try { token = sessionStorage.getItem(SESSION_KEY) || ''; } catch {}
+  const payload = token && decodeToken(token);
+  if (payload && ALLOWED_LOGIN_ACCOUNTS[payload.account_id] && Number(payload.exp) > Math.floor(Date.now() / 1000)) {
+    authToken = token;
+    showApp();
+  } else {
+    showLogin();
+  }
+}
+
+el('loginForm').addEventListener('submit', handleLogin);
+el('logoutBtn').addEventListener('click', () => showLogin());
 
 let pendingChanges = [];
 
@@ -229,12 +343,13 @@ async function sendChanges() {
   try {
     const response = await fetch(`${API_BASE}/property-codes`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...authHeaders() },
       body: JSON.stringify({
         submitted_by: el('submittedBy').value.trim(),
         changes: pendingChanges.map(c => ({ id: c.id, new_code: c.new_code })),
       }),
     });
+    if (response.status === 401) { el('confirmOverlay').classList.remove('show'); showLogin('Sesi berakhir. Silakan login kembali.'); return; }
     const result = await response.json().catch(() => ({}));
     if (!response.ok || !result.ok) throw new Error(result.error || 'Gagal menyimpan perubahan.');
     el('confirmOverlay').classList.remove('show');
@@ -256,7 +371,7 @@ el('submitBtn').addEventListener('click', openConfirm);
 el('confirmCancelBtn').addEventListener('click', () => el('confirmOverlay').classList.remove('show'));
 el('confirmSendBtn').addEventListener('click', sendChanges);
 el('closeModalBtn').addEventListener('click', () => el('successOverlay').classList.remove('show'));
-loadProperties();
+initAuth();
 </script>
 </body>
 </html>
