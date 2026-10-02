@@ -184,15 +184,16 @@
         <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
         <span>Absensi Karyawan</span>
       </button>
+      <button id="inventoryNavItem" onclick="switchView('inventaris')" class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left">
+        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 7L12 3 4 7m16 0-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+        <span>Inventaris</span>
+        <span id="inventoryIssueIndicator" class="hidden ml-auto w-2.5 h-2.5 rounded-full bg-rose-400 ring-2 ring-slate-900" aria-label="Ada laporan barang bermasalah" title="Ada laporan barang bermasalah"></span>
+      </button>
       <div class="px-3 pt-5 pb-2 text-[10px] uppercase tracking-wider text-slate-500 font-bold">Sistem</div>
       <button onclick="toggleStaffChat()" class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left">
         <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg>
         <span>Chat Internal</span>
         <span id="staffChatUnreadIndicator" class="hidden ml-auto w-2.5 h-2.5 rounded-full bg-rose-400 ring-2 ring-slate-900" aria-label="Ada pesan chat belum dibaca" title="Ada pesan belum dibaca"></span>
-      </button>
-      <button id="propertyCodeNavItem" onclick="switchView('ganti-kode-properti')" class="nav-item hidden w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left">
-        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M7 7h.01M7 3h5.586a1 1 0 01.707.293l7.414 7.414a1 1 0 010 1.414l-5.586 5.586a1 1 0 01-1.414 0L6.293 10.293A1 1 0 016 9.586V4a1 1 0 011-1z"/></svg>
-        <span>Ganti Kode Properti</span>
       </button>
       <button id="settingsNavItem" onclick="switchView('pengaturan')" class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left">
         <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
@@ -825,31 +826,55 @@
       <!-- =========================================== -->
       <!-- GANTI KODE PROPERTI VIEW                     -->
       <!-- =========================================== -->
-      <div id="view-ganti-kode-properti" class="view">
+      <!-- =========================================== -->
+      <!-- INVENTARIS VIEW                              -->
+      <!-- =========================================== -->
+      <div id="view-inventaris" class="view">
         <section class="bg-white rounded-2xl p-5 sm:p-6 border border-slate-100">
-          <div class="flex flex-wrap items-start justify-between gap-3 mb-5">
-            <div>
-              <h2 class="text-lg font-bold text-slate-900">Ganti Kode Properti</h2>
-              <p class="text-sm text-slate-500 mt-1">Centang "Tetap" untuk kode yang tidak berubah. Uncheck "Tetap" lalu isi kolom "Ganti Jadi" untuk kode yang mau diganti. Tersimpan langsung ke database yang sama dengan Booking dan Laporan.</p>
-            </div>
-            <button type="button" onclick="loadPropertyCodes()" class="h-[38px] bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-semibold px-3 rounded-lg">Muat Ulang</button>
+          <div class="mb-5">
+            <h2 class="text-lg font-bold text-slate-900">Daftar Barang per Properti</h2>
+            <p class="text-sm text-slate-500 mt-1">Barang tetap (kasur, AC, TV, dst) yang nanti diceklis kondisinya oleh Crew di lapangan pada momen tertentu (bukan tiap kunjungan), misalnya saat checkout tamu atau cek berkala.</p>
           </div>
-          <input id="propertyCodeSearch" type="text" oninput="renderPropertyCodeList()" placeholder="Cari nama properti..." class="w-full border border-slate-200 rounded-lg px-3 py-2.5 text-sm mb-4">
+          <form id="inventoryItemForm" class="grid grid-cols-1 sm:grid-cols-5 gap-3 items-end mb-5">
+            <label class="block sm:col-span-2"><span class="block text-xs font-semibold text-slate-600 mb-1">Properti</span><select id="inventoryItemProperty" required class="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 bg-white"></select></label>
+            <label class="block sm:col-span-2"><span class="block text-xs font-semibold text-slate-600 mb-1">Nama Barang</span><input id="inventoryItemName" required minlength="2" maxlength="120" placeholder="cth: AC Kamar Utama" class="w-full text-sm border border-slate-200 rounded-lg px-3 py-2"></label>
+            <label class="block"><span class="block text-xs font-semibold text-slate-600 mb-1">Jumlah</span><input id="inventoryItemQty" type="number" min="1" step="1" value="1" class="w-full text-sm border border-slate-200 rounded-lg px-3 py-2"></label>
+            <label class="block sm:col-span-2"><span class="block text-xs font-semibold text-slate-600 mb-1">Kategori</span><select id="inventoryItemCategory" class="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 bg-white"></select></label>
+            <label class="block sm:col-span-2"><span class="block text-xs font-semibold text-slate-600 mb-1">Foto (opsional)</span><input id="inventoryItemPhotoInput" type="file" accept="image/*" class="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 bg-white"></label>
+            <div class="sm:col-span-1"><img id="inventoryItemPhotoPreview" class="hidden w-12 h-12 rounded-lg object-cover border border-slate-200" alt="Pratinjau foto barang"></div>
+            <div class="sm:col-span-2 flex items-end"><button id="inventoryItemSubmitButton" type="submit" class="w-full sm:w-auto bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold px-4 py-2 rounded-lg">Tambah Barang</button></div>
+          </form>
+          <p id="inventoryItemStatus" class="text-sm mb-3" role="status" aria-live="polite"></p>
+          <div class="flex flex-wrap items-center gap-2 mb-3">
+            <label class="block"><span class="block text-xs font-semibold text-slate-600 mb-1">Filter Properti</span><select id="inventoryItemFilterProperty" onchange="renderInventoryItems()" class="text-sm border border-slate-200 rounded-lg px-3 py-2 bg-white min-w-[200px]"><option value="">Semua properti</option></select></label>
+          </div>
           <div class="overflow-x-auto">
             <table class="w-full text-sm">
               <thead class="bg-slate-50 text-slate-500 text-xs uppercase">
                 <tr>
                   <th class="text-left px-4 py-3">Properti</th>
-                  <th class="text-center px-4 py-3">Kode Saat Ini</th>
-                  <th class="text-center px-4 py-3">Tetap</th>
-                  <th class="text-center px-4 py-3">Ganti Jadi</th>
+                  <th class="text-left px-4 py-3">Nama Barang</th>
+                  <th class="text-left px-4 py-3">Kategori</th>
+                  <th class="text-center px-4 py-3">Jumlah</th>
+                  <th class="text-center px-4 py-3">Status</th>
+                  <th class="text-right px-4 py-3">Aksi</th>
                 </tr>
               </thead>
-              <tbody id="propertyCodeTableBody" class="divide-y divide-slate-100"></tbody>
+              <tbody id="inventoryItemTableBody" class="divide-y divide-slate-100"></tbody>
             </table>
           </div>
-          <p id="propertyCodeStatus" class="text-sm mt-3" role="status" aria-live="polite"></p>
-          <button type="button" onclick="submitPropertyCodeChanges()" class="mt-1 bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold px-4 py-2.5 rounded-lg">Simpan Perubahan</button>
+        </section>
+
+        <section class="bg-white rounded-2xl p-5 sm:p-6 border border-slate-100 mt-6">
+          <div class="flex flex-wrap items-start justify-between gap-3 mb-5">
+            <div>
+              <h2 class="text-lg font-bold text-slate-900">Riwayat Pengecekan Crew</h2>
+              <p class="text-sm text-slate-500 mt-1">Hasil ceklis kondisi barang yang dikirim Crew dari lapangan. Yang bertanda merah berarti ada barang rusak/hilang dan perlu ditindaklanjuti.</p>
+            </div>
+            <button type="button" onclick="loadInventoryChecks()" class="h-[38px] bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-semibold px-3 rounded-lg">Muat Ulang</button>
+          </div>
+          <p id="inventoryCheckStatus" class="text-sm mb-3" role="status" aria-live="polite"></p>
+          <div id="inventoryCheckList" class="space-y-3"></div>
         </section>
       </div>
 
@@ -1112,8 +1137,8 @@
       <!-- =========================================== -->
       <div id="view-pengaturan" class="view">
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
-          <!-- User roles -->
-          <div id="userManagementPanel" class="lg:col-span-2 bg-white rounded-2xl border border-slate-100 overflow-hidden">
+          <!-- Baris 1, kolom 1: Manajemen Pengguna -->
+          <div id="userManagementPanel" class="bg-white rounded-2xl border border-slate-100 overflow-hidden">
             <div class="p-5 pb-3 flex items-center justify-between">
               <div>
                 <h3 class="font-bold text-slate-900">Manajemen Pengguna</h3>
@@ -1121,9 +1146,9 @@
               </div>
               <div class="flex items-center gap-3"><button id="createAdminButton" type="button" onclick="openCreateAdminModal()" class="hidden text-xs font-semibold text-brand-600 hover:text-brand-700">Tambah Admin</button><button onclick="openProfileModal()" class="text-xs font-semibold text-brand-600 hover:text-brand-700">Edit Profil</button></div>
             </div>
-            <div class="overflow-x-auto">
+            <div class="overflow-x-auto overflow-y-auto max-h-[260px]">
               <table class="w-full text-sm">
-                <thead class="bg-slate-50 text-slate-500 text-xs uppercase tracking-wider">
+                <thead class="bg-slate-50 text-slate-500 text-xs uppercase tracking-wider sticky top-0">
                   <tr>
                     <th class="text-left font-semibold px-5 py-3">Nama</th>
                     <th class="text-left font-semibold px-3 py-3 hidden sm:table-cell">Email</th>
@@ -1138,34 +1163,17 @@
             </div>
           </div>
 
-          <!-- Settings cards -->
-          <div class="space-y-4">
-            <div class="bg-white rounded-2xl p-5 border border-slate-100">
-              <h3 class="font-bold text-slate-900 mb-3">Persentase Pembagian</h3>
-              <div class="text-lg font-extrabold text-brand-600">Per properti</div>
-              <p class="text-xs text-slate-500 mt-1">Persentase owner dan agen disimpan tanpa menghitung nominal transfer.</p>
-              <button onclick="switchView('properti')" class="mt-3 text-xs font-semibold text-brand-600 hover:text-brand-700">Atur properti →</button>
-            </div>
-            <div class="bg-white rounded-2xl p-5 border border-slate-100">
-              <h3 class="font-bold text-slate-900 mb-1">Stok Extra Bed</h3>
-              <p class="text-xs text-slate-500 mb-3">Total unit extra bed fisik yang dimiliki. Dipakai untuk menolak booking kalau jumlah extra bed yang dipesan bentrok tanggal di semua properti melebihi stok ini.</p>
-              <div class="flex items-center gap-2">
-                <input id="extraBedStockInput" type="number" min="0" step="1" placeholder="Belum diatur" class="w-full text-sm border border-slate-200 rounded-lg px-3 py-2.5">
-                <button type="button" onclick="saveExtraBedStock()" class="shrink-0 bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold px-3 py-2.5 rounded-lg">Simpan</button>
-              </div>
-              <p id="extraBedStockStatus" class="text-xs mt-2" role="status" aria-live="polite"></p>
-            </div>
-          </div>
-        </div>
-        <div class="mt-5 grid grid-cols-1 xl:grid-cols-2 gap-5">
+          <!-- Baris 1, kolom 2: Daftar Crew -->
           <section id="crewManagementPanel" class="bg-white rounded-xl border border-slate-100 overflow-hidden">
             <div class="p-5 pb-3 flex items-center justify-between gap-3">
               <div><h3 class="font-bold text-slate-900">Daftar Crew</h3><p class="text-xs text-slate-500">Crew untuk login Check In Crew dan pilihan penerima pengeluaran Gaji.</p></div>
               <button type="button" onclick="openCrewModal()" class="inline-flex items-center gap-2 bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold px-3 py-2 rounded-lg"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 4v16m8-8H4"/></svg>Tambah Karyawan</button>
             </div>
             <p id="crewManagementStatus" class="px-5 text-sm" role="status" aria-live="polite"></p>
-            <div class="overflow-x-auto"><table class="w-full text-sm"><thead class="bg-slate-50 text-slate-500 text-xs uppercase"><tr><th class="text-left px-5 py-3">Nama</th><th class="text-left px-3 py-3">Status</th><th class="text-right px-5 py-3">Aksi</th></tr></thead><tbody id="crewTableBody" class="divide-y divide-slate-100"></tbody></table></div>
+            <div class="overflow-x-auto overflow-y-auto max-h-[260px]"><table class="w-full text-sm"><thead class="bg-slate-50 text-slate-500 text-xs uppercase sticky top-0"><tr><th class="text-left px-5 py-3">Nama</th><th class="text-left px-3 py-3">Status</th><th class="text-right px-5 py-3">Aksi</th></tr></thead><tbody id="crewTableBody" class="divide-y divide-slate-100"></tbody></table></div>
           </section>
+
+          <!-- Baris 1, kolom 3: Karyawan Kantor -->
           <section id="officeEmployeePanel" class="bg-white rounded-xl border border-slate-100 overflow-hidden" hidden>
             <div class="p-5 pb-3">
               <h3 class="font-bold text-slate-900">Karyawan Kantor</h3>
@@ -1177,16 +1185,53 @@
               <div class="flex gap-2 mt-3"><button id="officeEmployeeSaveButton" type="submit" class="bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold px-3 py-2 rounded-lg">Tambah Karyawan</button><button id="officeEmployeeCancelEdit" type="button" class="hidden border border-slate-200 text-sm font-semibold px-3 py-2 rounded-lg">Batal Edit</button></div>
               <p id="officeEmployeeStatus" class="text-sm mt-2" role="status" aria-live="polite"></p>
             </form>
-            <div class="overflow-x-auto"><table class="w-full text-sm"><thead class="bg-slate-50 text-slate-500 text-xs uppercase"><tr><th class="text-left px-5 py-3">Nama</th><th class="text-left px-3 py-3">Status</th><th class="text-right px-5 py-3">Aksi</th></tr></thead><tbody id="officeEmployeeTableBody" class="divide-y divide-slate-100"></tbody></table></div>
+            <div class="overflow-x-auto overflow-y-auto max-h-[260px]"><table class="w-full text-sm"><thead class="bg-slate-50 text-slate-500 text-xs uppercase sticky top-0"><tr><th class="text-left px-5 py-3">Nama</th><th class="text-left px-3 py-3">Status</th><th class="text-right px-5 py-3">Aksi</th></tr></thead><tbody id="officeEmployeeTableBody" class="divide-y divide-slate-100"></tbody></table></div>
           </section>
+
+          <!-- Baris 2, kolom 1: Ganti Kode Properti -->
+          <div id="propertyCodeSettingsCard" class="bg-white rounded-2xl p-4 border border-slate-100" hidden>
+            <div class="flex items-center justify-between gap-2 mb-2">
+              <h3 class="font-bold text-slate-900 text-sm">Ganti Kode Properti</h3>
+              <button type="button" onclick="loadPropertyCodes()" class="text-[11px] font-semibold text-slate-500 hover:text-slate-700">Muat Ulang</button>
+            </div>
+            <input id="propertyCodeSearch" type="text" oninput="renderPropertyCodeList()" placeholder="Cari properti..." class="w-full border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs mb-2">
+            <div class="max-h-72 overflow-y-auto border border-slate-100 rounded-lg">
+              <table class="w-full text-xs">
+                <thead class="bg-slate-50 text-slate-500 uppercase sticky top-0">
+                  <tr>
+                    <th class="text-left px-2 py-1.5">Properti</th>
+                    <th class="text-center px-1.5 py-1.5">Kode</th>
+                    <th class="text-center px-1.5 py-1.5">Tetap</th>
+                    <th class="text-center px-1.5 py-1.5">Ganti Jadi</th>
+                  </tr>
+                </thead>
+                <tbody id="propertyCodeTableBody" class="divide-y divide-slate-100"></tbody>
+              </table>
+            </div>
+            <p id="propertyCodeStatus" class="text-[11px] mt-1.5" role="status" aria-live="polite"></p>
+            <button type="button" onclick="submitPropertyCodeChanges()" class="mt-1 w-full bg-brand-600 hover:bg-brand-700 text-white text-xs font-semibold px-3 py-1.5 rounded-lg">Simpan Perubahan</button>
+          </div>
+
+          <!-- Baris 2, kolom 2: Daftar Agen -->
           <section id="agentManagementPanel" class="bg-white rounded-xl border border-slate-100 overflow-hidden">
             <div class="p-5 pb-3 flex items-center justify-between gap-3">
               <div><h3 class="font-bold text-slate-900">Daftar Agen / Marketing</h3><p class="text-xs text-slate-500">Dipilih di form booking untuk mencatat fee agen. Agen bisa login di Agen Portal untuk lihat fee mereka.</p></div>
               <button type="button" onclick="openAgentModal()" class="inline-flex items-center gap-2 bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold px-3 py-2 rounded-lg"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 4v16m8-8H4"/></svg>Tambah Agen</button>
             </div>
             <p id="agentManagementStatus" class="px-5 text-sm" role="status" aria-live="polite"></p>
-            <div class="overflow-x-auto"><table class="w-full text-sm"><thead class="bg-slate-50 text-slate-500 text-xs uppercase"><tr><th class="text-left px-5 py-3">Nama</th><th class="text-left px-3 py-3">ID Agen</th><th class="text-left px-3 py-3">Fee Default</th><th class="text-left px-3 py-3">Portal</th><th class="text-right px-5 py-3">Aksi</th></tr></thead><tbody id="agentTableBody" class="divide-y divide-slate-100"></tbody></table></div>
+            <div class="overflow-x-auto overflow-y-auto max-h-[260px]"><table class="w-full text-sm"><thead class="bg-slate-50 text-slate-500 text-xs uppercase sticky top-0"><tr><th class="text-left px-5 py-3">Nama</th><th class="text-left px-3 py-3">ID Agen</th><th class="text-left px-3 py-3">Fee Default</th><th class="text-left px-3 py-3">Portal</th><th class="text-right px-5 py-3">Aksi</th></tr></thead><tbody id="agentTableBody" class="divide-y divide-slate-100"></tbody></table></div>
           </section>
+
+          <!-- Baris 2, kolom 3: Stok Extra Bed -->
+          <div class="bg-white rounded-2xl p-5 border border-slate-100">
+            <h3 class="font-bold text-slate-900 mb-1">Stok Extra Bed</h3>
+            <p class="text-xs text-slate-500 mb-3">Total unit extra bed fisik yang dimiliki. Dipakai untuk menolak booking kalau jumlah extra bed yang dipesan bentrok tanggal di semua properti melebihi stok ini.</p>
+            <div class="flex items-center gap-2">
+              <input id="extraBedStockInput" type="number" min="0" step="1" placeholder="Belum diatur" class="w-full text-sm border border-slate-200 rounded-lg px-3 py-2.5">
+              <button type="button" onclick="saveExtraBedStock()" class="shrink-0 bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold px-3 py-2.5 rounded-lg">Simpan</button>
+            </div>
+            <p id="extraBedStockStatus" class="text-xs mt-2" role="status" aria-live="polite"></p>
+          </div>
         </div>
       </div>
 
@@ -1622,7 +1667,7 @@
       <div class="grid grid-cols-2 gap-3">
         <div>
           <label for="newPropertyAgentName" class="text-xs text-slate-500 font-semibold">Nama Agen (opsional)</label>
-          <input id="newPropertyAgentName" type="text" maxlength="100" placeholder="Nama agen" class="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 mt-0.5">
+          <select id="newPropertyAgentName" class="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 bg-white mt-0.5"><option value="">Tidak ada agen</option></select>
         </div>
         <div>
           <label for="newPropertyAgentShare" class="text-xs text-slate-500 font-semibold">Bagian Agen (%)</label>
@@ -2053,7 +2098,8 @@ function showDashboardApp(account){
   }
   document.getElementById('addPropertyButton').classList.toggle('hidden', account.role === 'IT');
   document.getElementById('settingsNavItem').classList.toggle('hidden', account.role === 'IT');
-  document.getElementById('propertyCodeNavItem').classList.toggle('hidden', !['master', 'admin-1'].includes(account.account_id));
+  document.getElementById('propertyCodeSettingsCard').hidden = !['master', 'admin-1'].includes(account.account_id);
+  document.getElementById('inventoryNavItem').classList.toggle('hidden', account.role === 'IT');
   document.getElementById('adminLoginScreen').classList.add('hidden');
   document.getElementById('dashboardApp').hidden = false;
   updateContactItAccess();
@@ -2956,7 +3002,7 @@ const VIEW_META = {
   'nota-lunas': { title:'Nota Lunas', sub:'Buat nota lunas tamu, unduh PDF, lalu kirim ke WhatsApp (tidak disimpan ke sistem)' },
   'owner': { title:'Owner', sub:'Daftar pemilik properti dengan persentase kepemilikan' },
   'absensi-karyawan': { title:'Absensi Karyawan', sub:'Pantau absen masuk karyawan kantor via selfie dan lokasi' },
-  'ganti-kode-properti': { title:'Ganti Kode Properti', sub:'Ubah kode properti yang dipakai di Booking, Laporan, dan tempat lain' },
+  'inventaris': { title:'Inventaris', sub:'Daftar barang per properti dan riwayat ceklis kondisi dari Crew' },
   'bantuan': { title:'Bantuan', sub:'Laporkan bug atau kendala teknis kepada tim IT' },
   'pengaturan': { title:'Pengaturan', sub:'User role, komisi & konfigurasi sistem' }
 };
@@ -2988,8 +3034,12 @@ function switchView(name){
     if(!historyMonth.value) historyMonth.value = new Date().toLocaleDateString('en-CA', { timeZone:'Asia/Jakarta' }).slice(0,7);
     loadAttendanceDashboard();
   }
-  if(name==='ganti-kode-properti') loadPropertyCodes();
-  if(name==='pengaturan'){ renderUsers(); loadExtraBedStock(); }
+  if(name==='inventaris'){ populateInventoryPropertySelects(); loadInventoryItems(); loadInventoryChecks(); }
+  if(name==='pengaturan'){
+    renderUsers();
+    loadExtraBedStock();
+    if(!document.getElementById('propertyCodeSettingsCard').hidden) loadPropertyCodes();
+  }
   /* Close mobile sidebar */
   if(window.innerWidth < 1024){
     document.getElementById('sidebar').classList.add('-translate-x-full');
@@ -3673,6 +3723,19 @@ function populatePropertyOwnerSelect(){
   if(OWNERS.some(owner => owner.id === selected)) select.value = selected;
 }
 
+// Nama agen untuk bagi hasil per properti diambil dari Daftar Agen (Pengaturan), bukan teks
+// bebas lagi -- supaya nama agen di booking dan di bagi hasil properti selalu konsisten.
+function populatePropertyAgentSelect(currentAgentName){
+  const select = document.getElementById('newPropertyAgentName');
+  const activeAgents = AGENTS.filter(agent => Number(agent.active) === 1);
+  select.innerHTML = '<option value="">Tidak ada agen</option>' +
+    activeAgents.map(agent => `<option value="${escapeHtml(agent.name)}">${escapeHtml(agent.name)}</option>`).join('');
+  if(currentAgentName && !activeAgents.some(agent => agent.name === currentAgentName)){
+    select.appendChild(new Option(`${currentAgentName} (nonaktif)`, currentAgentName));
+  }
+  select.value = currentAgentName || '';
+}
+
 function togglePropertyManagementFields(){
   const isPartner = document.getElementById('newPropertyManagementType').value === 'partner';
   document.getElementById('propertyOwnerFields').classList.toggle('hidden', isPartner);
@@ -3686,6 +3749,7 @@ function openPropertyModal(propertyId=''){
   const form = document.querySelector('#modal-property form');
   form.reset();
   populatePropertyOwnerSelect();
+  populatePropertyAgentSelect(PROPERTIES.find(item => item.id === propertyId)?.agents?.[0]?.name || '');
   document.getElementById('propertyEditId').value = propertyId;
   document.getElementById('propertyFormStatus').textContent = '';
   document.getElementById('propertyModalTitle').textContent = propertyId ? 'Edit Properti' : 'Tambah Properti';
@@ -3702,7 +3766,6 @@ function openPropertyModal(propertyId=''){
     document.getElementById('newPropertyManagementType').value = property.managementType === 'partner' ? 'partner' : 'managed';
     document.getElementById('newPropertyOwner').value = property.owners?.[0]?.id || OWNERS[0].id;
     document.getElementById('newPropertyOwnerShare').value = property.owners?.[0]?.share ?? 100;
-    document.getElementById('newPropertyAgentName').value = property.agents?.[0]?.name || '';
     document.getElementById('newPropertyAgentShare').value = property.agents?.[0]?.share ?? 0;
   }
   togglePropertyManagementFields();
@@ -4366,13 +4429,13 @@ function renderEmployeeAttendanceHistory(records, summary){
   document.getElementById('attendanceHistoryAvgHours').textContent = formatHoursFromSeconds(summary?.avg_seconds_per_day);
 }
 
-/* ============== GANTI KODE PROPERTI (Master/admin-1 saja, lihat propertyCodeNavItem) ============== */
+/* ============== GANTI KODE PROPERTI (Master/admin-1 saja, dibuka dari card di Pengaturan) ============== */
 const PROPERTY_CODE_CATEGORY_LABEL = { villa:'Villa', apartment:'Apartemen', guesthouse:'Guest House', kos:'Kosan' };
 let propertyCodeList = [];
 
 async function loadPropertyCodes(){
   const status = document.getElementById('propertyCodeStatus');
-  status.className = 'text-sm mt-3 text-slate-500';
+  status.className = 'text-[11px] mt-1.5 text-slate-500';
   status.textContent = 'Memuat daftar properti...';
   try {
     const result = await dashboardApi('/property-codes');
@@ -4382,7 +4445,7 @@ async function loadPropertyCodes(){
   } catch(error) {
     propertyCodeList = [];
     document.getElementById('propertyCodeTableBody').innerHTML = '';
-    status.className = 'text-sm mt-3 text-rose-600';
+    status.className = 'text-[11px] mt-1.5 text-rose-600';
     status.textContent = error.message || 'Daftar properti gagal dimuat.';
   }
 }
@@ -4393,16 +4456,15 @@ function renderPropertyCodeList(){
   const tableBody = document.getElementById('propertyCodeTableBody');
   tableBody.innerHTML = filtered.length ? filtered.map(p => `
     <tr data-row-id="${escapeHtml(p.id)}">
-      <td class="px-4 py-3">
-        <div class="font-medium ${p.archived ? 'text-slate-400' : 'text-slate-800'}">${escapeHtml(p.name)}</div>
-        <div class="text-xs text-slate-400">${escapeHtml(PROPERTY_CODE_CATEGORY_LABEL[p.category] || p.category || '')}${p.archived ? ' · Arsip' : ''}</div>
+      <td class="px-2 py-1.5">
+        <div class="font-medium truncate max-w-[110px] ${p.archived ? 'text-slate-400' : 'text-slate-800'}" title="${escapeHtml(p.name)}">${escapeHtml(p.name)}</div>
       </td>
-      <td class="px-4 py-3 text-center font-semibold text-slate-700">${escapeHtml(p.property_code || '—')}</td>
-      <td class="px-4 py-3 text-center"><input type="checkbox" checked data-tetap-id="${escapeHtml(p.id)}" class="w-4 h-4"></td>
-      <td class="px-4 py-3 text-center">
-        <input type="text" maxlength="20" data-id="${escapeHtml(p.id)}" value="" placeholder="kode baru" disabled class="w-28 text-center uppercase border border-slate-200 rounded-lg px-2 py-1.5 text-sm disabled:bg-slate-50 disabled:text-slate-300">
+      <td class="px-1.5 py-1.5 text-center font-semibold text-slate-700">${escapeHtml(p.property_code || '—')}</td>
+      <td class="px-1.5 py-1.5 text-center"><input type="checkbox" checked data-tetap-id="${escapeHtml(p.id)}" class="w-3.5 h-3.5"></td>
+      <td class="px-1.5 py-1.5 text-center">
+        <input type="text" maxlength="20" data-id="${escapeHtml(p.id)}" value="" placeholder="baru" disabled class="w-16 text-center uppercase border border-slate-200 rounded px-1 py-1 text-xs disabled:bg-slate-50 disabled:text-slate-300">
       </td>
-    </tr>`).join('') : '<tr><td colspan="4" class="px-4 py-8 text-center text-sm text-slate-400">Tidak ada properti yang cocok.</td></tr>';
+    </tr>`).join('') : '<tr><td colspan="4" class="px-2 py-4 text-center text-xs text-slate-400">Tidak ada properti yang cocok.</td></tr>';
   tableBody.querySelectorAll('input[data-tetap-id]').forEach(checkbox => {
     const input = checkbox.closest('tr').querySelector('input[data-id]');
     checkbox.addEventListener('change', () => {
@@ -4433,13 +4495,15 @@ async function submitPropertyCodeChanges(){
   const status = document.getElementById('propertyCodeStatus');
   const changes = collectPropertyCodeChanges();
   if(!changes.length){
-    status.className = 'text-sm mt-3 text-rose-600';
+    status.className = 'text-[11px] mt-1.5 text-rose-600';
     status.textContent = 'Belum ada kode yang diubah. Uncheck "Tetap" lalu isi kode baru dulu.';
     return;
   }
   const summary = changes.map(c => `${c.name}: ${c.old_code} → ${c.new_code}`).join('\n');
   if(!window.confirm(`Konfirmasi perubahan kode berikut?\n\n${summary}`)) return;
-  status.className = 'text-sm mt-3 text-slate-500';
+  const pin = window.prompt('Masukkan PIN Master (4 digit) untuk menyimpan perubahan kode properti:');
+  if(pin === null) return;
+  status.className = 'text-[11px] mt-1.5 text-slate-500';
   status.textContent = 'Menyimpan perubahan...';
   try {
     await dashboardApi('/property-codes', {
@@ -4447,14 +4511,246 @@ async function submitPropertyCodeChanges(){
       body:JSON.stringify({
         submitted_by:currentDashboardAccount?.display_name || '',
         changes:changes.map(c => ({ id:c.id, new_code:c.new_code })),
+        pin:pin.trim(),
       }),
     });
+    // Sinkronkan array PROPERTIES di memori supaya auto-refresh Dashboard (setiap 60 detik)
+    // tidak menimpa balik kode baru ini dengan kode lama saat scheduleDashboardManagementSync jalan.
+    changes.forEach(change => {
+      const property = PROPERTIES.find(p => p.id === change.id);
+      if(property) property.code = change.new_code;
+    });
+    persistDashboardData({ skipCloudSync:true });
     showToast('Kode properti berhasil diperbarui.');
     status.textContent = '';
     await loadPropertyCodes();
   } catch(error) {
-    status.className = 'text-sm mt-3 text-rose-600';
+    status.className = 'text-[11px] mt-1.5 text-rose-600';
     status.textContent = error.message || 'Gagal menyimpan perubahan.';
+  }
+}
+
+/* ============== INVENTARIS PROPERTI ============== */
+let inventoryItems = [];
+let inventoryChecks = [];
+let inventoryItemPhotoDataUrl = '';
+
+// Kategori standar barang hotel/apartemen/villa/kosan (housekeeping, FF&E, amenities, dst),
+// dipakai sebagai dropdown di sini dan di form "Lapor Barang Baru" check-in-crew.html.
+const INVENTORY_CATEGORIES = [
+  'Furnitur', 'Elektronik & Pendingin Udara', 'Dapur & Peralatan Masak',
+  'Kamar Mandi & Sanitasi', 'Linen & Sprei', 'Pencahayaan & Kelistrikan',
+  'Keamanan & Keselamatan', 'Dekorasi & Aksesoris', 'Hiburan & Konektivitas (TV/WiFi)',
+  'Outdoor & Taman', 'Perlengkapan Kebersihan', 'Perlengkapan Tamu (Amenities)',
+  'Laundry', 'Lainnya',
+];
+
+function populateInventoryCategoryOptions(){
+  const select = document.getElementById('inventoryItemCategory');
+  if(!select || select.options.length) return;
+  select.innerHTML = INVENTORY_CATEGORIES.map(cat => `<option value="${escapeHtml(cat)}">${escapeHtml(cat)}</option>`).join('');
+}
+
+async function handleInventoryItemPhotoSelection(event){
+  const file = event.target.files?.[0];
+  const preview = document.getElementById('inventoryItemPhotoPreview');
+  const status = document.getElementById('inventoryItemStatus');
+  inventoryItemPhotoDataUrl = '';
+  preview.classList.add('hidden');
+  preview.removeAttribute('src');
+  if(!file) return;
+  status.className = 'text-sm mb-3 text-slate-500';
+  status.textContent = 'Mengompres foto...';
+  try {
+    const compressed = await compressExpenseProof(file);
+    inventoryItemPhotoDataUrl = compressed.dataUrl;
+    preview.src = compressed.dataUrl;
+    preview.classList.remove('hidden');
+    status.textContent = '';
+  } catch(error) {
+    event.target.value = '';
+    status.className = 'text-sm mb-3 text-rose-600';
+    status.textContent = error.message || 'Foto gagal diproses.';
+  }
+}
+
+function populateInventoryPropertySelects(){
+  populateInventoryCategoryOptions();
+  const sorted = [...PROPERTIES].sort((a,b) => a.name.localeCompare(b.name, 'id'));
+  const propertySelect = document.getElementById('inventoryItemProperty');
+  const previousProperty = propertySelect.value;
+  propertySelect.innerHTML = sorted.map(p => `<option value="${escapeHtml(p.id)}">${escapeHtml(p.name)}</option>`).join('');
+  if(sorted.some(p => p.id === previousProperty)) propertySelect.value = previousProperty;
+
+  const filterSelect = document.getElementById('inventoryItemFilterProperty');
+  const previousFilter = filterSelect.value;
+  filterSelect.innerHTML = '<option value="">Semua properti</option>' + sorted.map(p => `<option value="${escapeHtml(p.name)}">${escapeHtml(p.name)}</option>`).join('');
+  if(sorted.some(p => p.name === previousFilter)) filterSelect.value = previousFilter;
+}
+
+async function loadInventoryItems(){
+  const status = document.getElementById('inventoryItemStatus');
+  try {
+    const result = await dashboardApi('/dashboard/inventory-items');
+    inventoryItems = Array.isArray(result.data) ? result.data : [];
+    renderInventoryItems();
+    updateInventoryIssueIndicator();
+  } catch(error) {
+    inventoryItems = [];
+    document.getElementById('inventoryItemTableBody').innerHTML = '';
+    status.className = 'text-sm mb-3 text-rose-600';
+    status.textContent = error.message || 'Daftar barang gagal dimuat.';
+  }
+}
+
+function renderInventoryItems(){
+  const filterValue = document.getElementById('inventoryItemFilterProperty').value;
+  const filtered = filterValue ? inventoryItems.filter(item => item.property_name === filterValue) : inventoryItems;
+  document.getElementById('inventoryItemTableBody').innerHTML = filtered.length ? filtered.map(item => {
+    const active = Number(item.active) === 1;
+    const reviewStatus = item.review_status || 'approved';
+    const photoThumb = item.photo_url ? `<a href="${item.photo_url}" target="_blank" rel="noopener noreferrer"><img src="${item.photo_url}" class="w-8 h-8 rounded-lg object-cover border border-slate-200 inline-block align-middle mr-2" alt="Foto ${escapeHtml(item.name)}"></a>` : '';
+    const statusBadge = reviewStatus === 'pending'
+      ? '<span class="badge bg-amber-50 text-amber-700">Menunggu Review</span>'
+      : reviewStatus === 'rejected'
+      ? '<span class="badge bg-rose-50 text-rose-700">Ditolak</span>'
+      : `<span class="badge ${active ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-500'}">${active ? 'Aktif' : 'Nonaktif'}</span>`;
+    const actions = reviewStatus === 'pending' || reviewStatus === 'rejected'
+      ? `<button type="button" onclick="reviewInventoryItem('${item.id}', 'approved')" class="text-xs font-semibold text-emerald-700 hover:text-emerald-900">Setujui</button>${reviewStatus === 'pending' ? `<button type="button" onclick="reviewInventoryItem('${item.id}', 'rejected')" class="ml-3 text-xs font-semibold text-rose-600 hover:text-rose-800">Tolak</button>` : ''}`
+      : `<button type="button" onclick="toggleInventoryItemActive('${item.id}', ${active ? 0 : 1})" class="text-xs font-semibold ${active ? 'text-rose-600 hover:text-rose-800' : 'text-emerald-700 hover:text-emerald-900'}">${active ? 'Nonaktifkan' : 'Aktifkan'}</button>`;
+    return `<tr>
+      <td class="px-4 py-3 text-slate-600">${escapeHtml(item.property_name)}</td>
+      <td class="px-4 py-3 font-medium text-slate-800">${photoThumb}${escapeHtml(item.name)}${item.source === 'crew' ? `<div class="text-xs text-slate-400 font-normal">Dilaporkan oleh ${escapeHtml(item.reported_by || 'Crew')}</div>` : ''}</td>
+      <td class="px-4 py-3 text-slate-500">${escapeHtml(item.category || '-')}</td>
+      <td class="px-4 py-3 text-center">${Number(item.expected_qty)}</td>
+      <td class="px-4 py-3 text-center">${statusBadge}</td>
+      <td class="px-4 py-3 text-right whitespace-nowrap">${actions}</td>
+    </tr>`;
+  }).join('') : '<tr><td colspan="6" class="px-4 py-8 text-center text-sm text-slate-400">Belum ada barang. Tambahkan lewat form di atas.</td></tr>';
+}
+
+async function reviewInventoryItem(id, reviewStatus){
+  try {
+    await dashboardApi(`/dashboard/inventory-items/${encodeURIComponent(id)}`, { method:'PATCH', body:JSON.stringify({ review_status:reviewStatus }) });
+    const item = inventoryItems.find(i => i.id === id);
+    if(item) item.review_status = reviewStatus;
+    renderInventoryItems();
+    showToast(reviewStatus === 'approved' ? 'Barang disetujui dan masuk daftar resmi.' : 'Barang ditolak.');
+  } catch(error) {
+    showToast(error.message || 'Gagal memperbarui status review.');
+  }
+}
+
+async function toggleInventoryItemActive(id, active){
+  try {
+    await dashboardApi(`/dashboard/inventory-items/${encodeURIComponent(id)}`, { method:'PATCH', body:JSON.stringify({ active }) });
+    const item = inventoryItems.find(i => i.id === id);
+    if(item) item.active = active;
+    renderInventoryItems();
+  } catch(error) {
+    showToast(error.message || 'Gagal memperbarui status barang.');
+  }
+}
+
+async function submitInventoryItem(event){
+  event.preventDefault();
+  const status = document.getElementById('inventoryItemStatus');
+  const button = document.getElementById('inventoryItemSubmitButton');
+  const property = PROPERTIES.find(p => p.id === document.getElementById('inventoryItemProperty').value);
+  if(!property){
+    status.className = 'text-sm mb-3 text-rose-600';
+    status.textContent = 'Pilih properti terlebih dahulu.';
+    return;
+  }
+  button.disabled = true;
+  status.className = 'text-sm mb-3 text-slate-500';
+  status.textContent = 'Menyimpan barang...';
+  try {
+    await dashboardApi('/dashboard/inventory-items', {
+      method:'POST',
+      body:JSON.stringify({
+        property_id:property.id, property_name:property.name,
+        name:document.getElementById('inventoryItemName').value,
+        category:document.getElementById('inventoryItemCategory').value,
+        expected_qty:Number(document.getElementById('inventoryItemQty').value) || 1,
+        photo:inventoryItemPhotoDataUrl,
+      }),
+    });
+    document.getElementById('inventoryItemName').value = '';
+    document.getElementById('inventoryItemQty').value = 1;
+    document.getElementById('inventoryItemPhotoInput').value = '';
+    document.getElementById('inventoryItemPhotoPreview').classList.add('hidden');
+    inventoryItemPhotoDataUrl = '';
+    status.textContent = '';
+    await loadInventoryItems();
+    showToast('Barang berhasil ditambahkan.');
+  } catch(error) {
+    status.className = 'text-sm mb-3 text-rose-600';
+    status.textContent = error.message || 'Barang gagal ditambahkan.';
+  } finally {
+    button.disabled = false;
+  }
+}
+
+async function loadInventoryChecks(){
+  const status = document.getElementById('inventoryCheckStatus');
+  try {
+    const result = await dashboardApi('/dashboard/inventory-checks');
+    inventoryChecks = Array.isArray(result.data) ? result.data : [];
+    renderInventoryChecks();
+    updateInventoryIssueIndicator();
+    status.textContent = '';
+  } catch(error) {
+    inventoryChecks = [];
+    document.getElementById('inventoryCheckList').innerHTML = '';
+    status.className = 'text-sm mb-3 text-rose-600';
+    status.textContent = error.message || 'Riwayat pengecekan gagal dimuat.';
+  }
+}
+
+function updateInventoryIssueIndicator(){
+  const hasUnresolvedIssue = inventoryChecks.some(check => check.has_issues && !check.resolved);
+  const hasPendingItem = inventoryItems.some(item => (item.review_status || 'approved') === 'pending');
+  document.getElementById('inventoryIssueIndicator').classList.toggle('hidden', !hasUnresolvedIssue && !hasPendingItem);
+}
+
+function renderInventoryChecks(){
+  const container = document.getElementById('inventoryCheckList');
+  container.innerHTML = inventoryChecks.length ? inventoryChecks.map(check => {
+    const dateLabel = new Date(check.created_at).toLocaleString('id-ID', { dateStyle:'medium', timeStyle:'short', timeZone:'Asia/Jakarta' });
+    const itemsHtml = (check.items || []).map(item => {
+      const label = item.status === 'rusak' ? 'Rusak' : item.status === 'hilang' ? 'Hilang' : 'Baik';
+      const color = item.status === 'ok' ? 'text-slate-500' : 'text-rose-600 font-semibold';
+      return `<div class="flex items-center justify-between gap-2 text-xs ${color}"><span>${escapeHtml(item.name)}</span><span>${label}${item.note ? ` - ${escapeHtml(item.note)}` : ''}</span></div>`;
+    }).join('');
+    const photosHtml = (check.photo_urls || []).map(url => `<a href="${url}" target="_blank" rel="noopener noreferrer"><img src="${url}" class="w-14 h-14 rounded-lg object-cover border border-slate-200" alt="Foto dokumentasi"></a>`).join('');
+    return `<div class="border ${check.has_issues && !check.resolved ? 'border-rose-200 bg-rose-50/40' : 'border-slate-100'} rounded-xl p-4">
+      <div class="flex flex-wrap items-start justify-between gap-2">
+        <div>
+          <div class="font-semibold text-slate-900 text-sm">${escapeHtml(check.property_name)}</div>
+          <div class="text-xs text-slate-400">${escapeHtml(check.crew)} · ${dateLabel}</div>
+        </div>
+        ${check.has_issues ? `<span class="badge ${check.resolved ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'}">${check.resolved ? 'Sudah Ditindaklanjuti' : 'Ada Masalah'}</span>` : '<span class="badge bg-emerald-50 text-emerald-700">Semua Baik</span>'}
+      </div>
+      <div class="mt-3 space-y-1">${itemsHtml}</div>
+      ${photosHtml ? `<div class="mt-3 flex flex-wrap gap-2">${photosHtml}</div>` : ''}
+      ${check.has_issues && !check.resolved ? `<button type="button" onclick="resolveInventoryCheck('${check.id}')" class="mt-3 text-xs font-semibold text-brand-600 hover:text-brand-800">Tandai Sudah Ditindaklanjuti</button>` : ''}
+      ${check.resolved && check.resolved_note ? `<p class="mt-2 text-xs text-slate-500">Catatan tindak lanjut: ${escapeHtml(check.resolved_note)}</p>` : ''}
+    </div>`;
+  }).join('') : '<p class="text-sm text-slate-400">Belum ada riwayat pengecekan dari Crew.</p>';
+}
+
+async function resolveInventoryCheck(id){
+  const note = window.prompt('Catatan tindak lanjut (opsional):') || '';
+  try {
+    await dashboardApi(`/dashboard/inventory-checks/${encodeURIComponent(id)}`, { method:'PATCH', body:JSON.stringify({ resolved:true, resolved_note:note }) });
+    const check = inventoryChecks.find(c => c.id === id);
+    if(check){ check.resolved = true; check.resolved_note = note; }
+    renderInventoryChecks();
+    updateInventoryIssueIndicator();
+    showToast('Ditandai sudah ditindaklanjuti.');
+  } catch(error) {
+    showToast(error.message || 'Gagal memperbarui status.');
   }
 }
 
@@ -8602,6 +8898,8 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('deletePinForm').addEventListener('submit', changeDashboardDeletePin);
   document.getElementById('crewForm').addEventListener('submit', submitCrewForm);
   document.getElementById('officeEmployeeForm').addEventListener('submit', submitOfficeEmployeeForm);
+  document.getElementById('inventoryItemForm').addEventListener('submit', submitInventoryItem);
+  document.getElementById('inventoryItemPhotoInput').addEventListener('change', handleInventoryItemPhotoSelection);
   document.getElementById('officeEmployeeCancelEdit').addEventListener('click', resetOfficeEmployeeForm);
   document.getElementById('officeEmployeeTableBody').addEventListener('click', handleOfficeEmployeeAction);
   document.getElementById('ownerForm').addEventListener('submit', submitOwner);

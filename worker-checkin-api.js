@@ -931,6 +931,15 @@ export default {
         const rate = await reserveLoginAttempt(env, request, 'property-code-change');
         if (rate.limited) return bad('Terlalu banyak percobaan. Coba lagi dalam 15 menit.', 429);
         const body = await request.json();
+        const pin = String(body.pin || '').trim();
+        if (!/^\d{4}$/.test(pin)) return bad('Masukkan PIN Master tepat 4 digit.', 400);
+        const master = await env.DB.prepare(`
+          SELECT delete_pin_salt, delete_pin_hash FROM dashboard_users
+          WHERE account_id = 'master' AND active = 1
+        `).first();
+        if (!master?.delete_pin_hash) return bad('PIN Master belum diinisialisasi. Login sebagai Master terlebih dahulu.', 409);
+        const attemptedPinHash = await hashDashboardPassword(pin, master.delete_pin_salt);
+        if (!constantTimeEqual(attemptedPinHash, master.delete_pin_hash)) return bad('PIN Master salah.', 403);
         const submittedBy = String(body.submitted_by || '').trim().slice(0, 120);
         const changes = Array.isArray(body.changes) ? body.changes : [];
         if (!changes.length) return bad('Tidak ada data kode untuk disimpan.');
@@ -2160,6 +2169,321 @@ export default {
         }
         if (!updated.meta?.changes) return bad('Karyawan ini sudah absen pulang.', 409);
         return json({ ok:true, data:{ id, employee_id:attendance.employee_id, employee_name:attendance.employee_name, checked_out_at:checkedOutAt, checkout_lat:lat, checkout_lng:lng, checkout_accuracy:accuracy, checkout_selfie_url:checkoutSelfieUrl } });
+      }
+
+      // ================= INVENTARIS PROPERTI =================
+      // Master data barang per properti (dikelola Master/Admin dari Dashboard) dan riwayat
+      // ceklis kondisi barang dari Crew. Lihat migration-property-inventory.sql.
+      if (path === '/dashboard/inventory-items') {
+        const adminSecret = String(env.ADMIN_DASHBOARD_SECRET || '').trim();
+        const tokenData = await getAdminTokenPayload(request, adminSecret);
+        if (!hasDashboardRole(tokenData)) return bad('Login dashboard diperlukan.', 401);
+
+        if (request.method === 'GET') {
+          try {
+            const result = await env.DB.prepare(`
+              SELECT id, property_id, property_name, name, category, expected_qty, active,
+                     review_status, source, photo_url, reported_by, created_at, updated_at
+              FROM property_inventory_items ORDER BY
+                CASE review_status WHEN 'pending' THEN 0 ELSE 1 END,
+                property_name COLLATE NOCASE, name COLLATE NOCASE
+            `).all();
+            return json({ ok:true, data:result.results || [] });
+          } catch (error) {
+            if (/no such table: property_inventory_items/i.test(String(error?.message || error)) ||
+                /no such column: review_status/i.test(String(error?.message || error))) {
+              return bad('Inventaris belum disiapkan. Jalankan migration-property-inventory.sql dan migration-property-inventory-crew-proposals.sql di D1.', 503);
+            }
+            throw error;
+          }
+        }
+
+        if (!hasManagementRole(tokenData)) return bad('Hanya Master atau Admin yang dapat mengelola inventaris.', 403);
+        if (request.method !== 'POST') return bad('Metode inventaris tidak didukung.', 405);
+        const body = await request.json();
+        const propertyId = String(body.property_id || '').trim();
+        const propertyName = String(body.property_name || '').trim();
+        const name = String(body.name || '').trim().replace(/\s+/g, ' ');
+        const category = String(body.category || '').trim();
+        const expectedQty = Number(body.expected_qty || 1);
+        const photo = String(body.photo || '');
+        if (!propertyId || !propertyName || name.length < 2 || name.length > 120) return bad('Properti dan nama barang wajib diisi (maks 120 karakter).');
+        if (category.length > 60) return bad('Kategori maksimal 60 karakter.');
+        if (!Number.isSafeInteger(expectedQty) || expectedQty < 1 || expectedQty > 10000) return bad('Jumlah seharusnya tidak valid.');
+        const id = crypto.randomUUID();
+        const now = new Date().toISOString();
+        let photoUrl = '';
+        if (photo) {
+          let parsedPhoto;
+          try { parsedPhoto = parseDataUrl(photo); }
+          catch { return bad('Foto tidak valid.'); }
+          if (!String(parsedPhoto.contentType || '').startsWith('image/')) return bad('Foto harus berupa gambar.');
+          if (parsedPhoto.bytes.byteLength >= 100 * 1024) return bad('Foto wajib di bawah 100 KB.');
+          const key = `inventory-items/${id}/photo.jpg`;
+          await env.PHOTOS.put(key, parsedPhoto.bytes, { httpMetadata:{ contentType:parsedPhoto.contentType || 'image/jpeg' } });
+          photoUrl = publicFileUrl(url.origin, key);
+        }
+        try {
+          await env.DB.prepare(`
+            INSERT INTO property_inventory_items (id, property_id, property_name, name, category, expected_qty, active, photo_url, created_at, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?, 1, ?, ?, ?)
+          `).bind(id, propertyId, propertyName, name, category, expectedQty, photoUrl, now, now).run();
+        } catch (error) {
+          if (/no such table: property_inventory_items/i.test(String(error?.message || error))) {
+            return bad('Inventaris belum disiapkan. Jalankan migration-property-inventory.sql di D1.', 503);
+          }
+          if (/no such column: photo_url/i.test(String(error?.message || error))) {
+            return bad('Kolom foto belum tersedia. Jalankan migration-property-inventory-crew-proposals.sql di D1.', 503);
+          }
+          throw error;
+        }
+        return json({ ok:true, data:{ id, property_id:propertyId, property_name:propertyName, name, category, expected_qty:expectedQty, active:1, photo_url:photoUrl, created_at:now, updated_at:now } }, 201);
+      }
+
+      const inventoryItemMatch = path.match(/^\/dashboard\/inventory-items\/([^/]+)$/);
+      if (request.method === 'PATCH' && inventoryItemMatch) {
+        const adminSecret = String(env.ADMIN_DASHBOARD_SECRET || '').trim();
+        const tokenData = await getAdminTokenPayload(request, adminSecret);
+        if (!hasManagementRole(tokenData)) return bad('Hanya Master atau Admin yang dapat mengelola inventaris.', 403);
+        const id = decodeURIComponent(inventoryItemMatch[1]);
+        const item = await env.DB.prepare('SELECT id, name, category, expected_qty, active, review_status FROM property_inventory_items WHERE id = ?').bind(id).first();
+        if (!item) return bad('Barang tidak ditemukan.', 404);
+        const body = await request.json();
+        const name = Object.prototype.hasOwnProperty.call(body, 'name') ? String(body.name || '').trim().replace(/\s+/g, ' ') : item.name;
+        const category = Object.prototype.hasOwnProperty.call(body, 'category') ? String(body.category || '').trim() : item.category;
+        const expectedQty = Object.prototype.hasOwnProperty.call(body, 'expected_qty') ? Number(body.expected_qty) : Number(item.expected_qty);
+        const active = body.active === undefined ? Number(item.active)
+          : body.active === true || body.active === 1 ? 1
+          : body.active === false || body.active === 0 ? 0 : null;
+        const reviewStatus = body.review_status === undefined ? item.review_status
+          : ['pending', 'approved', 'rejected'].includes(body.review_status) ? body.review_status : null;
+        if (name.length < 2 || name.length > 120 || category.length > 60 || !Number.isSafeInteger(expectedQty) || expectedQty < 1 || expectedQty > 10000 || active === null || reviewStatus === null) {
+          return bad('Data barang tidak valid.');
+        }
+        const now = new Date().toISOString();
+        try {
+          await env.DB.prepare(`
+            UPDATE property_inventory_items SET name = ?, category = ?, expected_qty = ?, active = ?, review_status = ?, updated_at = ? WHERE id = ?
+          `).bind(name, category, expectedQty, active, reviewStatus, now, id).run();
+        } catch (error) {
+          if (/no such column: review_status/i.test(String(error?.message || error))) {
+            return bad('Kolom review barang belum tersedia. Jalankan migration-property-inventory-crew-proposals.sql di D1.', 503);
+          }
+          throw error;
+        }
+        return json({ ok:true, data:{ id, name, category, expected_qty:expectedQty, active, review_status:reviewStatus, updated_at:now } });
+      }
+
+      if (path === '/dashboard/inventory-checks') {
+        const adminSecret = String(env.ADMIN_DASHBOARD_SECRET || '').trim();
+        const tokenData = await getAdminTokenPayload(request, adminSecret);
+        if (!hasDashboardRole(tokenData)) return bad('Login dashboard diperlukan.', 401);
+        if (request.method !== 'GET') return bad('Metode riwayat inventaris tidak didukung.', 405);
+        try {
+          const result = await env.DB.prepare(`
+            SELECT id, property_id, property_name, crew, items_json, photo_urls_json, has_issues, resolved, resolved_note, created_at
+            FROM property_inventory_checks ORDER BY created_at DESC LIMIT 300
+          `).all();
+          const data = (result.results || []).map(row => ({
+            id:row.id, property_id:row.property_id, property_name:row.property_name, crew:row.crew,
+            items:safeParseJsonArray(row.items_json), photo_urls:safeParseJsonArray(row.photo_urls_json),
+            has_issues:Number(row.has_issues) === 1, resolved:Number(row.resolved) === 1,
+            resolved_note:row.resolved_note || '', created_at:row.created_at,
+          }));
+          return json({ ok:true, data });
+        } catch (error) {
+          if (/no such table: property_inventory_checks/i.test(String(error?.message || error))) {
+            return bad('Inventaris belum disiapkan. Jalankan migration-property-inventory.sql di D1.', 503);
+          }
+          throw error;
+        }
+      }
+
+      const inventoryCheckMatch = path.match(/^\/dashboard\/inventory-checks\/([^/]+)$/);
+      if (request.method === 'PATCH' && inventoryCheckMatch) {
+        const adminSecret = String(env.ADMIN_DASHBOARD_SECRET || '').trim();
+        const tokenData = await getAdminTokenPayload(request, adminSecret);
+        if (!hasManagementRole(tokenData)) return bad('Hanya Master atau Admin yang dapat menindaklanjuti inventaris.', 403);
+        const id = decodeURIComponent(inventoryCheckMatch[1]);
+        const check = await env.DB.prepare('SELECT id FROM property_inventory_checks WHERE id = ?').bind(id).first();
+        if (!check) return bad('Riwayat pengecekan tidak ditemukan.', 404);
+        const body = await request.json();
+        const resolved = body.resolved === true || body.resolved === 1 ? 1 : 0;
+        const resolvedNote = String(body.resolved_note || '').trim();
+        if (resolvedNote.length > 500) return bad('Catatan tindak lanjut maksimal 500 karakter.');
+        await env.DB.prepare('UPDATE property_inventory_checks SET resolved = ?, resolved_note = ? WHERE id = ?')
+          .bind(resolved, resolvedNote, id).run();
+        return json({ ok:true, data:{ id, resolved:Boolean(resolved), resolved_note:resolvedNote } });
+      }
+
+      // Crew: daftar barang yang sudah disetujui Admin/Operasional milik properti yang sedang
+      // dipilih di check-in-crew.html. Barang yang masih 'pending' (baru dilaporkan Crew, belum
+      // direview) sengaja tidak ikut muncul di checklist sampai disetujui.
+      if (request.method === 'GET' && path === '/checkin/inventory-items') {
+        const adminSecret = String(env.ADMIN_DASHBOARD_SECRET || '').trim();
+        const crewSession = await getCrewTokenPayload(request, adminSecret);
+        if (!crewSession) return bad('Login crew diperlukan.', 401);
+        const propertyName = String(url.searchParams.get('property') || '').trim();
+        if (!propertyName) return bad('Properti wajib dipilih.');
+        try {
+          const result = await env.DB.prepare(`
+            SELECT id, name, category, expected_qty FROM property_inventory_items
+            WHERE active = 1 AND review_status = 'approved' AND property_name = ? COLLATE NOCASE
+            ORDER BY name COLLATE NOCASE
+          `).bind(propertyName).all();
+          return json({ ok:true, data:result.results || [] });
+        } catch (error) {
+          if (/no such table: property_inventory_items/i.test(String(error?.message || error)) ||
+              /no such column: review_status/i.test(String(error?.message || error))) {
+            return bad('Inventaris belum disiapkan. Jalankan migration-property-inventory.sql dan migration-property-inventory-crew-proposals.sql di D1.', 503);
+          }
+          throw error;
+        }
+      }
+
+      // Crew: lapor barang baru yang ditemukan di lapangan (belum ada di daftar resmi).
+      // Masuk sebagai review_status='pending' sampai Admin/Operasional menyetujui dari Dashboard.
+      if (request.method === 'POST' && path === '/checkin/inventory-items') {
+        const adminSecret = String(env.ADMIN_DASHBOARD_SECRET || '').trim();
+        const crewSession = await getCrewTokenPayload(request, adminSecret);
+        if (!crewSession) return bad('Login crew diperlukan.', 401);
+        const body = await request.json();
+        const propertyName = String(body.property || '').trim();
+        const name = String(body.name || '').trim().replace(/\s+/g, ' ');
+        const category = String(body.category || '').trim();
+        const expectedQty = Number(body.expected_qty || 1);
+        const photo = String(body.photo || '');
+        if (!propertyName) return bad('Properti wajib dipilih.');
+        if (name.length < 2 || name.length > 120) return bad('Nama barang wajib diisi (maks 120 karakter).');
+        if (category.length > 60) return bad('Kategori maksimal 60 karakter.');
+        if (!Number.isSafeInteger(expectedQty) || expectedQty < 1 || expectedQty > 10000) return bad('Jumlah tidak valid.');
+        let photoUrl = '';
+        if (photo) {
+          let parsedPhoto;
+          try { parsedPhoto = parseDataUrl(photo); }
+          catch { return bad('Foto tidak valid.'); }
+          if (!String(parsedPhoto.contentType || '').startsWith('image/')) return bad('Foto harus berupa gambar.');
+          if (parsedPhoto.bytes.byteLength >= 100 * 1024) return bad('Foto wajib di bawah 100 KB.');
+          const id = crypto.randomUUID();
+          const key = `inventory-items/${id}/photo.jpg`;
+          await env.PHOTOS.put(key, parsedPhoto.bytes, { httpMetadata:{ contentType:parsedPhoto.contentType || 'image/jpeg' } });
+          photoUrl = publicFileUrl(url.origin, key);
+        }
+        const id = crypto.randomUUID();
+        const now = new Date().toISOString();
+        try {
+          await env.DB.prepare(`
+            INSERT INTO property_inventory_items (
+              id, property_id, property_name, name, category, expected_qty, active,
+              review_status, source, photo_url, reported_by, created_at, updated_at
+            ) VALUES (?, '', ?, ?, ?, ?, 1, 'pending', 'crew', ?, ?, ?, ?)
+          `).bind(id, propertyName, name, category, expectedQty, photoUrl, crewSession.crew, now, now).run();
+        } catch (error) {
+          if (/no such column: review_status/i.test(String(error?.message || error))) {
+            return bad('Fitur lapor barang baru belum disiapkan. Jalankan migration-property-inventory-crew-proposals.sql di D1.', 503);
+          }
+          throw error;
+        }
+
+        const telegramToken = String(env.TELEGRAM_BOT_TOKEN || '').trim();
+        const telegramChatId = String(env.TELEGRAM_CHAT_ID || '').trim();
+        if (telegramToken && telegramChatId) {
+          const text = [
+            'LAPORAN BARANG BARU - INVENTARIS',
+            `Properti: ${propertyName}`,
+            `Barang: ${name}${category ? ` (${category})` : ''}`,
+            `Crew: ${crewSession.crew}`,
+            'Menunggu review Admin/Operasional di Dashboard.',
+            now,
+          ].join('\n');
+          try {
+            await fetch(`https://api.telegram.org/bot${telegramToken}/sendMessage`, {
+              method:'POST', headers:{ 'Content-Type':'application/json' },
+              body:JSON.stringify({ chat_id:telegramChatId, text }),
+            });
+          } catch {
+            // Jangan gagalkan penyimpanan hanya karena notifikasi Telegram gagal terkirim.
+          }
+        }
+
+        return json({ ok:true, data:{ id, property_name:propertyName, name, category, expected_qty:expectedQty, photo_url:photoUrl, review_status:'pending' } }, 201);
+      }
+
+      // Crew: submit hasil ceklis kondisi barang (momen tertentu, bukan wajib tiap kunjungan).
+      if (request.method === 'POST' && path === '/checkin/inventory-checks') {
+        const adminSecret = String(env.ADMIN_DASHBOARD_SECRET || '').trim();
+        const crewSession = await getCrewTokenPayload(request, adminSecret);
+        if (!crewSession) return bad('Login crew diperlukan.', 401);
+        const body = await request.json();
+        const propertyName = String(body.property || '').trim();
+        const items = Array.isArray(body.items) ? body.items : [];
+        const photos = Array.isArray(body.photos) ? body.photos : [];
+        if (!propertyName) return bad('Properti wajib dipilih.');
+        if (!items.length || items.length > 300) return bad('Daftar barang tidak valid.');
+        const validStatuses = ['ok', 'rusak', 'hilang'];
+        const cleanedItems = [];
+        for (const item of items) {
+          const itemId = String(item?.item_id || '').trim();
+          const name = String(item?.name || '').trim();
+          const status = validStatuses.includes(item?.status) ? item.status : null;
+          const note = String(item?.note || '').trim();
+          if (!itemId || !name || !status || note.length > 300) return bad('Status salah satu barang tidak valid.');
+          cleanedItems.push({ item_id:itemId, name, status, note });
+        }
+        if (photos.length > 10) return bad('Maksimal 10 foto dokumentasi.');
+        const hasIssues = cleanedItems.some(item => item.status !== 'ok');
+        const id = crypto.randomUUID();
+        const now = new Date().toISOString();
+        const photoUrls = [];
+        for (let index = 0; index < photos.length; index++) {
+          let parsedPhoto;
+          try { parsedPhoto = parseDataUrl(photos[index]); }
+          catch { return bad('Salah satu foto dokumentasi tidak valid.'); }
+          if (!String(parsedPhoto.contentType || '').startsWith('image/')) return bad('Foto dokumentasi harus berupa gambar.');
+          if (parsedPhoto.bytes.byteLength >= 100 * 1024) return bad('Setiap foto dokumentasi wajib di bawah 100 KB.');
+          const key = `inventory-checks/${id}/photo-${index + 1}.jpg`;
+          await env.PHOTOS.put(key, parsedPhoto.bytes, { httpMetadata:{ contentType:parsedPhoto.contentType || 'image/jpeg' } });
+          photoUrls.push(publicFileUrl(url.origin, key));
+        }
+        try {
+          await env.DB.prepare(`
+            INSERT INTO property_inventory_checks (id, property_id, property_name, crew, items_json, photo_urls_json, has_issues, resolved, resolved_note, created_at)
+            VALUES (?, '', ?, ?, ?, ?, ?, 0, '', ?)
+          `).bind(id, propertyName, crewSession.crew, JSON.stringify(cleanedItems), JSON.stringify(photoUrls), hasIssues ? 1 : 0, now).run();
+        } catch (error) {
+          if (/no such table: property_inventory_checks/i.test(String(error?.message || error))) {
+            return bad('Inventaris belum disiapkan. Jalankan migration-property-inventory.sql di D1.', 503);
+          }
+          throw error;
+        }
+
+        if (hasIssues) {
+          const telegramToken = String(env.TELEGRAM_BOT_TOKEN || '').trim();
+          const telegramChatId = String(env.TELEGRAM_CHAT_ID || '').trim();
+          if (telegramToken && telegramChatId) {
+            const issueLines = cleanedItems.filter(item => item.status !== 'ok')
+              .map(item => `- ${item.name}: ${item.status === 'rusak' ? 'Rusak' : 'Hilang'}${item.note ? ` (${item.note})` : ''}`);
+            const text = [
+              'LAPORAN INVENTARIS BERMASALAH',
+              `Properti: ${propertyName}`,
+              `Crew: ${crewSession.crew}`,
+              '',
+              ...issueLines,
+              '',
+              now,
+            ].join('\n');
+            try {
+              await fetch(`https://api.telegram.org/bot${telegramToken}/sendMessage`, {
+                method:'POST', headers:{ 'Content-Type':'application/json' },
+                body:JSON.stringify({ chat_id:telegramChatId, text }),
+              });
+            } catch {
+              // Jangan gagalkan penyimpanan hanya karena notifikasi Telegram gagal terkirim.
+            }
+          }
+        }
+
+        return json({ ok:true, data:{ id, property_name:propertyName, crew:crewSession.crew, items:cleanedItems, photo_urls:photoUrls, has_issues:hasIssues, created_at:now } }, 201);
       }
 
       if (path === '/dashboard/crews') {
@@ -4333,6 +4657,95 @@ export default {
         return json({ ok:true, data:{ id, status, completed_by:status === 'done' ? 'it' : '', completed_at:completedAt } });
       }
 
+      // Percakapan per tiket -- dipakai IT Support (akses semua tiket) dan pelapor (hanya
+      // tiketnya sendiri, lihat lapor-it.html) supaya bisa saling balas sampai tiket selesai.
+      const ticketMessagesMatch = path.match(/^\/it\/tickets\/([^/]+)\/messages$/);
+      if (ticketMessagesMatch && ['GET', 'POST'].includes(request.method)) {
+        const adminSecret = String(env.ADMIN_DASHBOARD_SECRET || '').trim();
+        const tokenData = await getAdminTokenPayload(request, adminSecret);
+        if (!tokenData?.account_id) return bad('Login diperlukan.', 401);
+        const ticketId = decodeURIComponent(ticketMessagesMatch[1]);
+        const ticket = await env.DB.prepare('SELECT id, reported_by FROM it_support_tickets WHERE id = ?').bind(ticketId).first();
+        if (!ticket) return bad('Tiket tidak ditemukan.', 404);
+        const isIt = isItSupportAccount(tokenData);
+        const isReporter = tokenData.role !== 'IT' && tokenData.account_id === ticket.reported_by;
+        if (!isIt && !isReporter) return bad('Anda tidak memiliki akses ke tiket ini.', 403);
+
+        if (request.method === 'GET') {
+          try {
+            const result = await env.DB.prepare(`
+              SELECT id, sender_account_id, sender_label, sender_role, message, created_at
+              FROM it_support_ticket_messages WHERE ticket_id = ? ORDER BY created_at ASC
+            `).bind(ticketId).all();
+            return json({ ok:true, data:result.results || [] });
+          } catch (error) {
+            if (/no such table: it_support_ticket_messages/i.test(String(error?.message || error))) {
+              return bad('Percakapan tiket belum disiapkan. Jalankan migration-it-ticket-messages.sql di D1.', 503);
+            }
+            throw error;
+          }
+        }
+
+        const body = await request.json();
+        const message = String(body.message || '').trim();
+        if (!message || message.length > 2000) return bad('Pesan wajib diisi dan maksimal 2000 karakter.');
+        let senderLabel = 'IT Support';
+        if (!isIt) {
+          const account = await env.DB.prepare('SELECT display_name FROM dashboard_users WHERE account_id = ?').bind(tokenData.account_id).first();
+          senderLabel = account?.display_name || tokenData.account_id;
+        }
+        const id = crypto.randomUUID();
+        const now = new Date().toISOString();
+        try {
+          await env.DB.prepare(`
+            INSERT INTO it_support_ticket_messages (id, ticket_id, sender_account_id, sender_label, sender_role, message, created_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+          `).bind(id, ticketId, tokenData.account_id, senderLabel, tokenData.role || '', message, now).run();
+        } catch (error) {
+          if (/no such table: it_support_ticket_messages/i.test(String(error?.message || error))) {
+            return bad('Percakapan tiket belum disiapkan. Jalankan migration-it-ticket-messages.sql di D1.', 503);
+          }
+          throw error;
+        }
+
+        if (!isIt) {
+          const telegramToken = String(env.TELEGRAM_BOT_TOKEN || '').trim();
+          const telegramChatId = String(env.TELEGRAM_CHAT_ID || '').trim();
+          if (telegramToken && telegramChatId) {
+            try {
+              await fetch(`https://api.telegram.org/bot${telegramToken}/sendMessage`, {
+                method:'POST', headers:{ 'Content-Type':'application/json' },
+                body:JSON.stringify({ chat_id:telegramChatId, text:`BALASAN TIKET IT\nDari: ${senderLabel}\nTiket: ${ticketId}\n\n${message}` }),
+              });
+            } catch {
+              // Jangan gagalkan pengiriman pesan hanya karena notifikasi Telegram gagal.
+            }
+          }
+        }
+
+        return json({ ok:true, data:{ id, ticket_id:ticketId, sender_account_id:tokenData.account_id, sender_label:senderLabel, sender_role:tokenData.role || '', message, created_at:now } }, 201);
+      }
+
+      // Daftar tiket milik pelapor sendiri (lapor-it.html) -- bukan akun IT, hanya tiket yang
+      // reported_by miliknya sendiri yang terlihat.
+      if (request.method === 'GET' && path === '/my-it-tickets') {
+        const adminSecret = String(env.ADMIN_DASHBOARD_SECRET || '').trim();
+        const tokenData = await getAdminTokenPayload(request, adminSecret);
+        if (!tokenData?.account_id || tokenData.role === 'IT') return bad('Login diperlukan.', 401);
+        try {
+          const result = await env.DB.prepare(`
+            SELECT id, kind, title, description, created_at, status, completed_at
+            FROM it_support_tickets WHERE reported_by = ? ORDER BY created_at DESC LIMIT 100
+          `).bind(tokenData.account_id).all();
+          return json({ ok:true, data:result.results || [] });
+        } catch (error) {
+          if (/no such table: it_support_tickets/i.test(String(error?.message || error))) {
+            return bad('Tabel antrean IT belum tersedia. Jalankan properties/migration-it-support-tickets.sql di D1.', 503);
+          }
+          throw error;
+        }
+      }
+
       // Terima laporan bug atau pesan dari admin properti
       if (request.method === 'POST' && path === '/admin/contact-it') {
         const adminSecret = String(env.ADMIN_DASHBOARD_SECRET || '').trim();
@@ -4371,11 +4784,12 @@ export default {
         }
 
         const ticketTitle = submittedTitle || message.split(/\r?\n/, 1)[0].trim().slice(0, 160) || 'Laporan dari Lapor Bug';
+        const ticketId = crypto.randomUUID();
         try {
           await env.DB.prepare(`
             INSERT INTO it_support_tickets (id, kind, title, description, source, reported_by, created_at, status)
             VALUES (?, 'bug', ?, ?, 'lapor_bug', ?, ?, 'open')
-          `).bind(crypto.randomUUID(), ticketTitle, message, adminIdentity.account_id || adminIdentity.role || 'staf', createdAt).run();
+          `).bind(ticketId, ticketTitle, message, adminIdentity.account_id || adminIdentity.role || 'staf', createdAt).run();
         } catch (error) {
           if (/no such table: it_support_tickets/i.test(String(error?.message || error))) {
             return bad('Tabel antrean IT belum tersedia. Jalankan properties/migration-it-support-tickets.sql di D1.', 503);
@@ -4396,7 +4810,7 @@ export default {
           return bad('Pesan tersimpan, tetapi gagal dikirim ke Telegram', 502);
         }
 
-        return json({ ok: true, data: { id, created_at: createdAt } });
+        return json({ ok: true, data: { id, ticket_id: ticketId, created_at: createdAt } });
       }
 
       // Baca dan ubah status history Contact IT

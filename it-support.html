@@ -105,6 +105,19 @@
     </form>
   </dialog>
 
+  <dialog id="ticketMessagesDialog" class="delete-dialog" style="width:min(520px,calc(100% - 28px))" aria-labelledby="ticketMessagesTitle">
+    <div style="padding:22px">
+      <h2 id="ticketMessagesTitle">Percakapan Tiket</h2>
+      <p id="ticketMessagesSubtitle" style="margin:7px 0 0;color:var(--muted);font-size:12px"></p>
+      <div id="ticketMessagesList" style="margin-top:14px;max-height:320px;overflow-y:auto;display:grid;gap:8px"></div>
+      <form id="ticketMessageForm" style="margin-top:14px">
+        <div class="field"><label for="ticketMessageInput">Balasan</label><textarea id="ticketMessageInput" maxlength="2000" required placeholder="Tulis balasan untuk pelapor..." style="min-height:72px"></textarea></div>
+        <p id="ticketMessageNotice" class="notice" role="status" aria-live="polite"></p>
+        <div class="dialog-actions"><button id="ticketMessagesCloseBtn" class="secondary-button" type="button">Tutup</button><button class="primary-button" type="submit" style="width:auto;margin-top:0">Kirim Balasan</button></div>
+      </form>
+    </div>
+  </dialog>
+
   <script>
     const API_BASE='https://your-home-checkin-api.saerobotic.workers.dev';
     const TOKEN_KEY='yourhome_it_support_token';
@@ -165,7 +178,7 @@
         const reporter=ticket.reported_by?` · ${esc(ticket.reported_by)}`:'';
         return `<article class="ticket${isDone?' done':''}">
           <input class="ticket-check" type="checkbox" data-ticket-check="${esc(ticket.id)}" ${isDone?'checked':''} aria-label="${isDone?'Tandai belum selesai':'Tandai selesai'}: ${esc(ticket.title)}" />
-          <div class="ticket-main"><div class="ticket-content"><span class="badge ${isBug?'bug':'task'}">${isBug?'BUG':'TUGAS'}</span><h3 class="ticket-title" title="${esc(ticket.title)}">${esc(ticket.title)}</h3><p class="ticket-description" title="${esc(ticket.description)}">${esc(ticket.description)}</p><span class="ticket-meta" title="${source} · ${formatDate(ticket.created_at)}${reporter}">${source} · ${formatDate(ticket.created_at)}${reporter}${isDone?' · Selesai':''}</span></div><div class="ticket-actions"><button class="ticket-edit" type="button" data-ticket-edit="${esc(ticket.id)}" aria-label="Edit tiket: ${esc(ticket.title)}" title="Edit tiket"><svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L8 18l-4 1 1-4Z"/></svg></button><button class="ticket-delete" type="button" data-ticket-delete="${esc(ticket.id)}" aria-label="Hapus tiket: ${esc(ticket.title)}" title="Hapus tiket"><svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2m3 0-.8 14H5.8L5 6m4 4v6m6-6v6"/></svg></button></div></div>
+          <div class="ticket-main"><div class="ticket-content"><span class="badge ${isBug?'bug':'task'}">${isBug?'BUG':'TUGAS'}</span><h3 class="ticket-title" title="${esc(ticket.title)}">${esc(ticket.title)}</h3><p class="ticket-description" title="${esc(ticket.description)}">${esc(ticket.description)}</p><span class="ticket-meta" title="${source} · ${formatDate(ticket.created_at)}${reporter}">${source} · ${formatDate(ticket.created_at)}${reporter}${isDone?' · Selesai':''}</span></div><div class="ticket-actions"><button class="ticket-edit" type="button" data-ticket-messages="${esc(ticket.id)}" aria-label="Balas tiket: ${esc(ticket.title)}" title="Balas tiket"><svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg></button><button class="ticket-edit" type="button" data-ticket-edit="${esc(ticket.id)}" aria-label="Edit tiket: ${esc(ticket.title)}" title="Edit tiket"><svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L8 18l-4 1 1-4Z"/></svg></button><button class="ticket-delete" type="button" data-ticket-delete="${esc(ticket.id)}" aria-label="Hapus tiket: ${esc(ticket.title)}" title="Hapus tiket"><svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2m3 0-.8 14H5.8L5 6m4 4v6m6-6v6"/></svg></button></div></div>
         </article>`;
       }).join('');
     }
@@ -213,6 +226,54 @@
       el('ticketDeleteForm').reset();
       el('ticketDeleteNotice').textContent='';
     }
+    let activeMessagesTicketId='';
+    function renderTicketMessages(messages){
+      el('ticketMessagesList').innerHTML=messages.length?messages.map(message=>{
+        const isIt=message.sender_role==='IT';
+        return `<div style="padding:9px 11px;border-radius:8px;background:${isIt?'var(--accent-soft)':'var(--page)'};border:1px solid ${isIt?'var(--accent)':'var(--line)'}">
+          <div style="display:flex;justify-content:space-between;gap:8px;font-size:10px;font-weight:800;color:${isIt?'var(--accent-dark)':'var(--ink-soft)'}"><span>${esc(message.sender_label)}${isIt?' (IT)':''}</span><span style="font-weight:600;color:var(--muted)">${formatDate(message.created_at)}</span></div>
+          <p style="margin:5px 0 0;font-size:12px;white-space:pre-wrap">${esc(message.message)}</p>
+        </div>`;
+      }).join(''):'<p style="color:var(--muted);font-size:12px">Belum ada percakapan pada tiket ini.</p>';
+    }
+    async function loadTicketMessages(ticketId){
+      try{
+        const result=await ticketApi(`/it/tickets/${encodeURIComponent(ticketId)}/messages`);
+        renderTicketMessages(Array.isArray(result.data)?result.data:[]);
+      }catch(error){
+        el('ticketMessagesList').innerHTML=`<p style="color:var(--danger);font-size:12px">${esc(error.message||'Percakapan gagal dimuat.')}</p>`;
+      }
+    }
+    function openTicketMessagesDialog(ticket){
+      activeMessagesTicketId=ticket.id;
+      el('ticketMessagesTitle').textContent=`Percakapan: ${ticket.title}`;
+      el('ticketMessagesSubtitle').textContent=ticket.reported_by?`Pelapor: ${ticket.reported_by}`:'';
+      el('ticketMessagesList').innerHTML='<p style="color:var(--muted);font-size:12px">Memuat...</p>';
+      el('ticketMessageForm').reset();
+      el('ticketMessageNotice').textContent='';
+      el('ticketMessagesDialog').showModal();
+      loadTicketMessages(ticket.id);
+    }
+    el('ticketMessagesCloseBtn').addEventListener('click',()=>{el('ticketMessagesDialog').close();activeMessagesTicketId=''});
+    el('ticketMessagesDialog').addEventListener('click',event=>{
+      if(event.target===el('ticketMessagesDialog')){el('ticketMessagesDialog').close();activeMessagesTicketId=''}
+    });
+    el('ticketMessageForm').addEventListener('submit',async event=>{
+      event.preventDefault();
+      if(!activeMessagesTicketId)return;
+      const button=event.submitter;
+      button.disabled=true;
+      el('ticketMessageNotice').textContent='Mengirim balasan...';
+      try{
+        await ticketApi(`/it/tickets/${encodeURIComponent(activeMessagesTicketId)}/messages`,{
+          method:'POST',body:JSON.stringify({message:el('ticketMessageInput').value.trim()}),
+        });
+        el('ticketMessageForm').reset();
+        el('ticketMessageNotice').textContent='';
+        await loadTicketMessages(activeMessagesTicketId);
+      }catch(error){el('ticketMessageNotice').textContent=error.message||'Balasan gagal dikirim.'}
+      finally{button.disabled=false}
+    });
     el('itLoginForm').addEventListener('submit',async event=>{
       event.preventDefault();
       const button=el('loginButton');
@@ -263,6 +324,12 @@
       if(deleteButton){
         const ticket=tickets.find(item=>item.id===deleteButton.dataset.ticketDelete);
         if(ticket)openTicketDeleteDialog(ticket);
+        return;
+      }
+      const messagesButton=event.target.closest('[data-ticket-messages]');
+      if(messagesButton){
+        const ticket=tickets.find(item=>item.id===messagesButton.dataset.ticketMessages);
+        if(ticket)openTicketMessagesDialog(ticket);
         return;
       }
       const button=event.target.closest('[data-ticket-edit]');

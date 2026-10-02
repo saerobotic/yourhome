@@ -233,10 +233,11 @@
       <p id="todayDate" class="text-xs text-brand-100 mt-3"></p>
     </header>
 
-    <nav class="px-5 pt-5 grid grid-cols-3 gap-2" role="tablist" aria-label="Navigasi Check In Crew">
+    <nav class="px-5 pt-5 grid grid-cols-2 sm:grid-cols-4 gap-2" role="tablist" aria-label="Navigasi Check In Crew">
       <button id="crewCheckinTab" type="button" role="tab" aria-selected="true" aria-controls="crewCheckinView" class="min-h-12 rounded-xl bg-brand-600 px-2 py-3 text-xs sm:text-sm font-semibold leading-tight text-white">Check-in</button>
       <button id="crewDocumentationTab" type="button" role="tab" aria-selected="false" aria-controls="crewDocumentationView" class="min-h-12 rounded-xl bg-white border border-gray-200 px-2 py-3 text-xs sm:text-sm font-semibold leading-tight text-gray-700">Dokumentasi Saya</button>
       <button id="crewTasksTab" type="button" role="tab" aria-selected="false" aria-controls="crewTasksView" class="min-h-12 rounded-xl bg-white border border-gray-200 px-2 py-3 text-xs sm:text-sm font-semibold leading-tight text-gray-700">Tugas Hari Ini <span id="crewTaskBadge" class="ml-1"></span></button>
+      <button id="crewInventoryTab" type="button" role="tab" aria-selected="false" aria-controls="crewInventoryView" class="min-h-12 rounded-xl bg-white border border-gray-200 px-2 py-3 text-xs sm:text-sm font-semibold leading-tight text-gray-700">Cek Inventaris</button>
     </nav>
 
     <!-- ===========================================================
@@ -410,6 +411,43 @@
       <p id="crewTasksStatus" class="text-sm text-gray-500 mb-3" role="status" aria-live="polite"></p>
       <div id="crewTasksList" class="space-y-3"></div>
     </section>
+
+    <section id="crewInventoryView" role="tabpanel" aria-labelledby="crewInventoryTab" class="hidden px-5 pt-5">
+      <h3 class="font-bold text-gray-800 mb-1">Cek Inventaris</h3>
+      <p class="text-xs text-gray-500 mb-3">Isi ini pada momen tertentu saja (misalnya saat tamu checkout atau diminta admin cek berkala), tidak wajib tiap kunjungan.</p>
+      <label for="inventoryPropertySelect" class="block text-sm font-semibold text-gray-700 mb-1.5">Pilih Properti</label>
+      <select id="inventoryPropertySelect" class="w-full px-4 py-3.5 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition text-base">
+        <option value="">— Pilih properti —</option>
+      </select>
+      <p id="inventoryListStatus" class="text-xs text-gray-500 mt-2" role="status" aria-live="polite"></p>
+      <div id="inventoryChecklist" class="mt-3 space-y-2"></div>
+
+      <div id="inventoryNewItemSection" class="hidden mt-4 rounded-xl border border-dashed border-gray-300 p-3">
+        <h4 class="font-semibold text-gray-800 text-sm mb-1">+ Lapor Barang Baru</h4>
+        <p class="text-xs text-gray-500 mb-3">Belum ada di daftar? Laporkan di sini — akan direview Admin/Operasional sebelum masuk daftar resmi.</p>
+        <input type="text" id="newInventoryItemName" maxlength="120" placeholder="Nama barang" class="w-full px-3 py-2.5 rounded-lg border border-gray-200 bg-white text-sm mb-2" />
+        <div class="grid grid-cols-2 gap-2 mb-2">
+          <select id="newInventoryItemCategory" class="px-3 py-2.5 rounded-lg border border-gray-200 bg-white text-sm"></select>
+          <input type="number" id="newInventoryItemQty" min="1" step="1" value="1" class="px-3 py-2.5 rounded-lg border border-gray-200 bg-white text-sm" />
+        </div>
+        <label for="newInventoryItemPhotoInput" class="block cursor-pointer bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold py-2.5 rounded-lg text-center text-xs transition mb-2">📷 Foto Barang (opsional)</label>
+        <input type="file" id="newInventoryItemPhotoInput" accept="image/*" capture="environment" class="hidden" />
+        <div id="newInventoryItemPhotoPreview" class="mb-2"></div>
+        <button id="submitNewInventoryItemBtn" type="button" class="w-full rounded-lg bg-gray-800 py-2.5 text-xs font-semibold text-white transition hover:bg-gray-900">Kirim Laporan Barang Baru</button>
+        <p id="newInventoryItemStatus" class="text-xs text-gray-500 mt-2" role="status" aria-live="polite"></p>
+      </div>
+
+      <div id="inventoryPhotoSection" class="hidden mt-4">
+        <label for="inventoryPhotoInput" class="block cursor-pointer bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold py-3.5 rounded-xl text-center text-sm transition">
+          📷 Tambah Foto Dokumentasi (opsional)
+        </label>
+        <input type="file" id="inventoryPhotoInput" accept="image/*" capture="environment" multiple class="hidden" />
+        <p id="inventoryPhotoCount" class="text-xs text-gray-400 mt-2">Belum ada foto.</p>
+        <div id="inventoryPhotoPreview" class="work-photo-grid mt-3"></div>
+      </div>
+      <button id="submitInventoryCheckBtn" type="button" disabled class="hidden mt-4 w-full rounded-xl bg-brand-600 py-3.5 text-sm font-semibold text-white transition hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-60">Kirim Hasil Cek</button>
+      <p id="inventorySubmitStatus" class="text-sm text-gray-500 mt-2" role="status" aria-live="polite"></p>
+    </section>
   </section>
 
   <dialog id="checkinConfirmDialog" class="w-[calc(100%-2rem)] max-w-md rounded-xl border-0 p-0 shadow-2xl backdrop:bg-black/50">
@@ -448,7 +486,7 @@
     ACCURACY_THRESHOLD: 100,
     // Batas ukuran foto sebelum diunggah ke Storage
     PHOTO_MAX_WIDTH: 640,
-    PHOTO_MAX_BYTES: 250 * 1024,
+    PHOTO_MAX_BYTES: 100 * 1024,
     MAX_WORK_PHOTOS: 30
   };
   const PENDING_KEY = 'pending_checkins_v1';
@@ -728,20 +766,26 @@
   function switchCrewView(view) {
     const showDocumentation = view === 'documentation';
     const showTasks = view === 'tasks';
-    document.getElementById('crewCheckinView').classList.toggle('hidden', showDocumentation || showTasks);
+    const showInventory = view === 'inventory';
+    const showCheckin = !showDocumentation && !showTasks && !showInventory;
+    document.getElementById('crewCheckinView').classList.toggle('hidden', !showCheckin);
     document.getElementById('crewDocumentationView').classList.toggle('hidden', !showDocumentation);
     document.getElementById('crewTasksView').classList.toggle('hidden', !showTasks);
-    const checkinTab = document.getElementById('crewCheckinTab');
-    const documentationTab = document.getElementById('crewDocumentationTab');
-    const tasksTab = document.getElementById('crewTasksTab');
-    checkinTab.setAttribute('aria-selected', String(!showDocumentation && !showTasks));
-    documentationTab.setAttribute('aria-selected', String(showDocumentation));
-    tasksTab.setAttribute('aria-selected', String(showTasks));
-    checkinTab.className = `min-h-12 rounded-xl px-2 py-3 text-xs sm:text-sm font-semibold leading-tight ${!showDocumentation && !showTasks ? 'bg-brand-600 text-white' : 'bg-white border border-gray-200 text-gray-700'}`;
-    documentationTab.className = `min-h-12 rounded-xl px-2 py-3 text-xs sm:text-sm font-semibold leading-tight ${showDocumentation ? 'bg-brand-600 text-white' : 'bg-white border border-gray-200 text-gray-700'}`;
-    tasksTab.className = `min-h-12 rounded-xl px-2 py-3 text-xs sm:text-sm font-semibold leading-tight ${showTasks ? 'bg-brand-600 text-white' : 'bg-white border border-gray-200 text-gray-700'}`;
+    document.getElementById('crewInventoryView').classList.toggle('hidden', !showInventory);
+    const tabs = {
+      checkin: document.getElementById('crewCheckinTab'),
+      documentation: document.getElementById('crewDocumentationTab'),
+      tasks: document.getElementById('crewTasksTab'),
+      inventory: document.getElementById('crewInventoryTab'),
+    };
+    const active = { checkin:showCheckin, documentation:showDocumentation, tasks:showTasks, inventory:showInventory };
+    Object.entries(tabs).forEach(([key, tab]) => {
+      tab.setAttribute('aria-selected', String(active[key]));
+      tab.className = `min-h-12 rounded-xl px-2 py-3 text-xs sm:text-sm font-semibold leading-tight ${active[key] ? 'bg-brand-600 text-white' : 'bg-white border border-gray-200 text-gray-700'}`;
+    });
     if (showDocumentation) loadCrewDocumentation();
     if (showTasks) renderCrewTasks();
+    if (showInventory) populateInventoryPropertyOptions();
   }
 
   let checkinPendingExtraBedByProperty = new Map();
@@ -806,6 +850,7 @@
       status.textContent = properties.length ? `${properties.length} properti aktif dari Dashboard.` : 'Belum ada properti aktif di Dashboard.';
       validateForm();
       updateExtraBedPendingNotice();
+      populateInventoryPropertyOptions();
       if (!silent) showToast('Daftar properti berhasil diperbarui.', 'success');
       return true;
     } catch (error) {
@@ -816,6 +861,216 @@
       return false;
     } finally {
       refreshButton.disabled = false;
+    }
+  }
+
+  /* ============================================================
+     CEK INVENTARIS (momen tertentu, lihat view-inventaris Dashboard)
+     ============================================================ */
+  let inventoryChecklistItems = [];
+  let inventoryPhotos = [];
+
+  // Kategori standar barang hotel/apartemen/villa/kosan, sama dengan dropdown di menu
+  // Inventaris Dashboard (dasbord.html, INVENTORY_CATEGORIES).
+  const INVENTORY_CATEGORIES = [
+    'Furnitur', 'Elektronik & Pendingin Udara', 'Dapur & Peralatan Masak',
+    'Kamar Mandi & Sanitasi', 'Linen & Sprei', 'Pencahayaan & Kelistrikan',
+    'Keamanan & Keselamatan', 'Dekorasi & Aksesoris', 'Hiburan & Konektivitas (TV/WiFi)',
+    'Outdoor & Taman', 'Perlengkapan Kebersihan', 'Perlengkapan Tamu (Amenities)',
+    'Laundry', 'Lainnya',
+  ];
+
+  function populateInventoryPropertyOptions() {
+    const source = document.getElementById('unitInput');
+    const target = document.getElementById('inventoryPropertySelect');
+    const previous = target.value;
+    target.innerHTML = source.innerHTML;
+    if ([...target.options].some(option => option.value === previous)) target.value = previous;
+    const categorySelect = document.getElementById('newInventoryItemCategory');
+    if (categorySelect && !categorySelect.options.length) {
+      categorySelect.innerHTML = INVENTORY_CATEGORIES.map(cat => `<option value="${escapeHtml(cat)}">${escapeHtml(cat)}</option>`).join('');
+    }
+  }
+
+  function resetInventoryChecklistUi() {
+    inventoryChecklistItems = [];
+    inventoryPhotos = [];
+    document.getElementById('inventoryChecklist').innerHTML = '';
+    document.getElementById('inventoryPhotoSection').classList.add('hidden');
+    document.getElementById('submitInventoryCheckBtn').classList.add('hidden');
+    document.getElementById('submitInventoryCheckBtn').disabled = true;
+    document.getElementById('inventorySubmitStatus').textContent = '';
+    document.getElementById('inventoryNewItemSection').classList.add('hidden');
+    renderInventoryPhotoPreview();
+  }
+
+  async function loadInventoryChecklist() {
+    const propertyName = document.getElementById('inventoryPropertySelect').value;
+    const status = document.getElementById('inventoryListStatus');
+    resetInventoryChecklistUi();
+    if (!propertyName) { status.textContent = ''; return; }
+    document.getElementById('inventoryNewItemSection').classList.remove('hidden');
+    status.textContent = 'Memuat daftar barang...';
+    try {
+      const response = await api(`/checkin/inventory-items?property=${encodeURIComponent(propertyName)}`, { cache: 'no-store' });
+      const items = Array.isArray(response.data) ? response.data : [];
+      if (!items.length) {
+        status.textContent = 'Belum ada daftar barang resmi untuk properti ini. Lapor barang yang ada lewat form di bawah.';
+        return;
+      }
+      inventoryChecklistItems = items.map(item => ({ id: item.id, name: item.name, category: item.category, status: 'ok', note: '' }));
+      renderInventoryChecklist();
+      document.getElementById('inventoryPhotoSection').classList.remove('hidden');
+      document.getElementById('submitInventoryCheckBtn').classList.remove('hidden');
+      document.getElementById('submitInventoryCheckBtn').disabled = false;
+      status.textContent = `${items.length} barang dimuat. Ubah status kalau ada yang rusak/hilang.`;
+    } catch (error) {
+      status.textContent = error.message || 'Daftar barang gagal dimuat.';
+    }
+  }
+
+  function renderInventoryChecklist() {
+    const container = document.getElementById('inventoryChecklist');
+    container.innerHTML = inventoryChecklistItems.map((item, index) => `
+      <div class="rounded-xl border border-gray-200 p-3">
+        <div class="flex items-center justify-between gap-2">
+          <div class="min-w-0">
+            <p class="font-semibold text-gray-800 text-sm truncate">${escapeHtml(item.name)}</p>
+            ${item.category ? `<p class="text-xs text-gray-400">${escapeHtml(item.category)}</p>` : ''}
+          </div>
+          <select data-inventory-status="${index}" class="shrink-0 text-sm border border-gray-200 rounded-lg px-2 py-2 bg-white">
+            <option value="ok" ${item.status === 'ok' ? 'selected' : ''}>Baik</option>
+            <option value="rusak" ${item.status === 'rusak' ? 'selected' : ''}>Rusak</option>
+            <option value="hilang" ${item.status === 'hilang' ? 'selected' : ''}>Hilang</option>
+          </select>
+        </div>
+        <input type="text" data-inventory-note="${index}" maxlength="300" placeholder="Catatan (opsional)" value="${escapeHtml(item.note)}" class="mt-2 w-full text-sm border border-gray-200 rounded-lg px-3 py-2 ${item.status === 'ok' ? 'hidden' : ''}" />
+      </div>
+    `).join('');
+    container.querySelectorAll('select[data-inventory-status]').forEach(select => {
+      select.addEventListener('change', () => {
+        const index = Number(select.dataset.inventoryStatus);
+        inventoryChecklistItems[index].status = select.value;
+        const noteInput = container.querySelector(`input[data-inventory-note="${index}"]`);
+        noteInput.classList.toggle('hidden', select.value === 'ok');
+        if (select.value === 'ok') { inventoryChecklistItems[index].note = ''; noteInput.value = ''; }
+      });
+    });
+    container.querySelectorAll('input[data-inventory-note]').forEach(input => {
+      input.addEventListener('input', () => {
+        inventoryChecklistItems[Number(input.dataset.inventoryNote)].note = input.value;
+      });
+    });
+  }
+
+  function renderInventoryPhotoPreview() {
+    document.getElementById('inventoryPhotoCount').textContent = inventoryPhotos.length ? `${inventoryPhotos.length} foto dipilih.` : 'Belum ada foto.';
+    const preview = document.getElementById('inventoryPhotoPreview');
+    preview.innerHTML = inventoryPhotos.map((photo, index) => `
+      <div class="relative">
+        <img src="${photo}" class="work-photo-thumb" alt="Foto dokumentasi ${index + 1}" />
+        <button type="button" data-remove-inventory-photo="${index}" class="absolute -top-1.5 -right-1.5 bg-red-500 text-white rounded-full w-5 h-5 text-xs leading-5">×</button>
+      </div>
+    `).join('');
+    preview.querySelectorAll('[data-remove-inventory-photo]').forEach(button => {
+      button.addEventListener('click', () => {
+        inventoryPhotos.splice(Number(button.dataset.removeInventoryPhoto), 1);
+        renderInventoryPhotoPreview();
+      });
+    });
+  }
+
+  async function handleInventoryPhotoUpload(event) {
+    const files = Array.from(event.target.files || []);
+    event.target.value = '';
+    if (!files.length) return;
+    if (inventoryPhotos.length + files.length > 10) {
+      showToast('Maksimal 10 foto dokumentasi.', 'error');
+      return;
+    }
+    const compressed = await Promise.all(files.map(file => new Promise(resolve => compressImage(file, resolve))));
+    inventoryPhotos.push(...compressed);
+    renderInventoryPhotoPreview();
+  }
+
+  async function submitInventoryCheck() {
+    const propertyName = document.getElementById('inventoryPropertySelect').value;
+    const status = document.getElementById('inventorySubmitStatus');
+    const button = document.getElementById('submitInventoryCheckBtn');
+    if (!propertyName || !inventoryChecklistItems.length) return;
+    button.disabled = true;
+    status.textContent = 'Mengirim hasil cek...';
+    try {
+      await api('/checkin/inventory-checks', {
+        method: 'POST',
+        body: JSON.stringify({
+          property: propertyName,
+          items: inventoryChecklistItems.map(item => ({ item_id: item.id, name: item.name, status: item.status, note: item.note })),
+          photos: inventoryPhotos,
+        }),
+      });
+      showToast('Hasil cek inventaris terkirim.', 'success');
+      document.getElementById('inventoryPropertySelect').value = '';
+      await loadInventoryChecklist();
+    } catch (error) {
+      status.textContent = error.message || 'Gagal mengirim hasil cek.';
+    } finally {
+      button.disabled = false;
+    }
+  }
+
+  let newInventoryItemPhoto = '';
+
+  function renderNewInventoryItemPhotoPreview() {
+    const preview = document.getElementById('newInventoryItemPhotoPreview');
+    preview.innerHTML = newInventoryItemPhoto
+      ? `<div class="relative inline-block"><img src="${newInventoryItemPhoto}" class="work-photo-thumb" alt="Foto barang baru" /><button type="button" id="removeNewInventoryItemPhotoBtn" class="absolute -top-1.5 -right-1.5 bg-red-500 text-white rounded-full w-5 h-5 text-xs leading-5">×</button></div>`
+      : '';
+    document.getElementById('removeNewInventoryItemPhotoBtn')?.addEventListener('click', () => {
+      newInventoryItemPhoto = '';
+      renderNewInventoryItemPhotoPreview();
+    });
+  }
+
+  async function handleNewInventoryItemPhotoUpload(event) {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (!file) return;
+    newInventoryItemPhoto = await new Promise(resolve => compressImage(file, resolve));
+    renderNewInventoryItemPhotoPreview();
+  }
+
+  async function submitNewInventoryItem() {
+    const propertyName = document.getElementById('inventoryPropertySelect').value;
+    const status = document.getElementById('newInventoryItemStatus');
+    const button = document.getElementById('submitNewInventoryItemBtn');
+    const name = document.getElementById('newInventoryItemName').value.trim();
+    if (!propertyName) { status.textContent = 'Pilih properti terlebih dahulu.'; return; }
+    if (!name) { status.textContent = 'Nama barang wajib diisi.'; return; }
+    button.disabled = true;
+    status.textContent = 'Mengirim laporan...';
+    try {
+      await api('/checkin/inventory-items', {
+        method: 'POST',
+        body: JSON.stringify({
+          property: propertyName,
+          name,
+          category: document.getElementById('newInventoryItemCategory').value.trim(),
+          expected_qty: Number(document.getElementById('newInventoryItemQty').value) || 1,
+          photo: newInventoryItemPhoto,
+        }),
+      });
+      showToast('Laporan barang baru terkirim, menunggu review Admin.', 'success');
+      document.getElementById('newInventoryItemName').value = '';
+      document.getElementById('newInventoryItemCategory').value = '';
+      document.getElementById('newInventoryItemQty').value = 1;
+      newInventoryItemPhoto = '';
+      renderNewInventoryItemPhotoPreview();
+      status.textContent = '';
+    } catch (error) {
+      status.textContent = error.message || 'Gagal mengirim laporan.';
+    } finally {
+      button.disabled = false;
     }
   }
 
@@ -1085,6 +1340,12 @@
     document.getElementById('crewCheckinTab').addEventListener('click', () => switchCrewView('checkin'));
     document.getElementById('crewDocumentationTab').addEventListener('click', () => switchCrewView('documentation'));
     document.getElementById('crewTasksTab').addEventListener('click', () => switchCrewView('tasks'));
+    document.getElementById('crewInventoryTab').addEventListener('click', () => switchCrewView('inventory'));
+    document.getElementById('inventoryPropertySelect').addEventListener('change', loadInventoryChecklist);
+    document.getElementById('inventoryPhotoInput').addEventListener('change', handleInventoryPhotoUpload);
+    document.getElementById('submitInventoryCheckBtn').addEventListener('click', submitInventoryCheck);
+    document.getElementById('newInventoryItemPhotoInput').addEventListener('change', handleNewInventoryItemPhotoUpload);
+    document.getElementById('submitNewInventoryItemBtn').addEventListener('click', submitNewInventoryItem);
     document.getElementById('crewTasksList').addEventListener('click', handleCrewTaskAction);
     document.getElementById('refreshCrewDocumentationBtn').addEventListener('click', () => loadCrewDocumentation());
     document.getElementById('previousCrewDocumentationBtn').addEventListener('click', () => loadCrewDocumentation({ offset:crewDocumentationOffset - CREW_DOCUMENTATION_PAGE_SIZE }));

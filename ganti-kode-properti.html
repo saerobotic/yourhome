@@ -338,6 +338,8 @@ function openConfirm() {
 async function sendChanges() {
   const status = el('formStatus');
   const confirmButton = el('confirmSendBtn');
+  const pin = window.prompt('Masukkan PIN Master (4 digit) untuk menyimpan perubahan kode properti:');
+  if (pin === null) return;
   confirmButton.disabled = true;
   confirmButton.textContent = 'Mengirim...';
   try {
@@ -347,6 +349,7 @@ async function sendChanges() {
       body: JSON.stringify({
         submitted_by: el('submittedBy').value.trim(),
         changes: pendingChanges.map(c => ({ id: c.id, new_code: c.new_code })),
+        pin: pin.trim(),
       }),
     });
     if (response.status === 401) { el('confirmOverlay').classList.remove('show'); showLogin('Sesi berakhir. Silakan login kembali.'); return; }
