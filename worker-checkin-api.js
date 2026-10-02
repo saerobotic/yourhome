@@ -4677,6 +4677,15 @@ export default {
               SELECT id, sender_account_id, sender_label, sender_role, message, created_at
               FROM it_support_ticket_messages WHERE ticket_id = ? ORDER BY created_at ASC
             `).bind(ticketId).all();
+            // Pelapor membuka tiketnya sendiri -- tandai sudah dibaca supaya lampu notifikasi mati.
+            if (isReporter) {
+              try {
+                await env.DB.prepare('UPDATE it_support_tickets SET reporter_last_seen_at = ? WHERE id = ?')
+                  .bind(new Date().toISOString(), ticketId).run();
+              } catch (error) {
+                if (!/no such column: reporter_last_seen_at/i.test(String(error?.message || error))) throw error;
+              }
+            }
             return json({ ok:true, data:result.results || [] });
           } catch (error) {
             if (/no such table: it_support_ticket_messages/i.test(String(error?.message || error))) {
@@ -4708,6 +4717,16 @@ export default {
           throw error;
         }
 
+        // IT membalas -- catat waktunya supaya lampu notifikasi pelapor di admin_yourhome menyala
+        // merah sampai pelapor membuka tiket ini (lihat GET di atas yang menandai reporter_last_seen_at).
+        if (isIt) {
+          try {
+            await env.DB.prepare('UPDATE it_support_tickets SET last_it_reply_at = ? WHERE id = ?').bind(now, ticketId).run();
+          } catch (error) {
+            if (!/no such column: last_it_reply_at/i.test(String(error?.message || error))) throw error;
+          }
+        }
+
         if (!isIt) {
           const telegramToken = String(env.TELEGRAM_BOT_TOKEN || '').trim();
           const telegramChatId = String(env.TELEGRAM_CHAT_ID || '').trim();
@@ -4724,6 +4743,27 @@ export default {
         }
 
         return json({ ok:true, data:{ id, ticket_id:ticketId, sender_account_id:tokenData.account_id, sender_label:senderLabel, sender_role:tokenData.role || '', message, created_at:now } }, 201);
+      }
+
+      // Lampu notifikasi kartu "Lapor ke IT Support" di hub admin_yourhome -- merah kalau ada
+      // balasan IT yang belum dibuka pelapor (dicek lewat GET /it/tickets/{id}/messages).
+      if (request.method === 'GET' && path === '/my-it-tickets/unread-count') {
+        const adminSecret = String(env.ADMIN_DASHBOARD_SECRET || '').trim();
+        const tokenData = await getAdminTokenPayload(request, adminSecret);
+        if (!tokenData?.account_id || tokenData.role === 'IT') return bad('Login diperlukan.', 401);
+        try {
+          const row = await env.DB.prepare(`
+            SELECT COUNT(*) AS count FROM it_support_tickets
+            WHERE reported_by = ? AND last_it_reply_at <> ''
+              AND (reporter_last_seen_at = '' OR last_it_reply_at > reporter_last_seen_at)
+          `).bind(tokenData.account_id).first();
+          return json({ ok:true, data:{ count:Number(row?.count || 0) } });
+        } catch (error) {
+          if (/no such column: last_it_reply_at|no such table: it_support_tickets/i.test(String(error?.message || error))) {
+            return json({ ok:true, data:{ count:0 } });
+          }
+          throw error;
+        }
       }
 
       // Daftar tiket milik pelapor sendiri (lapor-it.html) -- bukan akun IT, hanya tiket yang

@@ -1,412 +1,426 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Lapor ke IT Support — YOUR HOME</title>
-<meta name="robots" content="noindex, nofollow" />
-<link rel="preconnect" href="https://fonts.googleapis.com" />
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,400&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
-<style>
-:root{
-  --cream:#FAF7F2; --cream-deep:#F1ECE2; --sand:#E8E0D2;
-  --terracotta:#A0522D; --terracotta-d:#8B4513;
-  --coffee:#5C4033; --coffee-d:#3E2723; --charcoal:#2C2620;
-  --white:#FFFFFF; --grey:#8C857C; --grey-l:#D9D3C8;
-  --green:#3F5A3A; --red:#B42318;
-  --shadow:0 10px 30px rgba(60,40,25,.10); --radius:14px; --radius-sm:9px;
-}
-*{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'Poppins',system-ui,sans-serif;background:var(--cream);color:var(--charcoal);line-height:1.5;padding-bottom:60px}
-h1,h2{font-family:'Playfair Display',Georgia,serif;font-weight:700;color:var(--coffee-d);letter-spacing:-.01em}
-.container{max-width:560px;margin:0 auto;padding:0 18px}
-.header{background:var(--coffee-d);color:#fff;padding:28px 0 22px}
-.header h1{color:#fff;font-size:clamp(1.4rem,4.5vw,1.9rem)}
-.header p{color:rgba(255,255,255,.75);font-size:.86rem;margin-top:6px}
-.card{background:var(--white);border:1px solid var(--grey-l);border-radius:var(--radius);box-shadow:var(--shadow);padding:18px;margin-top:18px}
-.field{display:block;margin-bottom:14px}
-.field label{display:block;font-size:.75rem;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:var(--grey);margin-bottom:5px}
-.field input,.field select,.field textarea{width:100%;padding:10px 12px;border:1px solid var(--grey-l);border-radius:8px;font:inherit;font-size:.95rem;color:var(--charcoal);background:#fff}
-.field textarea{resize:vertical;min-height:140px}
-.field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:var(--terracotta)}
-.status{margin-top:10px;font-size:.84rem;min-height:1.2em}
-.status.error{color:var(--red)}
-.status.ok{color:var(--green)}
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:13px 18px;border-radius:10px;border:none;font:inherit;font-weight:700;font-size:.95rem;cursor:pointer;transition:filter .15s}
-.btn-primary{background:var(--coffee-d);color:#fff}
-.btn-primary:hover{filter:brightness(1.08)}
-.btn-primary:disabled{opacity:.55;cursor:wait}
-.hint-box{background:var(--cream-deep);border:1px solid var(--sand);border-radius:var(--radius-sm);padding:12px 14px;font-size:.84rem;color:var(--coffee);margin-top:18px}
-.icon{width:52px;height:52px;border-radius:50%;background:#E9F0E6;color:var(--green);display:flex;align-items:center;justify-content:center;margin:0 auto 14px;font-size:1.6rem}
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#202a25" />
+  <title>Lapor ke IT Support | YOUR HOME</title>
+  <meta name="robots" content="noindex, nofollow" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root{--ink:#202a25;--ink-soft:#435149;--muted:#758078;--page:#f2f3ef;--paper:#fff;--line:#dfe4de;--accent:#47664d;--accent-dark:#35523b;--accent-soft:#eaf1e9;--danger:#a34335;--danger-soft:#faece8;--blue:#315e78;--blue-soft:#eaf2f6;--gold:#a9782c;--gold-soft:#fbf3e5;--radius:10px}
+    *{box-sizing:border-box}body{margin:0;background:var(--page);color:var(--ink);font-family:'Plus Jakarta Sans',sans-serif;font-size:14px;line-height:1.5}button,input,select,textarea{font:inherit}button{cursor:pointer}button:disabled{cursor:wait;opacity:.6}.hidden{display:none!important}[hidden]{display:none!important}
+    .login{min-height:100vh;display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr)}
+    .login-aside{position:relative;overflow:hidden;background:linear-gradient(165deg,var(--ink) 0%,#2e3a33 55%,var(--accent-dark) 100%);color:#fff;padding:48px 56px;display:flex;flex-direction:column;justify-content:space-between}
+    .login-aside::before{content:'';position:absolute;left:-120px;bottom:-140px;width:460px;height:460px;border-radius:50%;border:64px solid rgba(255,255,255,.08)}
+    .login-aside::after{content:'';position:absolute;right:48px;top:48px;width:120px;height:120px;border-radius:50%;border:1px solid rgba(255,255,255,.15)}
+    .login-aside>*{position:relative;z-index:1}
+    .login-aside-brand{display:flex;align-items:center;gap:10px;font-weight:800;letter-spacing:.04em;font-size:.8rem;text-transform:uppercase}
+    .login-aside-brand .brand-mark{background:rgba(255,255,255,.14);color:#fff}
+    .login-aside h2{font-size:clamp(1.6rem,2.4vw,2.2rem);font-weight:800;line-height:1.2;letter-spacing:-.02em;max-width:18ch;margin:14px 0 0}
+    .login-aside p{color:rgba(255,255,255,.75);max-width:42ch;margin:14px 0 0;font-size:.95rem;line-height:1.6}
+    .login-aside small{color:rgba(255,255,255,.55);font-size:.78rem}
+    .login-main{display:grid;place-items:center;padding:32px 20px;background:var(--page)}
+    .login-panel{width:min(420px,100%);background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:30px;box-shadow:0 24px 70px rgba(13,23,17,.12)}
+    .brand-mark{width:42px;height:42px;display:grid;place-items:center;background:var(--accent-soft);color:var(--accent-dark);border-radius:10px;font-size:14px;font-weight:800}
+    .eyebrow{margin:20px 0 5px;color:var(--accent);font-size:11px;font-weight:800;text-transform:uppercase}.login-panel h1{margin:0;font-size:25px;line-height:1.2}.subcopy{margin:8px 0 22px;color:var(--muted);font-size:13px}
+    .field{display:grid;gap:6px;margin-top:14px}.field label{font-size:12px;font-weight:700;color:var(--ink-soft)}.field input,.field select,.field textarea{width:100%;min-height:42px;padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:#fff;color:var(--ink);outline:none}.field textarea{min-height:118px;resize:vertical}.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(71,102,77,.14)}
+    .password-wrap{position:relative}.password-wrap input{padding-right:46px}.password-toggle{position:absolute;right:3px;top:3px;width:38px;height:36px;border:0;border-radius:6px;background:transparent;color:var(--muted);display:grid;place-items:center}.password-toggle:hover{background:var(--page);color:var(--ink)}
+    .primary-button{min-height:42px;padding:10px 15px;border:1px solid var(--accent);border-radius:8px;background:var(--accent);color:white;font-size:13px;font-weight:700}.primary-button:hover{background:var(--accent-dark)}.login-panel .primary-button{width:100%;margin-top:18px}
+    .notice{min-height:20px;margin:12px 0 0;color:var(--danger);font-size:12px}[role=status]:empty,[role=alert]:empty{display:none}
+    .app-header{background:var(--ink);color:white}.header-inner{max-width:900px;margin:auto;padding:16px 24px;display:flex;align-items:center;gap:14px}.header-brand{display:flex;align-items:center;gap:11px;min-width:0}.header-brand .brand-mark{background:#e4ebdd;color:var(--ink)}.header-title{font-size:15px;font-weight:800}.header-subtitle{color:#c2cdc3;font-size:11px}.header-spacer{flex:1}.user-chip{padding:6px 10px;border:1px solid rgba(255,255,255,.22);border-radius:7px;color:#d8e5d7;font-size:11px;font-weight:800}.ghost-button{min-height:36px;padding:7px 11px;border:1px solid rgba(255,255,255,.25);border-radius:7px;background:transparent;color:white;font-size:12px;font-weight:700}.ghost-button:hover{background:rgba(255,255,255,.1)}
+    .workspace{max-width:900px;margin:auto;padding:26px 24px 48px}.page-heading{margin-bottom:18px}.page-heading h1{margin:0;font-size:22px;line-height:1.2}.page-heading p{margin:6px 0 0;color:var(--muted);font-size:13px}
+    .filter-tabs{display:inline-flex;gap:3px;padding:3px;border:1px solid var(--line);border-radius:8px;background:var(--paper);margin-bottom:18px}.filter-tabs button{min-height:36px;padding:8px 16px;border:0;border-radius:6px;background:transparent;color:var(--muted);font-size:12px;font-weight:700}.filter-tabs button[aria-pressed=true]{background:var(--accent);color:#fff}
+    .panel{background:var(--paper);border:1px solid var(--line);border-radius:var(--radius)}.panel-head{padding:16px 18px;border-bottom:1px solid var(--line)}.panel-head h2{margin:0;font-size:15px}.panel-head p{margin:4px 0 0;color:var(--muted);font-size:11px}.entry-form{padding:4px 18px 18px}.entry-form .primary-button{width:100%;margin-top:16px}
+    .hint-box{background:var(--accent-soft);border:1px solid var(--line);border-radius:var(--radius);padding:12px 14px;font-size:12px;color:var(--ink-soft);margin-top:16px}
+    .ticket-list{padding:8px 12px}.ticket-row{display:block;width:100%;text-align:left;background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:11px 13px;margin-bottom:8px;cursor:pointer;font:inherit}.ticket-row:hover{border-color:var(--accent)}.ticket-row-top{display:flex;justify-content:space-between;gap:8px;align-items:start}.ticket-row strong{font-size:13px;color:var(--ink)}.ticket-row .meta{margin:4px 0 0;font-size:11px;color:var(--muted)}
+    .badge{display:inline-flex;align-items:center;min-height:18px;padding:2px 8px;border-radius:5px;font-size:9px;font-weight:800;white-space:nowrap}.badge.open{background:var(--gold-soft);color:#76551d}.badge.done{background:var(--accent-soft);color:var(--accent-dark)}
+    .empty-state{padding:36px 18px;text-align:center;color:var(--muted);font-size:12px}.empty-state strong{display:block;margin-bottom:4px;color:var(--ink);font-size:13px}
+    .back-link{background:none;border:none;color:var(--accent-dark);font:inherit;font-size:13px;font-weight:700;cursor:pointer;padding:0}
+    .message-bubble{padding:9px 11px;border-radius:8px;margin-bottom:8px}.message-bubble.it{background:var(--blue-soft);border:1px solid var(--blue)}.message-bubble.reporter{background:var(--page);border:1px solid var(--line)}
+    .message-head{display:flex;justify-content:space-between;gap:8px;font-size:10px;font-weight:800}.message-head .sender.it{color:var(--blue)}.message-head .sender.reporter{color:var(--ink-soft)}.message-head .time{color:var(--muted);font-weight:600}
+    .message-body{margin:5px 0 0;font-size:12.5px;white-space:pre-wrap}
+    @media(max-width:900px){.login{grid-template-columns:1fr}.login-aside{display:none}}
+    @media(max-width:780px){.workspace{padding:20px 14px 36px}.header-inner{padding:13px 14px}}
+    @media(max-width:420px){.login-panel{padding:23px}.header-subtitle{display:none}.user-chip{display:none}.filter-tabs{width:100%;display:flex}.filter-tabs button{flex:1}}
+  </style>
 </head>
 <body>
-
-<div class="header">
-  <div class="container">
-    <h1>Lapor ke IT Support</h1>
-    <p>Laporkan bug atau kendala teknis. Laporan langsung masuk ke antrean IT Support dan terkirim ke Telegram tim IT.</p>
-  </div>
-</div>
-
-<div class="container" id="loginSection">
-  <div class="card">
-    <h2 style="margin-bottom:4px;font-size:1.15rem">Login Diperlukan</h2>
-    <p style="color:var(--grey);font-size:.84rem;margin-bottom:16px">Masuk dengan akun Dashboard Anda (Master, Admin, atau Operasional).</p>
-    <form id="loginForm">
-      <div class="field">
-        <label for="loginAccount">ID Staf</label>
-        <select id="loginAccount" required></select>
+  <section id="loginScreen" class="login">
+    <aside class="login-aside" aria-hidden="true">
+      <div class="login-aside-brand"><div class="brand-mark">YH</div><span>YOUR HOME</span></div>
+      <div>
+        <h2>Lapor kendala, pantau balasannya di satu tempat.</h2>
+        <p>Laporan Anda langsung masuk ke antrean IT Support dan bisa saling balas sampai tiketnya selesai.</p>
       </div>
-      <div class="field">
-        <label for="loginPassword">Password</label>
-        <input id="loginPassword" type="password" required autocomplete="current-password" />
-      </div>
-      <p id="loginStatus" class="status" role="status" aria-live="polite"></p>
-      <button class="btn btn-primary" id="loginSubmitBtn" type="submit">Masuk</button>
-    </form>
-  </div>
-</div>
-
-<div class="container" id="appSection" hidden>
-  <div class="card" style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:0">
-    <span style="font-size:.82rem;color:var(--grey)">Masuk sebagai <strong id="loggedInName" style="color:var(--coffee-d)"></strong></span>
-    <button type="button" id="logoutBtn" style="background:none;border:none;color:var(--red);font:inherit;font-size:.82rem;font-weight:700;cursor:pointer">Keluar</button>
-  </div>
-
-  <div class="card" style="display:flex;gap:8px;padding:8px">
-    <button type="button" id="tabNewBtn" class="btn" style="flex:1;padding:10px">Lapor Baru</button>
-    <button type="button" id="tabMineBtn" class="btn" style="flex:1;padding:10px">Tiket Saya</button>
-  </div>
-
-  <div id="newTicketView">
-    <div class="card">
-      <form id="ticketForm">
+      <small>Panel khusus staf YOUR HOME</small>
+    </aside>
+    <div class="login-main">
+      <form id="loginForm" class="login-panel">
+        <div class="brand-mark" aria-hidden="true">IT</div>
+        <p class="eyebrow">YOUR HOME · Internal</p>
+        <h1>Lapor ke IT Support</h1>
+        <p class="subcopy">Masuk dengan akun Dashboard Anda (Master, Admin, atau Operasional).</p>
         <div class="field">
-          <label for="ticketTitle">Judul</label>
-          <input id="ticketTitle" type="text" maxlength="160" placeholder="Contoh: Tombol simpan booking tidak merespons" />
+          <label for="loginAccount">ID Staf</label>
+          <select id="loginAccount" required></select>
         </div>
         <div class="field">
-          <label for="ticketMessage">Detail Laporan</label>
-          <textarea id="ticketMessage" required maxlength="2000" placeholder="Jelaskan kendalanya, kapan terjadi, dan langkah yang sudah dicoba..."></textarea>
+          <label for="loginPassword">Password</label>
+          <span class="password-wrap">
+            <input id="loginPassword" type="password" required autocomplete="current-password" />
+            <button class="password-toggle" type="button" id="toggleLoginPassword" aria-label="Tampilkan password" title="Tampilkan password">
+              <svg data-eye-icon width="19" height="19" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+          </span>
         </div>
-        <p id="ticketStatus" class="status" role="status" aria-live="polite"></p>
-        <button class="btn btn-primary" id="ticketSubmitBtn" type="submit">Kirim ke IT Support</button>
+        <p id="loginStatus" class="notice" role="alert" aria-live="polite"></p>
+        <button class="primary-button" id="loginSubmitBtn" type="submit">Masuk</button>
       </form>
     </div>
-    <div class="hint-box">
-      Laporan ini masuk sebagai tiket jenis "Bug" di antrean IT Support dan dikirim ke Telegram tim IT. Setelah terkirim, Anda bisa membalas atau memantau tindak lanjutnya lewat tab "Tiket Saya".
-    </div>
-  </div>
+  </section>
 
-  <div id="myTicketsView" hidden>
-    <div class="card" id="myTicketsListCard">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
-        <h2 style="font-size:1.05rem">Tiket Saya</h2>
-        <button type="button" id="refreshMyTicketsBtn" style="background:none;border:none;color:var(--grey);font:inherit;font-size:.78rem;font-weight:700;cursor:pointer">Muat Ulang</button>
+  <div id="appSection" class="hidden">
+    <header class="app-header">
+      <div class="header-inner">
+        <div class="header-brand"><div class="brand-mark" aria-hidden="true">IT</div><div><div class="header-title">YOUR HOME</div><div class="header-subtitle">Lapor ke IT Support</div></div></div>
+        <div class="header-spacer"></div>
+        <span class="user-chip" id="loggedInName"></span>
+        <button id="logoutBtn" class="ghost-button" type="button">Keluar</button>
       </div>
-      <p id="myTicketsStatus" class="status" role="status" aria-live="polite"></p>
-      <div id="myTicketsList"></div>
-    </div>
-
-    <div class="card" id="ticketDetailCard" hidden>
-      <button type="button" id="backToListBtn" style="background:none;border:none;color:var(--terracotta-d);font:inherit;font-size:.82rem;font-weight:700;cursor:pointer;padding:0">&larr; Kembali ke daftar</button>
-      <h2 id="ticketDetailTitle" style="font-size:1.05rem;margin-top:10px"></h2>
-      <p id="ticketDetailMeta" style="color:var(--grey);font-size:.78rem;margin-top:2px"></p>
-      <div id="ticketDetailMessages" style="margin-top:12px;max-height:280px;overflow-y:auto;display:grid;gap:8px"></div>
-      <form id="replyForm" style="margin-top:14px">
-        <div class="field"><label for="replyMessage">Balasan</label><textarea id="replyMessage" required maxlength="2000" placeholder="Tulis balasan ke IT Support..." style="min-height:80px"></textarea></div>
-        <p id="replyStatus" class="status" role="status" aria-live="polite"></p>
-        <button class="btn btn-primary" type="submit">Kirim Balasan</button>
-      </form>
-    </div>
-  </div>
-</div>
-
-<div class="container" id="successSection" hidden>
-  <div class="card" style="text-align:center">
-    <div class="icon">&#10003;</div>
-    <h2 style="font-size:1.2rem;margin-bottom:6px">Laporan terkirim</h2>
-    <p style="color:var(--grey);font-size:.88rem;margin-bottom:18px">Tim IT Support sudah menerima notifikasinya. Anda bisa pantau balasannya di tab "Tiket Saya".</p>
-    <button class="btn btn-primary" id="reportAnotherBtn" type="button">Lapor Lagi</button>
-  </div>
-</div>
-
-<script>
-const API_BASE = 'https://your-home-checkin-api.saerobotic.workers.dev';
-const el = id => document.getElementById(id);
-
-/* ============== LOGIN (semua akun Dashboard kecuali IT) ============== */
-const SESSION_KEY = 'yourhome_lapor_it_session';
-let authToken = '';
-let authAccountLabel = '';
-
-function decodeToken(token) {
-  try {
-    const payload = String(token).split('.')[0].replace(/-/g, '+').replace(/_/g, '/');
-    const binary = atob(payload + '='.repeat((4 - payload.length % 4) % 4));
-    return JSON.parse(binary);
-  } catch { return null; }
-}
-
-function loginAccountLabel(account) {
-  const id = String(account.account_id || '');
-  if (id === 'master') return 'Master';
-  if (id === 'admin-1') return 'Operasional';
-  const adminMatch = id.match(/^admin-(\d+)$/);
-  return adminMatch ? `Admin ${adminMatch[1]}` : id;
-}
-
-async function loadLoginAccounts() {
-  const select = el('loginAccount');
-  let accounts = [];
-  try {
-    const response = await fetch(`${API_BASE}/dashboard/login-accounts`, { cache:'no-store' });
-    const result = await response.json().catch(() => ({}));
-    accounts = Array.isArray(result.data) ? result.data.filter(a => a.role !== 'IT') : [];
-  } catch { /* fallback ke daftar tetap di bawah */ }
-  if (!accounts.length) accounts = [{ account_id:'master' }];
-  select.innerHTML = accounts.map(a => `<option value="${a.account_id}">${loginAccountLabel(a)}</option>`).join('');
-}
-
-function showLogin(message) {
-  authToken = '';
-  try { sessionStorage.removeItem(SESSION_KEY); } catch {}
-  el('appSection').hidden = true;
-  el('successSection').hidden = true;
-  el('loginSection').hidden = false;
-  el('loginForm').reset();
-  const status = el('loginStatus');
-  if (message) { status.className = 'status error'; status.textContent = message; }
-  else { status.className = 'status'; status.textContent = ''; }
-  loadLoginAccounts();
-}
-
-function showApp() {
-  el('loginSection').hidden = true;
-  el('successSection').hidden = true;
-  el('appSection').hidden = false;
-  const payload = decodeToken(authToken);
-  authAccountLabel = loginAccountLabel({ account_id: payload?.account_id || '' });
-  el('loggedInName').textContent = authAccountLabel;
-  setTab('new');
-}
-
-async function handleLogin(event) {
-  event.preventDefault();
-  const status = el('loginStatus');
-  const button = el('loginSubmitBtn');
-  button.disabled = true;
-  status.className = 'status';
-  status.textContent = 'Memverifikasi...';
-  try {
-    const response = await fetch(`${API_BASE}/dashboard/login`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ account_id: el('loginAccount').value, password: el('loginPassword').value }),
-    });
-    const result = await response.json().catch(() => ({}));
-    if (!response.ok || !result.ok || !result.token) throw new Error(result.error || 'Login gagal.');
-    if (result.data?.role === 'IT') throw new Error('Akun IT Support tidak dapat mengirim laporan ke diri sendiri. Gunakan it-support.html untuk mengelola tiket.');
-    authToken = result.token;
-    try { sessionStorage.setItem(SESSION_KEY, authToken); } catch {}
-    showApp();
-  } catch (error) {
-    status.className = 'status error';
-    status.textContent = error.message || 'Login gagal.';
-  } finally {
-    button.disabled = false;
-  }
-}
-
-function initAuth() {
-  let token = '';
-  try { token = sessionStorage.getItem(SESSION_KEY) || ''; } catch {}
-  const payload = token && decodeToken(token);
-  if (payload && payload.role !== 'IT' && Number(payload.exp) > Math.floor(Date.now() / 1000)) {
-    authToken = token;
-    showApp();
-  } else {
-    showLogin();
-  }
-}
-
-el('loginForm').addEventListener('submit', handleLogin);
-el('logoutBtn').addEventListener('click', () => showLogin());
-
-/* ============== KIRIM TIKET ============== */
-async function handleTicketSubmit(event) {
-  event.preventDefault();
-  const status = el('ticketStatus');
-  const button = el('ticketSubmitBtn');
-  button.disabled = true;
-  status.className = 'status';
-  status.textContent = 'Mengirim laporan...';
-  try {
-    const response = await fetch(`${API_BASE}/admin/contact-it`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${authToken}` },
-      body: JSON.stringify({
-        title: el('ticketTitle').value.trim(),
-        message: el('ticketMessage').value.trim(),
-      }),
-    });
-    if (response.status === 401) { showLogin('Sesi berakhir. Silakan login kembali.'); return; }
-    const result = await response.json().catch(() => ({}));
-    if (!response.ok || !result.ok) throw new Error(result.error || 'Laporan gagal dikirim.');
-    el('ticketForm').reset();
-    status.textContent = '';
-    el('appSection').hidden = true;
-    el('successSection').hidden = false;
-  } catch (error) {
-    status.className = 'status error';
-    status.textContent = error.message || 'Laporan gagal dikirim.';
-  } finally {
-    button.disabled = false;
-  }
-}
-
-el('ticketForm').addEventListener('submit', handleTicketSubmit);
-el('reportAnotherBtn').addEventListener('click', () => {
-  el('successSection').hidden = true;
-  el('appSection').hidden = false;
-});
-
-/* ============== TIKET SAYA (daftar + percakapan) ============== */
-async function authedApi(path, options = {}) {
-  const response = await fetch(`${API_BASE}${path}`, {
-    ...options,
-    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${authToken}`, ...(options.headers || {}) },
-    cache: 'no-store',
-  });
-  if (response.status === 401) { showLogin('Sesi berakhir. Silakan login kembali.'); throw new Error('Sesi berakhir.'); }
-  const result = await response.json().catch(() => ({}));
-  if (!response.ok || !result.ok) throw new Error(result.error || `HTTP ${response.status}`);
-  return result;
-}
-
-function escapeHtml(value) {
-  return String(value ?? '').replace(/[&<>"']/g, ch => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[ch]));
-}
-
-function formatTicketDate(value) {
-  const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? '-' : date.toLocaleString('id-ID', { dateStyle:'medium', timeStyle:'short' });
-}
-
-function setTab(tab) {
-  const isMine = tab === 'mine';
-  el('newTicketView').hidden = isMine;
-  el('myTicketsView').hidden = !isMine;
-  el('tabNewBtn').style.background = isMine ? 'var(--cream-deep)' : 'var(--coffee-d)';
-  el('tabNewBtn').style.color = isMine ? 'var(--coffee)' : '#fff';
-  el('tabMineBtn').style.background = isMine ? 'var(--coffee-d)' : 'var(--cream-deep)';
-  el('tabMineBtn').style.color = isMine ? '#fff' : 'var(--coffee)';
-  if (isMine) { el('ticketDetailCard').hidden = true; el('myTicketsListCard').hidden = false; loadMyTickets(); }
-}
-
-let myTickets = [];
-
-async function loadMyTickets() {
-  const status = el('myTicketsStatus');
-  status.className = 'status';
-  status.textContent = 'Memuat tiket...';
-  try {
-    const result = await authedApi('/my-it-tickets');
-    myTickets = Array.isArray(result.data) ? result.data : [];
-    renderMyTickets();
-    status.textContent = '';
-  } catch (error) {
-    myTickets = [];
-    el('myTicketsList').innerHTML = '';
-    status.className = 'status error';
-    status.textContent = error.message || 'Tiket gagal dimuat.';
-  }
-}
-
-function renderMyTickets() {
-  const list = el('myTicketsList');
-  list.innerHTML = myTickets.length ? myTickets.map(ticket => {
-    const isDone = ticket.status === 'done';
-    return `<button type="button" data-open-ticket="${escapeHtml(ticket.id)}" style="display:block;width:100%;text-align:left;background:#fff;border:1px solid var(--grey-l);border-radius:8px;padding:10px 12px;margin-bottom:8px;cursor:pointer;font:inherit">
-      <div style="display:flex;justify-content:space-between;gap:8px;align-items:start">
-        <strong style="font-size:.88rem;color:var(--coffee-d)">${escapeHtml(ticket.title)}</strong>
-        <span style="font-size:.68rem;font-weight:700;padding:2px 7px;border-radius:5px;background:${isDone ? '#E9F0E6' : '#FBF0E8'};color:${isDone ? 'var(--green)' : 'var(--terracotta-d)'}">${isDone ? 'SELESAI' : 'BERJALAN'}</span>
+    </header>
+    <main class="workspace">
+      <div class="page-heading">
+        <h1>Lapor ke IT Support</h1>
+        <p>Laporkan bug/kendala teknis, atau pantau dan balas tiket yang sudah Anda kirim.</p>
       </div>
-      <p style="margin:4px 0 0;font-size:.78rem;color:var(--grey)">${formatTicketDate(ticket.created_at)}</p>
-    </button>`;
-  }).join('') : '<p style="color:var(--grey);font-size:.84rem">Belum ada tiket yang Anda laporkan.</p>';
-}
 
-function renderTicketMessages(messages) {
-  el('ticketDetailMessages').innerHTML = messages.length ? messages.map(message => {
-    const isIt = message.sender_role === 'IT';
-    return `<div style="padding:9px 11px;border-radius:8px;background:${isIt ? '#FBF0E8' : 'var(--cream-deep)'};border:1px solid ${isIt ? 'var(--terracotta)' : 'var(--sand)'}">
-      <div style="display:flex;justify-content:space-between;gap:8px;font-size:.68rem;font-weight:700;color:${isIt ? 'var(--terracotta-d)' : 'var(--coffee)'}"><span>${escapeHtml(message.sender_label)}${isIt ? ' (IT)' : ''}</span><span style="color:var(--grey);font-weight:600">${formatTicketDate(message.created_at)}</span></div>
-      <p style="margin:5px 0 0;font-size:.82rem;white-space:pre-wrap">${escapeHtml(message.message)}</p>
-    </div>`;
-  }).join('') : '<p style="color:var(--grey);font-size:.82rem">Belum ada balasan dari IT Support.</p>';
-}
+      <div class="filter-tabs" role="group" aria-label="Tampilan">
+        <button type="button" id="tabNewBtn" aria-pressed="true">Lapor Baru</button>
+        <button type="button" id="tabMineBtn" aria-pressed="false">Tiket Saya</button>
+      </div>
 
-let activeTicketId = '';
+      <div id="newTicketView">
+        <section class="panel" aria-labelledby="newTicketTitle">
+          <div class="panel-head"><h2 id="newTicketTitle">Input Laporan</h2><p>Catat bug atau kendala teknis untuk IT Support.</p></div>
+          <form id="ticketForm" class="entry-form">
+            <div class="field"><label for="ticketTitle">Judul</label><input id="ticketTitle" type="text" maxlength="160" placeholder="Contoh: Tombol simpan booking tidak merespons" /></div>
+            <div class="field"><label for="ticketMessage">Detail Laporan</label><textarea id="ticketMessage" required maxlength="2000" placeholder="Jelaskan kendalanya, kapan terjadi, dan langkah yang sudah dicoba..."></textarea></div>
+            <p id="ticketStatus" class="notice" role="status" aria-live="polite"></p>
+            <button class="primary-button" id="ticketSubmitBtn" type="submit">Kirim ke IT Support</button>
+          </form>
+        </section>
+        <div class="hint-box">
+          Laporan ini masuk sebagai tiket jenis "Bug" di antrean IT Support dan dikirim ke Telegram tim IT. Setelah terkirim, pantau dan balas lewat tab "Tiket Saya".
+        </div>
+      </div>
 
-async function openTicketDetail(ticketId) {
-  const ticket = myTickets.find(item => item.id === ticketId);
-  if (!ticket) return;
-  activeTicketId = ticketId;
-  el('myTicketsListCard').hidden = true;
-  el('ticketDetailCard').hidden = false;
-  el('ticketDetailTitle').textContent = ticket.title;
-  el('ticketDetailMeta').textContent = `${ticket.status === 'done' ? 'Selesai' : 'Berjalan'} · Dilaporkan ${formatTicketDate(ticket.created_at)}`;
-  el('ticketDetailMessages').innerHTML = '<p style="color:var(--grey);font-size:.82rem">Memuat percakapan...</p>';
-  el('replyForm').reset();
-  el('replyStatus').textContent = '';
-  try {
-    const result = await authedApi(`/it/tickets/${encodeURIComponent(ticketId)}/messages`);
-    renderTicketMessages(Array.isArray(result.data) ? result.data : []);
-  } catch (error) {
-    el('ticketDetailMessages').innerHTML = `<p style="color:var(--red);font-size:.82rem">${escapeHtml(error.message || 'Percakapan gagal dimuat.')}</p>`;
-  }
-}
+      <div id="myTicketsView" hidden>
+        <section class="panel" id="myTicketsListCard" aria-labelledby="myTicketsTitle">
+          <div class="panel-head" style="display:flex;justify-content:space-between;align-items:center">
+            <div><h2 id="myTicketsTitle">Tiket Saya</h2><p>Klik salah satu tiket untuk lihat dan kirim balasan.</p></div>
+            <button type="button" id="refreshMyTicketsBtn" class="ghost-button" style="color:var(--ink-soft);border-color:var(--line)">Muat Ulang</button>
+          </div>
+          <p id="myTicketsStatus" class="notice" style="padding:0 18px;margin-top:10px" role="status" aria-live="polite"></p>
+          <div id="myTicketsList" class="ticket-list"></div>
+        </section>
 
-el('tabNewBtn').addEventListener('click', () => setTab('new'));
-el('tabMineBtn').addEventListener('click', () => setTab('mine'));
-el('refreshMyTicketsBtn').addEventListener('click', loadMyTickets);
-el('myTicketsList').addEventListener('click', event => {
-  const button = event.target.closest('[data-open-ticket]');
-  if (button) openTicketDetail(button.dataset.openTicket);
-});
-el('backToListBtn').addEventListener('click', () => {
-  el('ticketDetailCard').hidden = true;
-  el('myTicketsListCard').hidden = false;
-  activeTicketId = '';
-});
-el('replyForm').addEventListener('submit', async event => {
-  event.preventDefault();
-  if (!activeTicketId) return;
-  const status = el('replyStatus');
-  const button = event.submitter;
-  button.disabled = true;
-  status.className = 'status';
-  status.textContent = 'Mengirim balasan...';
-  try {
-    await authedApi(`/it/tickets/${encodeURIComponent(activeTicketId)}/messages`, {
-      method: 'POST',
-      body: JSON.stringify({ message: el('replyMessage').value.trim() }),
+        <section class="panel" id="ticketDetailCard" hidden>
+          <div class="panel-head">
+            <button type="button" id="backToListBtn" class="back-link">&larr; Kembali ke daftar</button>
+            <h2 id="ticketDetailTitle" style="margin-top:10px"></h2>
+            <p id="ticketDetailMeta"></p>
+          </div>
+          <div id="ticketDetailMessages" style="padding:16px 18px;max-height:320px;overflow-y:auto"></div>
+          <form id="replyForm" class="entry-form" style="padding-top:0">
+            <div class="field"><label for="replyMessage">Balasan</label><textarea id="replyMessage" required maxlength="2000" placeholder="Tulis balasan ke IT Support..." style="min-height:80px"></textarea></div>
+            <p id="replyStatus" class="notice" role="status" aria-live="polite"></p>
+            <button class="primary-button" type="submit">Kirim Balasan</button>
+          </form>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <div id="successSection" class="login hidden" style="min-height:100vh">
+    <div class="login-main" style="grid-column:1/-1">
+      <div class="login-panel" style="text-align:center">
+        <div class="brand-mark" style="background:var(--accent-soft);color:var(--accent-dark);margin:0 auto">&#10003;</div>
+        <h1 style="margin-top:14px">Laporan terkirim</h1>
+        <p class="subcopy">Tim IT Support sudah menerima notifikasinya. Pantau balasannya di tab "Tiket Saya".</p>
+        <button class="primary-button" id="reportAnotherBtn" type="button">Kembali</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const API_BASE = 'https://your-home-checkin-api.saerobotic.workers.dev';
+    const el = id => document.getElementById(id);
+
+    function escapeHtml(value) {
+      return String(value ?? '').replace(/[&<>"']/g, ch => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[ch]));
+    }
+
+    /* ============== LOGIN (semua akun Dashboard kecuali IT) ============== */
+    const SESSION_KEY = 'yourhome_lapor_it_session';
+    let authToken = '';
+
+    function decodeToken(token) {
+      try {
+        const payload = String(token).split('.')[0].replace(/-/g, '+').replace(/_/g, '/');
+        const binary = atob(payload + '='.repeat((4 - payload.length % 4) % 4));
+        return JSON.parse(binary);
+      } catch { return null; }
+    }
+
+    function loginAccountLabel(account) {
+      const id = String(account.account_id || '');
+      if (id === 'master') return 'Master';
+      if (id === 'admin-1') return 'Operasional';
+      const adminMatch = id.match(/^admin-(\d+)$/);
+      return adminMatch ? `Admin ${adminMatch[1]}` : id;
+    }
+
+    async function loadLoginAccounts() {
+      const select = el('loginAccount');
+      let accounts = [];
+      try {
+        const response = await fetch(`${API_BASE}/dashboard/login-accounts`, { cache:'no-store' });
+        const result = await response.json().catch(() => ({}));
+        accounts = Array.isArray(result.data) ? result.data.filter(a => a.role !== 'IT') : [];
+      } catch { /* fallback ke daftar tetap di bawah */ }
+      if (!accounts.length) accounts = [{ account_id:'master' }];
+      select.innerHTML = accounts.map(a => `<option value="${a.account_id}">${loginAccountLabel(a)}</option>`).join('');
+    }
+
+    function showLogin(message) {
+      authToken = '';
+      try { sessionStorage.removeItem(SESSION_KEY); } catch {}
+      el('appSection').classList.add('hidden');
+      el('successSection').classList.add('hidden');
+      el('loginScreen').classList.remove('hidden');
+      el('loginForm').reset();
+      const status = el('loginStatus');
+      status.textContent = message || '';
+      loadLoginAccounts();
+    }
+
+    function showApp() {
+      el('loginScreen').classList.add('hidden');
+      el('successSection').classList.add('hidden');
+      el('appSection').classList.remove('hidden');
+      const payload = decodeToken(authToken);
+      el('loggedInName').textContent = loginAccountLabel({ account_id: payload?.account_id || '' });
+      setTab('new');
+    }
+
+    async function handleLogin(event) {
+      event.preventDefault();
+      const status = el('loginStatus');
+      const button = el('loginSubmitBtn');
+      button.disabled = true;
+      status.textContent = 'Memverifikasi...';
+      try {
+        const response = await fetch(`${API_BASE}/dashboard/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ account_id: el('loginAccount').value, password: el('loginPassword').value }),
+        });
+        const result = await response.json().catch(() => ({}));
+        if (!response.ok || !result.ok || !result.token) throw new Error(result.error || 'Login gagal.');
+        if (result.data?.role === 'IT') throw new Error('Akun IT Support tidak dapat mengirim laporan ke diri sendiri. Gunakan it-support.html untuk mengelola tiket.');
+        authToken = result.token;
+        try { sessionStorage.setItem(SESSION_KEY, authToken); } catch {}
+        showApp();
+      } catch (error) {
+        status.textContent = error.message || 'Login gagal.';
+      } finally {
+        button.disabled = false;
+      }
+    }
+
+    function initAuth() {
+      let token = '';
+      try { token = sessionStorage.getItem(SESSION_KEY) || ''; } catch {}
+      const payload = token && decodeToken(token);
+      if (payload && payload.role !== 'IT' && Number(payload.exp) > Math.floor(Date.now() / 1000)) {
+        authToken = token;
+        showApp();
+      } else {
+        showLogin();
+      }
+    }
+
+    el('loginForm').addEventListener('submit', handleLogin);
+    el('logoutBtn').addEventListener('click', () => showLogin());
+    el('toggleLoginPassword').addEventListener('click', () => {
+      const input = el('loginPassword');
+      input.type = input.type === 'password' ? 'text' : 'password';
     });
-    el('replyForm').reset();
-    status.textContent = '';
-    await openTicketDetail(activeTicketId);
-  } catch (error) {
-    status.className = 'status error';
-    status.textContent = error.message || 'Balasan gagal dikirim.';
-  } finally {
-    button.disabled = false;
-  }
-});
 
-initAuth();
-</script>
+    /* ============== KIRIM TIKET ============== */
+    async function handleTicketSubmit(event) {
+      event.preventDefault();
+      const status = el('ticketStatus');
+      const button = el('ticketSubmitBtn');
+      button.disabled = true;
+      status.textContent = 'Mengirim laporan...';
+      try {
+        const response = await fetch(`${API_BASE}/admin/contact-it`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${authToken}` },
+          body: JSON.stringify({
+            title: el('ticketTitle').value.trim(),
+            message: el('ticketMessage').value.trim(),
+          }),
+        });
+        if (response.status === 401) { showLogin('Sesi berakhir. Silakan login kembali.'); return; }
+        const result = await response.json().catch(() => ({}));
+        if (!response.ok || !result.ok) throw new Error(result.error || 'Laporan gagal dikirim.');
+        el('ticketForm').reset();
+        status.textContent = '';
+        el('appSection').classList.add('hidden');
+        el('successSection').classList.remove('hidden');
+      } catch (error) {
+        status.textContent = error.message || 'Laporan gagal dikirim.';
+      } finally {
+        button.disabled = false;
+      }
+    }
+
+    el('ticketForm').addEventListener('submit', handleTicketSubmit);
+    el('reportAnotherBtn').addEventListener('click', () => {
+      el('successSection').classList.add('hidden');
+      el('appSection').classList.remove('hidden');
+    });
+
+    /* ============== TIKET SAYA (daftar + percakapan) ============== */
+    async function authedApi(path, options = {}) {
+      const response = await fetch(`${API_BASE}${path}`, {
+        ...options,
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${authToken}`, ...(options.headers || {}) },
+        cache: 'no-store',
+      });
+      if (response.status === 401) { showLogin('Sesi berakhir. Silakan login kembali.'); throw new Error('Sesi berakhir.'); }
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok || !result.ok) throw new Error(result.error || `HTTP ${response.status}`);
+      return result;
+    }
+
+    function formatTicketDate(value) {
+      const date = new Date(value);
+      return Number.isNaN(date.getTime()) ? '-' : date.toLocaleString('id-ID', { dateStyle:'medium', timeStyle:'short' });
+    }
+
+    function setTab(tab) {
+      const isMine = tab === 'mine';
+      el('newTicketView').hidden = isMine;
+      el('myTicketsView').hidden = !isMine;
+      el('tabNewBtn').setAttribute('aria-pressed', String(!isMine));
+      el('tabMineBtn').setAttribute('aria-pressed', String(isMine));
+      if (isMine) { el('ticketDetailCard').hidden = true; el('myTicketsListCard').hidden = false; loadMyTickets(); }
+    }
+
+    let myTickets = [];
+
+    async function loadMyTickets() {
+      const status = el('myTicketsStatus');
+      status.textContent = 'Memuat tiket...';
+      try {
+        const result = await authedApi('/my-it-tickets');
+        myTickets = Array.isArray(result.data) ? result.data : [];
+        renderMyTickets();
+        status.textContent = '';
+      } catch (error) {
+        myTickets = [];
+        el('myTicketsList').innerHTML = '';
+        status.textContent = error.message || 'Tiket gagal dimuat.';
+      }
+    }
+
+    function renderMyTickets() {
+      const list = el('myTicketsList');
+      list.innerHTML = myTickets.length ? myTickets.map(ticket => {
+        const isDone = ticket.status === 'done';
+        return `<button type="button" class="ticket-row" data-open-ticket="${escapeHtml(ticket.id)}">
+          <div class="ticket-row-top">
+            <strong>${escapeHtml(ticket.title)}</strong>
+            <span class="badge ${isDone ? 'done' : 'open'}">${isDone ? 'SELESAI' : 'BERJALAN'}</span>
+          </div>
+          <p class="meta">${formatTicketDate(ticket.created_at)}</p>
+        </button>`;
+      }).join('') : '<div class="empty-state"><strong>Belum ada tiket.</strong>Laporan yang Anda kirim akan muncul di sini.</div>';
+    }
+
+    function renderTicketMessages(messages) {
+      el('ticketDetailMessages').innerHTML = messages.length ? messages.map(message => {
+        const isIt = message.sender_role === 'IT';
+        return `<div class="message-bubble ${isIt ? 'it' : 'reporter'}">
+          <div class="message-head"><span class="sender ${isIt ? 'it' : 'reporter'}">${escapeHtml(message.sender_label)}${isIt ? ' (IT)' : ''}</span><span class="time">${formatTicketDate(message.created_at)}</span></div>
+          <p class="message-body">${escapeHtml(message.message)}</p>
+        </div>`;
+      }).join('') : '<p style="color:var(--muted);font-size:12px">Belum ada balasan dari IT Support.</p>';
+    }
+
+    let activeTicketId = '';
+
+    async function openTicketDetail(ticketId) {
+      const ticket = myTickets.find(item => item.id === ticketId);
+      if (!ticket) return;
+      activeTicketId = ticketId;
+      el('myTicketsListCard').hidden = true;
+      el('ticketDetailCard').hidden = false;
+      el('ticketDetailTitle').textContent = ticket.title;
+      el('ticketDetailMeta').textContent = `${ticket.status === 'done' ? 'Selesai' : 'Berjalan'} · Dilaporkan ${formatTicketDate(ticket.created_at)}`;
+      el('ticketDetailMessages').innerHTML = '<p style="color:var(--muted);font-size:12px">Memuat percakapan...</p>';
+      el('replyForm').reset();
+      el('replyStatus').textContent = '';
+      try {
+        const result = await authedApi(`/it/tickets/${encodeURIComponent(ticketId)}/messages`);
+        renderTicketMessages(Array.isArray(result.data) ? result.data : []);
+      } catch (error) {
+        el('ticketDetailMessages').innerHTML = `<p style="color:var(--danger);font-size:12px">${escapeHtml(error.message || 'Percakapan gagal dimuat.')}</p>`;
+      }
+    }
+
+    el('tabNewBtn').addEventListener('click', () => setTab('new'));
+    el('tabMineBtn').addEventListener('click', () => setTab('mine'));
+    el('refreshMyTicketsBtn').addEventListener('click', loadMyTickets);
+    el('myTicketsList').addEventListener('click', event => {
+      const button = event.target.closest('[data-open-ticket]');
+      if (button) openTicketDetail(button.dataset.openTicket);
+    });
+    el('backToListBtn').addEventListener('click', () => {
+      el('ticketDetailCard').hidden = true;
+      el('myTicketsListCard').hidden = false;
+      activeTicketId = '';
+      loadMyTickets();
+    });
+    el('replyForm').addEventListener('submit', async event => {
+      event.preventDefault();
+      if (!activeTicketId) return;
+      const status = el('replyStatus');
+      const button = event.submitter;
+      button.disabled = true;
+      status.textContent = 'Mengirim balasan...';
+      try {
+        await authedApi(`/it/tickets/${encodeURIComponent(activeTicketId)}/messages`, {
+          method: 'POST',
+          body: JSON.stringify({ message: el('replyMessage').value.trim() }),
+        });
+        el('replyForm').reset();
+        status.textContent = '';
+        await openTicketDetail(activeTicketId);
+      } catch (error) {
+        status.textContent = error.message || 'Balasan gagal dikirim.';
+      } finally {
+        button.disabled = false;
+      }
+    });
+
+    initAuth();
+  </script>
 </body>
 </html>
