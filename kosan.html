@@ -1181,7 +1181,7 @@ table tbody tr:last-child td { border-bottom: none; }
         <div class="table-wrap">
           <table>
             <thead>
-              <tr><th>Tanggal</th><th>Gedung</th><th>Penyewa</th><th>Keterangan</th><th class="text-right">Jumlah</th></tr>
+              <tr><th>Tanggal</th><th>Gedung</th><th>Penyewa</th><th>Keterangan</th><th class="text-right">Jumlah</th><th class="text-right">Aksi</th></tr>
             </thead>
             <tbody id="inc-table-body"></tbody>
           </table>
@@ -1906,1736 +1906,1711 @@ const DATA = {
           "building": "De Orange",
           "room_number": "1",
           "room_label": "Kamar 1",
-          "tenant_name": "Annisa Nurfadillah",
-          "price": 1200000,
+          "tenant_name": "",
+          "price": 0,
           "depo": 0,
-          "status": "occupied",
-          "payments": [
-            {
-              "period": "2025-03",
-              "label": "Maret 2025",
-              "status": "unpaid",
-              "date": null
-            },
-            {
-              "period": "2025-04",
-              "label": "April 2025",
-              "status": "unpaid",
-              "date": null
-            },
-            {
-              "period": "2025-05",
-              "label": "Mei 2025",
-              "status": "unpaid",
-              "date": null
-            },
-            {
-              "period": "2025-06",
-              "label": "Juni 2025",
-              "status": "unpaid",
-              "date": null
-            },
-            {
-              "period": "2025-07",
-              "label": "Juli 2025",
-              "status": "unpaid",
-              "date": null
-            },
-            {
-              "period": "2025-08",
-              "label": "Agustus 2025",
-              "status": "unpaid",
-              "date": null
-            },
-            {
-              "period": "2025-09",
-              "label": "September 2025",
-              "status": "unpaid",
-              "date": null
-            },
-            {
-              "period": "2025-10",
-              "label": "Oktober 2025",
-              "status": "unpaid",
-              "date": null
-            },
-            {
-              "period": "2025-11",
-              "label": "November 2025",
-              "status": "unpaid",
-              "date": null
-            },
-            {
-              "period": "2025-12",
-              "label": "Desember 2025",
-              "status": "unpaid",
-              "date": null
-            },
-            {
-              "period": "2026-01",
-              "label": "Januari 2026",
-              "status": "unpaid",
-              "date": null
-            },
-            {
-              "period": "2026-02",
-              "label": "Februari 2026",
-              "status": "unpaid",
-              "date": null
-            },
-            {
-              "period": "2026-03",
-              "label": "Maret 2026",
-              "status": "unpaid",
-              "date": null
-            },
-            {
-              "period": "2026-04",
-              "label": "April 2026",
-              "status": "paid",
-              "date": "2026-04-03"
-            },
-            {
-              "period": "2026-05",
-              "label": "Mei 2026",
-              "status": "paid",
-              "date": "2026-05-05"
-            },
-            {
-              "period": "2026-06",
-              "label": "Juni 2026",
-              "status": "paid",
-              "date": "2026-06-11"
-            },
-            {
-              "period": "2026-07",
-              "label": "Juli 2026",
-              "status": "unpaid",
-              "date": null
-            }
-          ]
-        },
-        {
-          "building": "De Orange",
-          "room_number": "2",
-          "room_label": "Kamar 2",
-          "tenant_name": null,
-          "price": 950000,
-          "depo": 0,
-          "status": "occupied",
-          "payments": [
-            {
-              "period": "2025-03",
-              "label": "Maret 2025",
-              "status": "paid",
-              "date": "2025-03-17"
-            },
-            {
-              "period": "2025-04",
-              "label": "April 2025",
-              "status": "paid",
-              "date": "2025-04-16"
-            },
-            {
-              "period": "2025-05",
-              "label": "Mei 2025",
-              "status": "paid",
-              "date": "2025-05-18"
-            },
-            {
-              "period": "2025-06",
-              "label": "Juni 2025",
-              "status": "paid",
-              "date": "2025-06-20"
-            },
-            {
-              "period": "2025-07",
-              "label": "Juli 2025",
-              "status": "unpaid",
-              "date": null
-            },
-            {
-              "period": "2025-08",
-              "label": "Agustus 2025",
-              "status": "unpaid",
-              "date": null
-            },
-            {
-              "period": "2025-09",
-              "label": "September 2025",
-              "status": "unpaid",
-              "date": null
-            },
-            {
-              "period": "2025-10",
-              "label": "Oktober 2025",
-              "status": "paid",
-              "date": "2025-09-28"
-            },
-            {
-              "period": "2025-11",
-              "label": "November 2025",
-              "status": "paid",
-              "date": "2025-11-01"
-            },
-            {
-              "period": "2025-12",
-              "label": "Desember 2025",
-              "status": "unpaid",
-              "date": null
-            },
-            {
-              "period": "2026-01",
-              "label": "Januari 2026",
-              "status": "unpaid",
-              "date": null
-            },
-            {
-              "period": "2026-02",
-              "label": "Februari 2026",
-              "status": "unpaid",
-              "date": null
-            },
-            {
-              "period": "2026-03",
-              "label": "Maret 2026",
-              "status": "unpaid",
-              "date": null
-            },
-            {
-              "period": "2026-04",
-              "label": "April 2026",
-              "status": "unpaid",
-              "date": null
-            },
-            {
-              "period": "2026-05",
-              "label": "Mei 2026",
-              "status": "paid",
-              "date": "2026-05-08"
-            },
-            {
-              "period": "2026-06",
-              "label": "Juni 2026",
-              "status": "paid",
-              "date": "2026-06-02"
-            },
-            {
-              "period": "2026-07",
-              "label": "Juli 2026",
-              "status": "paid",
-              "date": "2026-07-19"
-            }
-          ]
-        },
-        {
-          "building": "De Orange",
-          "room_number": "3",
-          "room_label": "Kamar 3",
-          "tenant_name": "Muhammad Bushaeri",
-          "price": 1200000,
-          "depo": {
-            "amount": 500,
-            "refundable": false,
-            "raw": "500"
-          },
-          "status": "occupied",
-          "payments": [
-            {
-              "period": "2025-03",
-              "label": "Maret 2025",
-              "status": "paid",
-              "date": "2025-03-01"
-            },
-            {
-              "period": "2025-04",
-              "label": "April 2025",
-              "status": "paid",
-              "date": "2025-03-29"
-            },
-            {
-              "period": "2025-05",
-              "label": "Mei 2025",
-              "status": "paid",
-              "date": "2025-04-30"
-            },
-            {
-              "period": "2025-06",
-              "label": "Juni 2025",
-              "status": "paid",
-              "date": "2025-05-29"
-            },
-            {
-              "period": "2025-07",
-              "label": "Juli 2025",
-              "status": "paid",
-              "date": "2025-06-30"
-            },
-            {
-              "period": "2025-08",
-              "label": "Agustus 2025",
-              "status": "paid",
-              "date": "2025-07-29"
-            },
-            {
-              "period": "2025-09",
-              "label": "September 2025",
-              "status": "paid",
-              "date": "2025-08-29"
-            },
-            {
-              "period": "2025-10",
-              "label": "Oktober 2025",
-              "status": "paid",
-              "date": "2025-10-01"
-            },
-            {
-              "period": "2025-11",
-              "label": "November 2025",
-              "status": "paid",
-              "date": "2025-11-01"
-            },
-            {
-              "period": "2025-12",
-              "label": "Desember 2025",
-              "status": "paid",
-              "date": "2025-12-02"
-            },
-            {
-              "period": "2026-01",
-              "label": "Januari 2026",
-              "status": "paid",
-              "date": "2025-12-29"
-            },
-            {
-              "period": "2026-02",
-              "label": "Februari 2026",
-              "status": "paid",
-              "date": "2026-02-01"
-            },
-            {
-              "period": "2026-03",
-              "label": "Maret 2026",
-              "status": "paid",
-              "date": "2026-03-01"
-            },
-            {
-              "period": "2026-04",
-              "label": "April 2026",
-              "status": "paid",
-              "date": "2026-04-02"
-            },
-            {
-              "period": "2026-05",
-              "label": "Mei 2026",
-              "status": "paid",
-              "date": "2026-05-01"
-            },
-            {
-              "period": "2026-06",
-              "label": "Juni 2026",
-              "status": "paid",
-              "date": "2026-06-02"
-            },
-            {
-              "period": "2026-07",
-              "label": "Juli 2026",
-              "status": "paid",
-              "date": "2026-07-02"
-            }
-          ]
-        },
-        {
-          "building": "De Orange",
-          "room_number": "4",
-          "room_label": "Kamar 4",
-          "tenant_name": "Nadia Primar",
-          "price": 950000,
-          "depo": {
-            "amount": 250,
-            "refundable": false,
-            "raw": "250"
-          },
-          "status": "occupied",
-          "payments": [
-            {
-              "period": "2025-03",
-              "label": "Maret 2025",
-              "status": "unpaid",
-              "date": null
-            },
-            {
-              "period": "2025-04",
-              "label": "April 2025",
-              "status": "unpaid",
-              "date": null
-            },
-            {
-              "period": "2025-05",
-              "label": "Mei 2025",
-              "status": "unpaid",
-              "date": null
-            },
-            {
-              "period": "2025-06",
-              "label": "Juni 2025",
-              "status": "unpaid",
-              "date": null
-            },
-            {
-              "period": "2025-07",
-              "label": "Juli 2025",
-              "status": "unpaid",
-              "date": null
-            },
-            {
-              "period": "2025-08",
-              "label": "Agustus 2025",
-              "status": "unpaid",
-              "date": null
-            },
-            {
-              "period": "2025-09",
-              "label": "September 2025",
-              "status": "unpaid",
-              "date": null
-            },
-            {
-              "period": "2025-10",
-              "label": "Oktober 2025",
-              "status": "unpaid",
-              "date": null
-            },
-            {
-              "period": "2025-11",
-              "label": "November 2025",
-              "status": "unpaid",
-              "date": null
-            },
-            {
-              "period": "2025-12",
-              "label": "Desember 2025",
-              "status": "unpaid",
-              "date": null
-            },
-            {
-              "period": "2026-01",
-              "label": "Januari 2026",
-              "status": "unpaid",
-              "date": null
-            },
-            {
-              "period": "2026-02",
-              "label": "Februari 2026",
-              "status": "unpaid",
-              "date": null
-            },
-            {
-              "period": "2026-03",
-              "label": "Maret 2026",
-              "status": "unpaid",
-              "date": null
-            },
-            {
-              "period": "2026-04",
-              "label": "April 2026",
-              "status": "paid",
-              "date": "2026-04-26"
-            },
-            {
-              "period": "2026-05",
-              "label": "Mei 2026",
-              "status": "paid",
-              "date": "2026-05-26"
-            },
-            {
-              "period": "2026-06",
-              "label": "Juni 2026",
-              "status": "paid",
-              "date": "2026-06-28"
-            },
-            {
-              "period": "2026-07",
-              "label": "Juli 2026",
-              "status": "unpaid",
-              "date": null
-            }
-          ]
-        },
-        {
-          "building": "De Orange",
-          "room_number": "5",
-          "room_label": "Kamar 5",
-          "tenant_name": "Fariz Rizky Awaludin",
-          "price": 850000,
-          "depo": {
-            "amount": 500,
-            "refundable": false,
-            "raw": "500"
-          },
-          "status": "occupied",
-          "payments": [
-            {
-              "period": "2025-03",
-              "label": "Maret 2025",
-              "status": "unpaid",
-              "date": null
-            },
-            {
-              "period": "2025-04",
-              "label": "April 2025",
-              "status": "unpaid",
-              "date": null
-            },
-            {
-              "period": "2025-05",
-              "label": "Mei 2025",
-              "status": "unpaid",
-              "date": null
-            },
-            {
-              "period": "2025-06",
-              "label": "Juni 2025",
-              "status": "unpaid",
-              "date": null
-            },
-            {
-              "period": "2025-07",
-              "label": "Juli 2025",
-              "status": "paid",
-              "date": "2025-07-02"
-            },
-            {
-              "period": "2025-08",
-              "label": "Agustus 2025",
-              "status": "paid",
-              "date": "2025-08-02"
-            },
-            {
-              "period": "2025-09",
-              "label": "September 2025",
-              "status": "paid",
-              "date": "2025-08-29"
-            },
-            {
-              "period": "2025-10",
-              "label": "Oktober 2025",
-              "status": "unpaid",
-              "date": null
-            },
-            {
-              "period": "2025-11",
-              "label": "November 2025",
-              "status": "unpaid",
-              "date": null
-            },
-            {
-              "period": "2025-12",
-              "label": "Desember 2025",
-              "status": "unpaid",
-              "date": null
-            },
-            {
-              "period": "2026-01",
-              "label": "Januari 2026",
-              "status": "unpaid",
-              "date": null
-            },
-            {
-              "period": "2026-02",
-              "label": "Februari 2026",
-              "status": "unpaid",
-              "date": null
-            },
-            {
-              "period": "2026-03",
-              "label": "Maret 2026",
-              "status": "paid",
-              "date": "2026-03-29"
-            },
-            {
-              "period": "2026-04",
-              "label": "April 2026",
-              "status": "unpaid",
-              "date": null
-            },
-            {
-              "period": "2026-05",
-              "label": "Mei 2026",
-              "status": "paid",
-              "date": "2026-04-24"
-            },
-            {
-              "period": "2026-06",
-              "label": "Juni 2026",
-              "status": "paid",
-              "date": "2026-06-10"
-            },
-            {
-              "period": "2026-07",
-              "label": "Juli 2026",
-              "status": "paid",
-              "date": "2026-07-07"
-            }
-          ]
-        },
-        {
-          "building": "De Orange",
-          "room_number": "6",
-          "room_label": "Kamar 6",
-          "tenant_name": "Arief Daniel E Sohilait",
-          "price": 1200000,
-          "depo": {
-            "amount": 500,
-            "refundable": false,
-            "raw": "500"
-          },
-          "status": "occupied",
-          "payments": [
-            {
-              "period": "2025-03",
-              "label": "Maret 2025",
-              "status": "unpaid",
-              "date": null
-            },
-            {
-              "period": "2025-04",
-              "label": "April 2025",
-              "status": "unpaid",
-              "date": null
-            },
-            {
-              "period": "2025-05",
-              "label": "Mei 2025",
-              "status": "paid",
-              "date": "2025-05-01"
-            },
-            {
-              "period": "2025-06",
-              "label": "Juni 2025",
-              "status": "paid",
-              "date": "2025-06-02"
-            },
-            {
-              "period": "2025-07",
-              "label": "Juli 2025",
-              "status": "paid",
-              "date": "2025-07-09"
-            },
-            {
-              "period": "2025-08",
-              "label": "Agustus 2025",
-              "status": "unpaid",
-              "date": null
-            },
-            {
-              "period": "2025-09",
-              "label": "September 2025",
-              "status": "unpaid",
-              "date": null
-            },
-            {
-              "period": "2025-10",
-              "label": "Oktober 2025",
-              "status": "unpaid",
-              "date": null
-            },
-            {
-              "period": "2025-11",
-              "label": "November 2025",
-              "status": "unpaid",
-              "date": null
-            },
-            {
-              "period": "2025-12",
-              "label": "Desember 2025",
-              "status": "unpaid",
-              "date": null
-            },
-            {
-              "period": "2026-01",
-              "label": "Januari 2026",
-              "status": "unpaid",
-              "date": null
-            },
-            {
-              "period": "2026-02",
-              "label": "Februari 2026",
-              "status": "paid",
-              "date": "2026-02-09"
-            },
-            {
-              "period": "2026-03",
-              "label": "Maret 2026",
-              "status": "paid",
-              "date": "2026-03-08"
-            },
-            {
-              "period": "2026-04",
-              "label": "April 2026",
-              "status": "paid",
-              "date": "2026-04-01"
-            },
-            {
-              "period": "2026-05",
-              "label": "Mei 2026",
-              "status": "paid",
-              "date": "2026-05-04"
-            },
-            {
-              "period": "2026-06",
-              "label": "Juni 2026",
-              "status": "paid",
-              "date": "2026-06-07"
-            },
-            {
-              "period": "2026-07",
-              "label": "Juli 2026",
-              "status": "paid",
-              "date": "2026-07-21"
-            }
-          ]
-        },
-        {
-          "building": "De Orange",
-          "room_number": "7",
-          "room_label": "Kamar 7",
-          "tenant_name": "Yusmani Cece",
-          "price": 750000,
-          "depo": {
-            "amount": 500,
-            "refundable": false,
-            "raw": "500"
-          },
-          "status": "occupied",
-          "payments": [
-            {
-              "period": "2025-03",
-              "label": "Maret 2025",
-              "status": "paid",
-              "date": "2025-03-08"
-            },
-            {
-              "period": "2025-04",
-              "label": "April 2025",
-              "status": "paid",
-              "date": "2025-04-09"
-            },
-            {
-              "period": "2025-05",
-              "label": "Mei 2025",
-              "status": "paid",
-              "date": "2025-05-09"
-            },
-            {
-              "period": "2025-06",
-              "label": "Juni 2025",
-              "status": "paid",
-              "date": "2025-06-09"
-            },
-            {
-              "period": "2025-07",
-              "label": "Juli 2025",
-              "status": "paid",
-              "date": "2025-07-09"
-            },
-            {
-              "period": "2025-08",
-              "label": "Agustus 2025",
-              "status": "paid",
-              "date": "2025-08-09"
-            },
-            {
-              "period": "2025-09",
-              "label": "September 2025",
-              "status": "paid",
-              "date": "2025-09-08"
-            },
-            {
-              "period": "2025-10",
-              "label": "Oktober 2025",
-              "status": "paid",
-              "date": "2025-10-08"
-            },
-            {
-              "period": "2025-11",
-              "label": "November 2025",
-              "status": "paid",
-              "date": "2025-11-08"
-            },
-            {
-              "period": "2025-12",
-              "label": "Desember 2025",
-              "status": "unpaid",
-              "date": null
-            },
-            {
-              "period": "2026-01",
-              "label": "Januari 2026",
-              "status": "paid",
-              "date": "2026-01-17"
-            },
-            {
-              "period": "2026-02",
-              "label": "Februari 2026",
-              "status": "paid",
-              "date": "2026-02-01"
-            },
-            {
-              "period": "2026-03",
-              "label": "Maret 2026",
-              "status": "paid",
-              "date": "2026-03-01"
-            },
-            {
-              "period": "2026-04",
-              "label": "April 2026",
-              "status": "paid",
-              "date": "2026-04-01"
-            },
-            {
-              "period": "2026-05",
-              "label": "Mei 2026",
-              "status": "paid",
-              "date": "2026-05-01"
-            },
-            {
-              "period": "2026-06",
-              "label": "Juni 2026",
-              "status": "paid",
-              "date": "2026-05-31"
-            },
-            {
-              "period": "2026-07",
-              "label": "Juli 2026",
-              "status": "paid",
-              "date": "2026-07-01"
-            }
-          ]
-        },
-        {
-          "building": "De Orange",
-          "room_number": "8",
-          "room_label": "Kamar 8",
-          "tenant_name": "Evi Sumanti",
-          "price": 1200000,
-          "depo": {
-            "amount": 150,
-            "refundable": false,
-            "raw": "150"
-          },
-          "status": "occupied",
-          "payments": [
-            {
-              "period": "2025-03",
-              "label": "Maret 2025",
-              "status": "unpaid",
-              "date": null
-            },
-            {
-              "period": "2025-04",
-              "label": "April 2025",
-              "status": "unpaid",
-              "date": null
-            },
-            {
-              "period": "2025-05",
-              "label": "Mei 2025",
-              "status": "unpaid",
-              "date": null
-            },
-            {
-              "period": "2025-06",
-              "label": "Juni 2025",
-              "status": "unpaid",
-              "date": null
-            },
-            {
-              "period": "2025-07",
-              "label": "Juli 2025",
-              "status": "paid",
-              "date": "2025-07-03"
-            },
-            {
-              "period": "2025-08",
-              "label": "Agustus 2025",
-              "status": "unpaid",
-              "date": null
-            },
-            {
-              "period": "2025-09",
-              "label": "September 2025",
-              "status": "unpaid",
-              "date": null
-            },
-            {
-              "period": "2025-10",
-              "label": "Oktober 2025",
-              "status": "unpaid",
-              "date": null
-            },
-            {
-              "period": "2025-11",
-              "label": "November 2025",
-              "status": "unpaid",
-              "date": null
-            },
-            {
-              "period": "2025-12",
-              "label": "Desember 2025",
-              "status": "unpaid",
-              "date": null
-            },
-            {
-              "period": "2026-01",
-              "label": "Januari 2026",
-              "status": "unpaid",
-              "date": null
-            },
-            {
-              "period": "2026-02",
-              "label": "Februari 2026",
-              "status": "unpaid",
-              "date": null
-            },
-            {
-              "period": "2026-03",
-              "label": "Maret 2026",
-              "status": "unpaid",
-              "date": null
-            },
-            {
-              "period": "2026-04",
-              "label": "April 2026",
-              "status": "paid",
-              "date": "2026-04-01"
-            },
-            {
-              "period": "2026-05",
-              "label": "Mei 2026",
-              "status": "paid",
-              "date": "2026-05-01"
-            },
-            {
-              "period": "2026-06",
-              "label": "Juni 2026",
-              "status": "paid",
-              "date": "2026-05-31"
-            },
-            {
-              "period": "2026-07",
-              "label": "Juli 2026",
-              "status": "paid",
-              "date": "2026-07-01"
-            }
-          ]
-        },
-        {
-          "building": "De Orange",
-          "room_number": "9",
-          "room_label": "Kamar 9",
-          "tenant_name": "Evo Noviana",
-          "price": 1625000,
-          "depo": 0,
-          "status": "occupied",
-          "payments": [
-            {
-              "period": "2025-03",
-              "label": "Maret 2025",
-              "status": "unpaid",
-              "date": null
-            },
-            {
-              "period": "2025-04",
-              "label": "April 2025",
-              "status": "paid",
-              "date": "2025-04-07"
-            },
-            {
-              "period": "2025-05",
-              "label": "Mei 2025",
-              "status": "unpaid",
-              "date": null
-            },
-            {
-              "period": "2025-06",
-              "label": "Juni 2025",
-              "status": "paid",
-              "date": "2025-06-02"
-            },
-            {
-              "period": "2025-07",
-              "label": "Juli 2025",
-              "status": "unpaid",
-              "date": null
-            },
-            {
-              "period": "2025-08",
-              "label": "Agustus 2025",
-              "status": "unpaid",
-              "date": null
-            },
-            {
-              "period": "2025-09",
-              "label": "September 2025",
-              "status": "paid",
-              "date": "2025-09-06"
-            },
-            {
-              "period": "2025-10",
-              "label": "Oktober 2025",
-              "status": "unpaid",
-              "date": null
-            },
-            {
-              "period": "2025-11",
-              "label": "November 2025",
-              "status": "unpaid",
-              "date": null
-            },
-            {
-              "period": "2025-12",
-              "label": "Desember 2025",
-              "status": "unpaid",
-              "date": null
-            },
-            {
-              "period": "2026-01",
-              "label": "Januari 2026",
-              "status": "unpaid",
-              "date": null
-            },
-            {
-              "period": "2026-02",
-              "label": "Februari 2026",
-              "status": "unpaid",
-              "date": null
-            },
-            {
-              "period": "2026-03",
-              "label": "Maret 2026",
-              "status": "unpaid",
-              "date": null
-            },
-            {
-              "period": "2026-04",
-              "label": "April 2026",
-              "status": "paid",
-              "date": "2026-04-26"
-            },
-            {
-              "period": "2026-05",
-              "label": "Mei 2026",
-              "status": "unpaid",
-              "date": null
-            },
-            {
-              "period": "2026-06",
-              "label": "Juni 2026",
-              "status": "unpaid",
-              "date": null
-            },
-            {
-              "period": "2026-07",
-              "label": "Juli 2026",
-              "status": "unpaid",
-              "date": null
-            }
-          ]
-        },
-        {
-          "building": "De Orange",
-          "room_number": "10",
-          "room_label": "Kamar 10",
-          "tenant_name": "Fahmi Rosdiansyah Mahdani",
-          "price": 925000,
-          "depo": {
-            "amount": 500,
-            "refundable": false,
-            "raw": "500"
-          },
-          "status": "occupied",
-          "payments": [
-            {
-              "period": "2025-03",
-              "label": "Maret 2025",
-              "status": "paid",
-              "date": "2025-03-03"
-            },
-            {
-              "period": "2025-04",
-              "label": "April 2025",
-              "status": "paid",
-              "date": "2025-04-02"
-            },
-            {
-              "period": "2025-05",
-              "label": "Mei 2025",
-              "status": "paid",
-              "date": "2025-05-03"
-            },
-            {
-              "period": "2025-06",
-              "label": "Juni 2025",
-              "status": "paid",
-              "date": "2025-06-02"
-            },
-            {
-              "period": "2025-07",
-              "label": "Juli 2025",
-              "status": "paid",
-              "date": "2025-07-03"
-            },
-            {
-              "period": "2025-08",
-              "label": "Agustus 2025",
-              "status": "paid",
-              "date": "2025-08-02"
-            },
-            {
-              "period": "2025-09",
-              "label": "September 2025",
-              "status": "paid",
-              "date": "2025-09-02"
-            },
-            {
-              "period": "2025-10",
-              "label": "Oktober 2025",
-              "status": "paid",
-              "date": "2025-10-01"
-            },
-            {
-              "period": "2025-11",
-              "label": "November 2025",
-              "status": "paid",
-              "date": "2025-11-01"
-            },
-            {
-              "period": "2025-12",
-              "label": "Desember 2025",
-              "status": "paid",
-              "date": "2025-12-01"
-            },
-            {
-              "period": "2026-01",
-              "label": "Januari 2026",
-              "status": "paid",
-              "date": "2026-01-01"
-            },
-            {
-              "period": "2026-02",
-              "label": "Februari 2026",
-              "status": "paid",
-              "date": "2026-02-01"
-            },
-            {
-              "period": "2026-03",
-              "label": "Maret 2026",
-              "status": "unpaid",
-              "date": null
-            },
-            {
-              "period": "2026-04",
-              "label": "April 2026",
-              "status": "paid",
-              "date": "2026-04-01"
-            },
-            {
-              "period": "2026-05",
-              "label": "Mei 2026",
-              "status": "paid",
-              "date": "2026-05-02"
-            },
-            {
-              "period": "2026-06",
-              "label": "Juni 2026",
-              "status": "paid",
-              "date": "2026-06-02"
-            },
-            {
-              "period": "2026-07",
-              "label": "Juli 2026",
-              "status": "paid",
-              "date": "2026-07-02"
-            }
-          ]
-        },
-        {
-          "building": "De Orange",
-          "room_number": "11",
-          "room_label": "Kamar 11",
-          "tenant_name": "Raymond Kuncara Sitorus",
-          "price": 1550000,
-          "depo": {
-            "amount": 500,
-            "refundable": false,
-            "raw": "500"
-          },
-          "status": "occupied",
-          "payments": [
-            {
-              "period": "2025-03",
-              "label": "Maret 2025",
-              "status": "paid",
-              "date": "2025-03-12"
-            },
-            {
-              "period": "2025-04",
-              "label": "April 2025",
-              "status": "paid",
-              "date": "2025-04-12"
-            },
-            {
-              "period": "2025-05",
-              "label": "Mei 2025",
-              "status": "paid",
-              "date": "2025-05-12"
-            },
-            {
-              "period": "2025-06",
-              "label": "Juni 2025",
-              "status": "paid",
-              "date": "2025-06-16"
-            },
-            {
-              "period": "2025-07",
-              "label": "Juli 2025",
-              "status": "paid",
-              "date": "2025-07-12"
-            },
-            {
-              "period": "2025-08",
-              "label": "Agustus 2025",
-              "status": "paid",
-              "date": "2025-08-16"
-            },
-            {
-              "period": "2025-09",
-              "label": "September 2025",
-              "status": "paid",
-              "date": "2025-09-12"
-            },
-            {
-              "period": "2025-10",
-              "label": "Oktober 2025",
-              "status": "paid",
-              "date": "2025-10-17"
-            },
-            {
-              "period": "2025-11",
-              "label": "November 2025",
-              "status": "paid",
-              "date": "2025-11-17"
-            },
-            {
-              "period": "2025-12",
-              "label": "Desember 2025",
-              "status": "paid",
-              "date": "2025-12-15"
-            },
-            {
-              "period": "2026-01",
-              "label": "Januari 2026",
-              "status": "paid",
-              "date": "2026-01-13"
-            },
-            {
-              "period": "2026-02",
-              "label": "Februari 2026",
-              "status": "paid",
-              "date": "2026-02-18"
-            },
-            {
-              "period": "2026-03",
-              "label": "Maret 2026",
-              "status": "paid",
-              "date": "2026-03-17"
-            },
-            {
-              "period": "2026-04",
-              "label": "April 2026",
-              "status": "paid",
-              "date": "2026-04-17"
-            },
-            {
-              "period": "2026-05",
-              "label": "Mei 2026",
-              "status": "paid",
-              "date": "2026-05-17"
-            },
-            {
-              "period": "2026-06",
-              "label": "Juni 2026",
-              "status": "paid",
-              "date": "2026-06-12"
-            },
-            {
-              "period": "2026-07",
-              "label": "Juli 2026",
-              "status": "paid",
-              "date": "2026-07-17"
-            }
-          ]
-        },
-        {
-          "building": "De Orange",
-          "room_number": "12",
-          "room_label": "Kamar 12",
-          "tenant_name": "Dede Farhan Maulana",
-          "price": 750000,
-          "depo": 0,
-          "status": "occupied",
-          "payments": [
-            {
-              "period": "2025-03",
-              "label": "Maret 2025",
-              "status": "paid",
-              "date": "2025-03-24"
-            },
-            {
-              "period": "2025-04",
-              "label": "April 2025",
-              "status": "paid",
-              "date": "2025-04-23"
-            },
-            {
-              "period": "2025-05",
-              "label": "Mei 2025",
-              "status": "paid",
-              "date": "2025-05-26"
-            },
-            {
-              "period": "2025-06",
-              "label": "Juni 2025",
-              "status": "paid",
-              "date": "2025-07-14"
-            },
-            {
-              "period": "2025-07",
-              "label": "Juli 2025",
-              "status": "unpaid",
-              "date": null
-            },
-            {
-              "period": "2025-08",
-              "label": "Agustus 2025",
-              "status": "unpaid",
-              "date": null
-            },
-            {
-              "period": "2025-09",
-              "label": "September 2025",
-              "status": "unpaid",
-              "date": null
-            },
-            {
-              "period": "2025-10",
-              "label": "Oktober 2025",
-              "status": "unpaid",
-              "date": null
-            },
-            {
-              "period": "2025-11",
-              "label": "November 2025",
-              "status": "unpaid",
-              "date": null
-            },
-            {
-              "period": "2025-12",
-              "label": "Desember 2025",
-              "status": "unpaid",
-              "date": null
-            },
-            {
-              "period": "2026-01",
-              "label": "Januari 2026",
-              "status": "unpaid",
-              "date": null
-            },
-            {
-              "period": "2026-02",
-              "label": "Februari 2026",
-              "status": "unpaid",
-              "date": null
-            },
-            {
-              "period": "2026-03",
-              "label": "Maret 2026",
-              "status": "paid",
-              "date": "2026-03-01"
-            },
-            {
-              "period": "2026-04",
-              "label": "April 2026",
-              "status": "paid",
-              "date": "2026-04-01"
-            },
-            {
-              "period": "2026-05",
-              "label": "Mei 2026",
-              "status": "paid",
-              "date": "2026-05-01"
-            },
-            {
-              "period": "2026-06",
-              "label": "Juni 2026",
-              "status": "paid",
-              "date": "2026-05-31"
-            },
-            {
-              "period": "2026-07",
-              "label": "Juli 2026",
-              "status": "paid",
-              "date": "2026-07-01"
-            }
-          ]
-        },
-        {
-          "building": "De Orange",
-          "room_number": "13",
-          "room_label": "Kamar 13",
-          "tenant_name": "M Raihan Octario (Eriko Varid)",
-          "price": 850000,
-          "depo": {
-            "amount": 500,
-            "refundable": false,
-            "raw": "500"
-          },
-          "status": "occupied",
-          "payments": [
-            {
-              "period": "2025-03",
-              "label": "Maret 2025",
-              "status": "unpaid",
-              "date": null
-            },
-            {
-              "period": "2025-04",
-              "label": "April 2025",
-              "status": "unpaid",
-              "date": null
-            },
-            {
-              "period": "2025-05",
-              "label": "Mei 2025",
-              "status": "paid",
-              "date": "2025-05-04"
-            },
-            {
-              "period": "2025-06",
-              "label": "Juni 2025",
-              "status": "paid",
-              "date": "2025-06-15"
-            },
-            {
-              "period": "2025-07",
-              "label": "Juli 2025",
-              "status": "unpaid",
-              "date": null
-            },
-            {
-              "period": "2025-08",
-              "label": "Agustus 2025",
-              "status": "unpaid",
-              "date": null
-            },
-            {
-              "period": "2025-09",
-              "label": "September 2025",
-              "status": "paid",
-              "date": "2025-09-12"
-            },
-            {
-              "period": "2025-10",
-              "label": "Oktober 2025",
-              "status": "unpaid",
-              "date": null
-            },
-            {
-              "period": "2025-11",
-              "label": "November 2025",
-              "status": "unpaid",
-              "date": null
-            },
-            {
-              "period": "2025-12",
-              "label": "Desember 2025",
-              "status": "paid",
-              "date": "2026-12-18"
-            },
-            {
-              "period": "2026-01",
-              "label": "Januari 2026",
-              "status": "paid",
-              "date": "2026-01-01"
-            },
-            {
-              "period": "2026-02",
-              "label": "Februari 2026",
-              "status": "paid",
-              "date": "2026-02-01"
-            },
-            {
-              "period": "2026-03",
-              "label": "Maret 2026",
-              "status": "paid",
-              "date": "2026-03-02"
-            },
-            {
-              "period": "2026-04",
-              "label": "April 2026",
-              "status": "paid",
-              "date": "2026-04-02"
-            },
-            {
-              "period": "2026-05",
-              "label": "Mei 2026",
-              "status": "paid",
-              "date": "2026-05-01"
-            },
-            {
-              "period": "2026-06",
-              "label": "Juni 2026",
-              "status": "paid",
-              "date": "2026-06-01"
-            },
-            {
-              "period": "2026-07",
-              "label": "Juli 2026",
-              "status": "paid",
-              "date": "2026-07-01"
-            }
-          ]
-        },
-        {
-          "building": "De Orange",
-          "room_number": "14",
-          "room_label": "Kamar 14",
-          "tenant_name": "Aji Tirtana Kusuma",
-          "price": 1000000,
-          "depo": {
-            "amount": 500,
-            "refundable": false,
-            "raw": "500"
-          },
-          "status": "occupied",
-          "payments": [
-            {
-              "period": "2025-03",
-              "label": "Maret 2025",
-              "status": "unpaid",
-              "date": null
-            },
-            {
-              "period": "2025-04",
-              "label": "April 2025",
-              "status": "unpaid",
-              "date": null
-            },
-            {
-              "period": "2025-05",
-              "label": "Mei 2025",
-              "status": "unpaid",
-              "date": null
-            },
-            {
-              "period": "2025-06",
-              "label": "Juni 2025",
-              "status": "unpaid",
-              "date": null
-            },
-            {
-              "period": "2025-07",
-              "label": "Juli 2025",
-              "status": "unpaid",
-              "date": null
-            },
-            {
-              "period": "2025-08",
-              "label": "Agustus 2025",
-              "status": "unpaid",
-              "date": null
-            },
-            {
-              "period": "2025-09",
-              "label": "September 2025",
-              "status": "unpaid",
-              "date": null
-            },
-            {
-              "period": "2025-10",
-              "label": "Oktober 2025",
-              "status": "unpaid",
-              "date": null
-            },
-            {
-              "period": "2025-11",
-              "label": "November 2025",
-              "status": "unpaid",
-              "date": null
-            },
-            {
-              "period": "2025-12",
-              "label": "Desember 2025",
-              "status": "unpaid",
-              "date": null
-            },
-            {
-              "period": "2026-01",
-              "label": "Januari 2026",
-              "status": "unpaid",
-              "date": null
-            },
-            {
-              "period": "2026-02",
-              "label": "Februari 2026",
-              "status": "unpaid",
-              "date": null
-            },
-            {
-              "period": "2026-03",
-              "label": "Maret 2026",
-              "status": "unpaid",
-              "date": null
-            },
-            {
-              "period": "2026-04",
-              "label": "April 2026",
-              "status": "unpaid",
-              "date": null
-            },
-            {
-              "period": "2026-05",
-              "label": "Mei 2026",
-              "status": "unpaid",
-              "date": null
-            },
-            {
-              "period": "2026-06",
-              "label": "Juni 2026",
-              "status": "unpaid",
-              "date": null
-            },
-            {
-              "period": "2026-07",
-              "label": "Juli 2026",
-              "status": "unpaid",
-              "date": null
-            }
-          ]
-        },
-        {
-          "building": "De Orange",
-          "room_number": "15",
-          "room_label": "Kamar 15",
-          "tenant_name": null,
-          "price": 850000,
-          "depo": null,
           "status": "vacant",
           "payments": [
             {
               "period": "2025-03",
               "label": "Maret 2025",
-              "status": "unpaid",
+              "status": "none",
               "date": null
             },
             {
               "period": "2025-04",
               "label": "April 2025",
-              "status": "unpaid",
+              "status": "none",
               "date": null
             },
             {
               "period": "2025-05",
               "label": "Mei 2025",
-              "status": "unpaid",
+              "status": "none",
               "date": null
             },
             {
               "period": "2025-06",
               "label": "Juni 2025",
-              "status": "unpaid",
+              "status": "none",
               "date": null
             },
             {
               "period": "2025-07",
               "label": "Juli 2025",
-              "status": "unpaid",
+              "status": "none",
               "date": null
             },
             {
               "period": "2025-08",
               "label": "Agustus 2025",
-              "status": "unpaid",
+              "status": "none",
               "date": null
             },
             {
               "period": "2025-09",
               "label": "September 2025",
-              "status": "unpaid",
+              "status": "none",
               "date": null
             },
             {
               "period": "2025-10",
               "label": "Oktober 2025",
-              "status": "unpaid",
+              "status": "none",
               "date": null
             },
             {
               "period": "2025-11",
               "label": "November 2025",
-              "status": "unpaid",
+              "status": "none",
               "date": null
             },
             {
               "period": "2025-12",
               "label": "Desember 2025",
-              "status": "unpaid",
+              "status": "none",
               "date": null
             },
             {
               "period": "2026-01",
               "label": "Januari 2026",
-              "status": "unpaid",
+              "status": "none",
               "date": null
             },
             {
               "period": "2026-02",
               "label": "Februari 2026",
-              "status": "paid",
-              "date": "2026-04-15"
+              "status": "none",
+              "date": null
             },
             {
               "period": "2026-03",
               "label": "Maret 2026",
-              "status": "unpaid",
+              "status": "none",
               "date": null
             },
             {
               "period": "2026-04",
               "label": "April 2026",
-              "status": "unpaid",
+              "status": "none",
               "date": null
             },
             {
               "period": "2026-05",
               "label": "Mei 2026",
-              "status": "unpaid",
+              "status": "none",
               "date": null
             },
             {
               "period": "2026-06",
               "label": "Juni 2026",
-              "status": "unpaid",
+              "status": "none",
               "date": null
             },
             {
               "period": "2026-07",
               "label": "Juli 2026",
-              "status": "unpaid",
+              "status": "none",
               "date": null
             }
-          ]
+          ],
+          "notes": ""
+        },
+        {
+          "building": "De Orange",
+          "room_number": "2",
+          "room_label": "Kamar 2",
+          "tenant_name": "",
+          "price": 0,
+          "depo": 0,
+          "status": "vacant",
+          "payments": [
+            {
+              "period": "2025-03",
+              "label": "Maret 2025",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2025-04",
+              "label": "April 2025",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2025-05",
+              "label": "Mei 2025",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2025-06",
+              "label": "Juni 2025",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2025-07",
+              "label": "Juli 2025",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2025-08",
+              "label": "Agustus 2025",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2025-09",
+              "label": "September 2025",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2025-10",
+              "label": "Oktober 2025",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2025-11",
+              "label": "November 2025",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2025-12",
+              "label": "Desember 2025",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2026-01",
+              "label": "Januari 2026",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2026-02",
+              "label": "Februari 2026",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2026-03",
+              "label": "Maret 2026",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2026-04",
+              "label": "April 2026",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2026-05",
+              "label": "Mei 2026",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2026-06",
+              "label": "Juni 2026",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2026-07",
+              "label": "Juli 2026",
+              "status": "none",
+              "date": null
+            }
+          ],
+          "notes": ""
+        },
+        {
+          "building": "De Orange",
+          "room_number": "3",
+          "room_label": "Kamar 3",
+          "tenant_name": "",
+          "price": 0,
+          "depo": 0,
+          "status": "vacant",
+          "payments": [
+            {
+              "period": "2025-03",
+              "label": "Maret 2025",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2025-04",
+              "label": "April 2025",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2025-05",
+              "label": "Mei 2025",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2025-06",
+              "label": "Juni 2025",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2025-07",
+              "label": "Juli 2025",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2025-08",
+              "label": "Agustus 2025",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2025-09",
+              "label": "September 2025",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2025-10",
+              "label": "Oktober 2025",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2025-11",
+              "label": "November 2025",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2025-12",
+              "label": "Desember 2025",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2026-01",
+              "label": "Januari 2026",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2026-02",
+              "label": "Februari 2026",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2026-03",
+              "label": "Maret 2026",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2026-04",
+              "label": "April 2026",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2026-05",
+              "label": "Mei 2026",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2026-06",
+              "label": "Juni 2026",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2026-07",
+              "label": "Juli 2026",
+              "status": "none",
+              "date": null
+            }
+          ],
+          "notes": ""
+        },
+        {
+          "building": "De Orange",
+          "room_number": "4",
+          "room_label": "Kamar 4",
+          "tenant_name": "",
+          "price": 0,
+          "depo": 0,
+          "status": "vacant",
+          "payments": [
+            {
+              "period": "2025-03",
+              "label": "Maret 2025",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2025-04",
+              "label": "April 2025",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2025-05",
+              "label": "Mei 2025",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2025-06",
+              "label": "Juni 2025",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2025-07",
+              "label": "Juli 2025",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2025-08",
+              "label": "Agustus 2025",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2025-09",
+              "label": "September 2025",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2025-10",
+              "label": "Oktober 2025",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2025-11",
+              "label": "November 2025",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2025-12",
+              "label": "Desember 2025",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2026-01",
+              "label": "Januari 2026",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2026-02",
+              "label": "Februari 2026",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2026-03",
+              "label": "Maret 2026",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2026-04",
+              "label": "April 2026",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2026-05",
+              "label": "Mei 2026",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2026-06",
+              "label": "Juni 2026",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2026-07",
+              "label": "Juli 2026",
+              "status": "none",
+              "date": null
+            }
+          ],
+          "notes": ""
+        },
+        {
+          "building": "De Orange",
+          "room_number": "5",
+          "room_label": "Kamar 5",
+          "tenant_name": "",
+          "price": 0,
+          "depo": 0,
+          "status": "vacant",
+          "payments": [
+            {
+              "period": "2025-03",
+              "label": "Maret 2025",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2025-04",
+              "label": "April 2025",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2025-05",
+              "label": "Mei 2025",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2025-06",
+              "label": "Juni 2025",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2025-07",
+              "label": "Juli 2025",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2025-08",
+              "label": "Agustus 2025",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2025-09",
+              "label": "September 2025",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2025-10",
+              "label": "Oktober 2025",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2025-11",
+              "label": "November 2025",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2025-12",
+              "label": "Desember 2025",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2026-01",
+              "label": "Januari 2026",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2026-02",
+              "label": "Februari 2026",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2026-03",
+              "label": "Maret 2026",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2026-04",
+              "label": "April 2026",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2026-05",
+              "label": "Mei 2026",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2026-06",
+              "label": "Juni 2026",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2026-07",
+              "label": "Juli 2026",
+              "status": "none",
+              "date": null
+            }
+          ],
+          "notes": ""
+        },
+        {
+          "building": "De Orange",
+          "room_number": "6",
+          "room_label": "Kamar 6",
+          "tenant_name": "",
+          "price": 0,
+          "depo": 0,
+          "status": "vacant",
+          "payments": [
+            {
+              "period": "2025-03",
+              "label": "Maret 2025",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2025-04",
+              "label": "April 2025",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2025-05",
+              "label": "Mei 2025",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2025-06",
+              "label": "Juni 2025",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2025-07",
+              "label": "Juli 2025",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2025-08",
+              "label": "Agustus 2025",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2025-09",
+              "label": "September 2025",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2025-10",
+              "label": "Oktober 2025",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2025-11",
+              "label": "November 2025",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2025-12",
+              "label": "Desember 2025",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2026-01",
+              "label": "Januari 2026",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2026-02",
+              "label": "Februari 2026",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2026-03",
+              "label": "Maret 2026",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2026-04",
+              "label": "April 2026",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2026-05",
+              "label": "Mei 2026",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2026-06",
+              "label": "Juni 2026",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2026-07",
+              "label": "Juli 2026",
+              "status": "none",
+              "date": null
+            }
+          ],
+          "notes": ""
+        },
+        {
+          "building": "De Orange",
+          "room_number": "7",
+          "room_label": "Kamar 7",
+          "tenant_name": "",
+          "price": 0,
+          "depo": 0,
+          "status": "vacant",
+          "payments": [
+            {
+              "period": "2025-03",
+              "label": "Maret 2025",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2025-04",
+              "label": "April 2025",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2025-05",
+              "label": "Mei 2025",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2025-06",
+              "label": "Juni 2025",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2025-07",
+              "label": "Juli 2025",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2025-08",
+              "label": "Agustus 2025",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2025-09",
+              "label": "September 2025",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2025-10",
+              "label": "Oktober 2025",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2025-11",
+              "label": "November 2025",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2025-12",
+              "label": "Desember 2025",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2026-01",
+              "label": "Januari 2026",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2026-02",
+              "label": "Februari 2026",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2026-03",
+              "label": "Maret 2026",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2026-04",
+              "label": "April 2026",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2026-05",
+              "label": "Mei 2026",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2026-06",
+              "label": "Juni 2026",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2026-07",
+              "label": "Juli 2026",
+              "status": "none",
+              "date": null
+            }
+          ],
+          "notes": ""
+        },
+        {
+          "building": "De Orange",
+          "room_number": "8",
+          "room_label": "Kamar 8",
+          "tenant_name": "",
+          "price": 0,
+          "depo": 0,
+          "status": "vacant",
+          "payments": [
+            {
+              "period": "2025-03",
+              "label": "Maret 2025",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2025-04",
+              "label": "April 2025",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2025-05",
+              "label": "Mei 2025",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2025-06",
+              "label": "Juni 2025",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2025-07",
+              "label": "Juli 2025",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2025-08",
+              "label": "Agustus 2025",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2025-09",
+              "label": "September 2025",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2025-10",
+              "label": "Oktober 2025",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2025-11",
+              "label": "November 2025",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2025-12",
+              "label": "Desember 2025",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2026-01",
+              "label": "Januari 2026",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2026-02",
+              "label": "Februari 2026",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2026-03",
+              "label": "Maret 2026",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2026-04",
+              "label": "April 2026",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2026-05",
+              "label": "Mei 2026",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2026-06",
+              "label": "Juni 2026",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2026-07",
+              "label": "Juli 2026",
+              "status": "none",
+              "date": null
+            }
+          ],
+          "notes": ""
+        },
+        {
+          "building": "De Orange",
+          "room_number": "9",
+          "room_label": "Kamar 9",
+          "tenant_name": "",
+          "price": 0,
+          "depo": 0,
+          "status": "vacant",
+          "payments": [
+            {
+              "period": "2025-03",
+              "label": "Maret 2025",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2025-04",
+              "label": "April 2025",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2025-05",
+              "label": "Mei 2025",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2025-06",
+              "label": "Juni 2025",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2025-07",
+              "label": "Juli 2025",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2025-08",
+              "label": "Agustus 2025",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2025-09",
+              "label": "September 2025",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2025-10",
+              "label": "Oktober 2025",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2025-11",
+              "label": "November 2025",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2025-12",
+              "label": "Desember 2025",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2026-01",
+              "label": "Januari 2026",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2026-02",
+              "label": "Februari 2026",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2026-03",
+              "label": "Maret 2026",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2026-04",
+              "label": "April 2026",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2026-05",
+              "label": "Mei 2026",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2026-06",
+              "label": "Juni 2026",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2026-07",
+              "label": "Juli 2026",
+              "status": "none",
+              "date": null
+            }
+          ],
+          "notes": ""
+        },
+        {
+          "building": "De Orange",
+          "room_number": "10",
+          "room_label": "Kamar 10",
+          "tenant_name": "",
+          "price": 0,
+          "depo": 0,
+          "status": "vacant",
+          "payments": [
+            {
+              "period": "2025-03",
+              "label": "Maret 2025",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2025-04",
+              "label": "April 2025",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2025-05",
+              "label": "Mei 2025",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2025-06",
+              "label": "Juni 2025",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2025-07",
+              "label": "Juli 2025",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2025-08",
+              "label": "Agustus 2025",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2025-09",
+              "label": "September 2025",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2025-10",
+              "label": "Oktober 2025",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2025-11",
+              "label": "November 2025",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2025-12",
+              "label": "Desember 2025",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2026-01",
+              "label": "Januari 2026",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2026-02",
+              "label": "Februari 2026",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2026-03",
+              "label": "Maret 2026",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2026-04",
+              "label": "April 2026",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2026-05",
+              "label": "Mei 2026",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2026-06",
+              "label": "Juni 2026",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2026-07",
+              "label": "Juli 2026",
+              "status": "none",
+              "date": null
+            }
+          ],
+          "notes": ""
+        },
+        {
+          "building": "De Orange",
+          "room_number": "11",
+          "room_label": "Kamar 11",
+          "tenant_name": "",
+          "price": 0,
+          "depo": 0,
+          "status": "vacant",
+          "payments": [
+            {
+              "period": "2025-03",
+              "label": "Maret 2025",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2025-04",
+              "label": "April 2025",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2025-05",
+              "label": "Mei 2025",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2025-06",
+              "label": "Juni 2025",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2025-07",
+              "label": "Juli 2025",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2025-08",
+              "label": "Agustus 2025",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2025-09",
+              "label": "September 2025",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2025-10",
+              "label": "Oktober 2025",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2025-11",
+              "label": "November 2025",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2025-12",
+              "label": "Desember 2025",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2026-01",
+              "label": "Januari 2026",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2026-02",
+              "label": "Februari 2026",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2026-03",
+              "label": "Maret 2026",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2026-04",
+              "label": "April 2026",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2026-05",
+              "label": "Mei 2026",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2026-06",
+              "label": "Juni 2026",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2026-07",
+              "label": "Juli 2026",
+              "status": "none",
+              "date": null
+            }
+          ],
+          "notes": ""
+        },
+        {
+          "building": "De Orange",
+          "room_number": "12",
+          "room_label": "Kamar 12",
+          "tenant_name": "",
+          "price": 0,
+          "depo": 0,
+          "status": "vacant",
+          "payments": [
+            {
+              "period": "2025-03",
+              "label": "Maret 2025",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2025-04",
+              "label": "April 2025",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2025-05",
+              "label": "Mei 2025",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2025-06",
+              "label": "Juni 2025",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2025-07",
+              "label": "Juli 2025",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2025-08",
+              "label": "Agustus 2025",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2025-09",
+              "label": "September 2025",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2025-10",
+              "label": "Oktober 2025",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2025-11",
+              "label": "November 2025",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2025-12",
+              "label": "Desember 2025",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2026-01",
+              "label": "Januari 2026",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2026-02",
+              "label": "Februari 2026",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2026-03",
+              "label": "Maret 2026",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2026-04",
+              "label": "April 2026",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2026-05",
+              "label": "Mei 2026",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2026-06",
+              "label": "Juni 2026",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2026-07",
+              "label": "Juli 2026",
+              "status": "none",
+              "date": null
+            }
+          ],
+          "notes": ""
+        },
+        {
+          "building": "De Orange",
+          "room_number": "13",
+          "room_label": "Kamar 13",
+          "tenant_name": "",
+          "price": 0,
+          "depo": 0,
+          "status": "vacant",
+          "payments": [
+            {
+              "period": "2025-03",
+              "label": "Maret 2025",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2025-04",
+              "label": "April 2025",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2025-05",
+              "label": "Mei 2025",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2025-06",
+              "label": "Juni 2025",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2025-07",
+              "label": "Juli 2025",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2025-08",
+              "label": "Agustus 2025",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2025-09",
+              "label": "September 2025",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2025-10",
+              "label": "Oktober 2025",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2025-11",
+              "label": "November 2025",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2025-12",
+              "label": "Desember 2025",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2026-01",
+              "label": "Januari 2026",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2026-02",
+              "label": "Februari 2026",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2026-03",
+              "label": "Maret 2026",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2026-04",
+              "label": "April 2026",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2026-05",
+              "label": "Mei 2026",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2026-06",
+              "label": "Juni 2026",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2026-07",
+              "label": "Juli 2026",
+              "status": "none",
+              "date": null
+            }
+          ],
+          "notes": ""
+        },
+        {
+          "building": "De Orange",
+          "room_number": "14",
+          "room_label": "Kamar 14",
+          "tenant_name": "",
+          "price": 0,
+          "depo": 0,
+          "status": "vacant",
+          "payments": [
+            {
+              "period": "2025-03",
+              "label": "Maret 2025",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2025-04",
+              "label": "April 2025",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2025-05",
+              "label": "Mei 2025",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2025-06",
+              "label": "Juni 2025",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2025-07",
+              "label": "Juli 2025",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2025-08",
+              "label": "Agustus 2025",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2025-09",
+              "label": "September 2025",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2025-10",
+              "label": "Oktober 2025",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2025-11",
+              "label": "November 2025",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2025-12",
+              "label": "Desember 2025",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2026-01",
+              "label": "Januari 2026",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2026-02",
+              "label": "Februari 2026",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2026-03",
+              "label": "Maret 2026",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2026-04",
+              "label": "April 2026",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2026-05",
+              "label": "Mei 2026",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2026-06",
+              "label": "Juni 2026",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2026-07",
+              "label": "Juli 2026",
+              "status": "none",
+              "date": null
+            }
+          ],
+          "notes": ""
+        },
+        {
+          "building": "De Orange",
+          "room_number": "15",
+          "room_label": "Kamar 15",
+          "tenant_name": "",
+          "price": 0,
+          "depo": 0,
+          "status": "vacant",
+          "payments": [
+            {
+              "period": "2025-03",
+              "label": "Maret 2025",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2025-04",
+              "label": "April 2025",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2025-05",
+              "label": "Mei 2025",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2025-06",
+              "label": "Juni 2025",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2025-07",
+              "label": "Juli 2025",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2025-08",
+              "label": "Agustus 2025",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2025-09",
+              "label": "September 2025",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2025-10",
+              "label": "Oktober 2025",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2025-11",
+              "label": "November 2025",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2025-12",
+              "label": "Desember 2025",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2026-01",
+              "label": "Januari 2026",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2026-02",
+              "label": "Februari 2026",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2026-03",
+              "label": "Maret 2026",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2026-04",
+              "label": "April 2026",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2026-05",
+              "label": "Mei 2026",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2026-06",
+              "label": "Juni 2026",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2026-07",
+              "label": "Juli 2026",
+              "status": "none",
+              "date": null
+            }
+          ],
+          "notes": ""
         }
       ]
     },
@@ -3647,75 +3622,75 @@ const DATA = {
           "building": "De Sun",
           "room_number": "4",
           "room_label": "Kamar 4",
-          "tenant_name": null,
+          "tenant_name": "",
           "price": 0,
-          "depo": null,
+          "depo": 0,
           "status": "vacant",
           "payments": [
             {
               "period": "2025-03",
               "label": "Maret 2025",
-              "status": "unpaid",
+              "status": "none",
               "date": null
             },
             {
               "period": "2025-04",
               "label": "April 2025",
-              "status": "unpaid",
+              "status": "none",
               "date": null
             },
             {
               "period": "2025-05",
               "label": "Mei 2025",
-              "status": "unpaid",
+              "status": "none",
               "date": null
             },
             {
               "period": "2025-06",
               "label": "Juni 2025",
-              "status": "unpaid",
+              "status": "none",
               "date": null
             },
             {
               "period": "2025-07",
               "label": "Juli 2025",
-              "status": "unpaid",
+              "status": "none",
               "date": null
             },
             {
               "period": "2025-08",
               "label": "Agustus 2025",
-              "status": "unpaid",
+              "status": "none",
               "date": null
             },
             {
               "period": "2025-09",
               "label": "September 2025",
-              "status": "unpaid",
+              "status": "none",
               "date": null
             },
             {
               "period": "2025-10",
               "label": "Oktober 2025",
-              "status": "unpaid",
+              "status": "none",
               "date": null
             },
             {
               "period": "2025-11",
               "label": "November 2025",
-              "status": "unpaid",
+              "status": "none",
               "date": null
             },
             {
               "period": "2025-12",
               "label": "Desember 2025",
-              "status": "unpaid",
+              "status": "none",
               "date": null
             },
             {
               "period": "2026-01",
               "label": "Januari 2026",
-              "status": "unpaid",
+              "status": "none",
               "date": null
             },
             {
@@ -3754,81 +3729,82 @@ const DATA = {
               "status": "none",
               "date": null
             }
-          ]
+          ],
+          "notes": ""
         },
         {
           "building": "De Sun",
           "room_number": "8",
           "room_label": "Kamar 8",
-          "tenant_name": "Peter",
-          "price": 1575000,
-          "depo": null,
-          "status": "occupied",
+          "tenant_name": "",
+          "price": 0,
+          "depo": 0,
+          "status": "vacant",
           "payments": [
             {
               "period": "2025-03",
               "label": "Maret 2025",
-              "status": "unpaid",
+              "status": "none",
               "date": null
             },
             {
               "period": "2025-04",
               "label": "April 2025",
-              "status": "unpaid",
+              "status": "none",
               "date": null
             },
             {
               "period": "2025-05",
               "label": "Mei 2025",
-              "status": "unpaid",
+              "status": "none",
               "date": null
             },
             {
               "period": "2025-06",
               "label": "Juni 2025",
-              "status": "unpaid",
+              "status": "none",
               "date": null
             },
             {
               "period": "2025-07",
               "label": "Juli 2025",
-              "status": "unpaid",
+              "status": "none",
               "date": null
             },
             {
               "period": "2025-08",
               "label": "Agustus 2025",
-              "status": "paid",
-              "date": "2025-08-07"
+              "status": "none",
+              "date": null
             },
             {
               "period": "2025-09",
               "label": "September 2025",
-              "status": "unpaid",
+              "status": "none",
               "date": null
             },
             {
               "period": "2025-10",
               "label": "Oktober 2025",
-              "status": "paid",
-              "date": "2025-09-24"
+              "status": "none",
+              "date": null
             },
             {
               "period": "2025-11",
               "label": "November 2025",
-              "status": "unpaid",
+              "status": "none",
               "date": null
             },
             {
               "period": "2025-12",
               "label": "Desember 2025",
-              "status": "unpaid",
+              "status": "none",
               "date": null
             },
             {
               "period": "2026-01",
               "label": "Januari 2026",
-              "status": "unpaid",
+              "status": "none",
               "date": null
             },
             {
@@ -3867,81 +3843,82 @@ const DATA = {
               "status": "none",
               "date": null
             }
-          ]
+          ],
+          "notes": ""
         },
         {
           "building": "De Sun",
           "room_number": "9",
           "room_label": "Kamar 9",
-          "tenant_name": null,
+          "tenant_name": "",
           "price": 0,
-          "depo": null,
+          "depo": 0,
           "status": "vacant",
           "payments": [
             {
               "period": "2025-03",
               "label": "Maret 2025",
-              "status": "unpaid",
+              "status": "none",
               "date": null
             },
             {
               "period": "2025-04",
               "label": "April 2025",
-              "status": "unpaid",
+              "status": "none",
               "date": null
             },
             {
               "period": "2025-05",
               "label": "Mei 2025",
-              "status": "unpaid",
+              "status": "none",
               "date": null
             },
             {
               "period": "2025-06",
               "label": "Juni 2025",
-              "status": "unpaid",
+              "status": "none",
               "date": null
             },
             {
               "period": "2025-07",
               "label": "Juli 2025",
-              "status": "unpaid",
+              "status": "none",
               "date": null
             },
             {
               "period": "2025-08",
               "label": "Agustus 2025",
-              "status": "unpaid",
+              "status": "none",
               "date": null
             },
             {
               "period": "2025-09",
               "label": "September 2025",
-              "status": "unpaid",
+              "status": "none",
               "date": null
             },
             {
               "period": "2025-10",
               "label": "Oktober 2025",
-              "status": "unpaid",
+              "status": "none",
               "date": null
             },
             {
               "period": "2025-11",
               "label": "November 2025",
-              "status": "unpaid",
+              "status": "none",
               "date": null
             },
             {
               "period": "2025-12",
               "label": "Desember 2025",
-              "status": "unpaid",
+              "status": "none",
               "date": null
             },
             {
               "period": "2026-01",
               "label": "Januari 2026",
-              "status": "unpaid",
+              "status": "none",
               "date": null
             },
             {
@@ -3980,81 +3957,82 @@ const DATA = {
               "status": "none",
               "date": null
             }
-          ]
+          ],
+          "notes": ""
         },
         {
           "building": "De Sun",
           "room_number": "10",
           "room_label": "Kamar 10",
-          "tenant_name": null,
+          "tenant_name": "",
           "price": 0,
-          "depo": null,
+          "depo": 0,
           "status": "vacant",
           "payments": [
             {
               "period": "2025-03",
               "label": "Maret 2025",
-              "status": "unpaid",
+              "status": "none",
               "date": null
             },
             {
               "period": "2025-04",
               "label": "April 2025",
-              "status": "unpaid",
+              "status": "none",
               "date": null
             },
             {
               "period": "2025-05",
               "label": "Mei 2025",
-              "status": "unpaid",
+              "status": "none",
               "date": null
             },
             {
               "period": "2025-06",
               "label": "Juni 2025",
-              "status": "unpaid",
+              "status": "none",
               "date": null
             },
             {
               "period": "2025-07",
               "label": "Juli 2025",
-              "status": "unpaid",
+              "status": "none",
               "date": null
             },
             {
               "period": "2025-08",
               "label": "Agustus 2025",
-              "status": "unpaid",
+              "status": "none",
               "date": null
             },
             {
               "period": "2025-09",
               "label": "September 2025",
-              "status": "unpaid",
+              "status": "none",
               "date": null
             },
             {
               "period": "2025-10",
               "label": "Oktober 2025",
-              "status": "unpaid",
+              "status": "none",
               "date": null
             },
             {
               "period": "2025-11",
               "label": "November 2025",
-              "status": "unpaid",
+              "status": "none",
               "date": null
             },
             {
               "period": "2025-12",
               "label": "Desember 2025",
-              "status": "unpaid",
+              "status": "none",
               "date": null
             },
             {
               "period": "2026-01",
               "label": "Januari 2026",
-              "status": "unpaid",
+              "status": "none",
               "date": null
             },
             {
@@ -4093,81 +4071,82 @@ const DATA = {
               "status": "none",
               "date": null
             }
-          ]
+          ],
+          "notes": ""
         },
         {
           "building": "De Sun",
           "room_number": "12",
           "room_label": "Kamar 12",
-          "tenant_name": "R. Wisnu",
-          "price": 1575000,
-          "depo": null,
-          "status": "occupied",
+          "tenant_name": "",
+          "price": 0,
+          "depo": 0,
+          "status": "vacant",
           "payments": [
             {
               "period": "2025-03",
               "label": "Maret 2025",
-              "status": "unpaid",
+              "status": "none",
               "date": null
             },
             {
               "period": "2025-04",
               "label": "April 2025",
-              "status": "unpaid",
+              "status": "none",
               "date": null
             },
             {
               "period": "2025-05",
               "label": "Mei 2025",
-              "status": "unpaid",
+              "status": "none",
               "date": null
             },
             {
               "period": "2025-06",
               "label": "Juni 2025",
-              "status": "unpaid",
+              "status": "none",
               "date": null
             },
             {
               "period": "2025-07",
               "label": "Juli 2025",
-              "status": "unpaid",
+              "status": "none",
               "date": null
             },
             {
               "period": "2025-08",
               "label": "Agustus 2025",
-              "status": "unpaid",
+              "status": "none",
               "date": null
             },
             {
               "period": "2025-09",
               "label": "September 2025",
-              "status": "unpaid",
+              "status": "none",
               "date": null
             },
             {
               "period": "2025-10",
               "label": "Oktober 2025",
-              "status": "paid",
-              "date": "2025-09-24"
+              "status": "none",
+              "date": null
             },
             {
               "period": "2025-11",
               "label": "November 2025",
-              "status": "unpaid",
+              "status": "none",
               "date": null
             },
             {
               "period": "2025-12",
               "label": "Desember 2025",
-              "status": "unpaid",
+              "status": "none",
               "date": null
             },
             {
               "period": "2026-01",
               "label": "Januari 2026",
-              "status": "unpaid",
+              "status": "none",
               "date": null
             },
             {
@@ -4206,81 +4185,82 @@ const DATA = {
               "status": "none",
               "date": null
             }
-          ]
+          ],
+          "notes": ""
         },
         {
           "building": "De Sun",
           "room_number": "13",
           "room_label": "Kamar 13",
-          "tenant_name": "Wawan Gunawan",
-          "price": 875000,
-          "depo": null,
-          "status": "occupied",
+          "tenant_name": "",
+          "price": 0,
+          "depo": 0,
+          "status": "vacant",
           "payments": [
             {
               "period": "2025-03",
               "label": "Maret 2025",
-              "status": "unpaid",
+              "status": "none",
               "date": null
             },
             {
               "period": "2025-04",
               "label": "April 2025",
-              "status": "unpaid",
+              "status": "none",
               "date": null
             },
             {
               "period": "2025-05",
               "label": "Mei 2025",
-              "status": "unpaid",
+              "status": "none",
               "date": null
             },
             {
               "period": "2025-06",
               "label": "Juni 2025",
-              "status": "unpaid",
+              "status": "none",
               "date": null
             },
             {
               "period": "2025-07",
               "label": "Juli 2025",
-              "status": "unpaid",
+              "status": "none",
               "date": null
             },
             {
               "period": "2025-08",
               "label": "Agustus 2025",
-              "status": "unpaid",
+              "status": "none",
               "date": null
             },
             {
               "period": "2025-09",
               "label": "September 2025",
-              "status": "unpaid",
+              "status": "none",
               "date": null
             },
             {
               "period": "2025-10",
               "label": "Oktober 2025",
-              "status": "paid",
-              "date": "2025-10-06"
+              "status": "none",
+              "date": null
             },
             {
               "period": "2025-11",
               "label": "November 2025",
-              "status": "paid",
-              "date": "2025-11-08"
+              "status": "none",
+              "date": null
             },
             {
               "period": "2025-12",
               "label": "Desember 2025",
-              "status": "unpaid",
+              "status": "none",
               "date": null
             },
             {
               "period": "2026-01",
               "label": "Januari 2026",
-              "status": "unpaid",
+              "status": "none",
               "date": null
             },
             {
@@ -4319,81 +4299,82 @@ const DATA = {
               "status": "none",
               "date": null
             }
-          ]
+          ],
+          "notes": ""
         },
         {
           "building": "De Sun",
           "room_number": "14",
           "room_label": "Kamar 14",
-          "tenant_name": "Alief Wahyu",
-          "price": 1075000,
-          "depo": null,
-          "status": "occupied",
+          "tenant_name": "",
+          "price": 0,
+          "depo": 0,
+          "status": "vacant",
           "payments": [
             {
               "period": "2025-03",
               "label": "Maret 2025",
-              "status": "paid",
-              "date": "2025-03-04"
+              "status": "none",
+              "date": null
             },
             {
               "period": "2025-04",
               "label": "April 2025",
-              "status": "paid",
-              "date": "2025-04-05"
+              "status": "none",
+              "date": null
             },
             {
               "period": "2025-05",
               "label": "Mei 2025",
-              "status": "paid",
-              "date": "2025-05-06"
+              "status": "none",
+              "date": null
             },
             {
               "period": "2025-06",
               "label": "Juni 2025",
-              "status": "paid",
-              "date": "2025-06-05"
+              "status": "none",
+              "date": null
             },
             {
               "period": "2025-07",
               "label": "Juli 2025",
-              "status": "paid",
-              "date": "2025-07-07"
+              "status": "none",
+              "date": null
             },
             {
               "period": "2025-08",
               "label": "Agustus 2025",
-              "status": "unpaid",
+              "status": "none",
               "date": null
             },
             {
               "period": "2025-09",
               "label": "September 2025",
-              "status": "unpaid",
+              "status": "none",
               "date": null
             },
             {
               "period": "2025-10",
               "label": "Oktober 2025",
-              "status": "unpaid",
+              "status": "none",
               "date": null
             },
             {
               "period": "2025-11",
               "label": "November 2025",
-              "status": "unpaid",
+              "status": "none",
               "date": null
             },
             {
               "period": "2025-12",
               "label": "Desember 2025",
-              "status": "unpaid",
+              "status": "none",
               "date": null
             },
             {
               "period": "2026-01",
               "label": "Januari 2026",
-              "status": "unpaid",
+              "status": "none",
               "date": null
             },
             {
@@ -4432,81 +4413,82 @@ const DATA = {
               "status": "none",
               "date": null
             }
-          ]
+          ],
+          "notes": ""
         },
         {
           "building": "De Sun",
           "room_number": "15",
           "room_label": "Kamar 15",
-          "tenant_name": null,
+          "tenant_name": "",
           "price": 0,
-          "depo": null,
+          "depo": 0,
           "status": "vacant",
           "payments": [
             {
               "period": "2025-03",
               "label": "Maret 2025",
-              "status": "unpaid",
+              "status": "none",
               "date": null
             },
             {
               "period": "2025-04",
               "label": "April 2025",
-              "status": "unpaid",
+              "status": "none",
               "date": null
             },
             {
               "period": "2025-05",
               "label": "Mei 2025",
-              "status": "unpaid",
+              "status": "none",
               "date": null
             },
             {
               "period": "2025-06",
               "label": "Juni 2025",
-              "status": "unpaid",
+              "status": "none",
               "date": null
             },
             {
               "period": "2025-07",
               "label": "Juli 2025",
-              "status": "unpaid",
+              "status": "none",
               "date": null
             },
             {
               "period": "2025-08",
               "label": "Agustus 2025",
-              "status": "unpaid",
+              "status": "none",
               "date": null
             },
             {
               "period": "2025-09",
               "label": "September 2025",
-              "status": "unpaid",
+              "status": "none",
               "date": null
             },
             {
               "period": "2025-10",
               "label": "Oktober 2025",
-              "status": "unpaid",
+              "status": "none",
               "date": null
             },
             {
               "period": "2025-11",
               "label": "November 2025",
-              "status": "unpaid",
+              "status": "none",
               "date": null
             },
             {
               "period": "2025-12",
               "label": "Desember 2025",
-              "status": "unpaid",
+              "status": "none",
               "date": null
             },
             {
               "period": "2026-01",
               "label": "Januari 2026",
-              "status": "unpaid",
+              "status": "none",
               "date": null
             },
             {
@@ -4545,81 +4527,82 @@ const DATA = {
               "status": "none",
               "date": null
             }
-          ]
+          ],
+          "notes": ""
         },
         {
           "building": "De Sun",
           "room_number": "16",
           "room_label": "Kamar 16",
-          "tenant_name": null,
+          "tenant_name": "",
           "price": 0,
-          "depo": null,
+          "depo": 0,
           "status": "vacant",
           "payments": [
             {
               "period": "2025-03",
               "label": "Maret 2025",
-              "status": "unpaid",
+              "status": "none",
               "date": null
             },
             {
               "period": "2025-04",
               "label": "April 2025",
-              "status": "unpaid",
+              "status": "none",
               "date": null
             },
             {
               "period": "2025-05",
               "label": "Mei 2025",
-              "status": "unpaid",
+              "status": "none",
               "date": null
             },
             {
               "period": "2025-06",
               "label": "Juni 2025",
-              "status": "unpaid",
+              "status": "none",
               "date": null
             },
             {
               "period": "2025-07",
               "label": "Juli 2025",
-              "status": "unpaid",
+              "status": "none",
               "date": null
             },
             {
               "period": "2025-08",
               "label": "Agustus 2025",
-              "status": "unpaid",
+              "status": "none",
               "date": null
             },
             {
               "period": "2025-09",
               "label": "September 2025",
-              "status": "unpaid",
+              "status": "none",
               "date": null
             },
             {
               "period": "2025-10",
               "label": "Oktober 2025",
-              "status": "unpaid",
+              "status": "none",
               "date": null
             },
             {
               "period": "2025-11",
               "label": "November 2025",
-              "status": "unpaid",
+              "status": "none",
               "date": null
             },
             {
               "period": "2025-12",
               "label": "Desember 2025",
-              "status": "unpaid",
+              "status": "none",
               "date": null
             },
             {
               "period": "2026-01",
               "label": "Januari 2026",
-              "status": "unpaid",
+              "status": "none",
               "date": null
             },
             {
@@ -4658,194 +4641,82 @@ const DATA = {
               "status": "none",
               "date": null
             }
-          ]
+          ],
+          "notes": ""
         },
         {
           "building": "De Sun",
           "room_number": "18",
           "room_label": "Kamar 18",
-          "tenant_name": "Ajeng Apriliasari",
-          "price": 951437,
-          "depo": null,
-          "status": "occupied",
-          "payments": [
-            {
-              "period": "2025-03",
-              "label": "Maret 2025",
-              "status": "unpaid",
-              "date": null
-            },
-            {
-              "period": "2025-04",
-              "label": "April 2025",
-              "status": "unpaid",
-              "date": null
-            },
-            {
-              "period": "2025-05",
-              "label": "Mei 2025",
-              "status": "unpaid",
-              "date": null
-            },
-            {
-              "period": "2025-06",
-              "label": "Juni 2025",
-              "status": "paid",
-              "date": "2025-05-31"
-            },
-            {
-              "period": "2025-07",
-              "label": "Juli 2025",
-              "status": "paid",
-              "date": "2026-06-29"
-            },
-            {
-              "period": "2025-08",
-              "label": "Agustus 2025",
-              "status": "paid",
-              "date": "2026-07-29"
-            },
-            {
-              "period": "2025-09",
-              "label": "September 2025",
-              "status": "paid",
-              "date": "2026-08-28"
-            },
-            {
-              "period": "2025-10",
-              "label": "Oktober 2025",
-              "status": "unpaid",
-              "date": null
-            },
-            {
-              "period": "2025-11",
-              "label": "November 2025",
-              "status": "unpaid",
-              "date": null
-            },
-            {
-              "period": "2025-12",
-              "label": "Desember 2025",
-              "status": "unpaid",
-              "date": null
-            },
-            {
-              "period": "2026-01",
-              "label": "Januari 2026",
-              "status": "unpaid",
-              "date": null
-            },
-            {
-              "period": "2026-02",
-              "label": "Februari 2026",
-              "status": "none",
-              "date": null
-            },
-            {
-              "period": "2026-03",
-              "label": "Maret 2026",
-              "status": "none",
-              "date": null
-            },
-            {
-              "period": "2026-04",
-              "label": "April 2026",
-              "status": "none",
-              "date": null
-            },
-            {
-              "period": "2026-05",
-              "label": "Mei 2026",
-              "status": "none",
-              "date": null
-            },
-            {
-              "period": "2026-06",
-              "label": "Juni 2026",
-              "status": "none",
-              "date": null
-            },
-            {
-              "period": "2026-07",
-              "label": "Juli 2026",
-              "status": "none",
-              "date": null
-            }
-          ]
-        },
-        {
-          "building": "De Sun",
-          "room_number": "19",
-          "room_label": "Kamar 19",
-          "tenant_name": null,
+          "tenant_name": "",
           "price": 0,
-          "depo": null,
+          "depo": 0,
           "status": "vacant",
           "payments": [
             {
               "period": "2025-03",
               "label": "Maret 2025",
-              "status": "unpaid",
+              "status": "none",
               "date": null
             },
             {
               "period": "2025-04",
               "label": "April 2025",
-              "status": "unpaid",
+              "status": "none",
               "date": null
             },
             {
               "period": "2025-05",
               "label": "Mei 2025",
-              "status": "unpaid",
+              "status": "none",
               "date": null
             },
             {
               "period": "2025-06",
               "label": "Juni 2025",
-              "status": "unpaid",
+              "status": "none",
               "date": null
             },
             {
               "period": "2025-07",
               "label": "Juli 2025",
-              "status": "unpaid",
+              "status": "none",
               "date": null
             },
             {
               "period": "2025-08",
               "label": "Agustus 2025",
-              "status": "unpaid",
+              "status": "none",
               "date": null
             },
             {
               "period": "2025-09",
               "label": "September 2025",
-              "status": "unpaid",
+              "status": "none",
               "date": null
             },
             {
               "period": "2025-10",
               "label": "Oktober 2025",
-              "status": "unpaid",
+              "status": "none",
               "date": null
             },
             {
               "period": "2025-11",
               "label": "November 2025",
-              "status": "unpaid",
+              "status": "none",
               "date": null
             },
             {
               "period": "2025-12",
               "label": "Desember 2025",
-              "status": "unpaid",
+              "status": "none",
               "date": null
             },
             {
               "period": "2026-01",
               "label": "Januari 2026",
-              "status": "unpaid",
+              "status": "none",
               "date": null
             },
             {
@@ -4884,7 +4755,122 @@ const DATA = {
               "status": "none",
               "date": null
             }
-          ]
+          ],
+          "notes": ""
+        },
+        {
+          "building": "De Sun",
+          "room_number": "19",
+          "room_label": "Kamar 19",
+          "tenant_name": "",
+          "price": 0,
+          "depo": 0,
+          "status": "vacant",
+          "payments": [
+            {
+              "period": "2025-03",
+              "label": "Maret 2025",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2025-04",
+              "label": "April 2025",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2025-05",
+              "label": "Mei 2025",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2025-06",
+              "label": "Juni 2025",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2025-07",
+              "label": "Juli 2025",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2025-08",
+              "label": "Agustus 2025",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2025-09",
+              "label": "September 2025",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2025-10",
+              "label": "Oktober 2025",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2025-11",
+              "label": "November 2025",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2025-12",
+              "label": "Desember 2025",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2026-01",
+              "label": "Januari 2026",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2026-02",
+              "label": "Februari 2026",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2026-03",
+              "label": "Maret 2026",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2026-04",
+              "label": "April 2026",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2026-05",
+              "label": "Mei 2026",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2026-06",
+              "label": "Juni 2026",
+              "status": "none",
+              "date": null
+            },
+            {
+              "period": "2026-07",
+              "label": "Juli 2026",
+              "status": "none",
+              "date": null
+            }
+          ],
+          "notes": ""
         }
       ]
     }
@@ -5036,6 +5022,15 @@ function navigate(view) {
   if (view === 'pemasukan') initPemasukanView();
   if (view === 'pengeluaran') initPengeluaranView();
   if (view === 'database') renderDatabase();
+  if (view === 'dashboard') {
+    renderHero();
+    renderStats();
+    refreshKosanDashboardExpense();
+    renderIncomeChart('all');
+    renderStatusChart();
+    renderRecentPayments();
+    renderOverdue();
+  }
   if (view === 'tambah-kamar') initTambahKamarView();
   if (view === 'mou') initMouView();
   if (view === 'invoice') initInvoiceView();
@@ -5842,6 +5837,7 @@ async function saveKosanOtherIncome() {
     });
     closeModal();
     showToast(`Pemasukan ${category.name} ${fmtIDR(amount)} tersimpan.`);
+    if (document.getElementById('view-pemasukan')?.classList.contains('active')) initPemasukanView();
   } catch (error) {
     message.textContent = error.message || 'Pemasukan gagal disimpan.';
     button.disabled = false;
@@ -6057,6 +6053,7 @@ async function saveRentPayment() {
     closeModal();
     downloadRentPaymentReceipt(result.data);
     showToast(`${fmtIDR(result.data.total_amount)} tercatat untuk ${result.data.months_paid} bulan.`);
+    if (document.getElementById('view-pemasukan')?.classList.contains('active')) initPemasukanView();
   } catch (error) {
     message.textContent = error.message || 'Pembayaran gagal disimpan.';
     button.disabled = false;
@@ -6680,9 +6677,15 @@ let kosanIncomeEntries = [];
 let kosanIncomeBuildingFilter = 'all';
 
 async function loadKosanIncomeData(){
+  await ensureKdoProperty();
   const result = await kosanApi('/admin/finance');
   const allEntries = result.data.entries || [];
-  kosanIncomeEntries = allEntries.filter(entry => entry.kind === 'income' && entry.category_id === 'income-kosan-rent');
+  const kdoName = normalizeNameForMatch(kdoProperty.name);
+  kosanIncomeEntries = allEntries.filter(entry => entry.kind === 'income' && (
+    entry.category_id === 'income-kosan-rent' ||
+    entry.property_id === kdoProperty.id ||
+    normalizeNameForMatch(entry.property_name) === kdoName
+  ));
 }
 
 async function initPemasukanView(){
@@ -6750,7 +6753,7 @@ function renderKosanIncomeTable(){
   if(kosanIncomeBuildingFilter !== 'all') filtered = filtered.filter(e => e.property_name === kosanIncomeBuildingFilter);
   const tbody = document.getElementById('inc-table-body');
   if(!filtered.length){
-    tbody.innerHTML = '<tr><td colspan="5" class="text-center" style="padding:40px;color:var(--ink-400)">Belum ada pemasukan tercatat</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="6" class="text-center" style="padding:40px;color:var(--ink-400)">Belum ada pemasukan tercatat</td></tr>';
     return;
   }
   tbody.innerHTML = filtered.map(e => `
@@ -6760,7 +6763,52 @@ function renderKosanIncomeTable(){
       <td class="muted">${escapeHtmlKosan(e.payee || '-')}</td>
       <td>${escapeHtmlKosan(e.description || '')}</td>
       <td class="text-right cell-strong" style="color:var(--green-600)">+ ${fmtIDR(Number(e.amount || 0))}</td>
+      <td class="text-right" style="white-space:nowrap"><button class="btn-ghost btn" style="padding:4px 8px;font-size:11px;color:var(--red-600)" onclick="openKosanIncomeDeleteModal('${escapeHtmlKosan(e.id)}')">Hapus</button></td>
     </tr>`).join('');
+}
+
+function openKosanIncomeDeleteModal(id){
+  const entry = kosanIncomeEntries.find(e => e.id === id);
+  if(!entry) return;
+  document.getElementById('modal-title').textContent = 'Hapus Pemasukan';
+  document.getElementById('modal-body').innerHTML = `
+    <form onsubmit="submitKosanIncomeDelete(event)">
+      <input type="hidden" id="kinc-delete-id" value="${escapeHtmlKosan(entry.id)}">
+      <p>Hapus pemasukan "${escapeHtmlKosan(entry.description || entry.property_name)}" sebesar ${fmtIDR(Number(entry.amount || 0))}?</p>
+      <div class="mou-form-group" style="margin-top:12px">
+        <label class="mou-label">PIN Master (4 digit)</label>
+        <input type="password" class="mou-input" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" id="kinc-delete-pin" required>
+      </div>
+      <p id="kinc-delete-status" class="mou-hint" style="margin-top:10px"></p>
+      <div class="mou-action-bar" style="margin-top:14px">
+        <button type="submit" class="btn" style="background:var(--red-600)" id="kinc-delete-btn">Hapus Permanen</button>
+      </div>
+    </form>
+  `;
+  document.getElementById('modal-overlay').classList.add('show');
+}
+
+async function submitKosanIncomeDelete(event){
+  event.preventDefault();
+  const id = document.getElementById('kinc-delete-id').value;
+  const pin = document.getElementById('kinc-delete-pin').value;
+  const status = document.getElementById('kinc-delete-status');
+  const button = document.getElementById('kinc-delete-btn');
+  if(!/^\d{4}$/.test(pin)){ status.style.color = 'var(--red-600)'; status.textContent = 'Masukkan PIN Master 4 digit.'; return; }
+  button.disabled = true;
+  status.style.color = 'var(--ink-500)';
+  status.textContent = 'Memverifikasi PIN Master...';
+  try {
+    await kosanApi(`/admin/finance/entries/${encodeURIComponent(id)}`, { method:'DELETE', body:JSON.stringify({ pin }) });
+    closeModal();
+    showToast('Pemasukan berhasil dihapus.');
+    await initPemasukanView();
+  } catch(error) {
+    status.style.color = 'var(--red-600)';
+    status.textContent = error.message || 'Gagal menghapus pemasukan.';
+  } finally {
+    button.disabled = false;
+  }
 }
 
 function kosanPopulateCategorySelect(select){
@@ -8002,7 +8050,7 @@ async function loadKosanRoomsFromDb() {
         building:building.name,
         buildingCode:building.code,
       })));
-      showToast('D1 masih kosong. Menampilkan snapshot data lokal; perubahan kamar belum tersimpan ke database.');
+      showToast('Belum ada data penyewa. Mulai dari menu Tambah Kamar/Penyewa.');
     }
     if (typeof populateMouTenantSelect === 'function') {
       populateMouTenantSelect();
@@ -8235,7 +8283,12 @@ async function tkDecide(id, action) {
 let invTenantSelectReady = false;
 
 function initInvoiceView() {
-  if (!invTenantSelectReady) { populateInvoiceTenantSelect(); invTenantSelectReady = true; }
+  const previousTenant = document.getElementById('inv-tenant-select').value;
+  populateInvoiceTenantSelect();
+  invTenantSelectReady = true;
+  if ([...document.getElementById('inv-tenant-select').options].some(option => option.value === previousTenant)) {
+    document.getElementById('inv-tenant-select').value = previousTenant;
+  }
   if (!document.getElementById('inv-tanggal').value) {
     document.getElementById('inv-tanggal').valueAsDate = new Date();
   }
