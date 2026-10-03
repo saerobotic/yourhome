@@ -341,16 +341,19 @@
 
         <!-- Dropdown Jenis Pekerjaan -->
         <div class="mt-4">
-          <label for="jobTypeSelect" class="block text-sm font-semibold text-gray-700 mb-1.5">Jenis Pekerjaan <span class="text-red-500">*</span></label>
-          <select id="jobTypeSelect"
-                  class="w-full px-4 py-3.5 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none transition text-base">
-            <option value="">— Pilih jenis —</option>
-            <option value="Check-in Tamu">Check-in Tamu</option>
-            <option value="Cleaning">Cleaning</option>
-            <option value="Maintenance">Maintenance</option>
-            <option value="Laundry">Laundry</option>
-            <option value="Lainnya">Lainnya</option>
-          </select>
+          <p class="block text-sm font-semibold text-gray-700 mb-1.5">Jenis Pekerjaan <span class="text-red-500">*</span> <span class="font-normal text-gray-500">(boleh pilih lebih dari satu)</span></p>
+          <div id="jobTypeChecks" class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <label class="flex items-center gap-2 rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-base"><input type="checkbox" value="Check-in Tamu" class="w-5 h-5 accent-brand-600"> Check-in Tamu</label>
+            <label class="flex items-center gap-2 rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-base"><input type="checkbox" value="Check-out Tamu" class="w-5 h-5 accent-brand-600"> Check-out Tamu</label>
+            <label class="flex items-center gap-2 rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-base"><input type="checkbox" value="Cleaning" class="w-5 h-5 accent-brand-600"> Cleaning</label>
+            <label class="flex items-center gap-2 rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-base"><input type="checkbox" value="Maintenance" class="w-5 h-5 accent-brand-600"> Maintenance</label>
+            <label class="flex items-center gap-2 rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-base"><input type="checkbox" value="Laundry" class="w-5 h-5 accent-brand-600"> Laundry</label>
+            <label class="flex items-center gap-2 rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-base"><input type="checkbox" value="Lainnya" class="w-5 h-5 accent-brand-600"> Lainnya</label>
+            <label class="flex items-center gap-2 rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-base"><input type="checkbox" value="General Cleaning (GC)" class="w-5 h-5 accent-brand-600"> General Cleaning (GC)</label>
+            <label class="flex items-center gap-2 rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-base"><input type="checkbox" value="Filter AC (FAC)" class="w-5 h-5 accent-brand-600"> Filter AC (FAC)</label>
+            <label class="flex items-center gap-2 rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-base"><input type="checkbox" value="Leher Angsa (LA)" class="w-5 h-5 accent-brand-600"> Leher Angsa (LA)</label>
+            <label class="flex items-center gap-2 rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-base"><input type="checkbox" value="Grease Trap (GT)" class="w-5 h-5 accent-brand-600"> Grease Trap (GT)</label>
+          </div>
         </div>
 
         <!-- Tombol Simpan -->
@@ -1388,10 +1391,9 @@
     });
 
     // --- CHECK-IN: validasi form real-time ---
-    ['unitInput', 'jobTypeSelect'].forEach(id => {
-      document.getElementById(id).addEventListener('input', validateForm);
-      document.getElementById(id).addEventListener('change', validateForm);
-    });
+    document.getElementById('unitInput').addEventListener('input', validateForm);
+    document.getElementById('unitInput').addEventListener('change', validateForm);
+    document.getElementById('jobTypeChecks').addEventListener('change', validateForm);
 
     // --- CHECK-IN: simpan ---
     document.getElementById('saveCheckinBtn').addEventListener('click', openCheckinConfirmation);
@@ -1632,13 +1634,17 @@
   /* ============================================================
      VALIDASI: cek apakah semua input sudah lengkap
      ============================================================ */
+  function getSelectedJobTypes() {
+    return Array.from(document.querySelectorAll('#jobTypeChecks input:checked')).map(input => input.value);
+  }
+
   function validateForm() {
     const hasGps = !!state.gpsData;
     const hasPhoto = !!state.photoData;
     const hasWorkPhotos = state.workPhotos.length > 0;
     const selectedUnit = document.getElementById('unitInput').value;
     const hasUnit = selectedUnit !== '';
-    const hasJob = document.getElementById('jobTypeSelect').value !== '';
+    const hasJob = getSelectedJobTypes().length > 0;
     document.getElementById('saveCheckinBtn').disabled = isSavingCheckin || !(hasGps && hasPhoto && hasWorkPhotos && hasUnit && hasJob);
   }
 
@@ -1651,7 +1657,7 @@
     const selectedUnit = document.getElementById('unitInput').value;
     document.getElementById('confirmCrewName').textContent = state.currentCrew || '-';
     document.getElementById('confirmPropertyName').textContent = selectedUnit;
-    document.getElementById('confirmJobType').textContent = document.getElementById('jobTypeSelect').selectedOptions[0]?.textContent || '-';
+    document.getElementById('confirmJobType').textContent = getSelectedJobTypes().join(', ') || '-';
     document.getElementById('confirmWorkDate').textContent = formatWorkDate(state.today);
     document.getElementById('confirmPhotoCount').textContent = `1 selfie · ${state.workPhotos.length} foto hasil kerja · GPS ±${Math.round(state.gpsData?.accuracy || 0)} m`;
     document.getElementById('checkinConfirmDialog').showModal();
@@ -1684,7 +1690,7 @@
     }
     const selectedUnit = document.getElementById('unitInput').value;
     const unit = selectedUnit;
-    const jobType = document.getElementById('jobTypeSelect').value;
+    const jobType = getSelectedJobTypes().join(', ');
     if (!state.gpsData || !state.photoData || !state.workPhotos.length || !unit || !jobType) {
       showToast('Lengkapi GPS, foto bukti, dan foto hasil kerja terlebih dahulu.', 'error');
       return;
@@ -1847,7 +1853,7 @@
     preview.classList.remove('border-solid', 'border-brand-500');
     renderWorkPhotoPreview();
     document.getElementById('unitInput').value = '';
-    document.getElementById('jobTypeSelect').value = '';
+    document.querySelectorAll('#jobTypeChecks input').forEach(input => { input.checked = false; });
     document.getElementById('saveCheckinBtn').disabled = true;
   }
 
