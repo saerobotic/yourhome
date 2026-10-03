@@ -62,7 +62,12 @@
     .top-actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;margin-bottom:14px}
 
     /* ===== Tab tampilan ===== */
-    .view-switch{display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:16px;padding:4px;background:var(--sunken-2);border:1px solid var(--line);border-radius:12px}
+    .dash-shell{display:grid;grid-template-columns:220px minmax(0,1fr);gap:18px;align-items:start}
+    .dash-main{min-width:0;display:flex;flex-direction:column;gap:16px}
+    .dash-shared{display:flex;flex-direction:column;gap:16px;min-width:0}
+    .dash-shared.hidden{display:none}
+    .view-switch{display:flex;flex-direction:column;gap:4px;position:sticky;top:16px;padding:8px;background:var(--sunken-2);border:1px solid var(--line);border-radius:14px}
+    .view-switch .view-btn{justify-content:flex-start;width:100%}
     .view-btn{display:flex;align-items:center;justify-content:center;gap:8px;border:0;background:transparent;color:var(--muted);padding:11px 14px;border-radius:9px;font-weight:700;font-size:.86rem;line-height:1.2;transition:background .15s,color .15s}
     .view-btn svg{flex:0 0 auto}
     .view-btn:hover{color:var(--ink)}
@@ -357,6 +362,9 @@
       #exportPdfBtn .btn-word,#exportExcelBtn .btn-word{display:none}
       #exportPdfBtn .btn-icon,#exportExcelBtn .btn-icon{width:18px;height:18px}
       .view-btn{padding:10px 8px;font-size:.8rem}
+      .dash-shell{grid-template-columns:minmax(0,1fr)}
+      .view-switch{position:static;flex-direction:row;overflow-x:auto;gap:4px}
+      .view-switch .view-btn{flex:0 0 auto;width:auto;white-space:nowrap}
       .summary{grid-template-columns:repeat(2,1fr);gap:9px}
       .summary .stat-wide{grid-column:1/-1}
       .stat{padding:13px 14px}
@@ -437,6 +445,57 @@
       .cal-crews{display:none}
       .site-footer{align-items:flex-start;flex-direction:column;gap:6px}
     }
+    /* ===== Tampilan padat (lebih kecil agar data banyak muat) ===== */
+    body{font-size:13px}
+    .page{padding:12px 14px 36px}
+    .topbar{padding:10px 12px;margin-bottom:10px}
+    .brand{gap:10px}
+    .brand-mark{height:40px;max-width:130px;padding:4px 7px;border-radius:8px}
+    .topbar h1{font-size:1.05rem}
+    .topbar .subtitle,.subtitle{font-size:.74rem;margin-top:2px}
+    .signout-btn{width:34px;height:34px;border-radius:9px}
+    .top-actions{gap:6px;margin-bottom:10px}
+    .button{min-height:32px;padding:6px 11px;font-size:.78rem;gap:5px}
+    .detail-btn{font-size:.74rem}
+    .dash-shell{grid-template-columns:172px minmax(0,1fr);gap:12px}
+    .dash-main{gap:10px}
+    .dash-shared{gap:10px}
+    .view-switch{top:10px;padding:6px;gap:3px;border-radius:12px}
+    .view-btn{padding:7px 10px;font-size:.78rem;gap:6px}
+    .summary{grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px}
+    .stat{padding:9px 11px}
+    .stat-label{font-size:.72rem}
+    .stat-value{font-size:1.2rem;margin-top:2px}
+    .stat-value.small{font-size:1rem}
+    .filters{padding:10px;gap:8px}
+    .field{gap:3px}
+    .field label,.field .meta-label{font-size:.72rem}
+    .field input,.field select{min-height:32px;padding:5px 9px;font-size:.8rem}
+    .records-head{padding:10px 14px}
+    .records-head h2{font-size:.92rem}
+    .records-count,.slip-period{padding:2px 8px;font-size:.7rem}
+    th,td{padding:7px 10px}
+    th{font-size:.7rem}
+    td{font-size:.8rem}
+    .job,.source-badge,.honor-chip{padding:2px 7px;font-size:.68rem}
+    .honor-chip{font-size:.7rem}
+    .gps-link{font-size:.72rem}
+    .empty{padding:20px 14px;font-size:.8rem}
+    .empty strong{font-size:.9rem}
+    .pagination{padding:6px 10px}
+    .pagination button{min-height:28px;padding:3px 9px;font-size:.72rem}
+    .pagination span{font-size:.72rem}
+    .hint{font-size:.72rem;margin-top:6px}
+    .muted{font-size:.68rem}
+    .meta-item{padding:7px 9px}
+    .meta-value{font-size:.82rem}
+    .modal-head{padding:12px 14px}
+    .modal-head h2{font-size:1.05rem}
+    .filters{grid-template-columns:repeat(4,minmax(0,1fr)) auto}
+    .crew-picker{display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--paper);border:1px solid var(--line);border-radius:var(--r-lg);box-shadow:var(--shadow)}
+    .crew-picker label{font-size:.76rem;font-weight:700;color:var(--ink-2);white-space:nowrap}
+    .crew-picker select{min-height:32px;min-width:220px;border:1px solid var(--line-strong);border-radius:var(--r);background-color:var(--paper);padding:5px 34px 5px 10px;font-size:.8rem;color:var(--ink);outline:none}
+    .crew-picker select:focus{border-color:var(--brass);box-shadow:var(--ring)}
     @media(prefers-reduced-motion:reduce){*{transition:none!important}}
   </style>
 </head>
@@ -484,14 +543,24 @@
       <button class="button danger" id="deleteAllBtn" type="button" style="display:none">Hapus Semua Data</button>
     </div>
 
-    <nav class="view-switch" role="tablist" aria-label="Pilih tampilan dashboard">
-      <button class="view-btn active" id="viewAbsensiBtn" type="button" role="tab" aria-selected="true" aria-controls="viewAbsensi"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><path d="M9 5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v1H9z"/><path d="m9 14 2 2 4-4"/></svg><span>Absensi &amp; Honor Crew</span></button>
-      <button class="view-btn" id="viewPenugasanBtn" type="button" role="tab" aria-selected="false" aria-controls="viewPenugasan"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3v4m8-4v4M4 9h16"/><rect x="4" y="5" width="16" height="16" rx="2"/><path d="M9 14h2m3 0h1M9 17h1m3 0h2"/></svg><span>Penugasan &amp; Kalender</span></button>
+    <div class="dash-shell">
+    <nav class="view-switch" aria-label="Menu dashboard">
+      <button class="view-btn" data-dash-view="checkin" type="button"><span>Check-in Lokasi</span></button>
+      <button class="view-btn active" data-dash-view="riwayat" type="button" aria-current="page"><span>Laporan Kerja</span></button>
+      <button class="view-btn" data-dash-view="pengeluaran" type="button"><span>Pengeluaran</span></button>
+      <button class="view-btn" data-dash-view="slip" type="button"><span>Slip Gaji</span></button>
+      <button class="view-btn" data-dash-view="rekap" type="button"><span>Rekap Bulanan</span></button>
+      <button class="view-btn" data-dash-view="crew" type="button"><span>Data Crew</span></button>
+      <button class="view-btn" data-dash-view="gaji" type="button"><span>Gaji Pokok</span></button>
     </nav>
 
-    <div class="dashboard-view" id="viewAbsensi">
-    <div class="dashboard-column">
+    <div class="dash-main">
+    <div class="crew-picker">
+      <label for="crewFilter">Pilih crew</label>
+      <select id="crewFilter"><option value="">Semua crew</option></select>
+    </div>
 
+    <div class="dash-shared" data-dash-shared data-dash-views="riwayat slip rekap">
     <section class="summary" aria-label="Ringkasan absensi">
       <div class="stat"><span class="stat-label">Total check-in</span><strong class="stat-value" id="totalRecords">0</strong></div>
       <div class="stat"><span class="stat-label">Crew aktif</span><strong class="stat-value" id="totalCrew">0</strong></div>
@@ -503,36 +572,46 @@
     <section class="panel filters" aria-label="Filter Check In Crew">
       <div class="field"><label for="monthFilter">Bulan</label><input id="monthFilter" type="month" /></div>
       <div class="field"><label for="dateFilter">Tanggal</label><input id="dateFilter" type="date" /></div>
-      <div class="field"><label for="crewFilter">Crew</label><select id="crewFilter"><option value="">Semua crew</option></select></div>
       <div class="field"><label for="unitFilter">Properti</label><select id="unitFilter"><option value="">Semua properti</option></select></div>
       <div class="field"><label for="jobFilter">Pekerjaan</label><select id="jobFilter"><option value="">Semua pekerjaan</option></select></div>
       <div class="filter-actions"><button class="button" id="resetBtn" type="button">Reset</button></div>
     </section>
 
-    <section class="panel records">
-      <div class="records-head"><h2>Riwayat Pekerjaan</h2><span class="records-count" id="recordsCount">0 data</span></div>
+    </div><!-- /dash-shared -->
+
+    <div class="dashboard-view hidden" id="viewPengeluaran">
+    <section class="panel records" id="crewExpensePanel">
+      <div class="records-head">
+        <h2>Pengeluaran Lapangan Crew</h2>
+        <input type="date" id="crewExpenseDate" aria-label="Tanggal pengeluaran crew" />
+      </div>
       <div class="table-wrap">
         <table class="mobile-cards">
-          <thead><tr><th>Waktu</th><th>Crew</th><th>Properti</th><th>Pekerjaan</th><th>Honor/Properti</th><th>GPS</th><th>Bukti Foto</th><th>Sumber</th><th>Aksi</th></tr></thead>
-          <tbody id="recordsBody"></tbody>
+          <thead><tr><th>Crew</th><th>Jenis</th><th>Properti</th><th>Jumlah</th><th>Keterangan</th><th>Struk</th></tr></thead>
+          <tbody id="crewExpenseBody"></tbody>
         </table>
-        <div class="empty" id="emptyState"><strong>Belum ada data absensi</strong><span>Data check-in akan muncul di sini setelah crew menyimpan pekerjaan.</span></div>
+        <div class="empty" id="crewExpenseEmpty" hidden><strong>Belum ada pengeluaran</strong><span>Pengeluaran yang dikirim crew di tanggal ini akan muncul di sini.</span></div>
       </div>
-      <div class="pagination" id="historyPagination" aria-label="Navigasi riwayat pekerjaan"></div>
     </section>
 
+    </div><!-- /viewPengeluaran -->
+
+    <div class="dashboard-view hidden" id="viewSlip">
     <section class="panel records" id="slipPanel">
       <div class="records-head"><h2>Slip Gaji Bulanan</h2><span class="slip-period" id="slipPeriod">-</span></div>
       <div class="table-wrap">
         <table class="mobile-cards">
-          <thead><tr><th>Crew</th><th>Hari di Bulan</th><th>Hari Check In</th><th>Tidak Check In</th><th>Potongan</th><th>Gaji Dibayar</th><th>Properti Dikerjakan</th><th>Aksi</th></tr></thead>
+          <thead><tr><th>Crew</th><th>Hari di Bulan</th><th>Hari Check In</th><th>Tidak Check In</th><th>Potongan</th><th>Gaji Dibayar</th><th>Uang Bensin</th><th>Properti Dikerjakan</th><th>Aksi</th></tr></thead>
           <tbody id="slipBody"></tbody>
         </table>
         <div class="empty" id="slipEmpty" style="display:none"><strong>Belum ada data</strong><span>Pilih bulan di filter atas untuk melihat slip gaji crew.</span></div>
       </div>
-      <p class="hint" style="padding:0 20px 16px">Potongan = (Tidak Check In × Rp 100.000). Gaji Dibayar = (Hari Check In × Rp 100.000). Tidak Check In = Hari di Bulan dikurangi Hari Check In (jumlah tanggal unik crew check-in di bulan itu).</p>
+      <p class="hint" style="padding:0 20px 16px">Potongan = (Tidak Check In × honor per hari crew). Gaji Dibayar = (Hari Check In × honor per hari crew). Tidak Check In = Hari di Bulan dikurangi Hari Check In (jumlah tanggal unik crew check-in di bulan itu).</p>
     </section>
 
+    </div><!-- /viewSlip -->
+
+    <div class="dashboard-view hidden" id="viewRekap">
     <section class="panel records" id="monthlyMatrixPanel">
       <div class="records-head"><h2>Rekap Bulanan Semua Crew</h2><span class="records-count" id="matrixPeriod">-</span></div>
       <div class="table-wrap">
@@ -544,6 +623,9 @@
       </div>
     </section>
 
+    </div><!-- /viewRekap -->
+
+    <div class="dashboard-view hidden" id="viewDataCrew">
     <section class="panel records" id="pinManagementPanel">
       <div class="records-head"><h2>Kelola Data Crew</h2></div>
       <div class="pin-panel-body">
@@ -563,8 +645,47 @@
       </div>
     </section>
 
-    </div><!-- /stack absensi -->
-    </div><!-- /viewAbsensi -->
+    </div><!-- /viewDataCrew -->
+
+    <div class="dashboard-view hidden" id="viewGaji">
+    <section class="panel records">
+      <div class="records-head"><h2>Gaji Pokok per Hari</h2><span class="records-count" id="gajiCount">0 crew</span></div>
+      <div class="pin-panel-body">
+        <p class="hint">Honor per hari tiap crew, dipakai untuk honor, slip gaji, dan rekap (kalau kosong, Rp 100.000). Uang bensin per hari dikali jumlah hari check-in tiap bulan, masuk otomatis ke Gaji Tambahan slip dan kolom Uang Bensin di Slip Gaji Bulanan.</p>
+        <div class="table-wrap">
+          <table class="mobile-cards"><thead><tr><th>Nama Crew</th><th>Gaji Pokok / Hari (Rp)</th><th>Uang Bensin / Hari (Rp)</th><th>Aksi</th></tr></thead><tbody id="gajiRows"></tbody></table>
+        </div>
+        <p id="gajiMessage" class="pin-message" role="status" aria-live="polite"></p>
+      </div>
+    </section>
+    </div><!-- /viewGaji -->
+
+    <div class="dashboard-view hidden" id="viewCheckin">
+    <section class="panel records">
+      <div class="records-head"><h2>Riwayat Check-in Lokasi</h2><span class="records-count" id="arrivalCount">0 data</span></div>
+      <div class="table-wrap">
+        <table class="mobile-cards">
+          <thead><tr><th>Waktu</th><th>Crew</th><th>GPS</th><th>Selfie</th></tr></thead>
+          <tbody id="arrivalBody"></tbody>
+        </table>
+        <div class="empty" id="arrivalEmpty"><strong>Belum ada check-in lokasi</strong><span>Check-in lokasi dari crew (GPS dan selfie) akan muncul di sini.</span></div>
+      </div>
+    </section>
+    </div><!-- /viewCheckin -->
+
+    <div class="dashboard-view hidden" id="viewRiwayat">
+    <section class="panel records">
+      <div class="records-head"><h2>Laporan Pekerjaan</h2><span class="records-count" id="recordsCount">0 data</span></div>
+      <div class="table-wrap">
+        <table class="mobile-cards">
+          <thead><tr><th>Waktu</th><th>Crew</th><th>Properti</th><th>Pekerjaan</th><th>Honor/Properti</th><th>Bukti Foto</th><th>Sumber</th><th>Aksi</th></tr></thead>
+          <tbody id="recordsBody"></tbody>
+        </table>
+        <div class="empty" id="emptyState"><strong>Belum ada data absensi</strong><span>Data check-in akan muncul di sini setelah crew menyimpan pekerjaan.</span></div>
+      </div>
+      <div class="pagination" id="historyPagination" aria-label="Navigasi riwayat pekerjaan"></div>
+    </section>
+    </div><!-- /viewRiwayat -->
 
     <div class="dashboard-view hidden" id="viewPenugasan">
     <div class="dashboard-column">
@@ -635,6 +756,8 @@
       </section>
     </div><!-- /stack penugasan -->
     </div><!-- /viewPenugasan -->
+    </div><!-- /dash-main -->
+    </div><!-- /dash-shell -->
 
     <footer class="site-footer">
       <strong>YOUR HOME, Check In Crew Dashboard</strong>
@@ -677,7 +800,7 @@
         <div class="detail-meta" id="extraPayGrid" style="padding:8px 0 0">
           <div class="meta-item"><label class="meta-label" for="extraTunjangan">Tunjangan</label><input id="extraTunjangan" type="number" min="0" step="1000" placeholder="0"></div>
           <div class="meta-item"><label class="meta-label" for="extraBonus">Bonus</label><input id="extraBonus" type="number" min="0" step="1000" placeholder="0"></div>
-          <div class="meta-item"><label class="meta-label" for="extraBensin">Uang Bensin</label><input id="extraBensin" type="number" min="0" step="1000" placeholder="0"></div>
+          <div class="meta-item"><label class="meta-label" for="extraBensin">Uang Bensin (otomatis: hari × tarif)</label><input id="extraBensin" type="number" min="0" step="1000" placeholder="0"></div>
           <div class="meta-item"><label class="meta-label" for="extraReimburse">Reimburse (Penggantian Biaya)</label><input id="extraReimburse" type="number" min="0" step="1000" placeholder="0"></div>
           <div class="meta-item"><label class="meta-label" for="extraPulsa">Pulsa / Komunikasi</label><input id="extraPulsa" type="number" min="0" step="1000" placeholder="0"></div>
           <div class="meta-item gold"><span class="meta-label">Total Gaji</span><div class="meta-value gold" id="slipTotalGaji">Rp 0</div></div>
@@ -718,6 +841,13 @@
       </form>
     </div>
   </div>
+  <div class="modal" id="receiptModal">
+    <div class="modal-card" style="width:min(560px,100%)">
+      <div class="modal-head"><div><h2>Struk Pengeluaran</h2><p class="subtitle" id="receiptSubtitle"></p></div><button class="close" type="button" data-close="receiptModal" aria-label="Tutup">&times;</button></div>
+      <div style="padding:14px;text-align:center"><img id="receiptImage" alt="Struk pengeluaran" style="max-width:100%;max-height:70vh;border-radius:10px" /></div>
+    </div>
+  </div>
+
   <div class="lightbox" id="lightbox"><button type="button" data-close="lightbox" aria-label="Tutup foto">&times;</button><img id="lightboxImage" alt="Foto diperbesar" /></div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
@@ -735,7 +865,21 @@
       } catch { /* gunakan logo default jika API belum tersedia */ }
     }
     // Data absensi: Cloudflare Worker (D1 + R2)
-    const DAILY_SALARY = 100000; // Rp 3.000.000/bulan ÷ 30 hari
+    const DAILY_SALARY = 100000; // Default honor per hari jika crew belum diatur (Rp 3.000.000/bulan ÷ 30 hari)
+    // Gaji pokok per hari tiap crew, diisi dari menu Data Crew (kolom daily_salary).
+    let crewRates = {};
+    // Uang bensin default per crew (menu Gaji Pokok, kolom fuel_allowance).
+    let crewFuelRates = {};
+    function crewFuelAllowance(crew) {
+      return Number(crewFuelRates[crew]) || 0;
+    }
+    function crewCheckInDays(crew, month) {
+      return new Set(state.records.filter(r => r.crew === crew && r.date && r.date.slice(0,7) === month).map(r => r.date)).size;
+    }
+    function crewDailyRate(crew) {
+      const rate = crewRates[crew];
+      return Number.isFinite(rate) ? rate : DAILY_SALARY;
+    }
     const PAGE_SIZE = 10;
     function getLocalDateKey() {
       const date = new Date();
@@ -768,9 +912,13 @@
     }
     function extraPayStoreKey(crew, month) { return `${crew}|${month}`; }
     function getExtraPay(crew, month) {
-      const item = loadExtraPayStore()[extraPayStoreKey(crew, month)] || {};
+      const stored = loadExtraPayStore()[extraPayStoreKey(crew, month)];
+      const item = stored || {};
       const values = {};
       EXTRA_PAY_FIELDS.forEach(field => { values[field] = Number(item[field]) || 0; });
+      // Uang bensin ikut default crew sampai diubah manual untuk bulan itu.
+      // Uang bensin dihitung per hari check-in: tarif harian × jumlah hari check-in bulan itu.
+      values.bensin = crewFuelAllowance(crew) * crewCheckInDays(crew, month);
       return values;
     }
     function setExtraPay(crew, month, values) {
@@ -908,7 +1056,8 @@
         if (!record.crew || !record.date) return;
         const key = `${record.crew}|${record.date}`;
         if (!groups[key]) groups[key] = { crew: record.crew, date: record.date, units: new Set(), visits: 0 };
-        groups[key].units.add(record.unit || '(tanpa nama)');
+        // Hanya laporan (ada properti) yang membagi honor; check-in lokasi tidak dihitung sebagai properti.
+        if (isReportRecord(record)) groups[key].units.add(String(record.unit).trim().toLowerCase());
         groups[key].visits += 1;
       });
       const map = {};
@@ -920,8 +1069,8 @@
           date: g.date,
           uniqueProperties: count,
           visits: g.visits,
-          perProperty: DAILY_SALARY / count,
-          totalForDay: DAILY_SALARY
+          perProperty: crewDailyRate(g.crew) / count,
+          totalForDay: crewDailyRate(g.crew)
         };
       });
       return map;
@@ -939,7 +1088,7 @@
         }
         map[item.crew].daysWorked += 1;
         map[item.crew].totalVisits += item.visits;
-        map[item.crew].totalHonor += DAILY_SALARY;
+        map[item.crew].totalHonor += crewDailyRate(item.crew);
       });
       // Akumulasi properti unik per crew dari records
       records.forEach(record => {
@@ -964,39 +1113,63 @@
       renderSummary();
       state.historyPage = 1;
       renderRows();
+      renderArrivals();
       renderSlipGaji();
     }
     function renderSummary() {
       const records = state.filtered;
-      el('totalRecords').textContent = records.length;
+      // Check-in Lokasi (tanpa properti, berisi selfie) tidak dihitung di statistik laporan.
+      const reports = records.filter(record => record.jobType !== 'Check-in Lokasi' && record.unit);
+      el('totalRecords').textContent = reports.length;
       el('totalCrew').textContent = new Set(records.map(record => record.crew).filter(Boolean)).size;
-      el('totalUnits').textContent = new Set(records.map(record => record.unit).filter(Boolean)).size;
-      el('totalPhotos').textContent = records.reduce((sum, record) => sum + (record.workPhotos?.length || 0) + (record.photo ? 1 : 0), 0);
-      el('recordsCount').textContent = `${records.length} data`;
+      el('totalUnits').textContent = new Set(reports.map(record => record.unit)).size;
+      el('totalPhotos').textContent = reports.reduce((sum, record) => sum + (record.workPhotos?.length || 0), 0);
+      el('recordsCount').textContent = `${reports.length} data`;
       // Total honor dihitung dari state.filtered (mengikuti filter saat ini).
       // Tiap kombinasi crew+date menyumbang 1 hari kerja = Rp 100.000.
-      const workDays = new Set(records.filter(r => r.crew && r.date).map(r => `${r.crew}|${r.date}`)).size;
-      el('totalHonor').textContent = formatRupiah(workDays * DAILY_SALARY);
+      const workDays = [...new Set(records.filter(r => r.crew && r.date).map(r => `${r.crew}|${r.date}`))];
+      el('totalHonor').textContent = formatRupiah(workDays.reduce((sum, key) => sum + crewDailyRate(key.split('|')[0]), 0));
+    }
+    // Riwayat check-in lokasi (GPS + selfie) per crew, terpisah dari laporan pekerjaan.
+    function renderArrivals() {
+      const body = el('arrivalBody');
+      if (!body) return;
+      const crewPick = el('crewFilter').value;
+      const arrivals = state.records
+        .filter(record => record.jobType === 'Check-in Lokasi' && (!crewPick || record.crew === crewPick))
+        .sort((a, b) => String(b.date).localeCompare(String(a.date)) || String(b.created_at || '').localeCompare(String(a.created_at || '')))
+        .slice(0, 200);
+      el('arrivalCount').textContent = `${arrivals.length} data`;
+      el('arrivalEmpty').style.display = arrivals.length ? 'none' : 'block';
+      body.innerHTML = arrivals.map(record => {
+        const gps = record.lat != null && record.lng != null ? `<a class="gps-link" href="https://www.google.com/maps?q=${Number(record.lat)},${Number(record.lng)}" target="_blank" rel="noopener">${Number(record.lat).toFixed(4)}, ${Number(record.lng).toFixed(4)} ↗</a>` : '-';
+        const selfie = record.photo ? `<a href="${escapeHtml(record.photo)}" target="_blank" rel="noopener"><img src="${escapeHtml(record.photo)}" alt="Selfie" style="width:56px;height:56px;object-fit:cover;border-radius:10px" /></a>` : '<span class="muted">Tanpa selfie</span>';
+        return `<tr><td data-label="Waktu"><strong>${formatDate(record.date)}</strong><div class="muted">${formatTime(record)}</div></td><td data-label="Crew" class="crew">${escapeHtml(record.crew || '-')}</td><td data-label="GPS">${gps}</td><td data-label="Selfie">${selfie}</td></tr>`;
+      }).join('');
+    }
+    // Laporan Kerja hanya memuat laporan (properti + foto + pekerjaan); check-in lokasi tidak ikut.
+    function isReportRecord(record) {
+      return record.jobType !== 'Check-in Lokasi' && Boolean(record.unit);
     }
     function renderRows() {
       const body = el('recordsBody');
       const pagination = el('historyPagination');
-      const totalPages = Math.ceil(state.filtered.length / PAGE_SIZE);
+      const reports = state.filtered.filter(isReportRecord);
+      const totalPages = Math.ceil(reports.length / PAGE_SIZE);
       state.historyPage = Math.max(1, Math.min(state.historyPage, totalPages || 1));
       const pageStart = (state.historyPage - 1) * PAGE_SIZE;
-      const pageRecords = state.filtered.slice(pageStart, pageStart + PAGE_SIZE);
-      el('emptyState').style.display = state.filtered.length ? 'none' : 'block';
+      const pageRecords = reports.slice(pageStart, pageStart + PAGE_SIZE);
+      el('emptyState').style.display = reports.length ? 'none' : 'block';
       body.innerHTML = pageRecords.map((record, index) => {
         const photoCount = (record.workPhotos?.length || 0) + (record.photo ? 1 : 0);
         const salary = state.salaryMap[salaryKey(record)];
         const perProperti = salary ? formatRupiah(salary.perProperty) : '-';
         const propCount = salary ? salary.uniqueProperties : 1;
-        const gps = record.lat != null && record.lng != null ? `<a class="gps-link" href="https://www.google.com/maps?q=${Number(record.lat)},${Number(record.lng)}" target="_blank" rel="noopener">${Number(record.lat).toFixed(4)}, ${Number(record.lng).toFixed(4)} ↗</a>` : '-';
         const sourceLabel = record.source === 'admin' ? 'Admin' : 'Crew';
         const sourceClass = record.source === 'admin' ? 'admin' : 'crew';
-        return `<tr><td data-label="Waktu"><strong>${formatDate(record.date)}</strong><div class="muted">${formatTime(record)}</div></td><td data-label="Crew" class="crew">${escapeHtml(record.crew || '-')}</td><td data-label="Properti"><div class="unit">${escapeHtml(record.unit || '-')}</div><div class="muted">${escapeHtml(record.jobType || '-')}</div></td><td data-label="Pekerjaan"><span class="job">${escapeHtml(record.jobType || '-')}</span></td><td data-label="Honor/Properti"><span class="honor-chip">${perProperti}</span><div class="muted">dari ${propCount} properti hari itu</div></td><td data-label="GPS">${gps}</td><td data-label="Bukti Foto" class="photo-count">${photoCount} foto</td><td data-label="Sumber"><span class="source-badge ${sourceClass}">${sourceLabel}</span></td><td data-label="Aksi"><button class="detail-btn" type="button" data-detail="${index}">Lihat detail</button></td></tr>`;
+        return `<tr><td data-label="Waktu"><strong>${formatDate(record.date)}</strong><div class="muted">${formatTime(record)}</div></td><td data-label="Crew" class="crew">${escapeHtml(record.crew || '-')}</td><td data-label="Properti"><div class="unit">${escapeHtml(record.unit || '-')}</div><div class="muted">${escapeHtml(record.jobType || '-')}</div></td><td data-label="Pekerjaan"><span class="job">${escapeHtml(record.jobType || '-')}</span></td><td data-label="Honor/Properti"><span class="honor-chip">${perProperti}</span><div class="muted">dari ${propCount} properti hari itu</div></td><td data-label="Bukti Foto" class="photo-count">${photoCount} foto</td><td data-label="Sumber"><span class="source-badge ${sourceClass}">${sourceLabel}</span></td><td data-label="Aksi"><button class="detail-btn" type="button" data-detail="${index}">Lihat detail</button></td></tr>`;
       }).join('');
-      body.querySelectorAll('[data-detail]').forEach(button => button.addEventListener('click', () => openDetail(state.filtered[pageStart + Number(button.dataset.detail)])));
+      body.querySelectorAll('[data-detail]').forEach(button => button.addEventListener('click', () => openDetail(reports[pageStart + Number(button.dataset.detail)])));
       if (totalPages > 1) {
         pagination.innerHTML = `<button type="button" data-page="prev" ${state.historyPage === 1 ? 'disabled' : ''}>Sebelumnya</button><span>Halaman ${state.historyPage} dari ${totalPages}</span><button type="button" data-page="next" ${state.historyPage === totalPages ? 'disabled' : ''}>Berikutnya</button>`;
         pagination.querySelector('[data-page="prev"]').addEventListener('click', () => { state.historyPage -= 1; renderRows(); });
@@ -1010,8 +1183,9 @@
     function buildPropertyRecap(crew, month) {
       const propertyStats = {};
       state.records.forEach(r => {
-        if (r.crew !== crew || !r.date || r.date.slice(0,7) !== month) return;
-        const unit = r.unit || '(tanpa nama)';
+        // Check-in lokasi (tanpa properti) tidak masuk rekap properti.
+        if (r.crew !== crew || !r.date || !r.unit || r.date.slice(0,7) !== month) return;
+        const unit = r.unit;
         if (!propertyStats[unit]) {
           propertyStats[unit] = { unit, days: new Set(), visits: 0, honor: 0 };
         }
@@ -1027,20 +1201,21 @@
             if (r.crew === crew && r.date === date && r.unit) dayProperties.add(r.unit);
           });
           const propCount = Math.max(1, dayProperties.size);
-          propertyStats[unit].honor += DAILY_SALARY / propCount;
+          propertyStats[unit].honor += crewDailyRate(crew) / propCount;
         });
       });
       const list = Object.values(propertyStats).sort((a,b) => b.honor - a.honor || a.unit.localeCompare(b.unit, 'id'));
-      const totalHonor = list.reduce((sum, s) => sum + s.honor, 0);
       const totalDays = new Set(state.records.filter(r => r.crew === crew && r.date && r.date.slice(0,7) === month).map(r => r.date)).size;
       const totalProperties = list.length;
-      return { list, totalHonor, totalDays, totalProperties };
+      // Total honor = hari check-in × Rp 100.000, sama dengan Gaji Dibayar dan Slip Gaji.
+      return { list, totalHonor: totalDays * crewDailyRate(crew), totalDays, totalProperties };
     }
     function renderMonthlyMatrix(month) {
       const head = el('monthlyMatrixHead');
       const body = el('monthlyMatrixBody');
       const empty = el('monthlyMatrixEmpty');
-      const monthRecords = state.records.filter(record => record.date && record.date.slice(0,7) === month);
+      const crewPick = el('crewFilter').value;
+      const monthRecords = state.records.filter(record => record.date && record.date.slice(0,7) === month && (!crewPick || record.crew === crewPick));
       const crews = [...new Set(monthRecords.map(record => record.crew).filter(Boolean))].sort((a,b) => a.localeCompare(b, 'id'));
       const properties = [...new Set(monthRecords.map(record => record.unit).filter(Boolean))].sort((a,b) => a.localeCompare(b, 'id'));
       el('matrixPeriod').textContent = formatMonth(month);
@@ -1064,7 +1239,7 @@
       const totalRow = `<tr class="matrix-total"><td class="matrix-label">TOTAL HONOR</td>${crews.map(crew => `<td class="matrix-number">${formatRupiah(recaps[crew].totalHonor)}</td>`).join('')}</tr>`;
       const workDaysRow = `<tr><td class="matrix-label">HARI CHECK IN</td>${crews.map(crew => `<td class="matrix-number">${recaps[crew].totalDays}</td>`).join('')}</tr>`;
       const absenceRow = `<tr class="matrix-absence"><td class="matrix-label">ABSEN</td>${crews.map(crew => `<td class="matrix-number">${Math.max(0, daysInMonth(month) - recaps[crew].totalDays)}</td>`).join('')}</tr>`;
-      const paidRow = `<tr class="matrix-paid"><td class="matrix-label">GAJI DIBAYAR</td>${crews.map(crew => `<td class="matrix-number">${formatRupiah(recaps[crew].totalDays * DAILY_SALARY)}</td>`).join('')}</tr>`;
+      const paidRow = `<tr class="matrix-paid"><td class="matrix-label">GAJI DIBAYAR</td>${crews.map(crew => `<td class="matrix-number">${formatRupiah(recaps[crew].totalDays * crewDailyRate(crew))}</td>`).join('')}</tr>`;
       body.innerHTML = propertyRows + totalRow + workDaysRow + absenceRow + paidRow;
     }
     function renderSlipGaji() {
@@ -1091,13 +1266,13 @@
       body.innerHTML = crews.map(crew => {
         const checkInDays = crewDates[crew].size;
         const tidakCheckIn = Math.max(0, totalDays - checkInDays);
-        const potongan = tidakCheckIn * DAILY_SALARY;
-        const dibayar = checkInDays * DAILY_SALARY;
+        const potongan = tidakCheckIn * crewDailyRate(crew);
+        const dibayar = checkInDays * crewDailyRate(crew);
         const recap = buildPropertyRecap(crew, month);
         const propertiInfo = recap.totalProperties > 0
           ? `<span class="honor-chip">${recap.totalProperties} properti</span><div class="muted">${checkInDays} hari · ${recap.totalProperties > 1 ? 'multi-properti' : '1 properti'}</div>`
           : `<span class="muted">-</span>`;
-        return `<tr><td data-label="Crew" class="crew">${escapeHtml(crew)}</td><td data-label="Hari di Bulan">${totalDays} hari</td><td data-label="Hari Check In"><span class="hadir">${checkInDays} hari</span></td><td data-label="Tidak Check In"><span class="absen">${tidakCheckIn} hari</span></td><td data-label="Potongan" class="potongan">- ${formatRupiah(potongan)}</td><td data-label="Gaji Dibayar" class="bayar">${formatRupiah(dibayar)}</td><td data-label="Properti Dikerjakan">${propertiInfo}</td><td data-label="Aksi"><button class="detail-btn" type="button" data-slip="${escapeHtml(crew)}">Lihat slip</button></td></tr>`;
+        return `<tr><td data-label="Crew" class="crew">${escapeHtml(crew)}</td><td data-label="Hari di Bulan">${totalDays} hari</td><td data-label="Hari Check In"><span class="hadir">${checkInDays} hari</span></td><td data-label="Tidak Check In"><span class="absen">${tidakCheckIn} hari</span></td><td data-label="Potongan" class="potongan">- ${formatRupiah(potongan)}</td><td data-label="Gaji Dibayar" class="bayar">${formatRupiah(dibayar)}</td><td data-label="Uang Bensin">${formatRupiah(crewFuelAllowance(crew) * checkInDays)}</td><td data-label="Properti Dikerjakan">${propertiInfo}</td><td data-label="Aksi"><button class="detail-btn" type="button" data-slip="${escapeHtml(crew)}">Lihat slip</button></td></tr>`;
       }).join('');
       body.querySelectorAll('[data-slip]').forEach(btn => btn.addEventListener('click', () => openSlip(btn.dataset.slip, month)));
     }
@@ -1112,8 +1287,8 @@
       });
       const checkInDays = workDates.size;
       const tidakCheckIn = Math.max(0, totalDays - checkInDays);
-      const potongan = tidakCheckIn * DAILY_SALARY;
-      const dibayar = checkInDays * DAILY_SALARY;
+      const potongan = tidakCheckIn * crewDailyRate(crew);
+      const dibayar = checkInDays * crewDailyRate(crew);
       const [y, m] = month.split('-').map(Number);
       const firstWeekday = new Date(y, m-1, 1).getDay(); // 0=Min
       const cells = [];
@@ -1133,7 +1308,7 @@
         <div class="meta-item"><span class="meta-label">Total Hari di Bulan</span><span class="meta-value">${totalDays} hari</span></div>
         <div class="meta-item"><span class="meta-label">Hari Check In</span><span class="meta-value hadir">${checkInDays} hari</span></div>
         <div class="meta-item"><span class="meta-label">Tidak Check In</span><span class="meta-value absen">${tidakCheckIn} hari</span></div>
-        <div class="meta-item"><span class="meta-label">Honor per Hari</span><span class="meta-value">${formatRupiah(DAILY_SALARY)}</span></div>
+        <div class="meta-item"><span class="meta-label">Honor per Hari</span><span class="meta-value">${formatRupiah(crewDailyRate(crew))}</span></div>
         <div class="meta-item"><span class="meta-label">Potongan</span><span class="meta-value potongan">- ${formatRupiah(potongan)}</span></div>
         <div class="meta-item gold"><span class="meta-label">Gaji Dibayar</span><span class="meta-value gold">${formatRupiah(dibayar)}</span></div>`;
       el('slipCalendar').innerHTML = cells.join('');
@@ -1173,7 +1348,7 @@
       currentSlip = { crew, month, totalDays, checkInDays, tidakCheckIn, potongan, dibayar, recap, extraPay, totalGaji: dibayar + sumExtraPay(extraPay) };
       EXTRA_PAY_FIELDS.forEach(field => {
         const input = el(`extra${field[0].toUpperCase()}${field.slice(1)}`);
-        if (input) input.value = extraPay[field] || '';
+        if (input) { input.value = extraPay[field] || ''; input.readOnly = field === 'bensin'; }
       });
       el('slipTotalGaji').textContent = formatRupiah(currentSlip.totalGaji);
       el('slipActionMessage').textContent = '';
@@ -1216,7 +1391,7 @@
         `Hari di bulan: ${slip.totalDays} hari`,
         `Hari check in: ${slip.checkInDays} hari`,
         `Tidak check in: ${slip.tidakCheckIn} hari`,
-        `Honor per hari: ${formatRupiah(DAILY_SALARY)}`,
+        `Honor per hari: ${formatRupiah(crewDailyRate(slip.crew))}`,
         `Potongan: - ${formatRupiah(slip.potongan)}`,
         `Gaji dibayar: ${formatRupiah(slip.dibayar)}`,
         ...extraPayLines(slip.extraPay || {}).map(([label, value]) => `${label}: ${value}`),
@@ -1301,7 +1476,7 @@
         ['Total hari di bulan', `${slip.totalDays} hari`],
         ['Hari check in', `${slip.checkInDays} hari`],
         ['Tidak check in', `${slip.tidakCheckIn} hari`],
-        ['Honor per hari', formatRupiah(DAILY_SALARY)],
+        ['Honor per hari', formatRupiah(crewDailyRate(slip.crew))],
         ['Potongan', `- ${formatRupiah(slip.potongan)}`],
       ];
       doc.setFontSize(10);
@@ -1445,19 +1620,16 @@
       detailRecord = record;
       el('detailTitle').textContent = record.unit || 'Detail pekerjaan';
       el('detailSubtitle').textContent = `${record.crew || '-'} · ${formatDate(record.date)} ${formatTime(record)}`;
-      const gps = record.lat != null && record.lng != null ? `${Number(record.lat).toFixed(6)}, ${Number(record.lng).toFixed(6)}` : '-';
-      const gpsLink = record.lat != null && record.lng != null ? `<a class="gps-link" href="https://www.google.com/maps?q=${Number(record.lat)},${Number(record.lng)}" target="_blank" rel="noopener">${gps} ↗</a>` : '-';
       const salary = state.salaryMap[salaryKey(record)];
-      const honorPerProperti = salary ? formatRupiah(salary.perProperty) : formatRupiah(DAILY_SALARY);
+      const honorPerProperti = salary ? formatRupiah(salary.perProperty) : formatRupiah(crewDailyRate(record.crew));
       const propCount = salary ? salary.uniqueProperties : 1;
-      const totalDay = salary ? formatRupiah(salary.totalForDay) : formatRupiah(DAILY_SALARY);
+      const totalDay = salary ? formatRupiah(salary.totalForDay) : formatRupiah(crewDailyRate(record.crew));
       const sourceLabel = record.source === 'admin' ? 'Admin pusat' : 'Crew';
       const sourceClass = record.source === 'admin' ? 'admin' : 'crew';
       el('detailMeta').innerHTML = `
         <div class="meta-item"><span class="meta-label">Crew</span><span class="meta-value">${escapeHtml(record.crew || '-')}</span></div>
         <div class="meta-item"><span class="meta-label">Pekerjaan</span><span class="meta-value">${escapeHtml(record.jobType || '-')}</span></div>
         <div class="meta-item"><span class="meta-label">Sumber Data</span><span class="meta-value"><span class="source-badge ${sourceClass}">${sourceLabel}</span></span></div>
-        <div class="meta-item"><span class="meta-label">Lokasi GPS</span><span class="meta-value">${gpsLink}</span></div>
         <div class="meta-item gold"><span class="meta-label">Honor per Properti</span><span class="meta-value gold">${honorPerProperti}</span></div>
         <div class="meta-item gold"><span class="meta-label">Properti Dikunjungi Hari Ini</span><span class="meta-value gold">${propCount} properti</span></div>
         <div class="meta-item gold"><span class="meta-label">Total Honor Hari Ini</span><span class="meta-value gold">${totalDay}</span></div>`;
@@ -1477,8 +1649,8 @@
       const rows = state.filtered.map(record => {
         const salary = state.salaryMap[salaryKey(record)];
         const propCount = salary ? salary.uniqueProperties : 1;
-        const perProperti = salary ? Math.round(salary.perProperty) : DAILY_SALARY;
-        const totalDay = salary ? Math.round(salary.totalForDay) : DAILY_SALARY;
+        const perProperti = salary ? Math.round(salary.perProperty) : crewDailyRate(record.crew);
+        const totalDay = salary ? Math.round(salary.totalForDay) : crewDailyRate(record.crew);
         return [
           record.date,
           formatTime(record),
@@ -1511,7 +1683,8 @@
       const rows = Object.keys(crewDates).sort((a,b) => a.localeCompare(b,'id')).map(crew => {
         const checkInDays = crewDates[crew].size;
         const tidakCheckIn = Math.max(0, totalDays - checkInDays);
-        return [crew, month, totalDays, checkInDays, tidakCheckIn, DAILY_SALARY, tidakCheckIn * DAILY_SALARY, checkInDays * DAILY_SALARY];
+        const rate = crewDailyRate(crew);
+        return [crew, month, totalDays, checkInDays, tidakCheckIn, rate, tidakCheckIn * rate, checkInDays * rate];
       });
       const csv = [headers, ...rows].map(row => row.map(value => `"${String(value).replace(/"/g,'""')}"`).join(',')).join('\n');
       const link = document.createElement('a'); link.href = URL.createObjectURL(new Blob([csv], { type:'text/csv;charset=utf-8' })); link.download = `slip-gaji-${month}.csv`; link.click(); URL.revokeObjectURL(link.href);
@@ -1537,6 +1710,11 @@
       try {
         const response = await workerRequest(`${API_BASE}/dashboard/crews?_=${Date.now()}`);
         crewManagementItems = (Array.isArray(response.data) ? response.data : []).filter(crew => Number(crew.active) === 1);
+        crewRates = Object.fromEntries(crewManagementItems.map(crew => [crew.name, Number(crew.daily_salary) || DAILY_SALARY]));
+        crewFuelRates = Object.fromEntries(crewManagementItems.map(crew => [crew.name, Number(crew.fuel_allowance) || 0]));
+        renderGajiRows();
+        // Tarif berubah: hitung ulang honor dan slip dengan tarif terbaru.
+        if (state.records && state.records.length) { rebuildSalaryData(); applyFilters(); }
         rows.innerHTML = crewManagementItems.length ? crewManagementItems.map(crew => `
           <tr>
             <td data-label="Nama Crew">${escapeHtml(crew.name)}</td>
@@ -1548,6 +1726,47 @@
       } catch (error) {
         rows.innerHTML = '<tr><td colspan="4" class="empty-cell">Daftar crew gagal dimuat.</td></tr>';
         throw error;
+      }
+    }
+    function renderGajiRows() {
+      el('gajiCount').textContent = `${crewManagementItems.length} crew`;
+      el('gajiRows').innerHTML = crewManagementItems.length ? crewManagementItems.map(crew => `
+        <tr>
+          <td data-label="Nama Crew">${escapeHtml(crew.name)}</td>
+          <td data-label="Gaji Pokok / Hari"><input type="text" inputmode="numeric" class="gaji-input" data-gaji-input="${escapeHtml(crew.id)}" value="${(Number(crew.daily_salary) || DAILY_SALARY).toLocaleString('id-ID')}" /></td>
+          <td data-label="Uang Bensin Default"><input type="text" inputmode="numeric" class="gaji-input" data-fuel-input="${escapeHtml(crew.id)}" value="${(Number(crew.fuel_allowance) || 0).toLocaleString('id-ID')}" /></td>
+          <td data-label="Aksi"><button class="button primary" type="button" data-gaji-save="${escapeHtml(crew.id)}">Simpan</button></td>
+        </tr>`).join('') : '<tr class="empty-row"><td colspan="3" class="empty-cell">Belum ada data crew.</td></tr>';
+    }
+    async function handleGajiSave(event) {
+      const button = event.target.closest('[data-gaji-save]');
+      if (!button) return;
+      const id = button.dataset.gajiSave;
+      const crew = crewManagementItems.find(item => item.id === id);
+      const input = document.querySelector(`[data-gaji-input="${CSS.escape(id)}"]`);
+      const message = el('gajiMessage');
+      const salary = String(input?.value || '').replace(/\D/g, '');
+      const fuelInput = document.querySelector(`[data-fuel-input="${CSS.escape(id)}"]`);
+      const fuel = String(fuelInput?.value || '').replace(/\D/g, '') || '0';
+      if (!crew || !salary) {
+        message.className = 'pin-message error';
+        message.textContent = 'Isi gaji pokok per hari dalam angka.';
+        return;
+      }
+      button.disabled = true;
+      try {
+        await workerRequest(`${API_BASE}/dashboard/crews/${encodeURIComponent(id)}`, {
+          method: 'PATCH',
+          body: JSON.stringify({ name: crew.name, crew_code: crew.crew_code, daily_salary: Number(salary), fuel_allowance: Number(fuel) })
+        });
+        message.className = 'pin-message success';
+        message.textContent = `Gaji pokok ${crew.name} disimpan.`;
+        await loadCrewManagement();
+      } catch (error) {
+        message.className = 'pin-message error';
+        message.textContent = error.message || 'Gaji pokok gagal disimpan.';
+      } finally {
+        button.disabled = false;
       }
     }
     function resetCrewManagementForm() {
@@ -1903,6 +2122,7 @@
       ['monthFilter','dateFilter','crewFilter','unitFilter','jobFilter'].forEach(function (id) {
         document.getElementById(id).addEventListener('change', applyFilters);
       });
+      document.getElementById('crewFilter').addEventListener('change', loadCrewExpensesDashboard);
       document.getElementById('resetBtn').addEventListener('click', resetFilters);
       document.getElementById('exportPdfBtn').addEventListener('click', exportPdf);
       document.getElementById('exportExcelBtn').addEventListener('click', exportExcel);
@@ -1911,6 +2131,12 @@
       document.getElementById('deleteAllBtn').addEventListener('click', deleteAllRecords);
       el('crewManagementForm').addEventListener('submit', submitCrewManagement);
       el('crewManagementRows').addEventListener('click', handleCrewManagementAction);
+      el('gajiRows').addEventListener('click', handleGajiSave);
+      el('gajiRows').addEventListener('input', event => {
+        if (!event.target.matches('[data-gaji-input],[data-fuel-input]')) return;
+        const digits = event.target.value.replace(/\D/g, '');
+        event.target.value = digits ? Number(digits).toLocaleString('id-ID') : '';
+      });
       el('crewCancelEditBtn').addEventListener('click', resetCrewManagementForm);
       el('slipPdfBtn').addEventListener('click', saveSlipPdf);
       el('slipWhatsappBtn').addEventListener('click', sendSlipWhatsApp);
@@ -2079,24 +2305,36 @@
 
   const assignEl = id => document.getElementById(id);
   const DASHBOARD_VIEW_KEY = 'yourhome_dashboard_view';
+  // Penugasan & Kalender sementara disembunyikan; panelnya tetap ada tapi tidak bisa dibuka.
+  const DASHBOARD_VIEW_ELEMENTS = {
+    checkin: 'viewCheckin',
+    riwayat: 'viewRiwayat',
+    pengeluaran: 'viewPengeluaran',
+    slip: 'viewSlip',
+    rekap: 'viewRekap',
+    crew: 'viewDataCrew',
+    gaji: 'viewGaji',
+  };
+  const DASHBOARD_VIEWS = Object.keys(DASHBOARD_VIEW_ELEMENTS);
   function switchDashboardView(view) {
-    const target = view === 'penugasan' ? 'penugasan' : 'absensi';
-    assignEl('viewAbsensi').classList.toggle('hidden', target !== 'absensi');
-    assignEl('viewPenugasan').classList.toggle('hidden', target !== 'penugasan');
-    const absensiBtn = assignEl('viewAbsensiBtn');
-    const penugasanBtn = assignEl('viewPenugasanBtn');
-    absensiBtn.classList.toggle('active', target === 'absensi');
-    penugasanBtn.classList.toggle('active', target === 'penugasan');
-    absensiBtn.setAttribute('aria-selected', String(target === 'absensi'));
-    penugasanBtn.setAttribute('aria-selected', String(target === 'penugasan'));
+    const target = DASHBOARD_VIEWS.includes(view) ? view : 'riwayat';
+    DASHBOARD_VIEWS.forEach(name => assignEl(DASHBOARD_VIEW_ELEMENTS[name]).classList.toggle('hidden', target !== name));
+    document.querySelectorAll('[data-dash-view]').forEach(btn => {
+      const active = btn.dataset.dashView === target;
+      btn.classList.toggle('active', active);
+      if (active) btn.setAttribute('aria-current', 'page'); else btn.removeAttribute('aria-current');
+    });
+    // Ringkasan & filter ditampilkan hanya di menu yang memakainya.
+    const shared = document.querySelector('[data-dash-shared]');
+    shared.classList.toggle('hidden', !shared.dataset.dashViews.split(' ').includes(target));
     try { localStorage.setItem(DASHBOARD_VIEW_KEY, target); } catch {}
   }
   function currentDashboardView() {
     try {
       const saved = localStorage.getItem(DASHBOARD_VIEW_KEY);
-      if (saved === 'penugasan' || saved === 'absensi') return saved;
+      if (DASHBOARD_VIEWS.includes(saved)) return saved;
     } catch {}
-    return 'absensi';
+    return 'riwayat';
   }
   function assignSameProperty(left, right) {
     return String(left || '').trim().toLocaleLowerCase('id') === String(right || '').trim().toLocaleLowerCase('id');
@@ -2562,13 +2800,55 @@
       }
     });
     assignEl('taskDate').value = formatLocalDateKey();
-    assignEl('viewAbsensiBtn').addEventListener('click', () => switchDashboardView('absensi'));
-    assignEl('viewPenugasanBtn').addEventListener('click', () => switchDashboardView('penugasan'));
+    document.querySelectorAll('[data-dash-view]').forEach(btn => {
+      btn.addEventListener('click', () => switchDashboardView(btn.dataset.dashView));
+    });
     switchDashboardView(currentDashboardView());
     refreshAssignCrewFilter();
     renderAssignmentTable();
     loadAssignmentProperties();
     loadAssignmentBookings();
+    crewExpenseDateInput().value = formatLocalDateKey();
+    crewExpenseDateInput().addEventListener('change', loadCrewExpensesDashboard);
+    loadCrewExpensesDashboard();
+  }
+
+  function crewExpenseDateInput() {
+    return document.getElementById('crewExpenseDate');
+  }
+
+  function openReceiptModal(src, title) {
+    el('receiptImage').src = src;
+    el('receiptSubtitle').textContent = title || '';
+    el('receiptModal').classList.add('open');
+  }
+  async function loadCrewExpensesDashboard() {
+    const date = crewExpenseDateInput().value || formatLocalDateKey();
+    const body = document.getElementById('crewExpenseBody');
+    const empty = document.getElementById('crewExpenseEmpty');
+    try {
+      const res = await fetch(`${API_BASE}/dashboard/crew-expenses?date=${encodeURIComponent(date)}&_=${Date.now()}`, {
+        cache: 'no-store',
+        headers: state.adminToken ? { Authorization: `Bearer ${state.adminToken}` } : {}
+      });
+      const json = await res.json();
+      if (!res.ok || json.ok === false) throw new Error(json.error || ('HTTP ' + res.status));
+      const crewPick = el('crewFilter').value;
+      const records = (json.data || []).filter(item => !crewPick || item.payee === crewPick);
+      empty.hidden = records.length > 0;
+      body.innerHTML = records.map(item => `
+        <tr>
+          <td>${escapeHtml(item.payee)}</td>
+          <td>${escapeHtml(item.category_name)}</td>
+          <td>${escapeHtml(item.property_name)}</td>
+          <td>Rp ${Math.round(item.amount).toLocaleString('id-ID')}</td>
+          <td>${escapeHtml(item.description || '-')}</td>
+          <td>${item.proof_url ? `<button type="button" class="detail-btn" data-receipt="${escapeHtml(item.proof_url)}" data-receipt-title="${escapeHtml(`${item.payee || '-'} · ${item.category_name || ''}`)}">Lihat</button>` : '-'}</td>
+        </tr>`).join('');
+      body.querySelectorAll('[data-receipt]').forEach(button => button.addEventListener('click', () => openReceiptModal(button.dataset.receipt, button.dataset.receiptTitle)));
+    } catch (error) {
+      body.innerHTML = `<tr><td colspan="6">${escapeHtml(error.message || 'Gagal memuat pengeluaran crew.')}</td></tr>`;
+    }
   }
   </script>
 </body>

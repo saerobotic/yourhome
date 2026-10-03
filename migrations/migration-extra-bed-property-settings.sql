@@ -1,0 +1,1 @@
+CREATE TABLE IF NOT EXISTS extra_bed_property_settings (property_id TEXT PRIMARY KEY, stock INTEGER NOT NULL DEFAULT 0, price INTEGER NOT NULL DEFAULT 0, updated_at TEXT NOT NULL DEFAULT '');

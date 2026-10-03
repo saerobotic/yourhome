@@ -339,6 +339,10 @@
         <span>Inventaris</span>
         <span id="inventoryIssueIndicator" class="hidden ml-auto w-2.5 h-2.5 rounded-full bg-rose-400 ring-2 ring-slate-900" aria-label="Ada laporan barang bermasalah" title="Ada laporan barang bermasalah"></span>
       </button>
+      <button onclick="switchView('suplier-extrabed')" class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left">
+        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 7h11v9H3zM14 10h4l3 3v3h-7zM7 19a2 2 0 100-4 2 2 0 000 4zM17 19a2 2 0 100-4 2 2 0 000 4z"/></svg>
+        <span>Extrabed</span>
+      </button>
       <div class="px-3 pt-5 pb-2 text-[10px] uppercase tracking-wider text-slate-500 font-bold">Sistem</div>
       <button onclick="toggleStaffChat()" class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left">
         <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/></svg>
@@ -1025,6 +1029,114 @@
       </div>
 
       <!-- =========================================== -->
+      <!-- SUPLIER EXTRA BED                            -->
+      <div id="view-suplier-extrabed" class="view">
+        <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 mb-6">
+          <div class="stat-card bg-white rounded-2xl p-5 border border-slate-100" style="--accent:#0ea5e9">
+            <p class="text-xs font-semibold text-slate-500 uppercase tracking-wide">Selisih (Pendapatan Extra Bed − Sewa Suplier)</p>
+            <p id="supExtraBedMarginTotal" class="text-2xl font-extrabold text-slate-900 mt-1">Rp 0</p>
+          </div>
+          <div class="stat-card bg-white rounded-2xl p-5 border border-slate-100" style="--accent:#f59e0b">
+            <p class="text-xs font-semibold text-slate-500 uppercase tracking-wide">Masih Dipinjam dari Suplier</p>
+            <p id="supExtraBedBorrowed" class="text-2xl font-extrabold text-slate-900 mt-1">0 unit</p>
+          </div>
+          <div class="stat-card bg-white rounded-2xl p-5 border border-slate-100" style="--accent:#10b981">
+            <p class="text-xs font-semibold text-slate-500 uppercase tracking-wide">Stok Tersedia untuk Booking</p>
+            <p id="supExtraBedEffective" class="text-2xl font-extrabold text-slate-900 mt-1">—</p>
+            <p id="supExtraBedEffectiveDetail" class="text-xs text-slate-500 mt-1"></p>
+          </div>
+        </div>
+
+        <section class="bg-white rounded-2xl p-5 sm:p-6 border border-slate-100 mb-6">
+          <h2 class="text-lg font-bold text-slate-900">Stok & Harga Extra Bed per Properti</h2>
+          <p class="text-sm text-slate-500 mt-1 mb-4">Stok dicek per properti saat booking. Harga per unit terisi otomatis di form booking saat properti dipilih.</p>
+          <div class="max-h-72 overflow-y-auto border border-slate-100 rounded-lg">
+            <table class="w-full text-xs">
+              <thead class="bg-slate-50 text-slate-500 uppercase sticky top-0">
+                <tr>
+                  <th class="text-left px-3 py-2">Properti</th>
+                  <th class="text-center px-2 py-2 w-24">Stok (unit)</th>
+                  <th class="text-center px-2 py-2 w-36">Harga/unit (Rp)</th>
+                </tr>
+              </thead>
+              <tbody id="extraBedPropertyTableBody" class="divide-y divide-slate-100"></tbody>
+            </table>
+          </div>
+          <div class="flex items-center gap-3 mt-4">
+            <button type="button" onclick="saveExtraBedPropertySettings()" class="bg-brand-600 hover:bg-brand-700 text-white text-xs font-semibold px-3 py-2 rounded-lg">Simpan Stok & Harga</button>
+            <p id="extraBedStockStatus" class="text-xs" role="status" aria-live="polite"></p>
+          </div>
+        </section>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        <section class="bg-white rounded-2xl p-5 sm:p-6 border border-slate-100">
+          <h2 class="text-lg font-bold text-slate-900">Catat Pinjaman dari Suplier</h2>
+          <p class="text-sm text-slate-500 mt-1 mb-5">Extra bed yang dipinjam menambah stok yang bisa dipakai booking. Catat pengembalian saat unit dikembalikan ke suplier.</p>
+          <form id="supExtraBedForm" class="grid grid-cols-1 sm:grid-cols-2 gap-3 items-end">
+            <label class="block sm:col-span-2"><span class="block text-xs font-semibold text-slate-600 mb-1">Suplier</span><select id="supExtraBedName" required class="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 bg-white"><option value="">— Pilih suplier —</option></select><span class="block mt-1 text-[11px] text-slate-400">Suplier diambil dari Daftar Suplier di bawah.</span></label>
+            <label class="block"><span class="block text-xs font-semibold text-slate-600 mb-1">Jumlah dipinjam</span><input id="supExtraBedQty" type="number" required min="1" step="1" value="1" class="w-full text-sm border border-slate-200 rounded-lg px-3 py-2"></label>
+            <label class="block"><span class="block text-xs font-semibold text-slate-600 mb-1">Tanggal pinjam</span><input id="supExtraBedDate" type="date" required class="w-full text-sm border border-slate-200 rounded-lg px-3 py-2"></label>
+            <label class="block"><span class="block text-xs font-semibold text-slate-600 mb-1">Harga sewa dari suplier (Rp/unit)</span><input id="supExtraBedSupplierPrice" type="text" inputmode="numeric" pattern="[0-9.]*" data-currency-input value="0" class="w-full text-sm border border-slate-200 rounded-lg px-3 py-2"></label>
+            <label class="block"><span class="block text-xs font-semibold text-slate-600 mb-1">Harga jual ke tamu (Rp/unit)</span><input id="supExtraBedGuestPrice" type="text" inputmode="numeric" pattern="[0-9.]*" data-currency-input value="0" class="w-full text-sm border border-slate-200 rounded-lg px-3 py-2"></label>
+            <label class="block"><span class="block text-xs font-semibold text-slate-600 mb-1">Catatan (opsional)</span><input id="supExtraBedNote" maxlength="200" placeholder="cth: untuk musim libur" class="w-full text-sm border border-slate-200 rounded-lg px-3 py-2"></label>
+            <div class="sm:col-span-2 flex flex-wrap items-center gap-3">
+              <button id="supExtraBedSubmitButton" type="submit" class="bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold px-4 py-2 rounded-lg">Simpan Pinjaman</button>
+              <p id="supExtraBedStatus" class="text-sm" role="status" aria-live="polite"></p>
+            </div>
+          </form>
+        </section>
+
+        <section class="bg-white rounded-2xl p-5 sm:p-6 border border-slate-100">
+          <h2 class="text-lg font-bold text-slate-900">Daftar Suplier</h2>
+          <p class="text-sm text-slate-500 mt-1 mb-5">Masukkan suplier dulu. Nama yang tersimpan akan muncul di pilihan saat mencatat pinjaman.</p>
+          <form id="supListForm" class="grid grid-cols-1 sm:grid-cols-2 gap-3 items-end">
+            <label class="block"><span class="block text-xs font-semibold text-slate-600 mb-1">Nama suplier</span><input id="supListName" required minlength="2" maxlength="80" placeholder="cth: Toko Perlengkapan Sari" class="w-full text-sm border border-slate-200 rounded-lg px-3 py-2"></label>
+            <label class="block"><span class="block text-xs font-semibold text-slate-600 mb-1">No. HP (opsional)</span><input id="supListPhone" type="tel" maxlength="30" class="w-full text-sm border border-slate-200 rounded-lg px-3 py-2"></label>
+            <label class="block"><span class="block text-xs font-semibold text-slate-600 mb-1">Harga sewa/hari (Rp)</span><input id="supListPrice" type="text" inputmode="numeric" placeholder="cth: 40.000" class="w-full text-sm border border-slate-200 rounded-lg px-3 py-2"></label>
+            <label class="block"><span class="block text-xs font-semibold text-slate-600 mb-1">Catatan (opsional)</span><input id="supListNote" maxlength="200" placeholder="cth: toko dekat Pasar Baru" class="w-full text-sm border border-slate-200 rounded-lg px-3 py-2"></label>
+            <div class="flex flex-wrap items-center gap-3">
+              <button id="supListSubmitButton" type="submit" class="bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold px-4 py-2 rounded-lg">Tambah Suplier</button>
+              <p id="supListStatus" class="text-sm" role="status" aria-live="polite"></p>
+            </div>
+          </form>
+          <div class="overflow-x-auto mt-5">
+            <table class="w-full text-sm">
+              <thead class="bg-slate-50 text-slate-500 text-xs uppercase tracking-wider">
+                <tr>
+                  <th class="text-left font-semibold px-5 py-3">Nama</th>
+                  <th class="text-left font-semibold px-3 py-3">No. HP</th>
+                  <th class="text-right font-semibold px-3 py-3">Harga/hari</th>
+                  <th class="text-left font-semibold px-3 py-3">Catatan</th>
+                  <th class="text-right font-semibold px-5 py-3">Aksi</th>
+                </tr>
+              </thead>
+              <tbody id="supListTableBody" class="divide-y divide-slate-100"></tbody>
+            </table>
+          </div>
+        </section>
+        </div>
+
+        <section class="bg-white rounded-2xl border border-slate-100 overflow-hidden">
+          <div class="p-5 pb-3"><h2 class="font-bold text-slate-900">Riwayat Pinjaman Suplier</h2><p class="text-xs text-slate-500">Yang masih dipinjam ikut menambah stok tersedia. Setelah dikembalikan, stok kembali seperti semula.</p></div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+              <thead class="bg-slate-50 text-slate-500 text-xs uppercase tracking-wider">
+                <tr>
+                  <th class="text-left font-semibold px-5 py-3">Tanggal Pinjam</th>
+                  <th class="text-left font-semibold px-3 py-3">Suplier</th>
+                  <th class="text-center font-semibold px-3 py-3">Dipinjam</th>
+                  <th class="text-center font-semibold px-3 py-3">Dikembalikan</th>
+                  <th class="text-center font-semibold px-3 py-3">Masih Dipinjam</th>
+                  <th class="text-right font-semibold px-3 py-3">Biaya Sewa Suplier</th>
+                  <th class="text-right font-semibold px-5 py-3">Aksi</th>
+                </tr>
+              </thead>
+              <tbody id="supExtraBedTableBody" class="divide-y divide-slate-100"></tbody>
+            </table>
+          </div>
+        </section>
+      </div>
+
       <!-- LAPORAN VIEW                                 -->
       <!-- =========================================== -->
       <div id="view-laporan" class="view">
@@ -1365,15 +1477,6 @@
               <p class="mt-auto border-t border-slate-100 pt-3 text-xs text-slate-500">Ubah kode singkat properti yang digunakan di dashboard.</p>
             </div>
 
-            <div class="settings-section settings-narrow bg-white rounded-2xl p-5 border border-slate-100">
-              <h3 class="font-bold text-slate-900">Stok Extra Bed</h3>
-              <div class="flex items-center gap-2 mt-3 max-w-md">
-                <input id="extraBedStockInput" type="number" min="0" step="1" placeholder="Belum diatur" class="w-full text-sm border border-slate-200 rounded-lg px-3 py-2.5">
-                <button type="button" onclick="saveExtraBedStock()" class="shrink-0 bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold px-3 py-2.5 rounded-lg">Simpan</button>
-              </div>
-              <p id="extraBedStockStatus" class="text-xs mt-2" role="status" aria-live="polite"></p>
-              <p class="mt-3 border-t border-slate-100 pt-3 text-xs text-slate-500">Total unit extra bed fisik yang dimiliki. Dipakai untuk menolak booking kalau jumlah extra bed yang dipesan bentrok tanggal di semua properti melebihi stok ini.</p>
-            </div>
           </div>
         </section>
       </div>
@@ -1497,17 +1600,24 @@
       </div>
       <div class="grid grid-cols-2 gap-3">
         <label class="block"><span class="block text-xs text-slate-500 font-semibold">Extra Bed (jumlah)</span><input id="newBookingExtraBedQuantity" type="number" min="0" step="1" value="0" class="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 mt-0.5"></label>
-        <label class="block"><span class="block text-xs text-slate-500 font-semibold">Harga per Extra Bed (Rp)</span><input id="newBookingExtraBedPrice" type="text" inputmode="numeric" pattern="[0-9.]*" data-currency-input value="0" class="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 mt-0.5"></label>
+        <label class="block"><span class="block text-xs text-slate-500 font-semibold">Harga per Extra Bed (Rp)</span><input id="newBookingExtraBedPrice" type="text" inputmode="numeric" pattern="[0-9.]*" data-currency-input value="0" class="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 mt-0.5"><span id="newBookingExtraBedPriceHint" class="block mt-1 text-[11px] text-slate-400"></span></label>
       </div>
       <p id="newBookingExtraBedTotal" class="text-xs text-slate-500">Total Extra Bed: Rp 0. Dicatat terpisah dari nilai booking.</p>
       <p id="newBookingExtraBedStockHint" class="text-xs"></p>
       <div id="newBookingExtraBedPaymentField" class="hidden">
         <label class="text-xs text-slate-500 font-semibold">Pembayaran Extra Bed</label>
         <select id="newBookingExtraBedPaymentStatus" class="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 bg-white mt-0.5">
-          <option value="paid">Sudah dibayar</option>
-          <option value="pending">Bayar nanti (COD saat check-in)</option>
+          <option value="Tunai">Tunai</option>
+          <option value="Sudah Bayar">Sudah bayar (transfer/lainnya)</option>
+          <option value="Belum Bayar">Belum bayar</option>
         </select>
-        <p class="text-xs text-slate-500 mt-1">Pilih "Bayar nanti" kalau tamu baru akan bayar extra bed di lokasi. Dashboard akan menandai booking ini dan mengingatkan Crew di properti.</p>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2">
+          <button type="button" onclick="generateExtraBedInvoice('tagih')" class="text-sm font-semibold px-3 py-2 border border-amber-300 text-amber-800 bg-amber-50 hover:bg-amber-100 rounded-lg">Invoice Payment Request Extra Bed</button>
+          <button type="button" onclick="generateExtraBedInvoice('lunas')" class="text-sm font-semibold px-3 py-2 border border-emerald-300 text-emerald-800 bg-emerald-50 hover:bg-emerald-100 rounded-lg">Invoice Paid in Full Extra Bed</button>
+          <button type="button" onclick="generateExtraBedInvoice('tagih', true)" class="text-sm font-semibold px-3 py-2 border border-green-300 text-green-800 bg-green-50 hover:bg-green-100 rounded-lg">Kirim WA Payment Request Extra Bed</button>
+          <button type="button" onclick="generateExtraBedInvoice('lunas', true)" class="text-sm font-semibold px-3 py-2 border border-green-300 text-green-800 bg-green-50 hover:bg-green-100 rounded-lg">Kirim WA Paid in Full Extra Bed</button>
+        </div>
+        <p class="text-xs text-slate-500 mt-1">Pilih "Belum bayar" kalau tamu baru akan bayar di lokasi. Booking ditandai dan Crew diingatkan menagih.</p>
       </div>
       <div>
         <label class="text-xs text-slate-500 font-semibold">Agen / Marketing (opsional)</label>
@@ -1542,6 +1652,15 @@
       <div>
         <label class="text-xs text-slate-500 font-semibold">Catatan (opsional)</label>
         <textarea id="newBookingNote" rows="2" placeholder="Permintaan khusus tamu..." class="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 mt-0.5"></textarea>
+      </div>
+      <div id="bookingDirectInvoiceField" class="hidden rounded-lg border border-slate-200 bg-slate-50 p-3">
+        <p class="text-xs text-slate-500 font-semibold mb-2">Invoice Booking (khusus platform Direct)</p>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          <button type="button" onclick="generateBookingInvoice('penagihan')" class="text-sm font-semibold px-3 py-2 border border-amber-300 text-amber-800 bg-amber-50 hover:bg-amber-100 rounded-lg">Invoice Payment Request</button>
+          <button type="button" onclick="generateBookingInvoice('pelunasan')" class="text-sm font-semibold px-3 py-2 border border-emerald-300 text-emerald-800 bg-emerald-50 hover:bg-emerald-100 rounded-lg">Invoice Paid in Full</button>
+          <button type="button" onclick="generateBookingInvoice('penagihan', true)" class="text-sm font-semibold px-3 py-2 border border-green-300 text-green-800 bg-green-50 hover:bg-green-100 rounded-lg">Kirim WA Payment Request</button>
+          <button type="button" onclick="generateBookingInvoice('pelunasan', true)" class="text-sm font-semibold px-3 py-2 border border-green-300 text-green-800 bg-green-50 hover:bg-green-100 rounded-lg">Kirim WA Paid in Full</button>
+        </div>
       </div>
       <div class="flex gap-2 pt-2">
         <button id="bookingDeleteButton" type="button" onclick="deleteBookingFromModal()" class="hidden text-sm font-semibold px-4 py-2.5 border border-rose-200 text-rose-600 rounded-lg hover:bg-rose-50">Hapus</button>
@@ -3032,7 +3151,7 @@ async function loadBookingData(account){
 
   BOOKINGS.splice(0, BOOKINGS.length, ...normalizeBookingProperties(remoteBookings));
   document.getElementById('bookingNavCount').textContent = BOOKINGS.length;
-  persistDashboardData();
+  persistDashboardData({ skipCloudSync:true });
   // Menu periode ikut menyesuaikan diri kalau ada data tahun yang lebih baru.
   renderPeriodMenu();
 }
@@ -3137,6 +3256,7 @@ const VIEW_META = {
   'owner': { title:'Owner', sub:'Daftar pemilik properti dengan persentase kepemilikan' },
   'absensi-karyawan': { title:'Absensi Karyawan', sub:'Pantau absen masuk karyawan kantor via selfie dan lokasi' },
   'inventaris': { title:'Inventaris', sub:'Daftar barang per properti dan riwayat ceklis kondisi dari Crew' },
+  'suplier-extrabed': { title:'Extrabed', sub:'Catat pinjaman extra bed dari suplier; yang masih dipinjam menambah stok tersedia' },
   'pengaturan': { title:'Pengaturan', sub:'User role, komisi & konfigurasi sistem' }
 };
 function switchView(name){
@@ -3168,6 +3288,11 @@ function switchView(name){
     loadAttendanceDashboard();
   }
   if(name==='inventaris'){ populateInventoryPropertySelects(); loadInventoryItems(); loadInventoryChecks(); }
+  if(name==='suplier-extrabed'){
+    if(!document.getElementById('supExtraBedDate').value) document.getElementById('supExtraBedDate').value = new Date().toISOString().slice(0, 10);
+    loadExtraBedSupplierList();
+    loadExtraBedSuppliers();
+  }
   if(name==='pengaturan'){
     renderUsers();
     loadExtraBedStock();
@@ -7955,37 +8080,66 @@ function renderUsers(){
     </tr>`).join('');
 }
 
+let extraBedPropertySettings = {};
+
 async function loadExtraBedStock(){
   try {
     const result = await dashboardApi('/dashboard/extra-bed-stock');
     extraBedTotalStock = result.data?.total ?? null;
+    extraBedPropertySettings = result.data?.properties || {};
   } catch(error) {
     console.warn('Gagal memuat stok extra bed.', error);
   }
-  const input = document.getElementById('extraBedStockInput');
-  if(input) input.value = extraBedTotalStock === null ? '' : extraBedTotalStock;
+  renderExtraBedPropertySettings();
+  await loadExtraBedSuppliers();
 }
 
-async function saveExtraBedStock(){
-  const input = document.getElementById('extraBedStockInput');
+function renderExtraBedPropertySettings(){
+  const body = document.getElementById('extraBedPropertyTableBody');
+  if(!body) return;
+  const rows = PROPERTIES.filter(property => !property.archived);
+  body.innerHTML = rows.length ? rows.map(property => {
+    const setting = extraBedPropertySettings[property.id] || { stock:0, price:0 };
+    return `<tr data-ebprop-id="${escapeHtml(property.id)}">
+      <td class="px-3 py-2 font-medium text-slate-800">${escapeHtml(property.name)}</td>
+      <td class="px-2 py-2 text-center"><input type="number" min="0" step="1" data-ebprop-stock value="${setting.stock}" class="w-20 text-center border border-slate-200 rounded px-1 py-1 text-xs"></td>
+      <td class="px-2 py-2 text-center"><input type="text" inputmode="numeric" data-ebprop-price value="${setting.price ? setting.price.toLocaleString('id-ID') : ''}" placeholder="0" class="w-28 text-right border border-slate-200 rounded px-1 py-1 text-xs"></td>
+    </tr>`;
+  }).join('') : '<tr><td colspan="3" class="px-3 py-4 text-center text-slate-400">Belum ada properti.</td></tr>';
+  body.querySelectorAll('input[data-ebprop-price]').forEach(input => {
+    input.addEventListener('blur', () => {
+      const value = parseCurrencyInput(input.value);
+      input.value = value ? value.toLocaleString('id-ID') : '';
+    });
+  });
+}
+
+async function saveExtraBedPropertySettings(){
   const status = document.getElementById('extraBedStockStatus');
-  const total = Number(input.value);
-  if(!Number.isSafeInteger(total) || total < 0){
-    status.className = 'text-xs mt-2 text-rose-600';
-    status.textContent = 'Masukkan jumlah stok yang valid (bilangan bulat, minimal 0).';
+  const items = [];
+  let invalid = false;
+  document.querySelectorAll('#extraBedPropertyTableBody tr[data-ebprop-id]').forEach(row => {
+    const stock = Number(row.querySelector('input[data-ebprop-stock]').value);
+    const price = parseCurrencyInput(row.querySelector('input[data-ebprop-price]').value);
+    if(!Number.isSafeInteger(stock) || stock < 0) invalid = true;
+    items.push({ propertyId:row.dataset.ebpropId, stock, price });
+  });
+  if(invalid){
+    status.className = 'text-xs text-rose-600';
+    status.textContent = 'Stok harus bilangan bulat, minimal 0.';
     return;
   }
-  status.className = 'text-xs mt-2 text-slate-500';
+  status.className = 'text-xs text-slate-500';
   status.textContent = 'Menyimpan...';
   try {
-    await dashboardApi('/dashboard/extra-bed-stock', { method:'PUT', body:JSON.stringify({ total }) });
-    extraBedTotalStock = total;
-    status.className = 'text-xs mt-2 text-emerald-700';
-    status.textContent = `Stok tersimpan: ${total} unit.`;
-    showToast('Stok extra bed berhasil disimpan.');
+    await dashboardApi('/dashboard/extra-bed-stock', { method:'PUT', body:JSON.stringify({ items }) });
+    await loadExtraBedStock();
+    status.className = 'text-xs text-emerald-700';
+    status.textContent = 'Stok dan harga tersimpan.';
+    showToast('Stok dan harga extra bed per properti tersimpan.');
   } catch(error) {
-    status.className = 'text-xs mt-2 text-rose-600';
-    status.textContent = error.message || 'Stok extra bed gagal disimpan.';
+    status.className = 'text-xs text-rose-600';
+    status.textContent = error.message || 'Stok dan harga gagal disimpan.';
   }
 }
 
@@ -8109,6 +8263,229 @@ async function submitPasswordReset(event){
   }
 }
 
+/* ============== SUPLIER EXTRA BED ============== */
+/* Stok efektif = stok milik (Pengaturan) + extra bed yang masih dipinjam dari suplier.
+   Worker memakai rumus yang sama saat mengecek stok booking. */
+let extraBedSuppliers = [];
+let extraBedSupplierOutstanding = 0;
+let extraBedSupplierMarginTotal = 0;
+
+function getExtraBedEffectiveStock(){
+  return extraBedTotalStock === null ? null : extraBedTotalStock + extraBedSupplierOutstanding;
+}
+
+async function loadExtraBedSuppliers(){
+  try {
+    const result = await dashboardApi('/dashboard/extra-bed-suppliers');
+    extraBedSuppliers = Array.isArray(result.data?.suppliers) ? result.data.suppliers : [];
+    extraBedSupplierOutstanding = Number(result.data?.outstanding || 0);
+    extraBedSupplierMarginTotal = Number(result.data?.margin_total || 0);
+  } catch(error) {
+    extraBedSuppliers = [];
+    extraBedSupplierOutstanding = 0;
+    extraBedSupplierMarginTotal = 0;
+    console.warn('Gagal memuat suplier extra bed.', error);
+  }
+  renderExtraBedSuppliers();
+  updateBookingExtraBedStockHint();
+}
+
+function renderExtraBedSuppliers(){
+  const effective = getExtraBedEffectiveStock();
+  document.getElementById('supExtraBedBorrowed').textContent = `${extraBedSupplierOutstanding} unit`;
+  document.getElementById('supExtraBedEffective').textContent = effective === null ? 'Belum diatur' : `${effective} unit`;
+  document.getElementById('supExtraBedEffectiveDetail').textContent = extraBedTotalStock === null
+    ? 'Stok sendiri belum diatur'
+    : `Stok sendiri ${extraBedTotalStock} (harga kita) + pinjaman suplier ${extraBedSupplierOutstanding} (ada potongan sewa suplier)`;
+  const canEdit = ['Master', 'Admin'].includes(currentDashboardAccount?.role);
+  document.getElementById('supExtraBedTableBody').innerHTML = extraBedSuppliers.length ? extraBedSuppliers.map(item => {
+    const outstanding = Math.max(0, item.outstanding);
+    return `<tr>
+      <td class="px-5 py-3 text-sm text-slate-600">${fmtDate(item.borrowed_date)}</td>
+      <td class="px-3 py-3"><div class="font-semibold text-slate-900 text-sm">${escapeHtml(item.supplier_name)}</div>${item.note ? `<div class="text-xs text-slate-400">${escapeHtml(item.note)}</div>` : ''}</td>
+      <td class="px-3 py-3 text-center">${item.quantity}</td>
+      <td class="px-3 py-3 text-center">${item.returned}</td>
+      <td class="px-3 py-3 text-center font-bold ${outstanding ? 'text-amber-700' : 'text-emerald-700'}">${outstanding}</td>
+      <td class="px-3 py-3 text-right text-xs text-slate-600 whitespace-nowrap">${fmtRp(item.supplier_cost_total)}<div class="text-[11px] text-slate-400">${fmtRp(item.supplier_price)}/unit × ${item.quantity}</div><div class="text-[11px] text-emerald-700">Harga jual tamu: ${item.guest_price ? `${fmtRp(item.guest_price)}/unit` : 'belum diisi'}</div></td>
+      <td class="px-5 py-3 text-right whitespace-nowrap">${canEdit ? `<button type="button" onclick="markExtraBedSupplierReturn('${escapeHtml(item.id)}')" class="text-xs font-semibold text-brand-600 hover:text-brand-800">Catat Kembali</button><button type="button" onclick="deleteExtraBedSupplier('${escapeHtml(item.id)}')" class="ml-3 text-xs font-semibold text-rose-600 hover:text-rose-800">Hapus</button>` : '—'}</td>
+    </tr>`;
+  }).join('') : '<tr><td colspan="7" class="px-5 py-8 text-center text-sm text-slate-400">Belum ada pinjaman dari suplier.</td></tr>';
+  const marginEl = document.getElementById('supExtraBedMarginTotal');
+  if(marginEl) marginEl.textContent = fmtRp(extraBedSupplierMarginTotal);
+}
+
+async function submitExtraBedSupplier(event){
+  event.preventDefault();
+  const status = document.getElementById('supExtraBedStatus');
+  const button = document.getElementById('supExtraBedSubmitButton');
+  if(!['Master', 'Admin'].includes(currentDashboardAccount?.role)){
+    status.className = 'text-sm text-rose-600';
+    status.textContent = 'Hanya Master atau Admin yang dapat mencatat pinjaman suplier.';
+    return;
+  }
+  button.disabled = true;
+  status.className = 'text-sm text-slate-500';
+  status.textContent = 'Menyimpan pinjaman...';
+  try {
+    await dashboardApi('/dashboard/extra-bed-suppliers', {
+      method:'POST', body:JSON.stringify({
+        supplier_name:document.getElementById('supExtraBedName').value.trim(),
+        quantity:Number(document.getElementById('supExtraBedQty').value),
+        borrowed_date:document.getElementById('supExtraBedDate').value,
+        supplier_price:parseCurrencyInput(document.getElementById('supExtraBedSupplierPrice').value),
+        guest_price:parseCurrencyInput(document.getElementById('supExtraBedGuestPrice').value),
+        note:document.getElementById('supExtraBedNote').value.trim(),
+      })
+    });
+    const today = new Date().toISOString().slice(0, 10);
+    event.target.reset();
+    document.getElementById('supExtraBedDate').value = today;
+    status.className = 'text-sm text-emerald-700';
+    status.textContent = 'Pinjaman tersimpan. Stok tersedia ikut bertambah.';
+    await loadExtraBedSuppliers();
+  } catch(error) {
+    status.className = 'text-sm text-rose-600';
+    status.textContent = error.message || 'Pinjaman gagal disimpan.';
+  } finally {
+    button.disabled = false;
+  }
+}
+
+let extraBedSupplierList = [];
+
+async function loadExtraBedSupplierList(){
+  try {
+    const result = await dashboardApi('/dashboard/extra-bed-supplier-list');
+    extraBedSupplierList = Array.isArray(result.data) ? result.data : [];
+  } catch(error) {
+    extraBedSupplierList = [];
+    console.warn('Gagal memuat daftar suplier.', error);
+  }
+  renderExtraBedSupplierList();
+}
+
+function renderExtraBedSupplierList(){
+  const select = document.getElementById('supExtraBedName');
+  const selected = select.value;
+  select.replaceChildren(
+    new Option(extraBedSupplierList.length ? '— Pilih suplier —' : '— Belum ada suplier, tambahkan di Daftar Suplier —', ''),
+    ...extraBedSupplierList.map(item => new Option(item.name, item.name))
+  );
+  if(extraBedSupplierList.some(item => item.name === selected)) select.value = selected;
+  const canEdit = ['Master', 'Admin'].includes(currentDashboardAccount?.role);
+  document.getElementById('supListTableBody').innerHTML = extraBedSupplierList.length ? extraBedSupplierList.map(item => `<tr>
+      <td class="px-5 py-3 font-semibold text-slate-900 text-sm">${escapeHtml(item.name)}</td>
+      <td class="px-3 py-3 text-sm text-slate-600">${escapeHtml(item.phone || '—')}</td>
+      <td class="px-3 py-3 text-sm text-slate-900 text-right tabular-nums">${item.price_per_day ? fmtRp(item.price_per_day) : '—'}</td>
+      <td class="px-3 py-3 text-sm text-slate-500">${escapeHtml(item.note || '—')}</td>
+      <td class="px-5 py-3 text-right whitespace-nowrap">${canEdit ? `<button type="button" onclick="editExtraBedSupplierListItem('${escapeHtml(item.id)}')" class="text-xs font-semibold text-brand-700 hover:text-brand-900 mr-3">Edit</button><button type="button" onclick="deleteExtraBedSupplierListItem('${escapeHtml(item.id)}')" class="text-xs font-semibold text-rose-600 hover:text-rose-800">Hapus</button>` : '—'}</td>
+    </tr>`).join('') : '<tr><td colspan="5" class="px-5 py-8 text-center text-sm text-slate-400">Belum ada suplier terdaftar.</td></tr>';
+}
+
+async function submitExtraBedSupplierList(event){
+  event.preventDefault();
+  const status = document.getElementById('supListStatus');
+  const button = document.getElementById('supListSubmitButton');
+  if(!['Master', 'Admin'].includes(currentDashboardAccount?.role)){
+    status.className = 'text-sm text-rose-600';
+    status.textContent = 'Hanya Master atau Admin yang dapat menambah suplier.';
+    return;
+  }
+  button.disabled = true;
+  status.className = 'text-sm text-slate-500';
+  status.textContent = 'Menyimpan suplier...';
+  try {
+    await dashboardApi('/dashboard/extra-bed-supplier-list', {
+      method:'POST', body:JSON.stringify({
+        name:document.getElementById('supListName').value.trim(),
+        phone:document.getElementById('supListPhone').value.trim(),
+        note:document.getElementById('supListNote').value.trim(),
+        price_per_day:parseCurrencyInput(document.getElementById('supListPrice').value),
+      })
+    });
+    event.target.reset();
+    status.className = 'text-sm text-emerald-700';
+    status.textContent = 'Suplier tersimpan dan sudah bisa dipilih di pinjaman.';
+    await loadExtraBedSupplierList();
+  } catch(error) {
+    status.className = 'text-sm text-rose-600';
+    status.textContent = error.message || 'Suplier gagal disimpan.';
+  } finally {
+    button.disabled = false;
+  }
+}
+
+async function editExtraBedSupplierListItem(id){
+  const item = extraBedSupplierList.find(entry => entry.id === id);
+  if(!item) return;
+  const name = window.prompt('Nama suplier:', item.name);
+  if(name === null) return;
+  const phone = window.prompt('No. HP suplier (opsional):', item.phone || '');
+  if(phone === null) return;
+  const priceInput = window.prompt('Harga sewa per hari (Rp, isi 0 jika belum ada):', String(item.price_per_day || 0));
+  if(priceInput === null) return;
+  const note = window.prompt('Catatan (opsional):', item.note || '');
+  if(note === null) return;
+  try {
+    await dashboardApi(`/dashboard/extra-bed-supplier-list/${encodeURIComponent(id)}`, {
+      method:'PATCH', body:JSON.stringify({
+        name:name.trim(), phone:phone.trim(), note:note.trim(), price_per_day:parseCurrencyInput(priceInput),
+      })
+    });
+    await loadExtraBedSupplierList();
+    showToast('Data suplier diperbarui.');
+  } catch(error) {
+    showToast(error.message || 'Suplier gagal diperbarui.');
+  }
+}
+
+async function deleteExtraBedSupplierListItem(id){
+  const item = extraBedSupplierList.find(entry => entry.id === id);
+  if(!item) return;
+  if(!window.confirm(`Hapus ${item.name} dari daftar suplier? Riwayat pinjaman yang sudah ada tetap tersimpan.`)) return;
+  try {
+    await dashboardApi(`/dashboard/extra-bed-supplier-list/${encodeURIComponent(id)}`, { method:'DELETE' });
+    await loadExtraBedSupplierList();
+    showToast('Suplier dihapus dari daftar.');
+  } catch(error) {
+    showToast(error.message || 'Suplier gagal dihapus.');
+  }
+}
+
+async function markExtraBedSupplierReturn(id){
+  const item = extraBedSuppliers.find(entry => entry.id === id);
+  if(!item) return;
+  const input = window.prompt(`Berapa unit dari ${item.supplier_name} yang sudah dikembalikan? (sudah kembali: ${item.returned} dari ${item.quantity})`, String(item.quantity));
+  if(input === null) return;
+  const returned = Number(input);
+  if(!Number.isSafeInteger(returned) || returned < 0 || returned > item.quantity){
+    showToast(`Isi bilangan bulat 0 sampai ${item.quantity}.`);
+    return;
+  }
+  try {
+    await dashboardApi(`/dashboard/extra-bed-suppliers/${encodeURIComponent(id)}`, { method:'PATCH', body:JSON.stringify({ returned }) });
+    await loadExtraBedSuppliers();
+    showToast('Pengembalian dicatat.');
+  } catch(error) {
+    showToast(error.message || 'Pengembalian gagal dicatat.');
+  }
+}
+
+async function deleteExtraBedSupplier(id){
+  const item = extraBedSuppliers.find(entry => entry.id === id);
+  if(!item) return;
+  if(!window.confirm(`Hapus catatan pinjaman dari ${item.supplier_name}? Sisa pinjamannya tidak lagi dihitung sebagai stok.`)) return;
+  const pin = window.prompt('Masukkan PIN Master (4 digit) untuk menghapus catatan pinjaman ini:');
+  if(pin === null) return;
+  try {
+    await dashboardApi(`/dashboard/extra-bed-suppliers/${encodeURIComponent(id)}`, { method:'DELETE', body:JSON.stringify({ pin:pin.trim() }) });
+    await loadExtraBedSuppliers();
+    showToast('Catatan pinjaman dihapus.');
+  } catch(error) {
+    showToast(error.message || 'Catatan gagal dihapus.');
+  }
+}
+
 /* ============== FORM SUBMITS ============== */
 function updateBookingExtraBedTotal(){
   const quantity = Number(document.getElementById('newBookingExtraBedQuantity').value) || 0;
@@ -8120,32 +8497,68 @@ function updateBookingExtraBedTotal(){
 }
 
 // Indikator langsung di form: berapa extra bed yang masih tersedia pada rentang tanggal ini,
-// dihitung dari stok total (Pengaturan) dikurangi booking aktif lain yang tanggalnya tumpang-tindih.
-function updateBookingExtraBedStockHint(){
-  const hint = document.getElementById('newBookingExtraBedStockHint');
-  if(!hint) return;
+// dihitung dari stok total semua properti dikurangi booking aktif lain yang tanggalnya tumpang-tindih.
+// Stok per properti dipakai dulu; kelebihan permintaan diambil dari sisa pinjaman suplier.
+// Logika ini mengikuti pengecekan di worker (checkExtraBedStock).
+function getExtraBedAvailability(){
+  const propId = document.getElementById('newBookingProp').value;
   const editId = document.getElementById('bookingEditId').value;
   const checkin = document.getElementById('newBookingCheckin').value;
   const checkout = document.getElementById('newBookingCheckout').value;
   const quantity = Number(document.getElementById('newBookingExtraBedQuantity').value) || 0;
-  if(extraBedTotalStock === null){
+  const hasSettings = Object.keys(extraBedPropertySettings).length > 0;
+  const ownStock = extraBedPropertySettings[propId]?.stock || 0;
+  const prop = PROPERTIES.find(item => item.id === propId);
+  const usedByProp = new Map();
+  if(checkin && checkout && checkout > checkin){
+    BOOKINGS
+      .filter(booking => booking.id !== editId && booking.status !== 'Cancelled' && Number(booking.extraBedQuantity) > 0 &&
+        checkin < booking.checkout && checkout > booking.checkin)
+      .forEach(booking => usedByProp.set(booking.propId, (usedByProp.get(booking.propId) || 0) + Number(booking.extraBedQuantity || 0)));
+  }
+  const prior = usedByProp.get(propId) || 0;
+  const fromOwn = Math.min(quantity, Math.max(0, ownStock - prior));
+  const fromSupplier = quantity - fromOwn;
+  let otherOverflow = 0;
+  usedByProp.forEach((qty, id) => {
+    if(id !== propId) otherOverflow += Math.max(0, qty - (extraBedPropertySettings[id]?.stock || 0));
+  });
+  const priorOverflow = Math.max(0, prior - ownStock);
+  const loansLeft = Math.max(0, extraBedSupplierOutstanding - otherOverflow - priorOverflow);
+  const totalOverflow = otherOverflow + Math.max(0, prior + quantity - ownStock);
+  return {
+    hasSettings, propName:prop?.name || 'properti ini', ownStock, prior, quantity,
+    fromOwn, fromSupplier, loansLeft, ok: !hasSettings || totalOverflow <= extraBedSupplierOutstanding,
+  };
+}
+
+// Indikator langsung di form: sumber extra bed (stok sendiri atau pinjaman suplier) untuk properti ini.
+function updateBookingExtraBedStockHint(){
+  const hint = document.getElementById('newBookingExtraBedStockHint');
+  if(!hint) return;
+  const a = getExtraBedAvailability();
+  if(!a.hasSettings){
     hint.className = 'text-xs text-slate-400';
-    hint.textContent = 'Stok extra bed belum diatur (lihat menu Pengaturan).';
+    hint.textContent = 'Stok extra bed belum diatur (lihat menu Extrabed).';
     return;
   }
-  if(!checkin || !checkout || checkout <= checkin){
+  if(a.quantity === 0){
     hint.className = 'text-xs text-slate-400';
-    hint.textContent = `Total stok extra bed: ${extraBedTotalStock} unit. Isi tanggal untuk cek ketersediaan.`;
+    hint.textContent = `Stok ${a.propName}: ${a.ownStock} unit (terpakai ${a.prior} pada tanggal ini).`;
     return;
   }
-  const overlappingUsed = BOOKINGS
-    .filter(booking => booking.id !== editId && booking.status !== 'Cancelled' && Number(booking.extraBedQuantity) > 0 &&
-      checkin < booking.checkout && checkout > booking.checkin)
-    .reduce((sum, booking) => sum + Number(booking.extraBedQuantity || 0), 0);
-  const available = Math.max(0, extraBedTotalStock - overlappingUsed);
-  const enough = quantity <= available;
-  hint.className = `text-xs ${enough ? 'text-slate-500' : 'text-rose-600 font-semibold'}`;
-  hint.textContent = `Stok extra bed tersedia: ${available} dari ${extraBedTotalStock} unit pada tanggal ini.`;
+  if(a.fromSupplier === 0){
+    hint.className = 'text-xs text-slate-500';
+    hint.textContent = `Stok ${a.propName} cukup: diambil dari stok sendiri, sisa ${a.ownStock - a.prior - a.quantity} unit.`;
+    return;
+  }
+  if(a.ok){
+    hint.className = 'text-xs text-amber-700 font-semibold';
+    hint.textContent = `Stok ${a.propName} ${a.ownStock} unit, terpakai ${a.prior}. Kurang ${a.fromSupplier} unit akan diambil dari pinjaman suplier (sisa pinjaman ${a.loansLeft} unit).`;
+    return;
+  }
+  hint.className = 'text-xs text-rose-600 font-semibold';
+  hint.textContent = `Stok ${a.propName} ${a.ownStock} unit, terpakai ${a.prior}. Kurang ${a.fromSupplier} unit dan pinjaman suplier tidak cukup. Catat pinjaman suplier dulu.`;
 }
 
 // Booking yang sudah dibatalkan: potongan dan pemasukan bersih saling menyesuaikan.
@@ -8300,8 +8713,13 @@ function openBookingModal(bookingId=''){
   document.getElementById('newBookingCheckin').value = booking?.checkin || new Date().toISOString().slice(0, 10);
   document.getElementById('newBookingCheckout').value = booking?.checkout || new Date(Date.now() + 86400000).toISOString().slice(0, 10);
   document.getElementById('newBookingExtraBedQuantity').value = booking?.extraBedQuantity ?? 0;
-  setCurrencyInputValue(document.getElementById('newBookingExtraBedPrice'), booking?.extraBedPrice ?? 0);
-  document.getElementById('newBookingExtraBedPaymentStatus').value = booking?.extraBedPaymentStatus === 'pending' ? 'pending' : 'paid';
+  const extraBedSetting = extraBedPropertySettings[booking?.propId];
+  const latestLoanGuestPrice = extraBedSuppliers.find(item => item.guest_price > 0)?.guest_price;
+  setCurrencyInputValue(document.getElementById('newBookingExtraBedPrice'), extraBedSetting?.price || latestLoanGuestPrice || booking?.extraBedPrice || 0);
+  document.getElementById('newBookingExtraBedPriceHint').textContent = extraBedSetting?.price
+    ? 'Harga dari menu Extrabed'
+    : (latestLoanGuestPrice ? `Harga jual dari pinjaman suplier: ${fmtRp(latestLoanGuestPrice)}/unit` : '');
+  document.getElementById('newBookingExtraBedPaymentStatus').value = booking?.extraBedPaymentStatus === 'pending' ? 'Belum Bayar' : (booking?.extraBedPaymentMethod || 'Sudah Bayar');
   setCurrencyInputValue(document.getElementById('newBookingGrossAmount'), booking?.grossAmount ?? 0);
   populateBookingAgentSelect();
   const bookingAgentSelect = document.getElementById('newBookingAgent');
@@ -8330,6 +8748,7 @@ function openBookingModal(bookingId=''){
   updateBookingExtraBedTotal();
   updateBookingAgentFeeTotal();
   updateBookingFormForPropertyType();
+  updateBookingDirectInvoiceVisibility();
   openModal('modal-booking');
 }
 
@@ -8381,7 +8800,9 @@ async function submitBooking(){
   const grossAmount = managementType === 'partner' ? parseCurrencyInput(document.getElementById('newBookingGrossAmount').value) : 0;
   const extraBedQuantity = Number(document.getElementById('newBookingExtraBedQuantity').value) || 0;
   const extraBedPrice = parseCurrencyInput(document.getElementById('newBookingExtraBedPrice').value);
-  const extraBedPaymentStatus = extraBedQuantity > 0 && document.getElementById('newBookingExtraBedPaymentStatus').value === 'pending' ? 'pending' : 'paid';
+  const extraBedPaymentLabel = document.getElementById('newBookingExtraBedPaymentStatus').value;
+  const extraBedPaymentStatus = extraBedQuantity > 0 && extraBedPaymentLabel === 'Belum Bayar' ? 'pending' : 'paid';
+  const extraBedPaymentMethod = extraBedQuantity > 0 && extraBedPaymentStatus === 'paid' ? extraBedPaymentLabel : '';
   const platformFeePct = 0;
   const status = document.getElementById('newBookingStatus').value;
   const note = document.getElementById('newBookingNote').value.trim();
@@ -8412,14 +8833,11 @@ async function submitBooking(){
       statusElement.textContent = `Properti ${prop.name} sudah ada booking lain yang tanggalnya bentrok: ${conflictBooking.guest || 'tamu lain'} (${fmtDate(conflictBooking.checkin)} - ${fmtDate(conflictBooking.checkout)}).`;
       return;
     }
-    if(extraBedTotalStock !== null && extraBedQuantity > 0){
-      const overlappingUsed = BOOKINGS
-        .filter(booking => booking.id !== editId && booking.status !== 'Cancelled' && Number(booking.extraBedQuantity) > 0 &&
-          checkin < booking.checkout && checkout > booking.checkin)
-        .reduce((sum, booking) => sum + Number(booking.extraBedQuantity || 0), 0);
-      if(overlappingUsed + extraBedQuantity > extraBedTotalStock){
+    if(extraBedQuantity > 0){
+      const availability = getExtraBedAvailability();
+      if(!availability.ok){
         statusElement.className = 'text-sm text-rose-600';
-        statusElement.textContent = `Stok extra bed tidak cukup pada tanggal tersebut. Tersedia ${Math.max(0, extraBedTotalStock - overlappingUsed)} dari total ${extraBedTotalStock} unit.`;
+        statusElement.textContent = `Stok ${availability.propName} tidak cukup. Kurang ${availability.fromSupplier} unit dan pinjaman suplier tidak cukup. Catat pinjaman suplier dulu.`;
         return;
       }
     }
@@ -8442,7 +8860,7 @@ async function submitBooking(){
   const payload = {
     ...(editId ? { id:editId } : {}), propId, propName:prop.name, propCode:prop.code,
     guest, phone, platform, status:cancelledEdit ? editedBooking.status : status, checkin, checkout, amount, grossAmount, managementType, extraBedQuantity, extraBedPrice, extraBedPaymentStatus, platformFeePct, note, captureImage,
-    agentId, agentFeeType, agentFeeValue,
+    agentId, agentFeeType, agentFeeValue, extraBedPaymentMethod,
     ...(cancelledEdit ? { pin:approvalPin, refund_amount:retainedRefund } : {})
   };
   button.disabled = true;
@@ -8467,7 +8885,7 @@ async function submitBooking(){
     const savedIndex = BOOKINGS.findIndex(booking => booking.id === savedBooking.id);
     if(savedIndex >= 0) BOOKINGS[savedIndex] = savedBooking;
     else BOOKINGS.push(savedBooking);
-    persistDashboardData();
+    persistDashboardData({ skipCloudSync:true });
     refreshGeneratedShareCalculation();
     if(!editId){
       currentBookingPage = 1;
@@ -8491,7 +8909,7 @@ async function submitBooking(){
       await Promise.all([loadBookingData(currentDashboardAccount), loadFinanceData()]);
       if(!BOOKINGS.some(booking => booking.id === savedBooking.id)){
         BOOKINGS.push(savedBooking);
-        persistDashboardData();
+        persistDashboardData({ skipCloudSync:true });
       }
       renderCalendar();
       renderBookingsTable();
@@ -8510,6 +8928,369 @@ async function submitBooking(){
   } finally {
     button.disabled = false;
   }
+}
+
+/* ============== INVOICE EXTRA BED ============== */
+/* Invoice dibuat dari isi form booking yang sedang dibuka, jadi tidak perlu disimpan dulu. */
+function openInvoiceWhatsApp({ phone, guest, label, property, number, total }){
+  const message = `Halo Bapak/Ibu, terlampir ${label} No. ${number} untuk sewa di ${property.name}. Total: ${fmtRp(total)}. Terima kasih - Your Home.`;
+  window.open(`https://wa.me/${phone}?text=${encodeURIComponent(message)}`, '_blank');
+}
+
+async function generateExtraBedInvoice(mode, sendWhatsApp = false){
+  const statusEl = document.getElementById('bookingFormStatus');
+  const fail = message => { statusEl.className = 'text-sm text-rose-600'; statusEl.textContent = message; };
+  const quantity = Number(document.getElementById('newBookingExtraBedQuantity').value) || 0;
+  const unitPrice = parseCurrencyInput(document.getElementById('newBookingExtraBedPrice').value);
+  const paymentLabel = document.getElementById('newBookingExtraBedPaymentStatus').value;
+  const guest = document.getElementById('newBookingGuest').value.trim();
+  const phone = normalizeWhatsAppPhone(document.getElementById('newBookingPhone').value);
+  const property = PROPERTIES.find(item => item.id === document.getElementById('newBookingProp').value);
+  const checkin = document.getElementById('newBookingCheckin').value;
+  const checkout = document.getElementById('newBookingCheckout').value;
+  if(quantity <= 0 || unitPrice <= 0) return fail('Isi jumlah dan harga per extra bed terlebih dahulu.');
+  if(!guest || !property) return fail('Isi nama tamu dan properti terlebih dahulu.');
+  if(mode === 'lunas' && paymentLabel === 'Belum Bayar') return fail('Untuk invoice pelunasan, pilih metode bayar (Tunai atau Sudah Bayar).');
+  if(sendWhatsApp && !/^\d{8,15}$/.test(phone)) return fail('Isi nomor WhatsApp tamu yang valid untuk mengirim invoice.');
+  if(!window.jspdf?.jsPDF) return fail('Pembuat PDF belum termuat. Periksa koneksi lalu muat ulang halaman.');
+  if(!notaLogoDataUrl) await ensureNotaLogo();
+  const stamp = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+  const total = quantity * unitPrice;
+  const number = `${mode === 'lunas' ? 'INVL' : 'INVT'}-${stamp}-${String(Math.floor(Math.random() * 900) + 100)}`;
+  buildExtraBedInvoicePdf({
+    mode, guest, phone, property, checkin, checkout, quantity, unitPrice,
+    total, paymentLabel, number, sendWhatsApp,
+  });
+  const label = mode === 'lunas' ? 'invoice paid in full extra bed' : 'invoice payment request extra bed';
+  if(sendWhatsApp) openInvoiceWhatsApp({ phone, guest, label, property, number, total });
+  statusEl.className = 'text-sm text-emerald-700';
+  statusEl.textContent = sendWhatsApp
+    ? 'PDF diunduh. Chat WhatsApp tamu dibuka, lampirkan PDF tersebut secara manual.'
+    : (mode === 'lunas' ? 'Invoice paid in full extra bed dibuat.' : 'Invoice payment request extra bed dibuat.');
+}
+
+function buildExtraBedInvoicePdf(data){
+  const isLunas = data.mode === 'lunas';
+  const doc = new window.jspdf.jsPDF({ unit:'pt', format:'a4', orientation:'portrait' });
+  const margin = 42;
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const right = pageWidth - margin;
+  const accent = isLunas ? [63, 90, 58] : [160, 82, 45];
+  let y = margin;
+
+  doc.setFillColor(160, 82, 45);
+  doc.rect(0, 0, pageWidth, 7, 'F');
+
+  let kopBottom = y + 26;
+  let logoDrawn = false;
+  if(notaLogoDataUrl){
+    const box = notaLogoBox(210, 46);
+    try {
+      doc.addImage(notaLogoDataUrl, notaLogoFormat, margin, y, box.width, box.height);
+      logoDrawn = true;
+      kopBottom = y + box.height;
+    } catch(error) {
+      logoDrawn = false;
+    }
+  }
+  if(!logoDrawn){
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(17);
+    doc.setTextColor(62, 39, 35);
+    doc.text('YOUR HOME', margin, y + 4);
+  }
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(15);
+  doc.setTextColor(...accent);
+  doc.text(isLunas ? 'INVOICE PAID IN FULL' : 'INVOICE PAYMENT REQUEST', right, y + 4, { align:'right' });
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(9);
+  doc.setTextColor(120, 110, 102);
+  doc.text('Extra Bed', right, y + 19, { align:'right' });
+  doc.text(`No. ${data.number}`, right, y + 31, { align:'right' });
+
+  const badgeWidth = 92;
+  const badgeY = y + 38;
+  doc.setFillColor(...(isLunas ? [63, 90, 58] : [180, 83, 9]));
+  doc.roundedRect(right - badgeWidth, badgeY, badgeWidth, 18, 9, 9, 'F');
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(8.5);
+  doc.setTextColor(255, 255, 255);
+  doc.text(isLunas ? 'LUNAS' : 'BELUM LUNAS', right - badgeWidth / 2, badgeY + 12.5, { align:'center' });
+
+  y = Math.max(kopBottom, badgeY + 18) + 14;
+  doc.setDrawColor(160, 82, 45);
+  doc.setLineWidth(1.4);
+  doc.line(margin, y, right, y);
+  doc.setLineWidth(0.2);
+  y += 22;
+
+  const metaRows = [
+    ['Nama Tamu', data.guest],
+    ['WhatsApp', data.phone || '-'],
+    ['Properti', `${data.property.name} (${data.property.code})`],
+    ['Check-in', fmtNotaDate(data.checkin)],
+    ['Check-out', fmtNotaDate(data.checkout)],
+    ['Tanggal Invoice', fmtNotaDate(new Date().toISOString().slice(0, 10))],
+    ['Metode Pembayaran', data.paymentLabel],
+  ];
+  const metaTop = y;
+  const metaHeight = metaRows.length * 14 + 16;
+  doc.setFillColor(250, 247, 242);
+  doc.roundedRect(margin, metaTop, right - margin, metaHeight, 6, 6, 'F');
+  doc.setFillColor(...accent);
+  doc.rect(margin + 1.5, metaTop + 6, 3, metaHeight - 12, 'F');
+  y = metaTop + 17;
+  doc.setFontSize(9);
+  metaRows.forEach(([label, value]) => {
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(160, 82, 45);
+    doc.text(label, margin + 14, y);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(45, 38, 32);
+    doc.text(doc.splitTextToSize(String(value), right - (margin + 150))[0], margin + 150, y);
+    y += 14;
+  });
+  y = metaTop + metaHeight + 18;
+
+  doc.setFillColor(...accent);
+  doc.rect(margin, y, right - margin, 20, 'F');
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(8.5);
+  doc.setTextColor(255, 255, 255);
+  doc.text('KETERANGAN', margin + 8, y + 13.5);
+  doc.text('JUMLAH', right - 8, y + 13.5, { align:'right' });
+  y += 20;
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(9.5);
+  doc.setTextColor(45, 38, 32);
+  doc.text(`Sewa extra bed ${data.quantity} unit x ${fmtRp(data.unitPrice)}`, margin + 8, y + 13);
+  doc.text(fmtRp(data.total), right - 8, y + 13, { align:'right' });
+  doc.setDrawColor(228, 222, 214);
+  doc.line(margin, y + 20, right, y + 20);
+  y += 20;
+
+  y += 18;
+  doc.setFillColor(...accent);
+  doc.roundedRect(right - 220, y - 12, 220, 24, 6, 6, 'F');
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(10.5);
+  doc.setTextColor(255, 255, 255);
+  doc.text(isLunas ? 'TOTAL PAID' : 'TOTAL PAYMENT', right - 208, y + 4);
+  doc.text(fmtRp(data.total), right - 16, y + 4, { align:'right' });
+  y += 34;
+
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(9);
+  doc.setTextColor(160, 82, 45);
+  const terbilang = doc.splitTextToSize(`Terbilang: ${notaTerbilang(data.total)}`, right - margin);
+  doc.text(terbilang, margin, y);
+  y += terbilang.length * 12 + 10;
+  doc.setTextColor(120, 112, 104);
+  const statement = doc.splitTextToSize(isLunas
+    ? 'Terima kasih. Pembayaran extra bed telah kami terima dan dinyatakan lunas.'
+    : 'Mohon pembayaran extra bed dilakukan saat check-in/check-out sesuai kesepakatan. Pembayaran dapat dilakukan tunai atau transfer.', right - margin);
+  doc.text(statement, margin, y);
+
+  const footerY = doc.internal.pageSize.getHeight() - 44;
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(9.5);
+  doc.setTextColor(62, 39, 35);
+  doc.text('Questions?', margin, footerY);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(120, 112, 104);
+  doc.text(`whatsapp or call us at ${notaContactPhone}`, margin, footerY + 13);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(198, 88, 26);
+  doc.text('THANK YOU!', right, footerY, { align:'right' });
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(160, 82, 45);
+  doc.text('www.yourhome.id', right, footerY + 13, { align:'right' });
+
+  const guestSlug = data.guest.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'tamu';
+  pdfSave(doc, `${isLunas ? 'invoice-paid-in-full' : 'invoice-payment-request'}-extrabed-${guestSlug}-${data.number.toLowerCase()}.pdf`);
+  if(data.sendWhatsApp) showToast('PDF diunduh. Lampirkan di chat WhatsApp tamu.');
+}
+
+/* ============== INVOICE BOOKING DIRECT ============== */
+/* Tombol invoice booking hanya muncul untuk platform Direct. Dibuat dari isi form, tanpa perlu disimpan dulu. */
+const BOOKING_INVOICE_KINDS = {
+  penagihan:{ title:'INVOICE PAYMENT REQUEST', badge:'BELUM LUNAS', badgeColor:[180, 83, 9], accent:[160, 82, 45], totalLabel:'TOTAL PAYMENT', prefix:'INVT', note:'Mohon pelunasan dilakukan saat check-in sesuai kesepakatan. Pembayaran dapat dilakukan tunai atau transfer.' },
+  pelunasan:{ title:'INVOICE PAID IN FULL', badge:'LUNAS', badgeColor:[63, 90, 58], accent:[63, 90, 58], totalLabel:'TOTAL PAID', prefix:'INVL', note:'Terima kasih. Pembayaran sewa telah kami terima dan dinyatakan lunas.' },
+};
+
+function updateBookingDirectInvoiceVisibility(){
+  const isDirect = document.getElementById('newBookingPlatform').value === 'Direct';
+  document.getElementById('bookingDirectInvoiceField').classList.toggle('hidden', !isDirect);
+}
+
+async function generateBookingInvoice(kind, sendWhatsApp = false){
+  const statusEl = document.getElementById('bookingFormStatus');
+  const fail = message => { statusEl.className = 'text-sm text-rose-600'; statusEl.textContent = message; };
+  const config = BOOKING_INVOICE_KINDS[kind];
+  if(!config) return;
+  if(document.getElementById('newBookingPlatform').value !== 'Direct') return fail('Invoice booking hanya tersedia untuk platform Direct.');
+  const guest = document.getElementById('newBookingGuest').value.trim();
+  const phone = normalizeWhatsAppPhone(document.getElementById('newBookingPhone').value);
+  const property = PROPERTIES.find(item => item.id === document.getElementById('newBookingProp').value);
+  const checkin = document.getElementById('newBookingCheckin').value;
+  const checkout = document.getElementById('newBookingCheckout').value;
+  const amount = parseCurrencyInput(document.getElementById('newBookingAmount').value);
+  if(!guest || !property || checkout <= checkin || amount <= 0) return fail('Isi nama tamu, properti, tanggal, dan nilai booking terlebih dahulu.');
+  if(sendWhatsApp && !/^\d{8,15}$/.test(phone)) return fail('Isi nomor WhatsApp tamu yang valid untuk mengirim invoice.');
+  if(!window.jspdf?.jsPDF) return fail('Pembuat PDF belum termuat. Periksa koneksi lalu muat ulang halaman.');
+  if(!notaLogoDataUrl) await ensureNotaLogo();
+  const stamp = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+  const nights = Math.round((new Date(`${checkout}T00:00:00Z`) - new Date(`${checkin}T00:00:00Z`)) / 86400000);
+  const number = `${config.prefix}-${stamp}-${String(Math.floor(Math.random() * 900) + 100)}`;
+  buildBookingInvoicePdf({
+    kind, config, guest, phone, property, checkin, checkout, nights, amount, number, sendWhatsApp,
+  });
+  if(sendWhatsApp) openInvoiceWhatsApp({ phone, guest, label: `${config.title.toLowerCase()} booking`, property, number, total: amount });
+  statusEl.className = 'text-sm text-emerald-700';
+  statusEl.textContent = sendWhatsApp
+    ? 'PDF diunduh. Chat WhatsApp tamu dibuka, lampirkan PDF tersebut secara manual.'
+    : `${config.title.charAt(0)}${config.title.slice(1).toLowerCase()} booking dibuat.`;
+}
+
+function buildBookingInvoicePdf(data){
+  const { config } = data;
+  const isLunas = data.kind === 'pelunasan';
+  const doc = new window.jspdf.jsPDF({ unit:'pt', format:'a4', orientation:'portrait' });
+  const margin = 42;
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const right = pageWidth - margin;
+  const accent = config.accent;
+  let y = margin;
+
+  doc.setFillColor(160, 82, 45);
+  doc.rect(0, 0, pageWidth, 7, 'F');
+
+  let kopBottom = y + 26;
+  let logoDrawn = false;
+  if(notaLogoDataUrl){
+    const box = notaLogoBox(210, 46);
+    try {
+      doc.addImage(notaLogoDataUrl, notaLogoFormat, margin, y, box.width, box.height);
+      logoDrawn = true;
+      kopBottom = y + box.height;
+    } catch(error) {
+      logoDrawn = false;
+    }
+  }
+  if(!logoDrawn){
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(17);
+    doc.setTextColor(62, 39, 35);
+    doc.text('YOUR HOME', margin, y + 4);
+  }
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(15);
+  doc.setTextColor(...accent);
+  doc.text(config.title, right, y + 4, { align:'right' });
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(9);
+  doc.setTextColor(120, 110, 102);
+  doc.text('Sewa Properti', right, y + 19, { align:'right' });
+  doc.text(`No. ${data.number}`, right, y + 31, { align:'right' });
+
+  const badgeWidth = 92;
+  const badgeY = y + 38;
+  doc.setFillColor(...config.badgeColor);
+  doc.roundedRect(right - badgeWidth, badgeY, badgeWidth, 18, 9, 9, 'F');
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(8.5);
+  doc.setTextColor(255, 255, 255);
+  doc.text(config.badge, right - badgeWidth / 2, badgeY + 12.5, { align:'center' });
+
+  y = Math.max(kopBottom, badgeY + 18) + 14;
+  doc.setDrawColor(160, 82, 45);
+  doc.setLineWidth(1.4);
+  doc.line(margin, y, right, y);
+  doc.setLineWidth(0.2);
+  y += 22;
+
+  const metaRows = [
+    ['Nama Tamu', data.guest],
+    ['WhatsApp', data.phone || '-'],
+    ['Properti', `${data.property.name} (${data.property.code})`],
+    ['Check-in', fmtNotaDate(data.checkin)],
+    ['Check-out', fmtNotaDate(data.checkout)],
+    ['Durasi', `${data.nights} malam`],
+    ['Tanggal Invoice', fmtNotaDate(new Date().toISOString().slice(0, 10))],
+  ];
+  const metaTop = y;
+  const metaHeight = metaRows.length * 14 + 16;
+  doc.setFillColor(250, 247, 242);
+  doc.roundedRect(margin, metaTop, right - margin, metaHeight, 6, 6, 'F');
+  doc.setFillColor(...accent);
+  doc.rect(margin + 1.5, metaTop + 6, 3, metaHeight - 12, 'F');
+  y = metaTop + 17;
+  doc.setFontSize(9);
+  metaRows.forEach(([label, value]) => {
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(160, 82, 45);
+    doc.text(label, margin + 14, y);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(45, 38, 32);
+    doc.text(doc.splitTextToSize(String(value), right - (margin + 150))[0], margin + 150, y);
+    y += 14;
+  });
+  y = metaTop + metaHeight + 18;
+
+  doc.setFillColor(...accent);
+  doc.rect(margin, y, right - margin, 20, 'F');
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(8.5);
+  doc.setTextColor(255, 255, 255);
+  doc.text('KETERANGAN', margin + 8, y + 13.5);
+  doc.text('JUMLAH', right - 8, y + 13.5, { align:'right' });
+  y += 20;
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(9.5);
+  doc.setTextColor(45, 38, 32);
+  doc.text(`Sewa ${data.property.name} · ${data.nights} malam`, margin + 8, y + 13);
+  doc.text(fmtRp(data.amount), right - 8, y + 13, { align:'right' });
+  doc.setDrawColor(228, 222, 214);
+  doc.line(margin, y + 20, right, y + 20);
+  y += 38;
+
+  doc.setFillColor(...accent);
+  doc.roundedRect(right - 220, y - 12, 220, 24, 6, 6, 'F');
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(10.5);
+  doc.setTextColor(255, 255, 255);
+  doc.text(config.totalLabel, right - 208, y + 4);
+  doc.text(fmtRp(data.amount), right - 16, y + 4, { align:'right' });
+  y += 34;
+
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(9);
+  doc.setTextColor(160, 82, 45);
+  const terbilang = doc.splitTextToSize(`Terbilang: ${notaTerbilang(data.amount)}`, right - margin);
+  doc.text(terbilang, margin, y);
+  y += terbilang.length * 12 + 10;
+  doc.setTextColor(120, 112, 104);
+  doc.text(doc.splitTextToSize(config.note, right - margin), margin, y);
+
+  const footerY = doc.internal.pageSize.getHeight() - 44;
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(9.5);
+  doc.setTextColor(62, 39, 35);
+  doc.text('Questions?', margin, footerY);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(120, 112, 104);
+  doc.text(`whatsapp or call us at ${notaContactPhone}`, margin, footerY + 13);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(198, 88, 26);
+  doc.text('THANK YOU!', right, footerY, { align:'right' });
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(160, 82, 45);
+  doc.text('www.yourhome.id', right, footerY + 13, { align:'right' });
+
+  const guestSlug = data.guest.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'tamu';
+  pdfSave(doc, `invoice-${data.kind === 'penagihan' ? 'payment-request' : 'paid-in-full'}-booking-${guestSlug}-${data.number.toLowerCase()}.pdf`);
+  if(data.sendWhatsApp) showToast('PDF diunduh. Lampirkan di chat WhatsApp tamu.');
 }
 
 /* ============== IMPORT BANYAK BOOKING ============== */
@@ -9048,6 +9829,24 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('agentForm').addEventListener('submit', submitAgentForm);
   document.getElementById('agentTableBody').addEventListener('click', handleAgentTableAction);
   document.getElementById('deleteAgentForm').addEventListener('submit', submitAgentDelete);
+  document.getElementById('newBookingPlatform').addEventListener('change', updateBookingDirectInvoiceVisibility);
+  document.getElementById('newBookingProp').addEventListener('change', () => {
+    const setting = extraBedPropertySettings[document.getElementById('newBookingProp').value];
+    const priceInput = document.getElementById('newBookingExtraBedPrice');
+    if(setting?.price) setCurrencyInputValue(priceInput, setting.price);
+    updateBookingExtraBedStockHint();
+  });
+  ['newBookingCheckin', 'newBookingCheckout', 'newBookingExtraBedQuantity'].forEach(id => {
+    document.getElementById(id).addEventListener('input', updateBookingExtraBedStockHint);
+    document.getElementById(id).addEventListener('change', updateBookingExtraBedStockHint);
+  });
+  document.getElementById('supExtraBedForm').addEventListener('submit', submitExtraBedSupplier);
+  document.getElementById('supListForm').addEventListener('submit', submitExtraBedSupplierList);
+  document.getElementById('supExtraBedName').addEventListener('change', () => {
+    const name = document.getElementById('supExtraBedName').value;
+    const supplier = extraBedSupplierList.find(item => item.name === name);
+    if(supplier) setCurrencyInputValue(document.getElementById('supExtraBedSupplierPrice'), supplier.price_per_day || 0);
+  });
   document.getElementById('newExpCat').addEventListener('change', updateExpensePayeeField);
   document.getElementById('newExpProof').addEventListener('change', handleExpenseProofSelection);
   document.getElementById('newBookingExtraBedQuantity').addEventListener('input', updateBookingExtraBedTotal);
@@ -9147,8 +9946,10 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   initializeDashboardAuth();
-  setInterval(async () => {
+  let lastDataRefresh = Date.now();
+  async function refreshDashboardData(){
     if(!currentDashboardAccount || document.hidden) return;
+    lastDataRefresh = Date.now();
     try {
       // Akun yang dinonaktifkan Master langsung kehilangan sesi pada pemeriksaan berikutnya.
       await dashboardApi('/dashboard/profile');
@@ -9164,9 +9965,19 @@ document.addEventListener('DOMContentLoaded', () => {
     } catch(error) {
       console.warn('Refresh data dashboard otomatis gagal.', error);
     }
-  }, 60000);
+  }
+  // Refresh tiap 5 menit, plus saat tab dibuka lagi setelah lebih dari 2 menit, untuk menghemat baca D1.
+  setInterval(refreshDashboardData, 300000);
+  document.addEventListener('visibilitychange', () => {
+    if(!document.hidden && Date.now() - lastDataRefresh > 120000) refreshDashboardData();
+  });
+  // Chat dicek tiap 15 detik hanya saat widget terbuka; saat tertutup cukup tiap 2 menit untuk indikator belum dibaca.
+  let lastChatPoll = 0;
   setInterval(() => {
-    if(currentDashboardAccount && !document.hidden) loadStaffChat();
+    if(!currentDashboardAccount || document.hidden) return;
+    if(!isStaffChatOpen() && Date.now() - lastChatPoll < 120000) return;
+    lastChatPoll = Date.now();
+    loadStaffChat();
   }, 15000);
 });
 

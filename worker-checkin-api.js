@@ -241,11 +241,15 @@ async function buildDashboardCatalogStatements(env, properties, now) {
       const publicationStatus = archived
         ? 'archived'
         : requestedStatus || (row.publication_status === 'archived' ? 'draft' : row.publication_status || 'draft');
+      const activeValue = publicationStatus === 'archived' ? 0 : 1;
+      // Hanya tulis kalau ada kolom yang berubah, supaya sinkron rutin tidak menghabiskan kuota tulis D1.
       statements.push(env.DB.prepare(`
         UPDATE properties
         SET dashboard_id = ?, property_code = ?, name = ?, category = ?, active = ?, publication_status = ?, updated_at = ?
-        WHERE id = ?
-      `).bind(dashboardId, code, name, category, publicationStatus === 'archived' ? 0 : 1, publicationStatus, now, row.id));
+        WHERE id = ? AND (dashboard_id IS NOT ? OR property_code IS NOT ? OR name IS NOT ? OR
+          category IS NOT ? OR active IS NOT ? OR publication_status IS NOT ?)
+      `).bind(dashboardId, code, name, category, activeValue, publicationStatus, now, row.id,
+        dashboardId, code, name, category, activeValue, publicationStatus));
       continue;
     }
     if (exactNameMatches.length > 1) {
@@ -655,6 +659,37 @@ async function getOwnerTokenPayload(request, secret) {
 
 // Dipakai bersama oleh POST dan PATCH booking: validasi agen (opsional) dan hitung fee-nya.
 // Melempar Error dengan pesan siap pakai untuk bad() kalau datanya tidak valid.
+async function checkExtraBedStock(env, { propertyId, propertyName, checkin, checkout, quantity, excludeId = '' }) {
+  const settingsResult = await env.DB.prepare(`SELECT property_id, stock FROM extra_bed_property_settings`).all();
+  const settings = settingsResult.results || [];
+  if (!settings.length) return null;
+  // Pemakaian per properti pada rentang tanggal ini (tidak termasuk booking yang sedang diedit).
+  const usageResult = await env.DB.prepare(`
+    SELECT property_id, COALESCE(SUM(extra_bed_quantity), 0) AS used FROM dashboard_bookings
+    WHERE id <> ? AND LOWER(status) NOT IN ('cancelled', 'canceled') AND extra_bed_quantity > 0
+      AND checkin < ? AND checkout > ?
+    GROUP BY property_id
+  `).bind(excludeId, checkout, checkin).all();
+  const usedByProperty = new Map((usageResult.results || []).map(row => [row.property_id, Number(row.used) || 0]));
+  const usedBefore = [...usedByProperty.values()].reduce((sum, qty) => sum + qty, 0);
+  usedByProperty.set(propertyId, (usedByProperty.get(propertyId) || 0) + quantity);
+
+  // Stok sendiri per properti dipakai dulu; kelebihannya diambil dari sisa pinjaman suplier.
+  const ownedStockOf = id => Number(settings.find(row => row.property_id === id)?.stock) || 0;
+  const loanRow = await env.DB.prepare(`SELECT COALESCE(SUM(quantity - returned), 0) AS outstanding FROM extra_bed_suppliers`).first();
+  const loanOutstanding = Number(loanRow?.outstanding || 0);
+  const ownedTotal = settings.reduce((sum, row) => sum + (Number(row.stock) || 0), 0);
+  let overflow = 0;
+  for (const [id, qty] of usedByProperty) {
+    overflow += Math.max(0, qty - ownedStockOf(id));
+  }
+  if (overflow > loanOutstanding) {
+    const available = Math.max(0, ownedTotal + loanOutstanding - usedBefore);
+    return `Stok extra bed ${propertyName || propertyId} tidak cukup pada tanggal tersebut. Tersedia ${available} unit (stok sendiri ${ownedTotal} + sisa pinjaman suplier ${loanOutstanding}, dipakai ${usedBefore}).`;
+  }
+  return null;
+}
+
 async function resolveBookingAgentFee(env, body, amount) {
   const agentId = String(body.agentId || '').trim();
   if (!agentId) return { agentId: '', agentName: '', feeType: '', feeValue: 0, feeAmount: 0 };
@@ -706,6 +741,13 @@ async function getAgentTokenPayload(request, secret) {
   } catch {
     return null;
   }
+}
+
+// Gaji pokok per hari crew (Rp). null = tidak dikirim, NaN = tidak valid.
+function parseDailySalary(value) {
+  if (value === undefined || value === null || value === '') return null;
+  const amount = Math.round(Number(value));
+  return Number.isSafeInteger(amount) && amount >= 0 && amount <= 10000000 ? amount : NaN;
 }
 
 export default {
@@ -1033,6 +1075,8 @@ export default {
       }
 
       if (request.method === 'GET' && path === '/properties') {
+        // Booking yang sudah lewat tidak dibutuhkan untuk ketersediaan; tanggal hari ini mengikuti zona Jakarta.
+        const availabilityFrom = new Date().toLocaleDateString('en-CA', { timeZone:'Asia/Jakarta' });
         const [result, bookingResult] = await Promise.all([
           env.DB.prepare(`
             SELECT id, name, category, location, price, weekday_price, weekend_price,
@@ -1046,8 +1090,8 @@ export default {
           env.DB.prepare(`
             SELECT property_id, property_name, checkin, checkout
             FROM dashboard_bookings
-            WHERE LOWER(TRIM(status)) NOT IN ('cancelled', 'canceled')
-          `).all(),
+            WHERE LOWER(TRIM(status)) NOT IN ('cancelled', 'canceled') AND checkout >= ?
+          `).bind(availabilityFrom).all(),
         ]);
         const bookings = bookingResult.results || [];
         const data = (result.results || []).map(row => {
@@ -1367,8 +1411,11 @@ export default {
 
         const crew = String(body.crew || '').trim();
         if (crew !== crewSession.crew) return bad('Sesi crew tidak sesuai dengan check-in.', 403);
-        const unit = String(body.unit || '').trim();
-        const jobType = String(body.job_type || body.jobType || '').trim();
+        // Check-in lokasi: GPS + selfie saja (tanpa properti dan foto hasil kerja).
+        // unit dikosongkan supaya tidak ikut dihitung sebagai honor properti.
+        const arrivalOnly = body.arrival === true;
+        const unit = arrivalOnly ? '' : String(body.unit || '').trim();
+        const jobType = arrivalOnly ? 'Check-in Lokasi' : String(body.job_type || body.jobType || '').trim();
         const lat = body.lat;
         const lng = body.lng;
         const accuracy = body.accuracy;
@@ -1387,7 +1434,7 @@ export default {
         const workDate = String(body.work_date || body.workDate || '').trim();
         const clientCreatedAt = body.created_at || body.createdAt;
 
-        if (!crew || !unit || !jobType) {
+        if (!crew || (!arrivalOnly && !unit) || !jobType) {
           return bad('crew, unit, job_type wajib');
         }
 
@@ -1399,16 +1446,18 @@ export default {
           return bad('Tanggal kerja tidak valid.');
         }
 
-        if (lat == null || lng == null) {
-          return bad('GPS wajib');
+        // GPS dan selfie wajib hanya untuk check-in lokasi; laporan pekerjaan boleh tanpa keduanya.
+        const hasGps = lat != null && lng != null && lat !== '';
+        if (arrivalOnly && (!hasGps || !selfie)) {
+          return bad(!hasGps ? 'GPS wajib' : 'selfie wajib');
         }
 
-        const numericLat = Number(lat);
-        const numericLng = Number(lng);
-        const numericAccuracy = accuracy == null || accuracy === '' ? null : Number(accuracy);
+        const numericLat = hasGps ? Number(lat) : 0;
+        const numericLng = hasGps ? Number(lng) : 0;
+        const numericAccuracy = hasGps && accuracy != null && accuracy !== '' ? Number(accuracy) : null;
 
-        if (!Number.isFinite(numericLat) || !Number.isFinite(numericLng) ||
-            numericLat < -90 || numericLat > 90 || numericLng < -180 || numericLng > 180) {
+        if (hasGps && (!Number.isFinite(numericLat) || !Number.isFinite(numericLng) ||
+            numericLat < -90 || numericLat > 90 || numericLng < -180 || numericLng > 180)) {
           return bad('Koordinat GPS tidak valid');
         }
 
@@ -1416,11 +1465,7 @@ export default {
           return bad('Akurasi GPS tidak valid');
         }
 
-        if (!selfie) {
-          return bad('selfie wajib');
-        }
-
-        if (!Array.isArray(workPhotos) || workPhotos.length === 0) {
+        if (!arrivalOnly && (!Array.isArray(workPhotos) || workPhotos.length === 0)) {
           return bad('minimal 1 foto hasil kerja');
         }
 
@@ -1435,25 +1480,28 @@ export default {
         const base = `${slug(crew)}/${today}/${id}`;
         const origin = url.origin;
 
-        // Upload selfie
-        const selfieParsed = parseDataUrl(selfie);
-        const selfieKey = `${base}/selfie.jpg`;
+        // Upload selfie (opsional untuk laporan pekerjaan)
+        let selfieUrl = '';
+        if (selfie) {
+          const selfieParsed = parseDataUrl(selfie);
+          const selfieKey = `${base}/selfie.jpg`;
 
-        await env.PHOTOS.put(
-          selfieKey,
-          selfieParsed.bytes,
-          {
-            httpMetadata: {
-              contentType:
-                selfieParsed.contentType || 'image/jpeg',
-            },
-          }
-        );
+          await env.PHOTOS.put(
+            selfieKey,
+            selfieParsed.bytes,
+            {
+              httpMetadata: {
+                contentType:
+                  selfieParsed.contentType || 'image/jpeg',
+              },
+            }
+          );
 
-        const selfieUrl = publicFileUrl(
-          origin,
-          selfieKey
-        );
+          selfieUrl = publicFileUrl(
+            origin,
+            selfieKey
+          );
+        }
 
         // Upload foto kerja
         const workPhotoUrls = [];
@@ -2370,6 +2418,94 @@ export default {
         }
       }
 
+      // Crew: daftar jenis pengeluaran yang sama dengan Dashboard (finance_categories kind='expense').
+      if (request.method === 'GET' && path === '/checkin/expense-categories') {
+        const adminSecret = String(env.ADMIN_DASHBOARD_SECRET || '').trim();
+        const crewSession = await getCrewTokenPayload(request, adminSecret);
+        if (!crewSession) return bad('Login crew diperlukan.', 401);
+        const result = await env.DB.prepare(`
+          SELECT id, name FROM finance_categories WHERE kind = 'expense' AND active = 1 ORDER BY name COLLATE NOCASE
+        `).all();
+        return json({ ok:true, data:result.results || [] });
+      }
+
+      // Crew: pengeluaran lapangan (rembuse) -- masuk finance_entries sebagai pengeluaran, maks 10 struk per hari.
+      if (path === '/checkin/expenses') {
+        const adminSecret = String(env.ADMIN_DASHBOARD_SECRET || '').trim();
+        const crewSession = await getCrewTokenPayload(request, adminSecret);
+        if (!crewSession) return bad('Login crew diperlukan.', 401);
+        const createdBy = `crew:${crewSession.crew}`;
+
+        if (request.method === 'GET') {
+          const date = String(url.searchParams.get('date') || '').trim();
+          if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return bad('Tanggal tidak valid.');
+          const result = await env.DB.prepare(`
+            SELECT id, category_name, property_name, amount, description, proof_url
+            FROM finance_entries WHERE created_by = ? AND entry_date = ? ORDER BY created_at DESC
+          `).bind(createdBy, date).all();
+          return json({ ok:true, data:result.results || [] });
+        }
+
+        if (request.method !== 'POST') return bad('Metode pengeluaran tidak didukung.', 405);
+        const body = await request.json();
+        const categoryId = String(body.category_id || '').trim();
+        const propertyName = String(body.property || '').trim();
+        const amount = Number(body.amount);
+        const entryDate = String(body.entry_date || '').trim();
+        const description = String(body.description || '').trim();
+        const receipt = String(body.receipt || '');
+        if (!propertyName || propertyName.length > 180 || !Number.isSafeInteger(amount) || amount <= 0 ||
+            !/^\d{4}-\d{2}-\d{2}$/.test(entryDate) || description.length > 160) {
+          return bad('Properti, jumlah, dan tanggal pengeluaran wajib valid.');
+        }
+        if (!receipt.startsWith('data:image/')) return bad('Foto struk wajib dilampirkan.');
+        const category = await env.DB.prepare(`
+          SELECT id, name FROM finance_categories WHERE id = ? AND kind = 'expense' AND active = 1
+        `).bind(categoryId).first();
+        if (!category) return bad('Jenis pengeluaran tidak valid.');
+        const countRow = await env.DB.prepare(`
+          SELECT COUNT(*) AS count FROM finance_entries WHERE created_by = ? AND entry_date = ?
+        `).bind(createdBy, entryDate).first();
+        if (Number(countRow?.count || 0) >= 10) return bad('Batas 10 struk per hari sudah tercapai.', 409);
+        let parsedReceipt;
+        try { parsedReceipt = parseDataUrl(receipt); }
+        catch { return bad('Foto struk tidak valid.'); }
+        if (!String(parsedReceipt.contentType || '').startsWith('image/')) return bad('Foto struk harus berupa gambar.');
+        if (parsedReceipt.bytes.byteLength >= 100 * 1024) return bad('Foto struk wajib di bawah 100 KB.');
+
+        const id = crypto.randomUUID();
+        const receiptKey = `finance/crew-expense/${id}.jpg`;
+        await env.PHOTOS.put(receiptKey, parsedReceipt.bytes, {
+          httpMetadata:{ contentType:parsedReceipt.contentType || 'image/jpeg' },
+        });
+        const proofUrl = publicFileUrl(url.origin, receiptKey);
+        const propertyRow = await env.DB.prepare('SELECT id FROM properties WHERE name = ? COLLATE NOCASE LIMIT 1')
+          .bind(propertyName).first();
+        const createdAt = new Date().toISOString();
+        await env.DB.prepare(`
+          INSERT INTO finance_entries (
+            id, kind, category_id, category_name, property_id, property_name,
+            entry_date, amount, description, payee, recurrence, created_by, created_at, proof_url
+          ) VALUES (?, 'expense', ?, ?, ?, ?, ?, ?, ?, ?, 'once', ?, ?, ?)
+        `).bind(id, category.id, category.name, propertyRow?.id || null, propertyName,
+          entryDate, amount, description, crewSession.crew, createdBy, createdAt, proofUrl).run();
+        return json({ ok:true, data:{ id, proof_url:proofUrl } }, 201);
+      }
+
+      // Admin: daftar pengeluaran lapangan crew per tanggal (dipakai di Dashboard Check In Crew).
+      if (request.method === 'GET' && path === '/dashboard/crew-expenses') {
+        const adminSecret = String(env.ADMIN_DASHBOARD_SECRET || '').trim();
+        const tokenData = await getAdminTokenPayload(request, adminSecret);
+        if (!hasDashboardRole(tokenData)) return bad('Login dashboard diperlukan.', 401);
+        const date = String(url.searchParams.get('date') || '').trim();
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return bad('Tanggal tidak valid.');
+        const result = await env.DB.prepare(`
+          SELECT id, payee, category_name, property_name, amount, description, proof_url, entry_date
+          FROM finance_entries WHERE created_by LIKE 'crew:%' AND entry_date = ? ORDER BY created_at DESC
+        `).bind(date).all();
+        return json({ ok:true, data:result.results || [] });
+      }
+
       // Crew: lapor barang baru yang ditemukan di lapangan (belum ada di daftar resmi).
       // Masuk sebagai review_status='pending' sampai Admin/Operasional menyetujui dari Dashboard.
       if (request.method === 'POST' && path === '/checkin/inventory-items') {
@@ -2527,7 +2663,7 @@ export default {
         if (request.method === 'GET') {
           let result;
           try {
-            result = await env.DB.prepare('SELECT id, crew_code, name, active FROM crews ORDER BY active DESC, name COLLATE NOCASE ASC').all();
+            result = await env.DB.prepare('SELECT id, crew_code, name, active, daily_salary, fuel_allowance FROM crews ORDER BY active DESC, name COLLATE NOCASE ASC').all();
           } catch (error) {
             if (/no such column: crew_code/i.test(String(error?.message || error))) return bad('ID Crew belum tersedia. Jalankan migration-crew-id.sql di D1.', 503);
             throw error;
@@ -2553,17 +2689,20 @@ export default {
           ]);
           if (existingCode && existingCode.id !== existingName?.id) return bad('ID Crew tersebut sudah digunakan.', 409);
           if (existingName?.active) return bad('Nama crew tersebut sudah terdaftar.', 409);
+          const postedDailySalary = parseDailySalary(body.daily_salary);
+          if (Number.isNaN(postedDailySalary)) return bad('Gaji pokok per hari tidak valid.');
+          const dailySalary = postedDailySalary ?? 100000;
           const pinHash = await sha256Hex(pin);
           if (existingName) {
             const restoredCrewCode = crewCode || existingName.crew_code;
-            await env.DB.prepare('UPDATE crews SET crew_code = ?, name = ?, pin_hash = ?, active = 1 WHERE id = ?')
-              .bind(restoredCrewCode, name, pinHash, existingName.id).run();
+            await env.DB.prepare('UPDATE crews SET crew_code = ?, name = ?, pin_hash = ?, active = 1, daily_salary = ? WHERE id = ?')
+              .bind(restoredCrewCode, name, pinHash, dailySalary, existingName.id).run();
             return json({ ok:true, data:{ id:existingName.id, crew_code:restoredCrewCode, name, active:1 } });
           }
           const id = crypto.randomUUID();
           const generatedCrewCode = crewCode || `CR-${id.replace(/-/g, '').slice(0, 8).toUpperCase()}`;
-          await env.DB.prepare('INSERT INTO crews (id, crew_code, name, pin_hash, active) VALUES (?, ?, ?, ?, 1)')
-            .bind(id, generatedCrewCode, name, pinHash).run();
+          await env.DB.prepare('INSERT INTO crews (id, crew_code, name, pin_hash, active, daily_salary) VALUES (?, ?, ?, ?, 1, ?)')
+            .bind(id, generatedCrewCode, name, pinHash, dailySalary).run();
           return json({ ok:true, data:{ id, crew_code:generatedCrewCode, name, active:1 } }, 201);
         }
       }
@@ -2577,7 +2716,7 @@ export default {
           return bad('Hanya Master atau Admin yang dapat mengelola karyawan.', 403);
         }
         const id = decodeURIComponent(dashboardCrewMatch[1]);
-        const crew = await env.DB.prepare('SELECT id, crew_code, name, active FROM crews WHERE id = ?').bind(id).first();
+        const crew = await env.DB.prepare('SELECT id, crew_code, name, active, daily_salary, fuel_allowance FROM crews WHERE id = ?').bind(id).first();
         if (!crew) return bad('Karyawan tidak ditemukan.', 404);
 
         if (request.method === 'DELETE') {
@@ -2608,11 +2747,17 @@ export default {
         const duplicateCode = await env.DB.prepare('SELECT id FROM crews WHERE crew_code = ? COLLATE NOCASE AND id <> ? LIMIT 1')
           .bind(crewCode, id).first();
         if (duplicateCode) return bad('ID Crew tersebut sudah digunakan.', 409);
+        const postedDailySalary = parseDailySalary(body.daily_salary);
+        if (Number.isNaN(postedDailySalary)) return bad('Gaji pokok per hari tidak valid.');
+        const dailySalary = postedDailySalary ?? Number(crew.daily_salary ?? 100000);
+        const postedFuel = parseDailySalary(body.fuel_allowance);
+        if (Number.isNaN(postedFuel)) return bad('Uang bensin tidak valid.');
+        const fuelAllowance = postedFuel ?? Number(crew.fuel_allowance ?? 0);
         if (pin) {
-          await env.DB.prepare('UPDATE crews SET crew_code = ?, name = ?, pin_hash = ? WHERE id = ?')
-            .bind(crewCode, name, await sha256Hex(pin), id).run();
+          await env.DB.prepare('UPDATE crews SET crew_code = ?, name = ?, pin_hash = ?, daily_salary = ?, fuel_allowance = ? WHERE id = ?')
+            .bind(crewCode, name, await sha256Hex(pin), dailySalary, fuelAllowance, id).run();
         } else {
-          await env.DB.prepare('UPDATE crews SET crew_code = ?, name = ? WHERE id = ?').bind(crewCode, name, id).run();
+          await env.DB.prepare('UPDATE crews SET crew_code = ?, name = ?, daily_salary = ?, fuel_allowance = ? WHERE id = ?').bind(crewCode, name, dailySalary, fuelAllowance, id).run();
         }
         return json({ ok:true, data:{ id, crew_code:crewCode, name, active:Number(crew.active) } });
       }
@@ -2935,8 +3080,12 @@ export default {
             if (catalogStatements.length) await env.DB.batch(catalogStatements);
           } else {
             const previous = await env.DB.prepare(`
-              SELECT data_json FROM dashboard_management_data WHERE id = 'main'
+              SELECT data_json, updated_by, updated_at FROM dashboard_management_data WHERE id = 'main'
             `).first();
+            // Data tidak berubah: jangan tulis ulang properti dan management data ke D1.
+            if (previous && previous.data_json === dataJson) {
+              return json({ ok:true, data:{ ...data, updated_by:previous.updated_by, updated_at:previous.updated_at } });
+            }
             const renameStatements = [];
             if (previous) {
               let previousData;
@@ -3295,26 +3444,173 @@ export default {
         return json({ ok:true });
       }
 
+      if (path === '/dashboard/extra-bed-suppliers' || path.startsWith('/dashboard/extra-bed-suppliers/')) {
+        const adminSecret = String(env.ADMIN_DASHBOARD_SECRET || '').trim();
+        const tokenData = await getAdminTokenPayload(request, adminSecret);
+        if (!hasDashboardRole(tokenData)) return bad('Login dashboard diperlukan.', 401);
+        const supplierId = path.slice('/dashboard/extra-bed-suppliers/'.length);
+        const mapSupplier = row => {
+          const supplierPrice = Number(row.supplier_price || 0);
+          return {
+            id:row.id, supplier_name:row.supplier_name, quantity:Number(row.quantity),
+            returned:Number(row.returned || 0), outstanding:Number(row.quantity) - Number(row.returned || 0),
+            borrowed_date:row.borrowed_date, note:row.note || '',
+            supplier_price:supplierPrice, supplier_cost_total:supplierPrice * Number(row.quantity),
+            guest_price:Number(row.guest_price || 0),
+          };
+        };
+
+        if (request.method === 'GET' && !supplierId) {
+          const result = await env.DB.prepare(`SELECT * FROM extra_bed_suppliers ORDER BY borrowed_date DESC, created_at DESC`).all();
+          const suppliers = (result.results || []).map(mapSupplier);
+          const outstanding = suppliers.reduce((sum, item) => sum + Math.max(0, item.outstanding), 0);
+          const costTotal = suppliers.reduce((sum, item) => sum + item.supplier_cost_total, 0);
+          const revenueRow = await env.DB.prepare(`
+            SELECT COALESCE(SUM(extra_bed_quantity * extra_bed_price), 0) AS revenue FROM dashboard_bookings
+            WHERE LOWER(status) NOT IN ('cancelled', 'canceled') AND extra_bed_quantity > 0
+          `).first();
+          const extraBedRevenue = Number(revenueRow?.revenue || 0);
+          return json({ ok:true, data:{ suppliers, outstanding, supplier_cost_total:costTotal, extra_bed_revenue:extraBedRevenue, margin_total:extraBedRevenue - costTotal } });
+        }
+
+        if (!hasManagementRole(tokenData)) return bad('Hanya Master atau Admin yang dapat mengubah data suplier extra bed.', 403);
+
+        if (request.method === 'POST' && !supplierId) {
+          const body = await request.json();
+          const supplierName = String(body.supplier_name || '').trim();
+          const quantity = Number(body.quantity);
+          const borrowedDate = String(body.borrowed_date || '').trim();
+          const note = String(body.note || '').trim().slice(0, 200);
+          const supplierPrice = Number(body.supplier_price || 0);
+          const guestPrice = Math.max(0, Math.round(Number(body.guest_price) || 0));
+          if (supplierName.length < 2 || supplierName.length > 80) return bad('Nama suplier wajib 2-80 karakter.');
+          if (!Number.isSafeInteger(quantity) || quantity < 1 || quantity > 10000) return bad('Jumlah extra bed yang dipinjam harus bilangan bulat minimal 1.');
+          if (!/^\d{4}-\d{2}-\d{2}$/.test(borrowedDate)) return bad('Tanggal pinjam tidak valid.');
+          if (!Number.isSafeInteger(supplierPrice) || supplierPrice < 0 || !Number.isSafeInteger(guestPrice) || guestPrice < 0) return bad('Harga sewa tidak valid.');
+          const id = `sup-${crypto.randomUUID()}`;
+          const now = new Date().toISOString();
+          await env.DB.prepare(`
+            INSERT INTO extra_bed_suppliers (id, supplier_name, quantity, returned, borrowed_date, note, supplier_price, guest_price, created_at)
+            VALUES (?, ?, ?, 0, ?, ?, ?, ?, ?)
+          `).bind(id, supplierName, quantity, borrowedDate, note, supplierPrice, guestPrice, now).run();
+          return json({ ok:true, data:mapSupplier({ id, supplier_name:supplierName, quantity, returned:0, borrowed_date:borrowedDate, note, supplier_price:supplierPrice, guest_price:guestPrice }) });
+        }
+
+        if (request.method === 'PATCH' && supplierId) {
+          const body = await request.json();
+          const existing = await env.DB.prepare(`SELECT * FROM extra_bed_suppliers WHERE id = ?`).bind(supplierId).first();
+          if (!existing) return bad('Data suplier tidak ditemukan.', 404);
+          const returned = body.returned === undefined ? Number(existing.returned || 0) : Number(body.returned);
+          if (!Number.isSafeInteger(returned) || returned < 0 || returned > Number(existing.quantity)) return bad('Jumlah dikembalikan tidak boleh melebihi jumlah pinjam.');
+          const note = body.note === undefined ? existing.note : String(body.note || '').trim().slice(0, 200);
+          await env.DB.prepare(`UPDATE extra_bed_suppliers SET returned = ?, note = ? WHERE id = ?`).bind(returned, note, supplierId).run();
+          return json({ ok:true, data:{ id:supplierId, returned, outstanding:Number(existing.quantity) - returned } });
+        }
+
+        if (request.method === 'DELETE' && supplierId) {
+          const body = await request.json().catch(() => ({}));
+          const pin = String(body.pin || '').trim();
+          if (!/^\d{4}$/.test(pin)) return bad('PIN Master harus tepat 4 digit.');
+          const master = await env.DB.prepare(`
+            SELECT delete_pin_salt, delete_pin_hash FROM dashboard_users
+            WHERE account_id = 'master' AND active = 1
+          `).first();
+          if (!master?.delete_pin_hash) return bad('PIN Master belum diinisialisasi.', 409);
+          const attemptedHash = await hashDashboardPassword(pin, master.delete_pin_salt);
+          if (!constantTimeEqual(attemptedHash, master.delete_pin_hash)) return bad('PIN Master salah.', 403);
+          await env.DB.prepare(`DELETE FROM extra_bed_suppliers WHERE id = ?`).bind(supplierId).run();
+          return json({ ok:true, data:{ id:supplierId } });
+        }
+
+        return bad('Metode suplier extra bed tidak didukung.', 405);
+      }
+
+      if (path === '/dashboard/extra-bed-supplier-list' || path.startsWith('/dashboard/extra-bed-supplier-list/')) {
+        const adminSecret = String(env.ADMIN_DASHBOARD_SECRET || '').trim();
+        const tokenData = await getAdminTokenPayload(request, adminSecret);
+        if (!hasDashboardRole(tokenData)) return bad('Login dashboard diperlukan.', 401);
+        const listId = path.slice('/dashboard/extra-bed-supplier-list/'.length);
+
+        if (request.method === 'GET' && !listId) {
+          const result = await env.DB.prepare(`SELECT * FROM extra_bed_supplier_list WHERE active = 1 ORDER BY name COLLATE NOCASE`).all();
+          return json({ ok:true, data:(result.results || []).map(row => ({ id:row.id, name:row.name, phone:row.phone || '', note:row.note || '', price_per_day:Number(row.price_per_day) || 0 })) });
+        }
+
+        if (!hasManagementRole(tokenData)) return bad('Hanya Master atau Admin yang dapat mengubah daftar suplier.', 403);
+
+        if (request.method === 'POST' && !listId) {
+          const body = await request.json();
+          const name = String(body.name || '').trim();
+          const phone = String(body.phone || '').trim().slice(0, 30);
+          const note = String(body.note || '').trim().slice(0, 200);
+          const pricePerDay = Math.max(0, Math.round(Number(body.price_per_day) || 0));
+          if (name.length < 2 || name.length > 80) return bad('Nama suplier wajib 2-80 karakter.');
+          const duplicate = await env.DB.prepare(`SELECT id FROM extra_bed_supplier_list WHERE active = 1 AND LOWER(name) = LOWER(?)`).bind(name).first();
+          if (duplicate) return bad('Suplier dengan nama tersebut sudah ada.', 409);
+          const id = `supl-${crypto.randomUUID()}`;
+          await env.DB.prepare(`INSERT INTO extra_bed_supplier_list (id, name, phone, note, active, created_at, price_per_day) VALUES (?, ?, ?, ?, 1, ?, ?)`)
+            .bind(id, name, phone, note, new Date().toISOString(), pricePerDay).run();
+          return json({ ok:true, data:{ id, name, phone, note, price_per_day:pricePerDay } });
+        }
+
+        if (request.method === 'PATCH' && listId) {
+          const current = await env.DB.prepare(`SELECT * FROM extra_bed_supplier_list WHERE id = ? AND active = 1`).bind(listId).first();
+          if (!current) return bad('Suplier tidak ditemukan.', 404);
+          const body = await request.json();
+          const name = body.name !== undefined ? String(body.name || '').trim() : current.name;
+          const phone = body.phone !== undefined ? String(body.phone || '').trim().slice(0, 30) : (current.phone || '');
+          const note = body.note !== undefined ? String(body.note || '').trim().slice(0, 200) : (current.note || '');
+          const pricePerDay = body.price_per_day !== undefined ? Math.max(0, Math.round(Number(body.price_per_day) || 0)) : (Number(current.price_per_day) || 0);
+          if (name.length < 2 || name.length > 80) return bad('Nama suplier wajib 2-80 karakter.');
+          const duplicate = await env.DB.prepare(`SELECT id FROM extra_bed_supplier_list WHERE active = 1 AND id != ? AND LOWER(name) = LOWER(?)`).bind(listId, name).first();
+          if (duplicate) return bad('Suplier dengan nama tersebut sudah ada.', 409);
+          await env.DB.prepare(`UPDATE extra_bed_supplier_list SET name = ?, phone = ?, note = ?, price_per_day = ? WHERE id = ?`)
+            .bind(name, phone, note, pricePerDay, listId).run();
+          return json({ ok:true, data:{ id:listId, name, phone, note, price_per_day:pricePerDay } });
+        }
+
+        if (request.method === 'DELETE' && listId) {
+          await env.DB.prepare(`UPDATE extra_bed_supplier_list SET active = 0 WHERE id = ?`).bind(listId).run();
+          return json({ ok:true, data:{ id:listId } });
+        }
+
+        return bad('Metode daftar suplier tidak didukung.', 405);
+      }
+
       if (path === '/dashboard/extra-bed-stock') {
         const adminSecret = String(env.ADMIN_DASHBOARD_SECRET || '').trim();
         const tokenData = await getAdminTokenPayload(request, adminSecret);
         if (!hasDashboardRole(tokenData)) return bad('Login dashboard diperlukan.', 401);
 
         if (request.method === 'GET') {
-          const row = await env.DB.prepare(`SELECT value FROM site_settings WHERE key = 'extra_bed_total_stock'`).first();
-          return json({ ok:true, data:{ total: row ? Number(row.value) : null } });
+          const result = await env.DB.prepare(`SELECT property_id, stock, price FROM extra_bed_property_settings`).all();
+          const rows = result.results || [];
+          const properties = {};
+          rows.forEach(row => { properties[row.property_id] = { stock:Number(row.stock) || 0, price:Number(row.price) || 0 }; });
+          const total = rows.length ? rows.reduce((sum, row) => sum + (Number(row.stock) || 0), 0) : null;
+          return json({ ok:true, data:{ total, properties } });
         }
 
         if (request.method === 'PUT') {
           if (!hasManagementRole(tokenData)) return bad('Hanya Master atau Admin yang dapat mengubah stok extra bed.', 403);
           const body = await request.json();
-          const total = Number(body.total);
-          if (!Number.isSafeInteger(total) || total < 0 || total > 100000) return bad('Jumlah stok extra bed tidak valid.');
-          await env.DB.prepare(`
-            INSERT INTO site_settings (key, value, updated_at) VALUES ('extra_bed_total_stock', ?, ?)
-            ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at
-          `).bind(String(total), new Date().toISOString()).run();
-          return json({ ok:true, data:{ total } });
+          const items = Array.isArray(body.items) ? body.items : [];
+          const now = new Date().toISOString();
+          const statements = [];
+          for (const item of items) {
+            const propertyId = String(item.propertyId || '').trim();
+            const stock = Number(item.stock);
+            const price = Number(item.price);
+            if (!propertyId) return bad('Properti tidak valid.');
+            if (!Number.isSafeInteger(stock) || stock < 0 || stock > 10000) return bad('Jumlah stok extra bed tidak valid.');
+            if (!Number.isSafeInteger(price) || price < 0 || price > 100000000) return bad('Harga extra bed tidak valid.');
+            statements.push(env.DB.prepare(`
+              INSERT INTO extra_bed_property_settings (property_id, stock, price, updated_at) VALUES (?, ?, ?, ?)
+              ON CONFLICT(property_id) DO UPDATE SET stock = excluded.stock, price = excluded.price, updated_at = excluded.updated_at
+            `).bind(propertyId, stock, price, now));
+          }
+          if (statements.length) await env.DB.batch(statements);
+          return json({ ok:true, data:{ saved:statements.length } });
         }
 
         return bad('Metode stok extra bed tidak didukung.', 405);
@@ -3331,6 +3627,7 @@ export default {
           checkout:row.checkout, nights:Number(row.nights), amount:Number(row.amount), grossAmount:Number(row.gross_amount || 0),
           extraBedQuantity:Number(row.extra_bed_quantity || 0), extraBedPrice:Number(row.extra_bed_price || 0),
           extraBedPaymentStatus:row.extra_bed_payment_status === 'pending' ? 'pending' : 'paid',
+          extraBedPaymentMethod:row.extra_bed_payment_method || '',
           cleaningFee:Number(row.cleaning_fee), platformFeePct:Number(row.platform_fee_pct),
           note:row.note, cancellationReason:row.cancellation_reason, refundAmount:Number(row.refund_amount),
           captureImage:row.capture_image || '',
@@ -3361,6 +3658,7 @@ export default {
         const extraBedQuantity = Number(body.extraBedQuantity || 0);
         const extraBedPrice = Number(body.extraBedPrice || 0);
         const extraBedPaymentStatus = extraBedQuantity > 0 && body.extraBedPaymentStatus === 'pending' ? 'pending' : 'paid';
+        const extraBedPaymentMethod = extraBedQuantity > 0 && extraBedPaymentStatus === 'paid' ? String(body.extraBedPaymentMethod || '').trim().slice(0, 20) : '';
         const cleaningFee = Number(body.cleaningFee || 0);
         const platformFeePct = Number(body.platformFeePct || 0);
         const note = String(body.note || '').trim();
@@ -3389,19 +3687,8 @@ export default {
           }
         }
         if (status !== 'Cancelled' && extraBedQuantity > 0) {
-          const stockRow = await env.DB.prepare(`SELECT value FROM site_settings WHERE key = 'extra_bed_total_stock'`).first();
-          if (stockRow) {
-            const totalStock = Number(stockRow.value);
-            const usedRow = await env.DB.prepare(`
-              SELECT COALESCE(SUM(extra_bed_quantity), 0) AS used FROM dashboard_bookings
-              WHERE LOWER(status) NOT IN ('cancelled', 'canceled') AND extra_bed_quantity > 0
-                AND checkin < ? AND checkout > ?
-            `).bind(checkout, checkin).first();
-            const used = Number(usedRow?.used || 0);
-            if (used + extraBedQuantity > totalStock) {
-              return bad(`Stok extra bed tidak cukup pada tanggal tersebut. Tersedia ${Math.max(0, totalStock - used)} dari total ${totalStock}.`, 409);
-            }
-          }
+          const stockError = await checkExtraBedStock(env, { propertyId, propertyName, checkin, checkout, quantity:extraBedQuantity });
+          if (stockError) return bad(stockError, 409);
         }
         let bookingAgent;
         try {
@@ -3428,6 +3715,7 @@ export default {
             nights, amount, grossAmount, extraBedQuantity, extraBedPrice, extraBedPaymentStatus, cleaningFee, platformFeePct, note, captureImage,
             bookingAgent.agentId, bookingAgent.agentName, bookingAgent.feeType, bookingAgent.feeValue, bookingAgent.feeAmount,
             incomeEntryId, tokenData.account_id || '', now, now),
+          env.DB.prepare(`UPDATE dashboard_bookings SET extra_bed_payment_method = ? WHERE id = ?`).bind(extraBedPaymentMethod, id),
           env.DB.prepare(`
             INSERT INTO finance_entries (
               id, kind, category_id, category_name, property_id, property_name,
@@ -3557,6 +3845,7 @@ export default {
         const extraBedQuantity = Number(body.extraBedQuantity || 0);
         const extraBedPrice = Number(body.extraBedPrice || 0);
         const extraBedPaymentStatus = extraBedQuantity > 0 && body.extraBedPaymentStatus === 'pending' ? 'pending' : 'paid';
+        const extraBedPaymentMethod = extraBedQuantity > 0 && extraBedPaymentStatus === 'paid' ? String(body.extraBedPaymentMethod || '').trim().slice(0, 20) : '';
         const cleaningFee = Number(body.cleaningFee || 0);
         const platformFeePct = Number(body.platformFeePct || 0);
         const note = String(body.note || '').trim();
@@ -3582,19 +3871,8 @@ export default {
           }
         }
         if (!isCancelledBooking && extraBedQuantity > 0) {
-          const stockRow = await env.DB.prepare(`SELECT value FROM site_settings WHERE key = 'extra_bed_total_stock'`).first();
-          if (stockRow) {
-            const totalStock = Number(stockRow.value);
-            const usedRow = await env.DB.prepare(`
-              SELECT COALESCE(SUM(extra_bed_quantity), 0) AS used FROM dashboard_bookings
-              WHERE id <> ? AND LOWER(status) NOT IN ('cancelled', 'canceled') AND extra_bed_quantity > 0
-                AND checkin < ? AND checkout > ?
-            `).bind(id, checkout, checkin).first();
-            const used = Number(usedRow?.used || 0);
-            if (used + extraBedQuantity > totalStock) {
-              return bad(`Stok extra bed tidak cukup pada tanggal tersebut. Tersedia ${Math.max(0, totalStock - used)} dari total ${totalStock}.`, 409);
-            }
-          }
+          const stockError = await checkExtraBedStock(env, { propertyId, propertyName, checkin, checkout, quantity:extraBedQuantity, excludeId:id });
+          if (stockError) return bad(stockError, 409);
         }
         let bookingAgent;
         try {
@@ -3631,6 +3909,7 @@ export default {
             UPDATE finance_entries SET property_id = ?, property_name = ?, category_id = ?, category_name = ?, amount = ?, description = ?, payee = ?
             WHERE id = (SELECT income_entry_id FROM dashboard_bookings WHERE id = ?) AND kind = 'income' AND changes() = 1
           `).bind(propertyId, propertyName, incomeCategoryId, incomeCategoryName, bookingIncomeAmount, bookingIncomeDescription, platform, id),
+          env.DB.prepare(`UPDATE dashboard_bookings SET extra_bed_payment_method = ? WHERE id = ?`).bind(extraBedPaymentMethod, id),
         ]);
         if (!results[0]?.meta?.changes) return bad('Booking sudah berubah. Muat ulang lalu coba lagi.', 409);
         if (extraBedTotal > 0) {
@@ -5471,10 +5750,10 @@ export default {
 
       return bad('Endpoint tidak ditemukan', 404);
     } catch (error) {
+      console.error(error);
       return json({
         ok: false,
         error: String(error?.message || error),
-        stack: String(error?.stack || ''),
       }, 500);
     }
   },

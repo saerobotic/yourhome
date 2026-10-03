@@ -1,0 +1,10 @@
+CREATE INDEX IF NOT EXISTS idx_dashboard_bookings_property_checkin ON dashboard_bookings(property_id, checkin);
+CREATE INDEX IF NOT EXISTS idx_dashboard_bookings_checkout ON dashboard_bookings(checkout);
+CREATE INDEX IF NOT EXISTS idx_dashboard_bookings_checkin_created ON dashboard_bookings(checkin DESC, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_dashboard_bookings_agent_checkin ON dashboard_bookings(agent_id, checkin);
+CREATE INDEX IF NOT EXISTS idx_finance_entries_date_created ON finance_entries(entry_date DESC, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_finance_entries_date_created_by ON finance_entries(entry_date, created_by);
+CREATE INDEX IF NOT EXISTS idx_checkins_work_date ON checkins(work_date);
+CREATE INDEX IF NOT EXISTS idx_checkins_crew_work_date ON checkins(crew, work_date);
+CREATE INDEX IF NOT EXISTS idx_dashboard_staff_chat_messages_created_at ON dashboard_staff_chat_messages(created_at DESC, id DESC);
+CREATE INDEX IF NOT EXISTS idx_office_employee_attendance_work_date ON office_employee_attendance(work_date);

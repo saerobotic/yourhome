@@ -1,0 +1,1 @@
+CREATE TABLE IF NOT EXISTS extra_bed_suppliers (id TEXT PRIMARY KEY, supplier_name TEXT NOT NULL, quantity INTEGER NOT NULL CHECK (quantity > 0), returned INTEGER NOT NULL DEFAULT 0, borrowed_date TEXT NOT NULL, note TEXT NOT NULL DEFAULT '', created_at TEXT NOT NULL);
