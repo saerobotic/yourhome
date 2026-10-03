@@ -9,14 +9,6 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 <script>
-  /* Tampilan grafik mengikuti font & warna dashboard (murni visual). */
-  if (window.Chart) {
-    Chart.defaults.font.family = "'Inter', system-ui, sans-serif";
-    Chart.defaults.color = '#64748b';
-    Object.assign(Chart.defaults.plugins.tooltip, { backgroundColor:'#0f172a', padding:10, cornerRadius:10, boxPadding:4 });
-  }
-</script>
-<script>
   tailwind.config = {
     theme: {
       extend: {
@@ -83,128 +75,6 @@
   .finance-row[hidden]{display:none;}
   .settings-section{display:flex;flex-direction:column;}
   .settings-section[hidden]{display:none;}
-
-  /* =====================================================================
-     DESIGN REFRESH: lapisan visual saja. Aturan di atas tetap dipakai
-     script; bagian ini hanya menimpa tampilan (warna, bayangan, jarak).
-     ===================================================================== */
-  :root{
-    --ui-bg:#f3f5f9;
-    --ui-line:#e5e9f0;
-    --ui-brand:#4f46e5;
-    --ui-shadow-xs:0 1px 2px rgba(15,23,42,.05);
-    --ui-shadow-sm:0 1px 2px rgba(15,23,42,.04),0 2px 8px -2px rgba(15,23,42,.06);
-    --ui-shadow-md:0 16px 32px -18px rgba(15,23,42,.3),0 2px 6px rgba(15,23,42,.04);
-    --ui-shadow-lg:0 32px 80px -24px rgba(15,23,42,.45);
-  }
-  body{background:var(--ui-bg);-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;font-variant-numeric:tabular-nums;}
-  ::selection{background:#c7d2fe;color:#1e1b4b;}
-  button:focus-visible,a:focus-visible,summary:focus-visible{outline:2px solid #6366f1;outline-offset:2px;}
-  .badge{white-space:nowrap;}
-
-  /* Login */
-  .gradient-bg{background:radial-gradient(900px 520px at 110% -10%,rgba(129,140,248,.45),transparent 60%),linear-gradient(160deg,#1e1b4b 0%,#312e81 55%,#3730a3 100%);}
-  .gradient-bg::before{content:'';position:absolute;inset:0;background-image:radial-gradient(rgba(255,255,255,.12) 1px,transparent 1px);background-size:22px 22px;-webkit-mask-image:linear-gradient(180deg,#000,transparent 70%);mask-image:linear-gradient(180deg,#000,transparent 70%);pointer-events:none;}
-
-  /* Sidebar: tetap terlihat saat halaman di-scroll (desktop) */
-  #sidebar{background:linear-gradient(180deg,#0b1220 0%,#0f172a 45%,#121b34 100%);border-right:1px solid rgba(148,163,184,.08);}
-  @media (min-width:1024px){#sidebar{position:sticky;top:0;height:100vh;align-self:flex-start;}}
-  #sidebar > div:first-child,#sidebar > div:last-child{border-color:rgba(148,163,184,.1);}
-  #sidebar > div:last-child{background:rgba(2,6,23,.28);}
-  .sidebar-brand{display:flex;align-items:center;gap:11px;color:#fff;}
-  .sidebar-brand-mark{display:grid;place-items:center;width:36px;height:36px;flex:none;border-radius:11px;color:#fff;background:linear-gradient(135deg,#6366f1,#4338ca);box-shadow:0 8px 18px -8px rgba(99,102,241,.9),inset 0 1px 0 rgba(255,255,255,.2);}
-  .sidebar-brand strong{display:block;font-size:14px;font-weight:800;letter-spacing:.06em;line-height:1.2;}
-  .sidebar-brand small{display:block;margin-top:2px;color:#94a3b8;font-size:11px;font-weight:500;}
-  #dashboardHeaderLogo:not(.hidden) + .sidebar-brand{display:none;}
-  #sidebar nav > div{color:#5b6b85;letter-spacing:.12em;}
-  #sidebar .nav-item{color:#a5b0c4;font-weight:500;}
-  #sidebar .nav-item svg{flex:none;opacity:.75;transition:opacity .15s,color .15s;}
-  #sidebar .nav-item:hover{background:rgba(148,163,184,.09);color:#fff;}
-  #sidebar .nav-item:hover svg{opacity:1;}
-  #sidebar .nav-item.active{background:linear-gradient(90deg,rgba(99,102,241,.34),rgba(99,102,241,.1));color:#fff;box-shadow:inset 0 0 0 1px rgba(129,140,248,.22);}
-  #sidebar .nav-item.active svg{opacity:1;color:#c7d2fe;}
-  #sidebarOverlay{backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px);}
-  #sidebar .sidebar-scroll{scrollbar-width:thin;scrollbar-color:rgba(148,163,184,.28) transparent;}
-  #sidebar .sidebar-scroll::-webkit-scrollbar{display:block;width:6px;}
-  #sidebar .sidebar-scroll::-webkit-scrollbar-thumb{background:rgba(148,163,184,.28);border-radius:6px;}
-  @media (min-width:1024px) and (max-height:860px){
-    #sidebar .nav-item{padding-top:.4rem;padding-bottom:.4rem;}
-    #sidebar nav > div{padding-top:.85rem;padding-bottom:.35rem;}
-    #sidebar nav > div:first-child{padding-top:0;}
-  }
-
-  /* Top bar */
-  #dashboardApp header.glass{background:rgba(255,255,255,.8);backdrop-filter:saturate(1.6) blur(14px);-webkit-backdrop-filter:saturate(1.6) blur(14px);border-bottom-color:var(--ui-line);}
-  #pageTitle{letter-spacing:-.02em;}
-  #periodDropdown > button{border-color:var(--ui-line);border-radius:10px;box-shadow:var(--ui-shadow-xs);font-weight:600;color:#334155;}
-  #dashboardApp header input[type="text"]{border-radius:10px;}
-
-  /* Area konten dibatasi agar tetap nyaman dibaca di layar lebar */
-  #dashboardApp main > .view{max-width:1680px;margin-inline:auto;}
-
-  /* Kartu: garis lebih tegas, bayangan halus, sudut seragam */
-  #dashboardApp .bg-white.border:where(.border-slate-100,.border-slate-200):where(.rounded-xl,.rounded-2xl):where(:not(#staffChatWidget)){border-color:var(--ui-line);border-radius:16px;box-shadow:var(--ui-shadow-sm);}
-  #dashboardApp .prop-card:hover{box-shadow:0 22px 40px -18px rgba(15,23,42,.3);}
-  #dashboardApp h2,#dashboardApp h3{letter-spacing:-.01em;}
-
-  /* Banner sambutan */
-  .hero-card{box-shadow:0 24px 48px -28px rgba(49,46,129,.75);}
-  .hero-card::before{content:'';position:absolute;inset:0;background-image:radial-gradient(rgba(255,255,255,.09) 1px,transparent 1px);background-size:18px 18px;-webkit-mask-image:linear-gradient(100deg,transparent 35%,#000 85%);mask-image:linear-gradient(100deg,transparent 35%,#000 85%);pointer-events:none;}
-
-  /* Kartu statistik */
-  #dashboardApp .stat-card::before{background:linear-gradient(90deg,var(--accent,#94a3b8),color-mix(in srgb,var(--accent,#94a3b8) 12%,transparent));}
-  #dashboardApp .stat-card::after{content:'';position:absolute;top:-60px;right:-60px;width:160px;height:160px;border-radius:50%;background:radial-gradient(circle,color-mix(in srgb,var(--accent,#94a3b8) 16%,transparent) 0%,transparent 70%);pointer-events:none;}
-  #dashboardApp .stat-card > *{position:relative;z-index:1;}
-  #dashboardApp .stat-card .text-2xl{letter-spacing:-.025em;}
-  #dashboardApp .stat-card:hover{box-shadow:var(--ui-shadow-md);}
-
-  /* Tabel */
-  #dashboardApp table thead th{font-size:11px;font-weight:700;letter-spacing:.07em;color:#6b7a90;border-bottom:1px solid var(--ui-line);}
-  #dashboardApp table tbody tr:hover{background:#f7f8ff;}
-  #dashboardApp table td.text-right,#bookingTableBody td:nth-child(4){white-space:nowrap;}
-
-  /* Tombol */
-  button:is(.bg-brand-600,.bg-emerald-600,.bg-emerald-700,.bg-rose-600,.bg-slate-900,.bg-amber-500){box-shadow:0 1px 2px rgba(15,23,42,.12),inset 0 1px 0 rgba(255,255,255,.14);transition:background-color .15s,box-shadow .15s,transform .1s;}
-  button:is(.bg-brand-600,.bg-emerald-600,.bg-emerald-700,.bg-rose-600,.bg-slate-900,.bg-amber-500):active:not(:disabled){transform:translateY(1px);}
-  button.bg-brand-600:hover:not(:disabled){box-shadow:0 8px 16px -8px rgba(79,70,229,.75),inset 0 1px 0 rgba(255,255,255,.14);}
-
-  /* Input */
-  :is(#dashboardApp,.modal-panel,#adminLoginScreen) :is(input:not([type="checkbox"]):not([type="radio"]):not([type="file"]),select,textarea){transition:border-color .15s,box-shadow .15s,background-color .15s;}
-  :is(#dashboardApp,.modal-panel,#adminLoginScreen) :is(input:not([type="checkbox"]):not([type="radio"]),select,textarea):hover:not(:focus):not(:disabled){border-color:#cbd5e1;}
-
-  /* Tab filter: chip; tab dalam wadah abu-abu: segmented control */
-  .tab-btn{border:1px solid var(--ui-line);background:#fff;color:#5b6b82;font-weight:600;padding:7px 13px;border-radius:999px;line-height:1.2;white-space:nowrap;}
-  .tab-btn:hover:not(.active){background:#eef2ff;border-color:#c7d2fe;color:#4338ca;}
-  .tab-btn.active{background:#4f46e5;border-color:#4f46e5;color:#fff;box-shadow:0 6px 14px -8px rgba(79,70,229,.85);}
-  :is(.bg-slate-100,.bg-slate-200):has(> .tab-btn){background:#e9edf4;}
-  :is(.bg-slate-100,.bg-slate-200) > .tab-btn{border-color:transparent;background:transparent;border-radius:8px;}
-  :is(.bg-slate-100,.bg-slate-200) > .tab-btn:hover:not(.active){background:rgba(255,255,255,.65);border-color:transparent;color:#334155;}
-  :is(.bg-slate-100,.bg-slate-200) > .tab-btn.active{background:#fff;color:#3730a3;box-shadow:0 1px 3px rgba(15,23,42,.14);}
-
-  /* Pengaturan: dikelompokkan per topik; panel yang tersembunyi untuk role tertentu
-     membuat panel di sebelahnya otomatis melebar mengisi baris. */
-  .settings-group + .settings-group{margin-top:32px;}
-  .settings-group-head{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin-bottom:12px;}
-  .settings-group-head h2{margin:0;font-size:15px;font-weight:700;color:#0f172a;}
-  .settings-group-head p{margin:2px 0 0;font-size:12px;color:#64748b;}
-  .settings-row{display:flex;flex-wrap:wrap;gap:16px;align-items:stretch;}
-  .settings-row + .settings-row{margin-top:16px;}
-  .settings-row.is-start{align-items:flex-start;}
-  .settings-row > .settings-section{flex:1 1 420px;min-width:0;}
-  .settings-row > .settings-section.settings-full{flex-basis:100%;}
-  .settings-row > .settings-section.settings-wide{flex:2 1 520px;}
-  .settings-row > .settings-section.settings-narrow{flex:1 1 300px;}
-  .settings-group:not(:has(.settings-section:not([hidden]))){display:none;}
-  #propertyCodeTableBody .max-w-\[110px\]{max-width:none;}
-
-  /* Dropdown, modal, toast */
-  .dropdown-menu{border-color:var(--ui-line);border-radius:14px;box-shadow:var(--ui-shadow-lg);}
-  .dropdown-item.active{background:#eef2ff;color:#3730a3;}
-  .modal-overlay{backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);}
-  .modal-panel{box-shadow:var(--ui-shadow-lg),0 0 0 1px rgba(15,23,42,.05);}
-  .modal-panel.rounded-xl,.modal-panel.rounded-2xl{border-radius:18px;}
-  .toast{border-radius:14px;padding:13px 18px;font-weight:500;border:1px solid rgba(255,255,255,.08);box-shadow:0 20px 44px -14px rgba(15,23,42,.6);}
-  .toast svg{flex:none;color:#a5b4fc;}
 </style>
 </head>
 <body class="text-slate-800">
@@ -213,54 +83,40 @@
   <aside class="hidden lg:flex relative overflow-hidden gradient-bg text-white flex-col justify-between p-12">
     <div class="absolute -left-28 -bottom-32 w-[420px] h-[420px] rounded-full border-[56px] border-white/10 pointer-events-none"></div>
     <div class="absolute right-10 top-10 w-28 h-28 rounded-full border border-white/15 pointer-events-none"></div>
-    <div class="relative z-10 flex items-center gap-3 text-sm font-extrabold tracking-wide">
-      <span class="sidebar-brand-mark"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg></span>
-      YOUR HOME
-    </div>
+    <div class="relative z-10 text-sm font-extrabold tracking-wide">YOUR HOME</div>
     <div class="relative z-10">
-      <span class="inline-flex items-center rounded-full border border-white/20 bg-white/10 px-3 py-1 text-[11px] font-bold uppercase tracking-[.14em] text-indigo-100">Dasbord Management</span>
-      <h2 class="mt-5 text-4xl font-extrabold leading-tight tracking-tight max-w-sm">Kelola operasional YOUR HOME dari satu dashboard.</h2>
-      <p class="mt-4 text-indigo-100/90 max-w-sm text-sm leading-relaxed">Pantau booking, keuangan, owner, dan crew apartemen, villa, guest house, dan kosan secara real-time.</p>
-      <ul class="mt-8 space-y-3 text-sm text-indigo-50">
-        <li class="flex items-center gap-3"><span class="inline-grid place-items-center w-7 h-7 rounded-lg bg-white/10 border border-white/15"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg></span>Booking &amp; kalender semua platform</li>
-        <li class="flex items-center gap-3"><span class="inline-grid place-items-center w-7 h-7 rounded-lg bg-white/10 border border-white/15"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg></span>Keuangan, laporan owner &amp; bagi hasil</li>
-        <li class="flex items-center gap-3"><span class="inline-grid place-items-center w-7 h-7 rounded-lg bg-white/10 border border-white/15"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg></span>Absensi, crew &amp; inventaris properti</li>
-      </ul>
+      <h2 class="text-4xl font-extrabold leading-tight max-w-sm">Kelola operasional YOUR HOME dari satu dashboard.</h2>
+      <p class="mt-4 text-indigo-100 max-w-sm text-sm">Pantau booking, keuangan, owner, dan crew apartemen, villa, guest house, dan kosan secara real-time.</p>
     </div>
     <small class="relative z-10 text-indigo-200 text-xs">Panel khusus staf YOUR HOME</small>
   </aside>
-  <div class="flex flex-col items-center justify-center gap-5 p-4 bg-[#f3f5f9]">
-    <section class="w-full max-w-md bg-white border border-slate-200/80 rounded-2xl shadow-xl shadow-slate-900/5 p-6 sm:p-8">
-      <div class="mb-7">
+  <div class="flex items-center justify-center p-4 bg-slate-100">
+    <section class="w-full max-w-md bg-white border border-slate-200 rounded-xl shadow-sm p-6 sm:p-8">
+      <div class="mb-6">
         <img id="dashboardLoginLogo" alt="YOUR HOME" class="hidden mx-auto w-48 max-h-16 object-contain mb-5">
         <p class="text-xs font-bold uppercase tracking-wider text-brand-600">YOUR HOME · Dashboard</p>
-        <h1 class="text-2xl font-extrabold tracking-tight text-slate-900 mt-2">Dasbord Management</h1>
+        <h1 class="text-2xl font-extrabold text-slate-900 mt-2">Dasbord Management</h1>
         <p class="text-sm text-slate-500 mt-1">Pilih akun dan masukkan password untuk membuka dashboard.</p>
       </div>
       <form id="dashboardLoginForm" class="space-y-4">
         <label class="block">
           <span class="block text-sm font-semibold text-slate-700 mb-1.5">ID Akun</span>
-          <span class="relative block">
-            <svg class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-            <select id="dashboardLoginAccount" required autocomplete="username" class="w-full border border-slate-200 rounded-xl pl-10 pr-3 py-3 text-sm bg-white"><option value="master">Master</option></select>
-          </span>
+          <select id="dashboardLoginAccount" required autocomplete="username" class="w-full border border-slate-200 rounded-lg px-3 py-2.5 text-sm bg-white"><option value="master">Master</option></select>
         </label>
         <label class="block">
           <span class="block text-sm font-semibold text-slate-700 mb-1.5">Password</span>
           <span class="relative block">
-            <svg class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" aria-hidden="true"><rect width="18" height="11" x="3" y="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-            <input id="dashboardLoginPassword" type="password" required autocomplete="current-password" class="w-full border border-slate-200 rounded-xl pl-10 pr-12 py-3 text-sm">
+            <input id="dashboardLoginPassword" type="password" required autocomplete="current-password" class="w-full border border-slate-200 rounded-lg px-3 py-2.5 pr-12 text-sm">
             <button type="button" data-toggle-password="dashboardLoginPassword" aria-label="Tampilkan password" class="absolute inset-y-0 right-0 px-3 text-slate-500 hover:text-slate-800">
               <svg data-eye-icon width="19" height="19" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>
             </button>
           </span>
         </label>
         <p id="dashboardLoginStatus" class="text-sm min-h-5" role="status" aria-live="polite"></p>
-        <button id="dashboardLoginButton" type="submit" class="w-full inline-flex items-center justify-center gap-2 bg-brand-600 hover:bg-brand-700 disabled:opacity-60 text-white text-sm font-semibold px-4 py-3 rounded-xl">Masuk<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></button>
+        <button id="dashboardLoginButton" type="submit" class="w-full bg-brand-600 hover:bg-brand-700 disabled:opacity-60 text-white text-sm font-semibold px-4 py-2.5 rounded-lg">Masuk</button>
         <p class="text-xs text-slate-400 text-center">Sesi berlaku 1 hari atau sampai logout.</p>
       </form>
     </section>
-    <p class="text-xs text-slate-400">&copy; 2026 YOUR HOME</p>
   </div>
 </main>
 
@@ -272,10 +128,6 @@
     <!-- Logo -->
     <div class="px-5 py-5 border-b border-slate-800/70">
       <img id="dashboardHeaderLogo" alt="YOUR HOME" class="hidden w-44 h-auto object-contain">
-      <div class="sidebar-brand">
-        <span class="sidebar-brand-mark"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg></span>
-        <span><strong>YOUR HOME</strong><small>Dasbord Management</small></span>
-      </div>
     </div>
 
     <!-- Nav -->
@@ -421,7 +273,7 @@
       <!-- =========================================== -->
       <div id="view-dashboard" class="view active">
         <!-- Hero greeting -->
-        <div class="hero-card bg-gradient-to-br from-slate-900 via-brand-800 to-brand-700 rounded-2xl p-6 text-white relative overflow-hidden mb-6">
+        <div class="bg-gradient-to-br from-slate-900 via-brand-800 to-brand-700 rounded-2xl p-6 text-white relative overflow-hidden mb-6">
           <div class="absolute -right-10 -top-10 w-48 h-48 bg-amber-400/10 rounded-full blur-3xl"></div>
           <div class="absolute right-20 bottom-0 w-32 h-32 bg-brand-400/20 rounded-full blur-2xl"></div>
           <div class="relative flex flex-col sm:flex-row sm:items-end justify-between gap-4">
@@ -1256,126 +1108,106 @@
       <!-- PENGATURAN VIEW                              -->
       <!-- =========================================== -->
       <div id="view-pengaturan" class="view">
-
-        <!-- Grup 1: Akun & Akses -->
-        <section class="settings-group" aria-labelledby="settingsGroupAccounts">
-          <div class="settings-group-head">
-            <div><h2 id="settingsGroupAccounts">Akun &amp; Akses</h2><p>Akun staf yang dapat masuk ke Dasbord beserta peran dan statusnya.</p></div>
-          </div>
-          <div class="settings-row">
-            <div id="userManagementPanel" class="settings-section settings-full bg-white rounded-2xl border border-slate-100 overflow-hidden">
-              <div class="p-5 pb-3 flex flex-wrap items-center justify-between gap-3">
-                <div>
-                  <h3 class="font-bold text-slate-900">Manajemen Pengguna</h3>
-                </div>
-                <div class="flex items-center gap-2"><button onclick="openProfileModal()" class="inline-flex items-center gap-2 border border-slate-200 hover:bg-slate-50 text-slate-700 text-sm font-semibold px-3 py-2 rounded-lg"><svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 013 3L8 18l-4 1 1-4Z"/></svg>Edit Profil</button><button id="createAdminButton" type="button" onclick="openCreateAdminModal()" class="hidden inline-flex items-center gap-2 bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold px-3 py-2 rounded-lg"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 4v16m8-8H4"/></svg>Tambah Admin</button></div>
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          <!-- Baris 1, kolom 1: Manajemen Pengguna -->
+          <div id="userManagementPanel" class="settings-section bg-white rounded-2xl border border-slate-100 overflow-hidden">
+            <div class="p-5 pb-3 flex items-center justify-between">
+              <div>
+                <h3 class="font-bold text-slate-900">Manajemen Pengguna</h3>
               </div>
-              <div class="overflow-x-auto overflow-y-auto max-h-[360px]">
-                <table class="w-full text-sm">
-                  <thead class="bg-slate-50 text-slate-500 text-xs uppercase tracking-wider sticky top-0">
-                    <tr>
-                      <th class="text-left font-semibold px-5 py-3">Nama</th>
-                      <th class="text-left font-semibold px-3 py-3 hidden sm:table-cell">Email</th>
-                      <th class="text-left font-semibold px-3 py-3">Role</th>
-                      <th class="text-left font-semibold px-3 py-3 hidden md:table-cell">Akses</th>
-                      <th class="text-center font-semibold px-5 py-3">Status</th>
-                      <th id="userActionsHeader" class="text-right font-semibold px-5 py-3" hidden>Aksi</th>
-                    </tr>
-                  </thead>
-                  <tbody id="userTableBody" class="divide-y divide-slate-100"></tbody>
-                </table>
-              </div>
-              <p class="mt-auto border-t border-slate-100 px-5 py-3 text-xs text-slate-500">Role: Master dan Admin</p>
+              <div class="flex items-center gap-3"><button id="createAdminButton" type="button" onclick="openCreateAdminModal()" class="hidden text-xs font-semibold text-brand-600 hover:text-brand-700">Tambah Admin</button><button onclick="openProfileModal()" class="text-xs font-semibold text-brand-600 hover:text-brand-700">Edit Profil</button></div>
             </div>
-          </div>
-        </section>
-
-        <!-- Grup 2: Tim & Mitra -->
-        <section class="settings-group" aria-labelledby="settingsGroupTeam">
-          <div class="settings-group-head">
-            <div><h2 id="settingsGroupTeam">Tim &amp; Mitra</h2><p>Crew lapangan, karyawan kantor, dan agen/marketing.</p></div>
-          </div>
-          <div class="settings-row">
-            <section id="crewManagementPanel" class="settings-section bg-white rounded-xl border border-slate-100 overflow-hidden">
-              <div class="p-5 pb-3 flex items-center justify-between gap-3">
-                <div><h3 class="font-bold text-slate-900">Daftar Crew</h3></div>
-                <button type="button" onclick="openCrewModal()" class="inline-flex items-center gap-2 bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold px-3 py-2 rounded-lg"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 4v16m8-8H4"/></svg>Tambah Crew</button>
-              </div>
-              <p id="crewManagementStatus" class="px-5 text-sm" role="status" aria-live="polite"></p>
-              <div class="overflow-x-auto overflow-y-auto max-h-[320px]"><table class="w-full text-sm"><thead class="bg-slate-50 text-slate-500 text-xs uppercase sticky top-0"><tr><th class="text-left px-5 py-3">Nama</th><th class="text-left px-3 py-3">Status</th><th class="text-right px-5 py-3">Aksi</th></tr></thead><tbody id="crewTableBody" class="divide-y divide-slate-100"></tbody></table></div>
-              <p class="mt-auto border-t border-slate-100 px-5 py-3 text-xs text-slate-500">Crew untuk login Check In Crew dan pilihan penerima pengeluaran Gaji.</p>
-            </section>
-
-            <section id="officeEmployeePanel" class="settings-section bg-white rounded-xl border border-slate-100 overflow-hidden" hidden>
-              <div class="p-5 pb-3">
-                <h3 class="font-bold text-slate-900">Karyawan Kantor</h3>
-              </div>
-              <form id="officeEmployeeForm" class="px-5 pb-4">
-                <input id="officeEmployeeEditId" type="hidden">
-                <div class="flex flex-wrap items-end gap-2">
-                  <label class="block flex-1 min-w-[200px]"><span class="block text-xs font-semibold text-slate-600 mb-1">Nama karyawan</span><input id="officeEmployeeName" required minlength="2" maxlength="80" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm" placeholder="Masukkan nama karyawan"></label>
-                  <div class="flex gap-2"><button id="officeEmployeeSaveButton" type="submit" class="bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold px-3 py-2 rounded-lg">Tambah Karyawan</button><button id="officeEmployeeCancelEdit" type="button" class="hidden border border-slate-200 text-sm font-semibold px-3 py-2 rounded-lg">Batal Edit</button></div>
-                </div>
-                <p id="officeEmployeeStatus" class="text-sm mt-2" role="status" aria-live="polite"></p>
-              </form>
-              <div class="overflow-x-auto overflow-y-auto max-h-[320px]"><table class="w-full text-sm"><thead class="bg-slate-50 text-slate-500 text-xs uppercase sticky top-0"><tr><th class="text-left px-5 py-3">Nama</th><th class="text-left px-3 py-3">Status</th><th class="text-right px-5 py-3">Aksi</th></tr></thead><tbody id="officeEmployeeTableBody" class="divide-y divide-slate-100"></tbody></table></div>
-              <p class="mt-auto border-t border-slate-100 px-5 py-3 text-xs text-slate-500">Nama karyawan kantor untuk tombol Absen Masuk di Admin Portal. Terpisah dari Crew.</p>
-            </section>
-          </div>
-          <div class="settings-row">
-            <section id="agentManagementPanel" class="settings-section settings-full bg-white rounded-xl border border-slate-100 overflow-hidden">
-              <div class="p-5 pb-3 flex items-center justify-between gap-3">
-                <div><h3 class="font-bold text-slate-900">Daftar Agen / Marketing</h3></div>
-                <button type="button" onclick="openAgentModal()" class="inline-flex items-center gap-2 bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold px-3 py-2 rounded-lg"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 4v16m8-8H4"/></svg>Tambah Agen</button>
-              </div>
-              <p id="agentManagementStatus" class="px-5 text-sm" role="status" aria-live="polite"></p>
-              <div class="overflow-x-auto overflow-y-auto max-h-[320px]"><table class="w-full text-sm"><thead class="bg-slate-50 text-slate-500 text-xs uppercase sticky top-0"><tr><th class="text-left px-5 py-3">Nama</th><th class="text-left px-3 py-3">ID Agen</th><th class="text-left px-3 py-3">Fee Default</th><th class="text-right px-5 py-3">Aksi</th></tr></thead><tbody id="agentTableBody" class="divide-y divide-slate-100"></tbody></table></div>
-              <p class="mt-auto border-t border-slate-100 px-5 py-3 text-xs text-slate-500">Dipilih di form booking untuk mencatat fee agen. Agen bisa login di Agen Portal untuk lihat fee mereka.</p>
-            </section>
-          </div>
-        </section>
-
-        <!-- Grup 3: Properti & Operasional -->
-        <section class="settings-group" aria-labelledby="settingsGroupOps">
-          <div class="settings-group-head">
-            <div><h2 id="settingsGroupOps">Properti &amp; Operasional</h2><p>Kode singkat properti dan stok perlengkapan bersama.</p></div>
-          </div>
-          <div class="settings-row is-start">
-            <div id="propertyCodeSettingsCard" class="settings-section settings-wide bg-white rounded-2xl p-4 border border-slate-100" hidden>
-              <div class="flex items-center justify-between gap-2 mb-2">
-                <h3 class="font-bold text-slate-900 text-sm">Ganti Kode Properti</h3>
-                <button type="button" onclick="loadPropertyCodes()" class="text-[11px] font-semibold text-slate-500 hover:text-slate-700">Muat Ulang</button>
-              </div>
-              <input id="propertyCodeSearch" type="text" oninput="renderPropertyCodeList()" placeholder="Cari properti..." class="w-full border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs mb-2">
-              <div class="max-h-72 overflow-y-auto border border-slate-100 rounded-lg">
-                <table class="w-full text-xs">
-                  <thead class="bg-slate-50 text-slate-500 uppercase sticky top-0">
-                    <tr>
-                      <th class="text-left px-2 py-1.5">Properti</th>
-                      <th class="text-center px-1.5 py-1.5">Kode</th>
-                      <th class="text-center px-1.5 py-1.5">Tetap</th>
-                      <th class="text-center px-1.5 py-1.5">Ganti Jadi</th>
-                    </tr>
-                  </thead>
-                  <tbody id="propertyCodeTableBody" class="divide-y divide-slate-100"></tbody>
-                </table>
-              </div>
-              <p id="propertyCodeStatus" class="text-[11px] mt-1.5" role="status" aria-live="polite"></p>
-              <button type="button" onclick="submitPropertyCodeChanges()" class="mt-1 w-full bg-brand-600 hover:bg-brand-700 text-white text-xs font-semibold px-3 py-1.5 rounded-lg">Simpan Perubahan</button>
-              <p class="mt-auto border-t border-slate-100 pt-3 text-xs text-slate-500">Ubah kode singkat properti yang digunakan di dashboard.</p>
+            <div class="overflow-x-auto overflow-y-auto max-h-[260px]">
+              <table class="w-full text-sm">
+                <thead class="bg-slate-50 text-slate-500 text-xs uppercase tracking-wider sticky top-0">
+                  <tr>
+                    <th class="text-left font-semibold px-5 py-3">Nama</th>
+                    <th class="text-left font-semibold px-3 py-3 hidden sm:table-cell">Email</th>
+                    <th class="text-left font-semibold px-3 py-3">Role</th>
+                    <th class="text-left font-semibold px-3 py-3 hidden md:table-cell">Akses</th>
+                    <th class="text-center font-semibold px-5 py-3">Status</th>
+                    <th id="userActionsHeader" class="text-right font-semibold px-5 py-3" hidden>Aksi</th>
+                  </tr>
+                </thead>
+                <tbody id="userTableBody" class="divide-y divide-slate-100"></tbody>
+              </table>
             </div>
-
-            <div class="settings-section settings-narrow bg-white rounded-2xl p-5 border border-slate-100">
-              <h3 class="font-bold text-slate-900">Stok Extra Bed</h3>
-              <div class="flex items-center gap-2 mt-3 max-w-md">
-                <input id="extraBedStockInput" type="number" min="0" step="1" placeholder="Belum diatur" class="w-full text-sm border border-slate-200 rounded-lg px-3 py-2.5">
-                <button type="button" onclick="saveExtraBedStock()" class="shrink-0 bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold px-3 py-2.5 rounded-lg">Simpan</button>
-              </div>
-              <p id="extraBedStockStatus" class="text-xs mt-2" role="status" aria-live="polite"></p>
-              <p class="mt-3 border-t border-slate-100 pt-3 text-xs text-slate-500">Total unit extra bed fisik yang dimiliki. Dipakai untuk menolak booking kalau jumlah extra bed yang dipesan bentrok tanggal di semua properti melebihi stok ini.</p>
-            </div>
+            <p class="mt-auto border-t border-slate-100 px-5 py-3 text-xs text-slate-500">Role: Master dan Admin</p>
           </div>
-        </section>
+
+          <!-- Baris 1, kolom 2: Daftar Crew -->
+          <section id="crewManagementPanel" class="settings-section bg-white rounded-xl border border-slate-100 overflow-hidden">
+            <div class="p-5 pb-3 flex items-center justify-between gap-3">
+              <div><h3 class="font-bold text-slate-900">Daftar Crew</h3></div>
+              <button type="button" onclick="openCrewModal()" class="inline-flex items-center gap-2 bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold px-3 py-2 rounded-lg"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 4v16m8-8H4"/></svg>Tambah Karyawan</button>
+            </div>
+            <p id="crewManagementStatus" class="px-5 text-sm" role="status" aria-live="polite"></p>
+            <div class="overflow-x-auto overflow-y-auto max-h-[260px]"><table class="w-full text-sm"><thead class="bg-slate-50 text-slate-500 text-xs uppercase sticky top-0"><tr><th class="text-left px-5 py-3">Nama</th><th class="text-left px-3 py-3">Status</th><th class="text-right px-5 py-3">Aksi</th></tr></thead><tbody id="crewTableBody" class="divide-y divide-slate-100"></tbody></table></div>
+            <p class="mt-auto border-t border-slate-100 px-5 py-3 text-xs text-slate-500">Crew untuk login Check In Crew dan pilihan penerima pengeluaran Gaji.</p>
+          </section>
+
+          <!-- Baris 1, kolom 3: Karyawan Kantor -->
+          <section id="officeEmployeePanel" class="settings-section bg-white rounded-xl border border-slate-100 overflow-hidden" hidden>
+            <div class="p-5 pb-3">
+              <h3 class="font-bold text-slate-900">Karyawan Kantor</h3>
+            </div>
+            <form id="officeEmployeeForm" class="px-5 pb-4">
+              <input id="officeEmployeeEditId" type="hidden">
+              <label class="block"><span class="block text-xs font-semibold text-slate-600 mb-1">Nama karyawan</span><input id="officeEmployeeName" required minlength="2" maxlength="80" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm" placeholder="Masukkan nama karyawan"></label>
+              <div class="flex gap-2 mt-3"><button id="officeEmployeeSaveButton" type="submit" class="bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold px-3 py-2 rounded-lg">Tambah Karyawan</button><button id="officeEmployeeCancelEdit" type="button" class="hidden border border-slate-200 text-sm font-semibold px-3 py-2 rounded-lg">Batal Edit</button></div>
+              <p id="officeEmployeeStatus" class="text-sm mt-2" role="status" aria-live="polite"></p>
+            </form>
+            <div class="overflow-x-auto overflow-y-auto max-h-[260px]"><table class="w-full text-sm"><thead class="bg-slate-50 text-slate-500 text-xs uppercase sticky top-0"><tr><th class="text-left px-5 py-3">Nama</th><th class="text-left px-3 py-3">Status</th><th class="text-right px-5 py-3">Aksi</th></tr></thead><tbody id="officeEmployeeTableBody" class="divide-y divide-slate-100"></tbody></table></div>
+            <p class="mt-auto border-t border-slate-100 px-5 py-3 text-xs text-slate-500">Nama karyawan kantor untuk tombol Absen Masuk di Admin Portal. Terpisah dari Crew.</p>
+          </section>
+
+          <!-- Baris 2, kolom 1: Ganti Kode Properti -->
+          <div id="propertyCodeSettingsCard" class="settings-section bg-white rounded-2xl p-4 border border-slate-100" hidden>
+            <div class="flex items-center justify-between gap-2 mb-2">
+              <h3 class="font-bold text-slate-900 text-sm">Ganti Kode Properti</h3>
+              <button type="button" onclick="loadPropertyCodes()" class="text-[11px] font-semibold text-slate-500 hover:text-slate-700">Muat Ulang</button>
+            </div>
+            <input id="propertyCodeSearch" type="text" oninput="renderPropertyCodeList()" placeholder="Cari properti..." class="w-full border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs mb-2">
+            <div class="max-h-72 overflow-y-auto border border-slate-100 rounded-lg">
+              <table class="w-full text-xs">
+                <thead class="bg-slate-50 text-slate-500 uppercase sticky top-0">
+                  <tr>
+                    <th class="text-left px-2 py-1.5">Properti</th>
+                    <th class="text-center px-1.5 py-1.5">Kode</th>
+                    <th class="text-center px-1.5 py-1.5">Tetap</th>
+                    <th class="text-center px-1.5 py-1.5">Ganti Jadi</th>
+                  </tr>
+                </thead>
+                <tbody id="propertyCodeTableBody" class="divide-y divide-slate-100"></tbody>
+              </table>
+            </div>
+            <p id="propertyCodeStatus" class="text-[11px] mt-1.5" role="status" aria-live="polite"></p>
+            <button type="button" onclick="submitPropertyCodeChanges()" class="mt-1 w-full bg-brand-600 hover:bg-brand-700 text-white text-xs font-semibold px-3 py-1.5 rounded-lg">Simpan Perubahan</button>
+            <p class="mt-auto border-t border-slate-100 pt-3 text-xs text-slate-500">Ubah kode singkat properti yang digunakan di dashboard.</p>
+          </div>
+
+          <!-- Baris 2, kolom 2: Daftar Agen -->
+          <section id="agentManagementPanel" class="settings-section bg-white rounded-xl border border-slate-100 overflow-hidden">
+            <div class="p-5 pb-3 flex items-center justify-between gap-3">
+              <div><h3 class="font-bold text-slate-900">Daftar Agen / Marketing</h3></div>
+              <button type="button" onclick="openAgentModal()" class="inline-flex items-center gap-2 bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold px-3 py-2 rounded-lg"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 4v16m8-8H4"/></svg>Tambah Agen</button>
+            </div>
+            <p id="agentManagementStatus" class="px-5 text-sm" role="status" aria-live="polite"></p>
+            <div class="overflow-x-auto overflow-y-auto max-h-[260px]"><table class="w-full text-sm"><thead class="bg-slate-50 text-slate-500 text-xs uppercase sticky top-0"><tr><th class="text-left px-5 py-3">Nama</th><th class="text-left px-3 py-3">ID Agen</th><th class="text-left px-3 py-3">Fee Default</th><th class="text-left px-3 py-3">Portal</th><th class="text-right px-5 py-3">Aksi</th></tr></thead><tbody id="agentTableBody" class="divide-y divide-slate-100"></tbody></table></div>
+            <p class="mt-auto border-t border-slate-100 px-5 py-3 text-xs text-slate-500">Dipilih di form booking untuk mencatat fee agen. Agen bisa login di Agen Portal untuk lihat fee mereka.</p>
+          </section>
+
+          <!-- Baris 2, kolom 3: Stok Extra Bed -->
+          <div class="settings-section bg-white rounded-2xl p-5 border border-slate-100">
+            <h3 class="font-bold text-slate-900">Stok Extra Bed</h3>
+            <div class="flex items-center gap-2">
+              <input id="extraBedStockInput" type="number" min="0" step="1" placeholder="Belum diatur" class="w-full text-sm border border-slate-200 rounded-lg px-3 py-2.5">
+              <button type="button" onclick="saveExtraBedStock()" class="shrink-0 bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold px-3 py-2.5 rounded-lg">Simpan</button>
+            </div>
+            <p id="extraBedStockStatus" class="text-xs mt-2" role="status" aria-live="polite"></p>
+            <p class="mt-auto border-t border-slate-100 pt-3 text-xs text-slate-500">Total unit extra bed fisik yang dimiliki. Dipakai untuk menolak booking kalau jumlah extra bed yang dipesan bentrok tanggal di semua properti melebihi stok ini.</p>
+          </div>
+        </div>
       </div>
 
     </main>
