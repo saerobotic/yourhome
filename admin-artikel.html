@@ -147,7 +147,10 @@
     .article-list{display:grid;grid-template-columns:minmax(0,1fr);gap:8px;margin-top:16px}
     .article-item{display:grid;grid-template-columns:76px minmax(0,1fr) auto auto;gap:14px;align-items:center;padding:10px 12px;border:1px solid var(--line);border-radius:var(--r);background:var(--paper);transition:border-color .15s,background .15s}
     .article-item:hover{border-color:var(--line-strong);background:var(--sunken)}
-    .thumb{width:76px;height:54px;border-radius:7px;background:var(--sunken) center/cover no-repeat;border:1px solid var(--line);display:grid;place-items:center;color:var(--line-strong)}
+    .thumb{position:relative;width:76px;height:54px;border-radius:7px;background:var(--sunken) center/cover no-repeat;border:1px solid var(--line);display:grid;place-items:center;color:var(--line-strong)}
+    .thumb-view{position:absolute;inset:0;width:100%;height:100%;display:grid;place-items:center;background:rgba(36,25,21,.0);border-radius:6px;opacity:0;transition:opacity .15s,background .15s;color:#fff;cursor:pointer}
+    .thumb-view svg{width:16px;height:16px}
+    .thumb:hover .thumb-view{opacity:1;background:rgba(36,25,21,.45)}
     .article-main{min-width:0}
     .article-main strong{display:block;font-size:.93rem;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
     .article-main span{display:block;color:var(--muted);font-size:.76rem;margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -255,6 +258,8 @@
     .dlg p{margin:0 0 16px;color:var(--muted);font-size:.88rem}
     .dlg .actions{justify-content:flex-end;margin-top:18px}
     dialog.wide{max-width:min(96vw,860px)}
+    dialog.img-dlg{position:relative;max-width:min(94vw,900px);background:transparent;box-shadow:none;overflow:visible}
+    dialog.img-dlg img{display:block;max-width:100%;max-height:85vh;border-radius:10px;box-shadow:0 24px 70px -20px rgba(0,0,0,.6)}
     .preview-head{display:flex;justify-content:space-between;align-items:center;padding:14px 20px;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--paper);z-index:2}
     .preview-head h2{font-size:.95rem}
     .preview-seg{display:inline-flex;gap:4px;padding:3px;background:var(--sunken);border-radius:var(--r);border:1px solid var(--line)}
@@ -481,6 +486,8 @@
   <dialog id="dlgAlt"><form method="dialog" class="dlg" id="altForm"><h2>Gambar di dalam artikel</h2><p>Teks alternatif membantu SEO dan pembaca tunanetra. Jelaskan isi gambar secara singkat.</p><div class="field"><label for="altInput">Teks alternatif</label><input id="altInput" type="text" maxlength="140" autocomplete="off" /></div><div class="actions"><button class="button danger" type="button" id="altRemove">Hapus gambar</button><span style="flex:1"></span><button class="button" value="cancel">Batal</button><button class="button primary" id="altSave" value="ok">Simpan</button></div></form></dialog>
 
   <dialog id="dlgTarget"><form method="dialog" class="dlg"><h2>Target posting harian</h2><p>Jumlah artikel yang harus terbit per hari. Berlaku untuk semua admin.</p><div class="field"><label for="targetInput">Artikel per hari</label><input id="targetInput" type="number" min="1" max="50" /></div><div class="actions"><button class="button" value="cancel">Batal</button><button class="button primary" id="targetSave" value="ok">Simpan</button></div></form></dialog>
+
+  <dialog id="dlgImagePreview" class="img-dlg"><button class="button small" type="button" id="imgPreviewClose" style="position:absolute;top:10px;right:10px">Tutup</button><img id="imgPreviewImg" src="" alt="" /></dialog>
 
   <dialog id="dlgPreview" class="wide"><div class="preview-head"><h2>Pratinjau artikel</h2><div class="actions"><span class="preview-seg" role="group" aria-label="Ukuran layar"><button type="button" data-w="desktop" aria-pressed="true">Desktop</button><button type="button" data-w="mobile" aria-pressed="false">Ponsel</button></span><button class="button small" type="button" id="previewClose">Tutup</button></div></div><div class="preview-stage"><article class="preview-frame" id="previewFrame"></article></div></dialog>
 
@@ -822,7 +829,7 @@
       const st = articleStatus(a);
       const when = st === 'draft' ? `Diubah ${fmtDateTime(a.updated_at || a.created_at)}` : `${st === 'scheduled' ? 'Tayang' : 'Terbit'} ${fmtDateTime(a.published_at)}`;
       return `<div class="article-item" data-id="${esc(a.id)}">
-        <div class="thumb" style="${a.cover_url ? `background-image:url('${esc(a.cover_url)}')` : ''}">${a.cover_url ? '' : '<svg class="icon" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></svg>'}</div>
+        <div class="thumb" style="${a.cover_url ? `background-image:url('${esc(a.cover_url)}')` : ''}">${a.cover_url ? `<button class="thumb-view" type="button" data-act="view" title="Lihat gambar" aria-label="Lihat gambar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z"/><circle cx="12" cy="12" r="3"/></svg></button>` : '<svg class="icon" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></svg>'}</div>
         <div class="article-main"><strong>${esc(a.title || '(Tanpa judul)')}</strong><span>${esc(catLabel(a.category))} · ${esc(a.author || '—')} · ${esc(when)}</span></div>
         <div class="badge-cell"><span class="badge ${st}">${STATUS_LABEL[st]}</span></div>
         <div class="row-actions"><button class="button small" data-act="edit" type="button">Edit</button><button class="button small" data-act="dup" type="button">Duplikat</button><button class="button small danger" data-act="del" type="button">Hapus</button></div>
@@ -1021,6 +1028,10 @@
     try { await store().remove(id); state.articles = state.articles.filter(x => x.id !== id); try { localStorage.removeItem(BACKUP_PREFIX + id); } catch { /* abaikan */ } renderList(); renderTarget(); toast('Artikel dihapus.'); }
     catch (e) { toast(e.message, 'error'); }
   }
+  function openImagePreview(url, alt) {
+    el('imgPreviewImg').src = url; el('imgPreviewImg').alt = alt || '';
+    el('dlgImagePreview').showModal();
+  }
 
   /* ---------- Pratinjau ---------- */
   function openPreview() {
@@ -1098,7 +1109,8 @@
     el('articleList').addEventListener('click', e => {
       const b = e.target.closest('[data-act]'), row = e.target.closest('.article-item'); if (!row) return;
       const id = row.dataset.id, act = b?.dataset.act || 'edit';
-      if (act === 'edit') openEditor(id); else if (act === 'dup') duplicateArticle(id); else if (act === 'del') deleteArticle(id);
+      if (act === 'view') { e.stopPropagation(); const a = state.articles.find(x => x.id === id); if (a?.cover_url) openImagePreview(a.cover_url, a.cover_alt || a.title || ''); }
+      else if (act === 'edit') openEditor(id); else if (act === 'dup') duplicateArticle(id); else if (act === 'del') deleteArticle(id);
     });
     el('editTargetBtn').addEventListener('click', () => {
       const d = el('dlgTarget'); el('targetInput').value = state.target;
@@ -1117,6 +1129,8 @@
     el('previewBtn').addEventListener('click', openPreview);
     el('previewClose').addEventListener('click', () => el('dlgPreview').close());
     el('dlgPreview').addEventListener('click', e => { if (e.target === el('dlgPreview')) el('dlgPreview').close(); });
+    el('imgPreviewClose').addEventListener('click', () => el('dlgImagePreview').close());
+    el('dlgImagePreview').addEventListener('click', e => { if (e.target === el('dlgImagePreview')) el('dlgImagePreview').close(); });
     document.querySelectorAll('.preview-seg button').forEach(b => b.addEventListener('click', () => {
       document.querySelectorAll('.preview-seg button').forEach(x => x.setAttribute('aria-pressed', x === b)); el('previewFrame').classList.toggle('mobile', b.dataset.w === 'mobile');
     }));
