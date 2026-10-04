@@ -1028,6 +1028,29 @@ async function normalizeArticleInput(body, existing) {
 
 const escapeLike = value => String(value).replace(/[\\%_]/g, char => `\\${char}`);
 
+// Memberi tahu GitHub Actions (repo saerobotic/artikel_yourhome) untuk build ulang & deploy situs statis.
+// Butuh secret GITHUB_TOKEN (Personal Access Token dengan izin "Actions: Read and write" pada repo tsb).
+// Gagal kirim notifikasi tidak boleh membatalkan penyimpanan artikel, jadi errornya hanya dicatat.
+async function triggerArticlesDeploy(env) {
+  const token = String(env.GITHUB_TOKEN || '').trim();
+  if (!token) { console.warn('GITHUB_TOKEN belum diset: deploy artikel.yourhome.id tidak otomatis.'); return; }
+  try {
+    const response = await fetch('https://api.github.com/repos/saerobotic/artikel_yourhome/dispatches', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Accept': 'application/vnd.github+json',
+        'Content-Type': 'application/json',
+        'User-Agent': 'your-home-checkin-api',
+      },
+      body: JSON.stringify({ event_type: 'article-published' }),
+    });
+    if (!response.ok) console.warn(`Gagal memicu deploy artikel.yourhome.id: HTTP ${response.status} ${await response.text().catch(() => '')}`);
+  } catch (error) {
+    console.warn(`Gagal memicu deploy artikel.yourhome.id: ${error?.message || error}`);
+  }
+}
+
 async function handleArticleRoutes({ request, env, url, path, json, bad }) {
   if (!/^\/(admin\/)?articles(\/|$)/.test(path)) return null;
   const method = request.method;
@@ -1130,6 +1153,7 @@ async function handleArticleRoutes({ request, env, url, path, json, bad }) {
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `).bind(id, a.slug, a.title, a.excerpt, a.content, a.category, a.tags, a.cover_url, a.cover_alt, a.status, a.published_at, a.meta_title, a.meta_description, authorName, tokenData.account_id || '', now, now).run();
       const created = await env.DB.prepare('SELECT * FROM articles WHERE id = ?').bind(id).first();
+      if (a.status === 'published') await triggerArticlesDeploy(env);
       return json({ ok:true, data:articleRow(created) }, 201);
     }
 
@@ -1153,11 +1177,13 @@ async function handleArticleRoutes({ request, env, url, path, json, bad }) {
           WHERE id = ?
         `).bind(a.slug, a.title, a.excerpt, a.content, a.category, a.tags, a.cover_url, a.cover_alt, a.status, a.published_at, a.meta_title, a.meta_description, new Date().toISOString(), id).run();
         const updated = await env.DB.prepare('SELECT * FROM articles WHERE id = ?').bind(id).first();
+        if (a.status === 'published' || existing.status === 'published') await triggerArticlesDeploy(env);
         return json({ ok:true, data:articleRow(updated) });
       }
 
       if (method === 'DELETE') {
         await env.DB.prepare('DELETE FROM articles WHERE id = ?').bind(id).run();
+        if (existing.status === 'published') await triggerArticlesDeploy(env);
         return json({ ok:true, data:{ id } });
       }
     }
