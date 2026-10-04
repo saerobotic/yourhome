@@ -653,20 +653,38 @@
   const store = () => state.mode === 'local' ? localStore : remoteStore;
 
   /* ---------- Kompres gambar ---------- */
-  function compressImage(file, maxW = 1600, quality = 0.82) {
+  // Target: hasil akhir di bawah ~100KB dan dimensi tidak terlalu besar untuk ditampilkan.
+  // Strategi: coba lebar makin kecil (1280 -> 360px), di tiap lebar coba kualitas makin rendah,
+  // ambil hasil pertama yang sudah di bawah batas ukuran; kalau tidak ada yang cukup kecil, pakai hasil terkecil yang didapat.
+  const IMAGE_MAX_BYTES = 100 * 1024;
+  const IMAGE_WIDTH_STEPS = [1280, 1024, 800, 640, 480, 360];
+  const IMAGE_QUALITY_STEPS = [0.82, 0.72, 0.62, 0.52, 0.42, 0.32];
+  function dataUrlBytes(dataUrl) { return Math.ceil((dataUrl.length - dataUrl.indexOf(',') - 1) * 0.75); }
+  function compressImage(file, maxBytes = IMAGE_MAX_BYTES) {
     return new Promise((resolve, reject) => {
       if (!/^image\//.test(file.type)) { reject(new Error('File harus berupa gambar.')); return; }
-      const url = URL.createObjectURL(file); const img = new Image();
+      const objUrl = URL.createObjectURL(file); const img = new Image();
       img.onload = () => {
-        URL.revokeObjectURL(url);
-        const scale = Math.min(1, maxW / img.width);
-        const c = document.createElement('canvas'); c.width = Math.round(img.width * scale); c.height = Math.round(img.height * scale);
-        const ctx = c.getContext('2d'); ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, c.width, c.height); ctx.drawImage(img, 0, 0, c.width, c.height);
-        const type = c.toDataURL('image/webp', 0.5).startsWith('data:image/webp') ? 'image/webp' : 'image/jpeg';
-        resolve(c.toDataURL(type, quality));
+        URL.revokeObjectURL(objUrl);
+        const probe = document.createElement('canvas').toDataURL('image/webp', 0.5);
+        const type = probe.startsWith('data:image/webp') ? 'image/webp' : 'image/jpeg';
+        let best = null;
+        for (const w of IMAGE_WIDTH_STEPS) {
+          const scale = Math.min(1, w / img.width);
+          const cw = Math.max(1, Math.round(img.width * scale)), ch = Math.max(1, Math.round(img.height * scale));
+          const c = document.createElement('canvas'); c.width = cw; c.height = ch;
+          const ctx = c.getContext('2d'); ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, cw, ch); ctx.drawImage(img, 0, 0, cw, ch);
+          for (const q of IMAGE_QUALITY_STEPS) {
+            const dataUrl = c.toDataURL(type, q);
+            best = dataUrl;
+            if (dataUrlBytes(dataUrl) <= maxBytes) { resolve(dataUrl); return; }
+          }
+          // Lebar ini tidak cukup kecil di kualitas manapun; coba lebar lebih kecil berikutnya.
+        }
+        resolve(best); // Tidak ada kombinasi di bawah batas; pakai hasil terkecil yang berhasil dibuat.
       };
-      img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('Gambar tidak dapat dibaca.')); };
-      img.src = url;
+      img.onerror = () => { URL.revokeObjectURL(objUrl); reject(new Error('Gambar tidak dapat dibaca.')); };
+      img.src = objUrl;
     });
   }
   async function uploadFile(file) {
