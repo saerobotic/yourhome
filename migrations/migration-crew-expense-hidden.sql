@@ -1,0 +1,1 @@
+ALTER TABLE finance_entries ADD COLUMN crew_hidden INTEGER NOT NULL DEFAULT 0;

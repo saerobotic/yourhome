@@ -65,9 +65,13 @@
 
     /* Thumbnail foto di riwayat */
     .thumb {
-      width: 56px; height: 56px; object-fit: cover; border-radius: 8px;
-      border: 2px solid #d1fae5;
+      width: 40px; height: 40px; object-fit: cover; border-radius: 8px;
+      border: 1px solid var(--line, #e2dbd0);
     }
+    /* Foto kecil di riwayat/dokumentasi; klik untuk membuka pop-up foto. */
+    .photo-mini { width: 44px; height: 44px; object-fit: cover; border-radius: 8px; border: 1px solid var(--line, #e2dbd0); display: block; }
+    .photo-mini-row { display: flex; flex-wrap: wrap; gap: 6px; }
+    [data-photo-src] { cursor: zoom-in; padding: 0; border: 0; background: none; line-height: 0; }
     .work-photo-thumb { width: 64px; height: 64px; object-fit: cover; border-radius: 8px; border: 2px solid var(--line); }
     .work-photo-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; }
     @media (max-width: 380px) { .work-photo-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
@@ -229,6 +233,10 @@
           <p class="text-xs text-brand-100">Total Unit Dikunjungi</p>
           <p id="statUnits" class="text-2xl font-bold">0</p>
         </div>
+        <div class="col-span-2 bg-white/15 backdrop-blur rounded-2xl p-3.5">
+          <p class="text-xs text-brand-100">Total Pengeluaran Hari Ini</p>
+          <p id="statExpenseTotal" class="text-2xl font-bold">Rp 0</p>
+        </div>
       </div>
       <p id="todayDate" class="text-xs text-brand-100 mt-3"></p>
     </header>
@@ -243,7 +251,7 @@
     <!-- ===========================================================
          FORM CHECK-IN
          =========================================================== -->
-    <div id="crewCheckinView" role="tabpanel" aria-labelledby="crewCheckinTab" class="px-5 -mt-3 pt-3">
+    <div id="crewCheckinView" role="tabpanel" aria-labelledby="crewCheckinTab" class="px-5 pt-5">
       <div class="bg-white rounded-2xl shadow-md border border-gray-100 p-5">
         <h3 class="font-bold text-gray-800 mb-4 flex items-center gap-2">
           <span class="w-1.5 h-5 bg-brand-600 rounded-full"></span>
@@ -415,6 +423,22 @@
         </button>
       </div>
 
+      <!-- Riwayat laporan pekerjaan hari ini -->
+      <div class="mt-6">
+        <div class="flex items-center justify-between mb-3">
+          <h3 class="font-bold text-gray-800 flex items-center gap-2">
+            <span class="w-1.5 h-5 bg-brand-600 rounded-full"></span>
+            Riwayat Laporan Hari Ini
+          </h3>
+          <button id="refreshLaporanHistoryBtn" class="text-xs text-brand-600 hover:underline">Refresh</button>
+        </div>
+        <div id="laporanHistoryList" class="space-y-3"></div>
+        <div id="laporanHistoryEmpty" class="hidden text-center py-10 text-gray-400">
+          <p class="text-sm">Belum ada laporan hari ini</p>
+          <p class="text-xs">Laporan muncul di sini setelah check-in lokasi dan laporan terkirim</p>
+        </div>
+      </div>
+
     </section>
 
     <section id="crewDocumentationView" role="tabpanel" aria-labelledby="crewDocumentationTab" class="hidden px-5 pt-5">
@@ -523,7 +547,16 @@
     </section>
   </section>
 
-  <dialog id="checkinConfirmDialog" class="w-[calc(100%-2rem)] max-w-md rounded-xl border-0 p-0 shadow-2xl backdrop:bg-black/50">
+  <!-- Pop-up foto bersama untuk riwayat check-in, riwayat laporan, dan Dokumentasi Saya -->
+  <dialog id="photoDialog" class="w-[calc(100%-2rem)] max-w-md rounded-xl border-0 p-0 shadow-2xl backdrop:bg-black/50">
+    <div class="flex items-start justify-between gap-3 border-b border-gray-100 p-4">
+      <div class="min-w-0"><h2 id="photoDialogTitle" class="text-lg font-bold text-gray-800">Foto</h2><p id="photoDialogSubtitle" class="text-xs text-gray-500"></p></div>
+      <button type="button" id="closePhotoDialogBtn" aria-label="Tutup" class="text-2xl leading-none text-gray-500 hover:text-gray-800">&times;</button>
+    </div>
+    <div class="p-3.5 text-center"><img id="photoDialogImage" alt="Foto" class="mx-auto max-h-[70vh] max-w-full rounded-lg" /></div>
+  </dialog>
+
+  <dialog id="checkinConfirmDialog"class="w-[calc(100%-2rem)] max-w-md rounded-xl border-0 p-0 shadow-2xl backdrop:bg-black/50">
     <div class="p-5 sm:p-6">
       <div class="flex items-start gap-3">
         <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-amber-50 text-amber-700" aria-hidden="true">!</div>
@@ -823,13 +856,14 @@
     const location = Number.isFinite(Number(record.lat)) && Number.isFinite(Number(record.lng))
       ? `<a href="https://www.google.com/maps?q=${Number(record.lat)},${Number(record.lng)}" target="_blank" rel="noopener" class="mt-2 inline-flex text-xs font-semibold text-brand-700 underline">Lihat lokasi GPS</a>`
       : '<span class="mt-2 block text-xs text-gray-400">Lokasi GPS tidak tersedia</span>';
+    const photoTitle = `${isArrivalRecord(record) ? 'Check-in Lokasi' : record.unit} · ${formatWorkDate(record.work_date)} ${formatTime(record.created_at)}`;
     const selfie = record.selfie_url
-      ? `<a href="${escapeHtml(fileUrl(record.selfie_url))}" target="_blank" rel="noopener"><img src="${escapeHtml(fileUrl(record.selfie_url))}" class="thumb" loading="lazy" alt="Foto selfie ${escapeHtml(record.unit || 'check-in')}" /></a>`
-      : '<div class="thumb flex items-center justify-center bg-gray-100 text-[10px] text-gray-400">Tanpa selfie</div>';
+      ? `<span class="flex-shrink-0">${photoTriggerHtml(record.selfie_url, 'thumb', 'Selfie Check-in', photoTitle)}</span>`
+      : '<div class="thumb flex items-center justify-center bg-gray-100 text-[9px] text-gray-400 text-center">Tanpa selfie</div>';
     const workPhotos = photoUrls.length
-      ? `<div class="mt-3"><p class="text-xs font-semibold text-gray-600 mb-1">Foto hasil kerja (${photoUrls.length})</p><div class="work-photo-grid">${photoUrls.map((photo, index) => `<a href="${escapeHtml(fileUrl(photo))}" target="_blank" rel="noopener"><img src="${escapeHtml(fileUrl(photo))}" class="work-photo-thumb" loading="lazy" alt="Foto kerja ${index + 1}" /></a>`).join('')}</div></div>`
+      ? `<div class="mt-3"><p class="text-xs font-semibold text-gray-600 mb-1">Foto hasil kerja (${photoUrls.length})</p><div class="photo-mini-row">${photoUrls.map((photo, index) => photoTriggerHtml(photo, 'photo-mini', `Foto hasil kerja ${index + 1}`, photoTitle)).join('')}</div></div>`
       : '';
-    card.innerHTML = `<div class="flex gap-3">${selfie}<div class="min-w-0 flex-1"><div class="flex flex-wrap items-start justify-between gap-2"><div><h4 class="font-bold text-gray-800">${escapeHtml(record.unit || 'Properti')}</h4><p class="text-xs font-semibold text-brand-700">${escapeHtml(record.job_type || 'Pekerjaan')}</p></div><time class="text-xs text-gray-500">${escapeHtml(formatWorkDate(record.work_date))} · ${escapeHtml(formatTime(record.created_at))}</time></div><p class="mt-1 text-xs text-gray-500">${escapeHtml(state.currentCrew)} · ${Math.round(Number(record.accuracy) || 0)} m akurasi GPS</p>${location}</div></div>${workPhotos}`;
+    card.innerHTML = `<div class="flex gap-3">${selfie}<div class="min-w-0 flex-1"><div class="flex flex-wrap items-start justify-between gap-2"><div><h4 class="font-bold text-gray-800">${escapeHtml(isArrivalRecord(record) ? 'Check-in Lokasi' : record.unit)}</h4>${isArrivalRecord(record) ? '' : `<p class="text-xs font-semibold text-brand-700">${escapeHtml(record.job_type || 'Pekerjaan')}</p>`}</div><time class="text-xs text-gray-500">${escapeHtml(formatWorkDate(record.work_date))} · ${escapeHtml(formatTime(record.created_at))}</time></div><p class="mt-1 text-xs text-gray-500">${escapeHtml(state.currentCrew)} · ${Math.round(Number(record.accuracy) || 0)} m akurasi GPS</p>${location}</div></div>${workPhotos}`;
     return card;
   }
 
@@ -879,6 +913,8 @@
       const data = await api(`/checkin/expenses?date=${today}`);
       const records = Array.isArray(data.data) ? data.data : [];
       document.getElementById('crewExpenseCounter').textContent = `${records.length} dari 10 struk hari ini.`;
+      const expenseTotal = records.reduce((sum, item) => sum + (Number(item.amount) || 0), 0);
+      document.getElementById('statExpenseTotal').textContent = `Rp ${Math.round(expenseTotal).toLocaleString('id-ID')}`;
       list.innerHTML = records.length ? records.map(item => `
         <div class="rounded-xl border border-gray-200 bg-white p-3 text-sm">
           <div class="flex justify-between gap-2"><strong>${escapeHtml(item.category_name)}</strong><span>Rp ${Math.round(item.amount).toLocaleString('id-ID')}</span></div>
@@ -894,7 +930,25 @@
     if (select.options.length > 1) return;
     try {
       const data = await api('/checkin/expense-categories');
-      (data.data || []).forEach(category => select.add(new Option(category.name, category.id)));
+      // Kategori yang punya grup tampil sebagai optgroup; grup berisi satu item bernama sama
+      // dengan grupnya (misal Laundry, WIFI) cukup tampil sebagai pilihan biasa.
+      const groups = new Map();
+      (data.data || []).forEach(category => {
+        const key = category.group || '';
+        if (!groups.has(key)) groups.set(key, []);
+        groups.get(key).push(category);
+      });
+      groups.forEach((items, group) => {
+        const flat = !group || (items.length === 1 && items[0].name.toLowerCase() === group.toLowerCase());
+        if (flat) {
+          items.forEach(category => select.add(new Option(category.name, category.id)));
+          return;
+        }
+        const optgroup = document.createElement('optgroup');
+        optgroup.label = group;
+        items.forEach(category => optgroup.appendChild(new Option(category.name, category.id)));
+        select.appendChild(optgroup);
+      });
     } catch (error) {
       document.getElementById('expenseStatus').textContent = error.message || 'Jenis pengeluaran gagal dimuat.';
     }
@@ -1459,6 +1513,7 @@
     await flushQueue();
     await renderHistory();
     await updateStats();
+    loadCrewExpenses();
   }
 
   async function checkLocationAvailability() {
@@ -1575,7 +1630,7 @@
       showLogin();
       showToast('Berhasil keluar.', 'info');
     });
-    document.getElementById('flushPendingBtn').addEventListener('click', flushQueue);
+    document.getElementById('flushPendingBtn').addEventListener('click', refreshCrewData);
     document.getElementById('refreshPropertiesBtn').addEventListener('click', () => loadCheckinProperties());
     document.getElementById('crewCheckinTab').addEventListener('click', () => switchCrewView('checkin'));
     document.getElementById('crewDocumentationTab').addEventListener('click', () => switchCrewView('documentation'));
@@ -1640,15 +1695,27 @@
     document.getElementById('saveCheckinBtn').addEventListener('click', openCheckinConfirmation);
     document.getElementById('sendArrivalBtn').addEventListener('click', submitArrival);
     document.getElementById('goToCheckinBtn').addEventListener('click', () => switchCrewView('checkin'));
+    // --- Pop-up foto (delegasi klik untuk semua elemen [data-photo-src]) ---
+    const photoDialog = document.getElementById('photoDialog');
+    document.addEventListener('click', event => {
+      const trigger = event.target.closest('[data-photo-src]');
+      if (!trigger) return;
+      document.getElementById('photoDialogImage').src = trigger.dataset.photoSrc;
+      document.getElementById('photoDialogTitle').textContent = trigger.dataset.photoHeading || 'Foto';
+      document.getElementById('photoDialogSubtitle').textContent = trigger.dataset.photoTitle || '';
+      photoDialog.showModal();
+    });
+    document.getElementById('closePhotoDialogBtn').addEventListener('click', () => photoDialog.close());
+    photoDialog.addEventListener('click', event => { if (event.target === photoDialog) photoDialog.close(); });
     document.getElementById('cancelCheckinConfirmBtn').addEventListener('click', () => document.getElementById('checkinConfirmDialog').close());
     document.getElementById('confirmSaveCheckinBtn').addEventListener('click', confirmCheckinSubmission);
 
     // --- Refresh riwayat ---
-    const refreshHistoryButton = document.getElementById('refreshHistoryBtn');
-    refreshHistoryButton.addEventListener('click', async () => {
-      if (!state.currentCrew || refreshHistoryButton.disabled) return;
-      refreshHistoryButton.disabled = true;
-      refreshHistoryButton.textContent = 'Memuat...';
+    const refreshHistoryButtons = ['refreshHistoryBtn', 'refreshLaporanHistoryBtn'].map(id => document.getElementById(id));
+    refreshHistoryButtons.forEach(button => button.addEventListener('click', async () => {
+      if (!state.currentCrew || button.disabled) return;
+      refreshHistoryButtons.forEach(item => { item.disabled = true; });
+      button.textContent = 'Memuat...';
       try {
         const records = await getTodayRecordsForCrew(state.currentCrew);
         renderHistoryRecords(records);
@@ -1658,10 +1725,10 @@
         console.error('Gagal memuat riwayat check-in:', error);
         showToast(error.message || 'Gagal memuat riwayat check-in.', 'error');
       } finally {
-        refreshHistoryButton.disabled = false;
-        refreshHistoryButton.textContent = 'Refresh';
+        refreshHistoryButtons.forEach(item => { item.disabled = false; });
+        button.textContent = 'Refresh';
       }
-    });
+    }));
   }
 
   /* ============================================================
@@ -1908,22 +1975,54 @@
     }
   }
 
+  // Alur dua tahap: Check-in lokasi (tahap 1) membuka Laporan Pekerjaan (tahap 2).
+  // Setelah laporan terkirim, kunci ditutup lagi sehingga crew harus check-in lagi untuk laporan berikutnya.
+  const ARRIVAL_SENT_KEY = 'crew_arrival_sent';
+  function arrivalSentKey() {
+    return state.currentCrew ? `${state.currentCrew}|${formatLocalDateKey()}` : '';
+  }
+  function isArrivalSent() {
+    const key = arrivalSentKey();
+    if (!key) return false;
+    if (state.arrivalSentKey === key) return true;
+    try { return sessionStorage.getItem(ARRIVAL_SENT_KEY) === key; } catch { return false; }
+  }
+  function markArrivalSent() {
+    const key = arrivalSentKey();
+    state.arrivalSentKey = key;
+    try { sessionStorage.setItem(ARRIVAL_SENT_KEY, key); } catch {}
+  }
+  function finishReportCycle() {
+    state.arrivalSentKey = null;
+    state.arrival = null;
+    try { sessionStorage.removeItem(ARRIVAL_SENT_KEY); } catch {}
+    try { sessionStorage.removeItem(CHECKIN_SESSION_KEY); } catch {}
+  }
+
   function validateForm() {
     restoreCheckinSession();
+    const arrivalSent = isArrivalSent();
     const hasGps = !!state.gpsData;
     const hasPhoto = !!state.photoData;
     const hasWorkPhotos = state.workPhotos.length > 0;
     const selectedUnit = document.getElementById('unitInput').value;
     const hasUnit = selectedUnit !== '';
     const hasJob = getSelectedJobTypes().length > 0 && (!isLainnyaChecked() || document.getElementById('jobTypeOtherNote').value.trim() !== '');
-    // Laporan pekerjaan tidak lagi memerlukan GPS dan selfie (sudah dikirim lewat Check-in Lokasi).
-    document.getElementById('saveCheckinBtn').disabled = isSavingCheckin || !(hasWorkPhotos && hasUnit && hasJob);
-    document.getElementById('sendArrivalBtn').disabled = isSavingCheckin || !(hasGps && hasPhoto);
-    document.getElementById('laporanCheckinBanner')?.classList.add('hidden');
+    // Laporan hanya bisa dikirim setelah Check-in Lokasi berhasil; check-in hanya sekali per laporan.
+    document.getElementById('saveCheckinBtn').disabled = isSavingCheckin || !arrivalSent || !(hasWorkPhotos && hasUnit && hasJob);
+    const arrivalButton = document.getElementById('sendArrivalBtn');
+    arrivalButton.disabled = isSavingCheckin || arrivalSent || !(hasGps && hasPhoto);
+    arrivalButton.textContent = arrivalSent ? 'Check-in Terkirim ✓ — Lanjut ke Laporan Pekerjaan' : 'Kirim Check-in Lokasi (GPS + Selfie)';
+    document.getElementById('laporanCheckinBanner')?.classList.toggle('hidden', arrivalSent);
   }
 
   function openCheckinConfirmation() {
     validateForm();
+    if (!isArrivalSent()) {
+      showToast('Check-in lokasi dulu sebelum mengirim laporan.', 'error');
+      switchCrewView('checkin');
+      return;
+    }
     if (document.getElementById('saveCheckinBtn').disabled) {
       showToast('Lengkapi lokasi, foto, properti, dan pekerjaan sebelum mengirim.', 'error');
       return;
@@ -1957,6 +2056,10 @@
      SIMPAN CHECK-IN
      ============================================================ */
   async function saveCheckin() {
+    if (!isArrivalSent()) {
+      showToast('Check-in lokasi dulu sebelum mengirim laporan.', 'error');
+      return;
+    }
     const selectedUnit = document.getElementById('unitInput').value;
     const unit = selectedUnit;
     const jobType = getSelectedJobTypes().join(', ');
@@ -2015,9 +2118,10 @@
       }
       completeRequestedCrewTasks(unit);
       showToast('Check-in berhasil disimpan! ✅', 'success');
-      state.arrival = null;
-      try { sessionStorage.removeItem(CHECKIN_SESSION_KEY); } catch {}
+      // Laporan terkirim: alur kembali ke tahap 1, crew harus check-in lagi untuk laporan berikutnya.
+      finishReportCycle();
       resetForm();
+      switchCrewView('checkin');
       await renderHistory();
       await updateStats();
     } catch (err) {
@@ -2039,7 +2143,9 @@
           updatePendingBadge();
           console.log('Check-in disimpan ke antrian offline:', item.id);
           showToast('Tidak ada sinyal. Check-in disimpan offline, akan dikirim nanti.', 'warning');
+          finishReportCycle();
           resetForm();
+          switchCrewView('checkin');
         }
       }
     } finally {
@@ -2051,6 +2157,11 @@
   // Check-in lokasi: kirim GPS + selfie saja, supaya crew tercatat sudah di lokasi.
   async function submitArrival() {
     if (isSavingCheckin) return;
+    if (isArrivalSent()) {
+      showToast('Check-in sudah terkirim. Buat laporan pekerjaan dulu sebelum check-in lagi.', 'warning');
+      switchCrewView('laporan');
+      return;
+    }
     if (!state.gpsData || !state.photoData) {
       showToast('Ambil GPS dan selfie terlebih dahulu.', 'error');
       return;
@@ -2092,7 +2203,9 @@
       }
       // GPS dan selfie tetap dipakai untuk Kirim Laporan di tab Laporan Pekerjaan.
       state.arrival = { gpsData: state.gpsData, photoData: state.photoData };
-      showToast('Check-in lokasi berhasil dikirim! ✅', 'success');
+      markArrivalSent();
+      showToast('Check-in lokasi berhasil dikirim! Lanjut isi Laporan Pekerjaan. ✅', 'success');
+      switchCrewView('laporan');
       await renderHistory();
       await updateStats();
     } catch (err) {
@@ -2102,6 +2215,38 @@
       isSavingCheckin = false;
       hideLoading();
       validateForm();
+    }
+  }
+
+  // Tombol ↻ di header: kirim data tertunda (kalau ada), lalu muat ulang properti, tugas, riwayat, dan statistik.
+  let isRefreshingCrewData = false;
+  async function refreshCrewData() {
+    if (isRefreshingCrewData) return;
+    if (!state.currentCrew) return;
+    if (!navigator.onLine) {
+      showToast('Masih offline. Tidak bisa memuat ulang data.', 'warning');
+      return;
+    }
+    const button = document.getElementById('flushPendingBtn');
+    isRefreshingCrewData = true;
+    button.disabled = true;
+    button.classList.add('animate-spin');
+    try {
+      await flushQueue();
+      renderCrewTasks();
+      await loadCheckinProperties({ silent:true });
+      await renderHistory();
+      await updateStats();
+      if (!document.getElementById('crewDocumentationView').classList.contains('hidden')) await loadCrewDocumentation();
+      validateForm();
+      showToast('Data diperbarui.', 'success');
+    } catch (error) {
+      console.error('Gagal memuat ulang data:', error);
+      showToast('Gagal memuat ulang data: ' + (error.message || 'coba lagi'), 'error');
+    } finally {
+      button.classList.remove('animate-spin');
+      button.disabled = false;
+      isRefreshingCrewData = false;
     }
   }
 
@@ -2207,44 +2352,65 @@
     updateStatsFromRecords(myRecords);
   }
 
-  function renderHistoryRecords(myRecords) {
-    const list = document.getElementById('historyList');
-    const empty = document.getElementById('historyEmpty');
-    if (myRecords.length === 0) {
-      list.innerHTML = '';
-      empty.classList.remove('hidden');
-      return;
-    }
-    empty.classList.add('hidden');
+  // Check-in Lokasi (tahap 1) tidak punya properti; laporan pekerjaan (tahap 2) selalu punya properti.
+  function isArrivalRecord(record) {
+    return String(record.unit || '').trim() === '';
+  }
 
-    list.innerHTML = myRecords.map(r => `
-      <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 flex gap-3">
-        <img src="${fileUrl(r.selfie_url)}" class="thumb flex-shrink-0" alt="foto" />
-        <div class="flex-1 min-w-0">
-          <div class="flex items-start justify-between gap-2">
-            <div class="min-w-0">
-              <p class="font-bold text-gray-800 truncate">${escapeHtml(r.unit)}</p>
-              <p class="text-xs text-brand-600 font-semibold">${escapeHtml(r.job_type)}</p>
-            </div>
-            <span class="text-xs text-gray-400 flex-shrink-0">${formatWorkDate(r.work_date)} · ${formatTime(r.created_at)}</span>
-          </div>
+  // Foto kecil yang membuka pop-up foto bersama saat diklik.
+  function photoTriggerHtml(src, imgClass, heading, title) {
+    const attr = value => escapeHtml(value).replace(/"/g, '&quot;');
+    return `<button type="button" data-photo-src="${attr(fileUrl(src))}" data-photo-heading="${attr(heading)}" data-photo-title="${attr(title)}" aria-label="Perbesar ${attr(heading)}"><img src="${attr(fileUrl(src))}" class="${imgClass}" loading="lazy" alt="${attr(heading)}" /></button>`;
+  }
+
+  function historyCardHtml(r) {
+    const arrival = isArrivalRecord(r);
+    const hasGps = Number.isFinite(Number(r.lat)) && Number.isFinite(Number(r.lng)) && r.lat !== null && r.lng !== null;
+    const gps = hasGps ? `
           <div class="flex items-center gap-2 mt-2 text-xs text-gray-500">
             <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 text-brand-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
               <path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
             </svg>
-            <span class="font-mono">${r.lat.toFixed(5)}, ${r.lng.toFixed(5)}</span>
+            <span class="font-mono">${Number(r.lat).toFixed(5)}, ${Number(r.lng).toFixed(5)}</span>
             <span class="text-gray-300">·</span>
-            <span>±${Math.round(r.accuracy)}m</span>
+            <span>±${Math.round(Number(r.accuracy) || 0)}m</span>
           </div>
-          <a href="https://www.google.com/maps?q=${r.lat},${r.lng}" target="_blank" rel="noopener"
+          <a href="https://www.google.com/maps?q=${Number(r.lat)},${Number(r.lng)}" target="_blank" rel="noopener"
              class="inline-flex items-center gap-1 mt-1.5 text-xs text-brand-600 hover:underline font-medium">
             Buka di Google Maps ↗
-          </a>
-          ${r.work_photo_urls?.length ? `<div class="mt-3"><p class="text-xs text-gray-500 mb-1">Foto hasil kerja (${r.work_photo_urls.length})</p><div class="work-photo-grid">${r.work_photo_urls.map((photo, index) => `<img src="${fileUrl(photo)}" class="work-photo-thumb" alt="Foto hasil kerja ${index + 1}" />`).join('')}</div></div>` : ''}
+          </a>` : '';
+    const photoTitle = `${arrival ? 'Check-in Lokasi' : r.unit} · ${formatWorkDate(r.work_date)} ${formatTime(r.created_at)}`;
+    const photos = r.work_photo_urls?.length
+      ? `<div class="mt-3"><p class="text-xs text-gray-500 mb-1">Foto hasil kerja (${r.work_photo_urls.length})</p><div class="photo-mini-row">${r.work_photo_urls.map((photo, index) => photoTriggerHtml(photo, 'photo-mini', `Foto hasil kerja ${index + 1}`, photoTitle)).join('')}</div></div>`
+      : '';
+    const thumb = r.selfie_url ? `<span class="flex-shrink-0">${photoTriggerHtml(r.selfie_url, 'thumb', 'Selfie Check-in', photoTitle)}</span>` : '';
+    return `
+      <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 flex gap-3">
+        ${thumb}
+        <div class="flex-1 min-w-0">
+          <div class="flex items-start justify-between gap-2">
+            <div class="min-w-0">
+              <p class="font-bold text-gray-800 truncate">${escapeHtml(arrival ? 'Check-in Lokasi' : r.unit)}</p>
+              ${arrival ? '' : `<p class="text-xs text-brand-600 font-semibold">${escapeHtml(r.job_type)}</p>`}
+            </div>
+            <span class="text-xs text-gray-400 flex-shrink-0">${formatWorkDate(r.work_date)} · ${formatTime(r.created_at)}</span>
+          </div>${gps}
+          ${photos}
         </div>
-      </div>
-    `).join('');
+      </div>`;
+  }
+
+  // Riwayat dipisah: check-in lokasi tampil di tab Check-in, laporan tampil di tab Laporan Pekerjaan.
+  function renderHistoryRecords(myRecords) {
+    const groups = [
+      { records: myRecords.filter(isArrivalRecord), list: 'historyList', empty: 'historyEmpty' },
+      { records: myRecords.filter(record => !isArrivalRecord(record)), list: 'laporanHistoryList', empty: 'laporanHistoryEmpty' }
+    ];
+    groups.forEach(({ records, list, empty }) => {
+      document.getElementById(list).innerHTML = records.map(historyCardHtml).join('');
+      document.getElementById(empty).classList.toggle('hidden', records.length > 0);
+    });
   }
 
   /* ============================================================

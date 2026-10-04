@@ -334,6 +334,10 @@
         <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
         <span>Absensi Karyawan</span>
       </button>
+      <button id="crewReportNavItem" onclick="switchView('laporan-crew')" class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left">
+        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
+        <span>Laporan Crew &amp; Operasional</span>
+      </button>
       <button id="inventoryNavItem" onclick="switchView('inventaris')" class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left">
         <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 7L12 3 4 7m16 0-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
         <span>Inventaris</span>
@@ -969,6 +973,103 @@
               </thead>
               <tbody id="attendanceHistoryTableBody" class="divide-y divide-slate-100"></tbody>
             </table>
+          </div>
+        </section>
+      </div>
+
+      <!-- =========================================== -->
+      <!-- LAPORAN CREW VIEW (slip gaji, nanti pengeluaran) -->
+      <!-- =========================================== -->
+      <div id="view-laporan-crew" class="view">
+        <div id="crewReportStats" class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+          <div class="stat-card bg-white rounded-2xl p-5 border border-slate-100" style="--accent:#4f46e5">
+            <p class="text-xs font-semibold text-slate-500 uppercase tracking-wide">Slip Masuk</p>
+            <p id="crewReportSlipCount" class="text-2xl font-extrabold text-slate-900 mt-1">0</p>
+          </div>
+          <div class="stat-card bg-white rounded-2xl p-5 border border-slate-100" style="--accent:#f59e0b">
+            <p class="text-xs font-semibold text-slate-500 uppercase tracking-wide">Menunggu Review</p>
+            <p id="crewReportUnpaidTotal" class="text-2xl font-extrabold text-slate-900 mt-1">Rp 0</p>
+          </div>
+          <div class="stat-card bg-white rounded-2xl p-5 border border-slate-100" style="--accent:#10b981">
+            <p class="text-xs font-semibold text-slate-500 uppercase tracking-wide">Masuk Pengeluaran</p>
+            <p id="crewReportPaidTotal" class="text-2xl font-extrabold text-slate-900 mt-1">Rp 0</p>
+          </div>
+        </div>
+
+        <section class="bg-white rounded-2xl p-5 sm:p-6 border border-slate-100">
+          <div class="flex flex-wrap gap-2 mb-5" role="tablist" aria-label="Jenis laporan crew">
+            <button type="button" id="crewReportTabSlip" role="tab" aria-selected="true" onclick="switchCrewReportTab('slip')" class="px-4 py-2 rounded-lg text-sm font-semibold bg-indigo-600 text-white">Slip Gaji</button>
+            <button type="button" id="crewReportTabExpense" role="tab" aria-selected="false" onclick="switchCrewReportTab('expense')" class="px-4 py-2 rounded-lg text-sm font-semibold bg-slate-100 text-slate-600 hover:bg-slate-200">Pengeluaran Crew <span id="crewReportExpenseBadge" class="hidden ml-1 px-1.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-500 text-white"></span></button>
+            <button type="button" id="crewReportTabOps" role="tab" aria-selected="false" onclick="switchCrewReportTab('ops')" class="px-4 py-2 rounded-lg text-sm font-semibold bg-slate-100 text-slate-600 hover:bg-slate-200">Pengeluaran Operasional <span id="crewReportOpsBadge" class="hidden ml-1 px-1.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-500 text-white"></span></button>
+          </div>
+
+          <div id="crewReportPanelSlip">
+            <div class="flex flex-wrap items-end justify-between gap-3 mb-4">
+              <div>
+                <h2 class="text-lg font-bold text-slate-900">Slip Gaji Crew</h2>
+                <p class="text-sm text-slate-500 mt-1">Dikirim dari tombol "Kirim ke Admin" di Slip Gaji Bulanan (Dashboard Check In Crew).</p>
+              </div>
+              <div class="flex items-end gap-2">
+                <label class="block">
+                  <span class="block text-xs font-semibold text-slate-600 mb-1">Bulan</span>
+                  <input id="crewReportMonth" type="month" onchange="loadCrewPayrollSlips()" class="border border-slate-200 rounded-lg px-3 py-2 text-sm">
+                </label>
+                <button type="button" onclick="loadCrewPayrollSlips()" class="h-[38px] bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-semibold px-3 rounded-lg">Muat Ulang</button>
+              </div>
+            </div>
+            <p id="crewReportStatus" class="text-sm text-slate-500 mb-3" role="status" aria-live="polite"></p>
+            <div class="overflow-x-auto">
+              <table class="w-full text-sm">
+                <thead class="bg-slate-50 text-slate-500 text-xs uppercase">
+                  <tr>
+                    <th class="text-left px-4 py-3">Crew</th>
+                    <th class="text-left px-4 py-3">Check-in</th>
+                    <th class="text-right px-4 py-3">Gaji Dibayar</th>
+                    <th class="text-right px-4 py-3">Tambahan</th>
+                    <th class="text-right px-4 py-3">Total Gaji</th>
+                    <th class="text-left px-4 py-3">Status</th>
+                    <th class="text-left px-4 py-3">Dikirim</th>
+                    <th class="text-right px-4 py-3">Aksi</th>
+                  </tr>
+                </thead>
+                <tbody id="crewReportTableBody" class="divide-y divide-slate-100"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div id="crewReportPanelExpense" class="hidden">
+            <div class="flex flex-wrap items-end justify-between gap-3 mb-4">
+              <div>
+                <h2 id="crewExpenseReportTitle" class="text-lg font-bold text-slate-900">Laporan Pengeluaran Crew</h2>
+                <p id="crewExpenseReportDesc" class="text-sm text-slate-500 mt-1">Dikirim dari tombol "Kirim ke Admin" di menu Pengeluaran Crew (Dashboard Check In Crew). Pengeluaran baru dihitung setelah diterima.</p>
+              </div>
+              <div class="flex items-end gap-2">
+                <label class="block">
+                  <span class="block text-xs font-semibold text-slate-600 mb-1">Bulan</span>
+                  <input id="crewExpenseReportMonth" type="month" onchange="loadCrewExpenseReports()" class="border border-slate-200 rounded-lg px-3 py-2 text-sm">
+                </label>
+                <button type="button" onclick="loadCrewExpenseReports()" class="h-[38px] bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-semibold px-3 rounded-lg">Muat Ulang</button>
+              </div>
+            </div>
+            <p id="crewExpenseReportStatus" class="text-sm text-slate-500 mb-3" role="status" aria-live="polite"></p>
+            <div class="overflow-x-auto">
+              <table class="w-full text-sm">
+                <thead class="bg-slate-50 text-slate-500 text-xs uppercase">
+                  <tr>
+                    <th class="text-left px-4 py-3">Tanggal</th>
+                    <th id="crewExpenseReportPayeeHead" class="text-left px-4 py-3">Crew</th>
+                    <th class="text-left px-4 py-3">Jenis</th>
+                    <th class="text-left px-4 py-3">Properti</th>
+                    <th class="text-right px-4 py-3">Jumlah</th>
+                    <th class="text-left px-4 py-3">Keterangan</th>
+                    <th class="text-left px-4 py-3">Struk</th>
+                    <th class="text-left px-4 py-3">Status</th>
+                    <th class="text-right px-4 py-3">Aksi</th>
+                  </tr>
+                </thead>
+                <tbody id="crewExpenseReportBody" class="divide-y divide-slate-100"></tbody>
+              </table>
+            </div>
           </div>
         </section>
       </div>
@@ -1722,6 +1823,20 @@
   </div>
 </div>
 
+<!-- ============== MODAL: DETAIL SLIP GAJI CREW ============== -->
+<div id="modal-crew-payroll" class="modal-overlay fixed inset-0 bg-slate-900/50 z-50 hidden items-center justify-center p-4" onclick="if(event.target===this) closeModal('modal-crew-payroll')">
+  <div class="bg-white rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto p-5 sm:p-6">
+    <div class="flex items-start justify-between gap-3 mb-4">
+      <div>
+        <h3 id="crewPayrollModalTitle" class="text-lg font-bold text-slate-900">Slip Gaji</h3>
+        <p id="crewPayrollModalSub" class="text-xs text-slate-500 mt-1"></p>
+      </div>
+      <button type="button" onclick="closeModal('modal-crew-payroll')" aria-label="Tutup" class="text-slate-400 hover:text-slate-700 text-2xl leading-none">&times;</button>
+    </div>
+    <div id="crewPayrollModalBody" class="space-y-4 text-sm"></div>
+  </div>
+</div>
+
 <!-- ============== MODAL: IMPORT BANYAK BOOKING ============== -->
 <div id="modal-import-booking" class="modal-overlay fixed inset-0 bg-slate-900/50 z-50 hidden items-center justify-center p-4">
   <div class="modal-panel bg-white rounded-2xl max-w-3xl w-full max-h-[92vh] overflow-y-auto">
@@ -2354,6 +2469,7 @@ function showDashboardApp(account){
   document.getElementById('settingsNavItem').classList.toggle('hidden', account.role === 'IT');
   document.getElementById('propertyCodeSettingsCard').hidden = !['master', 'admin-1'].includes(account.account_id);
   document.getElementById('inventoryNavItem').classList.toggle('hidden', account.role === 'IT');
+  document.getElementById('crewReportNavItem').classList.toggle('hidden', account.role === 'IT');
   document.getElementById('adminLoginScreen').classList.add('hidden');
   document.getElementById('dashboardApp').hidden = false;
 }
@@ -3255,6 +3371,7 @@ const VIEW_META = {
   'nota-lunas': { title:'Nota Lunas', sub:'Buat nota lunas tamu, unduh PDF, lalu kirim ke WhatsApp (tidak disimpan ke sistem)' },
   'owner': { title:'Owner', sub:'Daftar pemilik properti dengan persentase kepemilikan' },
   'absensi-karyawan': { title:'Absensi Karyawan', sub:'Pantau absen masuk karyawan kantor via selfie dan lokasi' },
+  'laporan-crew': { title:'Laporan Crew & Operasional', sub:'Slip gaji serta pengeluaran Crew dan Operasional yang dikirim dari Dashboard Check In Crew' },
   'inventaris': { title:'Inventaris', sub:'Daftar barang per properti dan riwayat ceklis kondisi dari Crew' },
   'suplier-extrabed': { title:'Extrabed', sub:'Catat pinjaman extra bed dari suplier; yang masih dipinjam menambah stok tersedia' },
   'pengaturan': { title:'Pengaturan', sub:'User role, komisi & konfigurasi sistem' }
@@ -3286,6 +3403,14 @@ function switchView(name){
     const historyMonth = document.getElementById('attendanceHistoryMonth');
     if(!historyMonth.value) historyMonth.value = new Date().toLocaleDateString('en-CA', { timeZone:'Asia/Jakarta' }).slice(0,7);
     loadAttendanceDashboard();
+  }
+  if(name==='laporan-crew'){
+    const reportMonth = document.getElementById('crewReportMonth');
+    if(!reportMonth.value) reportMonth.value = new Date().toLocaleDateString('en-CA', { timeZone:'Asia/Jakarta' }).slice(0,7);
+    const expenseReportMonth = document.getElementById('crewExpenseReportMonth');
+    if(!expenseReportMonth.value) expenseReportMonth.value = reportMonth.value;
+    loadCrewPayrollSlips();
+    loadCrewExpenseReports(true);
   }
   if(name==='inventaris'){ populateInventoryPropertySelects(); loadInventoryItems(); loadInventoryChecks(); }
   if(name==='suplier-extrabed'){
@@ -4636,6 +4761,299 @@ function renderAttendanceDashboard(records){
     : '<p class="text-sm text-slate-400">Semua karyawan aktif sudah absen masuk pada tanggal ini.</p>';
 }
 
+/* ============== LAPORAN CREW (slip gaji dari Dashboard Check In Crew) ============== */
+let crewPayrollSlips = [];
+const CREW_PAY_EXTRA_LABELS = { tunjangan:'Tunjangan', bonus:'Bonus', bensin:'Uang Bensin', reimburse:'Reimburse', pulsa:'Pulsa / Komunikasi' };
+
+// tab: 'slip' (Slip Gaji), 'expense' (Pengeluaran Crew), atau 'ops' (Pengeluaran Operasional).
+// Crew dan Operasional dipisah penuh: masing-masing hanya menampilkan datanya sendiri.
+function switchCrewReportTab(tab){
+  const isSlip = tab === 'slip';
+  crewExpenseSource = tab === 'ops' ? 'ops' : 'crew';
+  document.getElementById('crewReportPanelSlip').classList.toggle('hidden', !isSlip);
+  document.getElementById('crewReportPanelExpense').classList.toggle('hidden', isSlip);
+  document.getElementById('crewReportStats').classList.toggle('hidden', !isSlip);
+  const isOps = crewExpenseSource === 'ops';
+  document.getElementById('crewExpenseReportTitle').textContent = isOps ? 'Laporan Pengeluaran Operasional' : 'Laporan Pengeluaran Crew';
+  document.getElementById('crewExpenseReportDesc').textContent = isOps
+    ? 'Dikirim dari tombol "Kirim ke Admin" di menu Operasional (Dashboard Check In Crew). Pengeluaran baru dihitung setelah diterima.'
+    : 'Dikirim dari tombol "Kirim ke Admin" di menu Pengeluaran Crew (Dashboard Check In Crew). Pengeluaran baru dihitung setelah diterima.';
+  document.getElementById('crewExpenseReportPayeeHead').textContent = isOps ? 'Petugas' : 'Crew';
+  if(!isSlip) loadCrewExpenseReports();
+  const active = 'px-4 py-2 rounded-lg text-sm font-semibold bg-indigo-600 text-white';
+  const idle = 'px-4 py-2 rounded-lg text-sm font-semibold bg-slate-100 text-slate-600 hover:bg-slate-200';
+  const tabs = { slip:'crewReportTabSlip', expense:'crewReportTabExpense', ops:'crewReportTabOps' };
+  Object.entries(tabs).forEach(([name, id]) => {
+    const button = document.getElementById(id);
+    button.className = name === tab ? active : idle;
+    button.setAttribute('aria-selected', String(name === tab));
+  });
+}
+
+function formatCrewReportMonth(month){
+  const [year, monthNumber] = String(month).split('-').map(Number);
+  return new Date(year, monthNumber - 1, 1).toLocaleDateString('id-ID', { month:'long', year:'numeric' });
+}
+
+async function loadCrewPayrollSlips(){
+  const status = document.getElementById('crewReportStatus');
+  const month = document.getElementById('crewReportMonth').value;
+  status.className = 'text-sm text-slate-500 mb-3';
+  status.textContent = 'Memuat slip gaji crew...';
+  try {
+    const result = await dashboardApi(`/dashboard/crew-payroll${month ? `?month=${encodeURIComponent(month)}` : ''}`);
+    crewPayrollSlips = Array.isArray(result.data) ? result.data : [];
+    renderCrewPayrollSlips();
+    status.textContent = '';
+  } catch(error) {
+    crewPayrollSlips = [];
+    renderCrewPayrollSlips();
+    status.className = 'text-sm text-rose-600 mb-3';
+    status.textContent = error.message || 'Slip gaji crew gagal dimuat.';
+  }
+}
+
+function renderCrewPayrollSlips(){
+  const paid = crewPayrollSlips.filter(slip => slip.status === 'paid');
+  const waiting = crewPayrollSlips.filter(slip => slip.status !== 'paid' && !slip.review_note);
+  document.getElementById('crewReportSlipCount').textContent = crewPayrollSlips.length;
+  document.getElementById('crewReportUnpaidTotal').textContent = fmtRp(waiting.reduce((sum, slip) => sum + Number(slip.total_pay || 0), 0));
+  document.getElementById('crewReportPaidTotal').textContent = fmtRp(paid.reduce((sum, slip) => sum + Number(slip.total_pay || 0), 0));
+  const body = document.getElementById('crewReportTableBody');
+  body.innerHTML = crewPayrollSlips.length ? crewPayrollSlips.map(slip => {
+    const isPaid = slip.status === 'paid';
+    const isRejected = !isPaid && Boolean(slip.review_note);
+    const badge = isPaid
+      ? '<span class="inline-flex px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700">Masuk Pengeluaran</span>'
+      : isRejected
+        ? `<span class="inline-flex px-2.5 py-1 rounded-full text-xs font-semibold bg-rose-50 text-rose-700">Ditolak</span><div class="text-xs text-rose-600 mt-1 max-w-[220px] whitespace-normal">${escapeHtml(slip.review_note)}</div><div class="text-[11px] text-slate-400 mt-0.5">Menunggu revisi dari Dashboard Check In Crew</div>`
+        : '<span class="inline-flex px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-700">Menunggu Review</span>';
+    const deleteButton = `<button type="button" onclick="deleteCrewPayroll('${escapeHtml(slip.id)}')" class="ml-3 text-xs font-semibold text-slate-400 hover:text-rose-600">Hapus</button>`;
+    const actions = isPaid
+      ? `<button type="button" onclick="reviewCrewPayroll('${escapeHtml(slip.id)}','undo')" class="ml-3 text-xs font-semibold text-slate-500 hover:text-slate-700">Batalkan</button>${deleteButton}`
+      : isRejected
+        ? deleteButton
+        : `<button type="button" onclick="reviewCrewPayroll('${escapeHtml(slip.id)}','accept')" class="ml-3 text-xs font-semibold text-emerald-600 hover:text-emerald-800">Masukkan sebagai pengeluaran</button><button type="button" onclick="reviewCrewPayroll('${escapeHtml(slip.id)}','reject')" class="ml-3 text-xs font-semibold text-rose-600 hover:text-rose-800">Tolak</button>${deleteButton}`;
+    const sentAt = new Date(slip.updated_at || slip.submitted_at).toLocaleString('id-ID', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit', timeZone:'Asia/Jakarta' });
+    return `<tr>
+      <td class="px-4 py-3 font-medium text-slate-800">${escapeHtml(slip.crew)}<div class="text-xs text-slate-400 font-normal">${escapeHtml(formatCrewReportMonth(slip.period_month))}</div></td>
+      <td class="px-4 py-3 whitespace-nowrap">${Number(slip.detail?.check_in_days || 0)} hari</td>
+      <td class="px-4 py-3 text-right whitespace-nowrap">${fmtRp(slip.base_pay)}</td>
+      <td class="px-4 py-3 text-right whitespace-nowrap">${fmtRp(slip.extra_total)}</td>
+      <td class="px-4 py-3 text-right whitespace-nowrap font-bold text-slate-900">${fmtRp(slip.total_pay)}</td>
+      <td class="px-4 py-3">${badge}</td>
+      <td class="px-4 py-3 text-xs text-slate-500 whitespace-nowrap">${escapeHtml(sentAt)} WIB</td>
+      <td class="px-4 py-3 text-right whitespace-nowrap">
+        <button type="button" onclick="openCrewPayrollDetail('${escapeHtml(slip.id)}')" class="text-xs font-semibold text-indigo-600 hover:text-indigo-800">Detail</button>${actions}
+      </td>
+    </tr>`;
+  }).join('') : '<tr><td colspan="8" class="px-4 py-8 text-center text-sm text-slate-400">Belum ada slip gaji yang dikirim untuk bulan ini.</td></tr>';
+}
+
+function openCrewPayrollDetail(id){
+  const slip = crewPayrollSlips.find(item => item.id === id);
+  if(!slip) return;
+  const detail = slip.detail || {};
+  const extra = detail.extra_pay || {};
+  const row = (label, value, strong) => `<div class="flex justify-between gap-3 ${strong ? 'font-bold text-slate-900 border-t border-slate-200 pt-2' : 'text-slate-600'}"><span>${label}</span><span>${value}</span></div>`;
+  const extraRows = Object.keys(CREW_PAY_EXTRA_LABELS).filter(field => Number(extra[field]) > 0).map(field => row(CREW_PAY_EXTRA_LABELS[field], fmtRp(extra[field])));
+  const properties = Array.isArray(detail.properties) ? detail.properties : [];
+  document.getElementById('crewPayrollModalTitle').textContent = `Slip Gaji ${slip.crew}`;
+  document.getElementById('crewPayrollModalSub').textContent = `${formatCrewReportMonth(slip.period_month)} · dikirim oleh ${slip.submitted_by || '-'}`;
+  document.getElementById('crewPayrollModalBody').innerHTML = `
+    <div class="space-y-1.5">
+      ${row('Honor per hari', fmtRp(detail.daily_rate || 0))}
+      ${row('Hari di bulan', `${Number(detail.total_days || 0)} hari`)}
+      ${row('Hari check-in', `${Number(detail.check_in_days || 0)} hari`)}
+      ${row('Tidak check-in', `${Number(detail.absent_days || 0)} hari`)}
+      ${row('Potongan', `- ${fmtRp(detail.deduction || 0)}`)}
+      ${row('Gaji dibayar', fmtRp(slip.base_pay))}
+      ${extraRows.join('')}
+      ${row('Total gaji', fmtRp(slip.total_pay), true)}
+    </div>
+    <div>
+      <h4 class="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2">Rekap per properti</h4>
+      ${properties.length ? `<div class="divide-y divide-slate-100 border border-slate-100 rounded-xl">${properties.map(item => `
+        <div class="flex justify-between gap-3 px-3 py-2">
+          <div class="min-w-0"><div class="font-medium text-slate-800 truncate">${escapeHtml(item.unit)}</div><div class="text-xs text-slate-400">${Number(item.days)} hari · ${Number(item.visits)} kunjungan</div></div>
+          <div class="text-right whitespace-nowrap"><div class="font-semibold text-slate-800">${fmtRp(item.honor)}</div>${Number(item.fuel) > 0 ? `<div class="text-xs text-slate-400">+ bensin ${fmtRp(item.fuel)}</div>` : ''}</div>
+        </div>`).join('')}</div>` : '<p class="text-slate-400">Tidak ada data properti.</p>'}
+    </div>
+    ${slip.status === 'paid' && slip.paid_at ? `<p class="text-xs text-emerald-700">Dimasukkan sebagai pengeluaran ${escapeHtml(new Date(slip.paid_at).toLocaleDateString('id-ID', { day:'2-digit', month:'long', year:'numeric', timeZone:'Asia/Jakarta' }))}.</p>` : ''}
+    ${slip.status !== 'paid' && slip.review_note ? `<p class="text-xs text-rose-700">Ditolak: ${escapeHtml(slip.review_note)}. Revisi dan kirim ulang dari Dashboard Check In Crew.</p>` : ''}`;
+  openModal('modal-crew-payroll');
+}
+
+/* Review slip: accept = masukkan sebagai pengeluaran, reject = tolak (revisi di Dashboard Check In Crew), undo = batalkan. */
+async function reviewCrewPayroll(id, action){
+  const slip = crewPayrollSlips.find(item => item.id === id);
+  const who = slip ? `${slip.crew} (${formatCrewReportMonth(slip.period_month)}), total ${fmtRp(slip.total_pay)}` : 'slip ini';
+  let note = '';
+  if(action === 'accept'){
+    if(!confirm(`Masukkan slip ${who} sebagai pengeluaran?\n\nGaji pokok dan bensin dicatat per properti, tunjangan/bonus/pulsa sebagai pengeluaran umum. Ini menggantikan catatan honor otomatis crew tersebut untuk bulan itu. Reimburse tidak dicatat lagi karena sudah masuk lewat Pengeluaran Lapangan.\n\nSlip tidak bisa diedit di sini. Kalau ada yang salah, gunakan Tolak.`)) return;
+  } else if(action === 'reject'){
+    const reason = prompt(`Tolak slip ${who}?\n\nTulis alasan penolakan (min. 3 karakter). Slip harus direvisi dan dikirim ulang dari Dashboard Check In Crew.`);
+    if(reason === null) return;
+    note = reason.trim();
+    if(note.length < 3){ showToast('Alasan penolakan wajib diisi.'); return; }
+  } else if(action === 'undo'){
+    if(!confirm(`Batalkan slip ${who}? Pengeluaran dari slip ini akan dihapus dan catatan honor otomatis dikembalikan. Slip kembali ke Menunggu Review.`)) return;
+  }
+  const statusLine = document.getElementById('crewReportStatus');
+  try {
+    await dashboardApi(`/dashboard/crew-payroll/${encodeURIComponent(id)}`, { method:'PATCH', body:JSON.stringify({ action, note }) });
+    await loadCrewPayrollSlips();
+    if(action !== 'reject'){
+      try { await loadFinanceData(); renderDashboard(); } catch(error) { console.warn('Muat ulang keuangan gagal.', error); }
+    }
+    showToast(action === 'accept' ? 'Slip dimasukkan sebagai pengeluaran.' : action === 'reject' ? 'Slip ditolak. Crew diminta merevisi dan mengirim ulang.' : 'Slip dibatalkan; pengeluaran dihapus.');
+  } catch(error) {
+    statusLine.className = 'text-sm text-rose-600 mb-3';
+    statusLine.textContent = error.message || 'Status slip gagal diubah.';
+  }
+}
+
+/* Hapus slip yang belum masuk pengeluaran (menunggu review atau ditolak). Perlu PIN Master. */
+async function deleteCrewPayroll(id){
+  const slip = crewPayrollSlips.find(item => item.id === id);
+  const who = slip ? `${slip.crew} (${formatCrewReportMonth(slip.period_month)}), total ${fmtRp(slip.total_pay)}` : 'slip ini';
+  const wasPaid = slip?.status === 'paid';
+  if(!confirm(`Hapus slip ${who}?\n\n${wasPaid ? 'Pengeluaran yang dibuat dari slip ini juga ikut dihapus dan catatan honor otomatis dikembalikan. ' : ''}Slip hilang dari Laporan Crew & Operasional. Crew bisa mengirim ulang dari Dashboard Check In Crew.`)) return;
+  const pin = window.prompt('Masukkan PIN Master (4 digit) untuk menyetujui penghapusan:');
+  if(pin === null) return;
+  const statusLine = document.getElementById('crewReportStatus');
+  try {
+    await dashboardApi(`/dashboard/crew-payroll/${encodeURIComponent(id)}`, { method:'DELETE', body:JSON.stringify({ pin:pin.trim() }) });
+    await loadCrewPayrollSlips();
+    if(wasPaid){
+      try { await loadFinanceData(); renderDashboard(); } catch(error) { console.warn('Muat ulang keuangan gagal.', error); }
+    }
+    showToast('Slip dihapus.');
+  } catch(error) {
+    statusLine.className = 'text-sm text-rose-600 mb-3';
+    statusLine.textContent = error.message || 'Slip gagal dihapus.';
+  }
+}
+
+/* Pengeluaran lapangan crew yang dikirim dari Dashboard Check In Crew: Terima = masuk pengeluaran, Tolak, Hapus. */
+let crewExpenseReports = [];
+let crewExpenseSource = 'crew';
+let crewExpenseCounts = { crew:0, ops:0 };
+const CREW_EXPENSE_REVIEW_BADGES = {
+  sent:['Menunggu Review','bg-amber-50 text-amber-700'],
+  approved:['Diterima','bg-emerald-50 text-emerald-700'],
+  rejected:['Ditolak','bg-rose-50 text-rose-700']
+};
+
+async function loadCrewExpenseReports(quiet){
+  const status = document.getElementById('crewExpenseReportStatus');
+  const monthInput = document.getElementById('crewExpenseReportMonth');
+  const month = monthInput.value;
+  if(!quiet){
+    status.className = 'text-sm text-slate-500 mb-3';
+    status.textContent = 'Memuat pengeluaran...';
+  }
+  try {
+    const fetchSource = source => {
+      const params = new URLSearchParams({ review:'admin', limit:'50', source });
+      if(month) params.set('month', month);
+      return dashboardApi(`/dashboard/crew-expenses?${params.toString()}`);
+    };
+    // Dua daftar dimuat sekaligus supaya lencana "menunggu review" di kedua tab selalu terbarui.
+    const [crewResult, opsResult] = await Promise.all([fetchSource('crew'), fetchSource('ops')]);
+    const waitingOf = result => (Array.isArray(result.data) ? result.data : []).filter(item => item.review_status === 'sent').length;
+    crewExpenseCounts = { crew:waitingOf(crewResult), ops:waitingOf(opsResult) };
+    const result = crewExpenseSource === 'ops' ? opsResult : crewResult;
+    crewExpenseReports = Array.isArray(result.data) ? result.data : [];
+    renderCrewExpenseReports(Boolean(result.pagination?.has_more));
+    if(!quiet) status.textContent = '';
+  } catch(error) {
+    crewExpenseReports = [];
+    renderCrewExpenseReports(false);
+    status.className = 'text-sm text-rose-600 mb-3';
+    status.textContent = error.message || 'Pengeluaran crew gagal dimuat.';
+  }
+}
+
+function renderCrewExpenseReports(hasMore){
+  [['crewReportExpenseBadge', 'crew'], ['crewReportOpsBadge', 'ops']].forEach(([id, source]) => {
+    const badge = document.getElementById(id);
+    badge.textContent = crewExpenseCounts[source];
+    badge.classList.toggle('hidden', crewExpenseCounts[source] === 0);
+  });
+  const body = document.getElementById('crewExpenseReportBody');
+  if(!crewExpenseReports.length){
+    body.innerHTML = `<tr><td colspan="9" class="px-4 py-8 text-center text-slate-400">Belum ada pengeluaran ${crewExpenseSource === 'ops' ? 'operasional' : 'crew'} yang dikirim pada bulan ini.</td></tr>`;
+    return;
+  }
+  body.innerHTML = crewExpenseReports.map(item => {
+    const [label, classes] = CREW_EXPENSE_REVIEW_BADGES[item.review_status] || CREW_EXPENSE_REVIEW_BADGES.sent;
+    const id = escapeHtml(item.id);
+    const accept = `<button type="button" onclick="reviewCrewExpense('${id}','accept')" class="ml-3 text-xs font-semibold text-emerald-600 hover:text-emerald-800">Terima</button>`;
+    const reject = `<button type="button" onclick="reviewCrewExpense('${id}','reject')" class="ml-3 text-xs font-semibold text-rose-600 hover:text-rose-800">Tolak</button>`;
+    const remove = `<button type="button" onclick="deleteCrewExpenseReport('${id}')" class="ml-3 text-xs font-semibold text-slate-400 hover:text-rose-600">Hapus</button>`;
+    const actions = item.review_status === 'sent' ? accept + reject + remove
+      : item.review_status === 'rejected' ? accept + remove
+      : remove;
+    return `<tr>
+      <td class="px-4 py-3 whitespace-nowrap">${escapeHtml(item.entry_date || '-')}</td>
+      <td class="px-4 py-3 font-semibold text-slate-800">${escapeHtml(item.payee || '-')}</td>
+      <td class="px-4 py-3">${escapeHtml(item.category_name || '-')}</td>
+      <td class="px-4 py-3">${escapeHtml(item.property_name || '-')}</td>
+      <td class="px-4 py-3 text-right font-semibold whitespace-nowrap">${fmtRp(item.amount)}</td>
+      <td class="px-4 py-3 text-slate-500">${escapeHtml(item.description || '-')}</td>
+      <td class="px-4 py-3">${item.proof_url ? `<button type="button" onclick="viewCrewExpenseProof('${escapeHtml(item.proof_url)}')" class="text-xs font-semibold text-indigo-600 hover:text-indigo-800">Lihat</button>` : '-'}</td>
+      <td class="px-4 py-3"><span class="inline-flex px-2.5 py-1 rounded-full text-xs font-semibold ${classes}">${label}</span></td>
+      <td class="px-4 py-3 text-right whitespace-nowrap">${actions}</td>
+    </tr>`;
+  }).join('') + (hasMore ? '<tr><td colspan="9" class="px-4 py-3 text-center text-xs text-slate-400">Menampilkan 50 pengeluaran terbaru. Pilih bulan yang lebih spesifik untuk melihat sisanya.</td></tr>' : '');
+}
+
+function viewCrewExpenseProof(url){
+  document.getElementById('attendancePhotoModalImg').alt = 'Struk pengeluaran crew';
+  viewAttendancePhoto(url);
+}
+
+async function reviewCrewExpense(id, action){
+  const item = crewExpenseReports.find(entry => entry.id === id);
+  const who = item ? `${item.payee || 'crew'} - ${item.category_name || ''} ${fmtRp(item.amount)}` : 'pengeluaran ini';
+  if(action === 'accept' && !confirm(`Terima ${who}?\n\nPengeluaran ini akan dicatat sebagai pengeluaran dan dihitung di laporan.`)) return;
+  if(action === 'reject' && !confirm(`Tolak ${who}?\n\nStatus di Dashboard Check In Crew akan menjadi Ditolak.`)) return;
+  const status = document.getElementById('crewExpenseReportStatus');
+  try {
+    await dashboardApi(`/dashboard/crew-expenses/${encodeURIComponent(id)}`, { method:'PATCH', body:JSON.stringify({ action }) });
+    await loadCrewExpenseReports(true);
+    if(action === 'accept'){
+      try { await loadFinanceData(); renderDashboard(); } catch(error) { console.warn('Muat ulang keuangan gagal.', error); }
+    }
+    showToast(action === 'accept' ? 'Pengeluaran diterima dan dicatat.' : 'Pengeluaran ditolak.');
+  } catch(error) {
+    status.className = 'text-sm text-rose-600 mb-3';
+    status.textContent = error.message || 'Aksi pengeluaran gagal.';
+  }
+}
+
+async function deleteCrewExpenseReport(id){
+  const item = crewExpenseReports.find(entry => entry.id === id);
+  const who = item ? `${item.payee || 'crew'} - ${item.category_name || ''} ${fmtRp(item.amount)}` : 'pengeluaran ini';
+  const wasApproved = item?.review_status === 'approved';
+  if(!confirm(`Hapus ${who}?\n\nData ini juga hilang dari Dashboard Check In Crew.${wasApproved ? ' Pengeluaran ini sudah masuk pengeluaran dan ikut terhapus dari sana.' : ''}\nTindakan ini tidak bisa dibatalkan.`)) return;
+  const pin = window.prompt('Masukkan PIN Master (4 digit) untuk menyetujui penghapusan:');
+  if(pin === null) return;
+  const status = document.getElementById('crewExpenseReportStatus');
+  try {
+    await dashboardApi(`/dashboard/crew-expenses/${encodeURIComponent(id)}`, { method:'DELETE', body:JSON.stringify({ pin:pin.trim() }) });
+    await loadCrewExpenseReports(true);
+    if(wasApproved){
+      try { await loadFinanceData(); renderDashboard(); } catch(error) { console.warn('Muat ulang keuangan gagal.', error); }
+    }
+    showToast('Pengeluaran dihapus.');
+  } catch(error) {
+    status.className = 'text-sm text-rose-600 mb-3';
+    status.textContent = error.message || 'Pengeluaran gagal dihapus.';
+  }
+}
+
 function viewAttendancePhoto(url){
   document.getElementById('attendancePhotoModalImg').src = url;
   openModal('modal-attendance-photo');
@@ -5344,7 +5762,7 @@ function deleteFinanceEntry(id){
 
 function openExpenseEditModal(id){
   const entry = EXPENSES.find(item => item.id === id);
-  if(!entry || entry.createdBy === 'checkin-payroll') return;
+  if(!entry || ['checkin-payroll', 'crew-payroll'].includes(entry.createdBy)) return;
   const property = PROPERTIES.find(item => financeEntryMatchesProperty(entry, item));
   if(property?.code === 'KDO'){
     showToast('Pengeluaran Kosan De Orange hanya bisa dikelola dari halaman Kosan.');
@@ -5478,6 +5896,7 @@ async function submitFinanceDelete(event){
     closeModal('modal-delete-finance');
     showToast('Transaksi berhasil dihapus.');
     try {
+      await loadCrewExpenseReports(true);
       await loadFinanceData();
       renderDashboard();
       if(currentView === 'owner') renderOwners();
@@ -5664,6 +6083,8 @@ function renderExpenseTable(){
         : '<span class="text-slate-300">—</span>';
       const actionCell = property?.code === 'KDO'
         ? '<span class="text-xs text-slate-400" title="Dikelola dari halaman Kosan">Kelola di Kosan</span>'
+        : entry.createdBy === 'crew-payroll'
+        ? '<span class="text-xs text-slate-400" title="Berasal dari slip gaji. Ubah lewat Laporan Crew.">Dari Laporan Crew</span>'
         : canEdit
           ? `<button type="button" onclick="openExpenseEditModal('${escapeHtml(entry.id)}')" class="text-xs font-semibold text-brand-600 hover:text-brand-800">Edit</button><button type="button" onclick="deleteFinanceEntry('${escapeHtml(entry.id)}')" aria-label="Hapus pengeluaran" title="Hapus pengeluaran" class="ml-3 text-slate-400 hover:text-rose-600"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2m-9 0l1 14h8l1-14M10 11v5m4-5v5"/></svg></button>`
           : '—';

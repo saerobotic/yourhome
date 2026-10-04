@@ -127,6 +127,23 @@
     .honor-total{font-weight:700;color:var(--accent);white-space:nowrap}
     .hadir{color:var(--success);font-weight:700;white-space:nowrap}
     .absen,.potongan{color:var(--danger);font-weight:700;white-space:nowrap}
+    .slip-alert-dot{display:inline-block;width:9px;height:9px;margin-right:7px;border-radius:50%;background:var(--danger);box-shadow:0 0 0 3px var(--danger-soft);vertical-align:middle;animation:slipAlertPulse 1.6s ease-in-out infinite}
+    .slip-alert-note{display:block;margin-top:3px;font-size:.72rem;font-weight:600;color:var(--danger)}
+    .exp-status{display:inline-block;padding:3px 9px;border-radius:999px;font-size:.72rem;font-weight:700;white-space:nowrap}
+    .exp-status.pending{background:var(--sunken-2);color:var(--ink-2)}
+    .exp-status.sent{background:#fdf3d7;color:#8a5a00}
+    .exp-status.rejected{background:var(--danger-soft);color:var(--danger)}
+    .exp-status.approved{background:#e3f4e8;color:#1f6b3a}
+    .exp-actions{display:flex;flex-wrap:wrap;gap:4px 12px}
+    .detail-btn.exp-danger{color:var(--danger)}
+    .detail-btn:disabled{opacity:.5;cursor:default;text-decoration:none}
+    .sent-notice-icon{width:54px;height:54px;margin:0 auto;border-radius:50%;background:#e3f4e8;color:#1f6b3a;font-size:1.6rem;font-weight:800;display:flex;align-items:center;justify-content:center}
+    .slip-alert-dismiss{margin-left:6px;padding:1px 8px;border:1px solid var(--danger-line);border-radius:999px;background:var(--paper);color:var(--danger);font-size:.68rem;font-weight:700;cursor:pointer}
+    .slip-alert-dismiss:hover{background:var(--danger);border-color:var(--danger);color:#fff}
+    .slip-alert-badge{display:inline-block;margin-left:8px;padding:2px 9px;border-radius:999px;background:var(--danger-soft);border:1px solid var(--danger-line);color:var(--danger);font-size:.72rem;font-weight:700;vertical-align:middle}
+    .slip-alert-badge[hidden]{display:none}
+    @keyframes slipAlertPulse{50%{box-shadow:0 0 0 5px transparent}}
+    @media (prefers-reduced-motion:reduce){.slip-alert-dot{animation:none}}
     .bayar{font-weight:800;color:var(--ink);white-space:nowrap;font-variant-numeric:tabular-nums}
     .empty{padding:48px 20px;text-align:center;color:var(--muted);display:none;font-size:.88rem}
     .empty strong{display:block;color:var(--ink);font-size:1.02rem;font-weight:700;margin-bottom:4px}
@@ -178,10 +195,6 @@
     .photo-grid img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .2s}
     .photo-grid button:hover img{transform:scale(1.04)}
     .no-photo,.no-recap{color:var(--muted);font-size:.84rem;padding:18px;background:var(--sunken);border:1px dashed var(--line-strong);border-radius:10px;text-align:center;grid-column:1/-1}
-    .lightbox{position:fixed;inset:0;background:rgba(20,14,12,.9);display:none;place-items:center;z-index:20;padding:18px}
-    .lightbox.open{display:grid}
-    .lightbox img{max-width:94vw;max-height:88vh;object-fit:contain;border-radius:10px}
-    .lightbox button{position:absolute;top:20px;right:22px;border:0;background:#fff;color:var(--ink);width:40px;height:40px;border-radius:50%;font-size:1.4rem}
 
     /* ===== Slip gaji ===== */
     .slip-calendar{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;padding:18px 20px 4px}
@@ -539,15 +552,14 @@
     <div class="top-actions">
       <button class="button" id="exportPdfBtn" type="button" title="Download PDF"><svg class="btn-icon" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg><span class="btn-word">Download&nbsp;</span><span>PDF</span></button>
       <button class="button" id="exportExcelBtn" type="button" title="Download Excel"><svg class="btn-icon" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg><span class="btn-word">Download&nbsp;</span><span>Excel</span></button>
-      <button class="button primary" id="manualEntryBtn" type="button">+ Tambah Data Manual</button>
-      <button class="button danger" id="deleteAllBtn" type="button" style="display:none">Hapus Semua Data</button>
     </div>
 
     <div class="dash-shell">
     <nav class="view-switch" aria-label="Menu dashboard">
       <button class="view-btn" data-dash-view="checkin" type="button"><span>Check-in Lokasi</span></button>
       <button class="view-btn active" data-dash-view="riwayat" type="button" aria-current="page"><span>Laporan Kerja</span></button>
-      <button class="view-btn" data-dash-view="pengeluaran" type="button"><span>Pengeluaran</span></button>
+      <button class="view-btn" data-dash-view="pengeluaran" type="button"><span>Pengeluaran Crew</span></button>
+      <button class="view-btn" data-dash-view="operasional" type="button"><span>Operasional</span></button>
       <button class="view-btn" data-dash-view="slip" type="button"><span>Slip Gaji</span></button>
       <button class="view-btn" data-dash-view="rekap" type="button"><span>Rekap Bulanan</span></button>
       <button class="view-btn" data-dash-view="crew" type="button"><span>Data Crew</span></button>
@@ -582,23 +594,80 @@
     <div class="dashboard-view hidden" id="viewPengeluaran">
     <section class="panel records" id="crewExpensePanel">
       <div class="records-head">
-        <h2>Pengeluaran Lapangan Crew</h2>
-        <input type="date" id="crewExpenseDate" aria-label="Tanggal pengeluaran crew" />
+        <h2>Pengeluaran Crew</h2>
+        <div style="display:flex;gap:8px;align-items:center">
+          <input type="date" id="crewExpenseDate" aria-label="Filter tanggal pengeluaran crew (kosong = semua tanggal)" />
+          <button class="button" id="crewExpenseAllBtn" type="button">Semua tanggal</button>
+        </div>
       </div>
+      <p class="hint" style="margin:0 20px 10px">Tinjau pengeluaran dari crew: <strong>Kirim ke Admin</strong> mengirimnya ke menu Laporan Crew &amp; Operasional di Dashboard utama untuk diterima atau ditolak. Setelah terkirim, statusnya "Terkirim"; kalau Admin menolak statusnya menjadi "Ditolak", dan kalau Admin menghapusnya di Laporan, baris ini ikut hilang. Pengeluaran baru dihitung setelah diterima Admin.</p>
+      <p id="crewExpenseMessage" class="pin-message" role="status" aria-live="polite" style="margin:0 20px 10px"></p>
       <div class="table-wrap">
         <table class="mobile-cards">
-          <thead><tr><th>Crew</th><th>Jenis</th><th>Properti</th><th>Jumlah</th><th>Keterangan</th><th>Struk</th></tr></thead>
+          <thead><tr><th>Tanggal</th><th>Crew</th><th>Jenis</th><th>Properti</th><th>Jumlah</th><th>Keterangan</th><th>Struk</th><th>Status</th><th>Aksi</th></tr></thead>
           <tbody id="crewExpenseBody"></tbody>
         </table>
-        <div class="empty" id="crewExpenseEmpty" hidden><strong>Belum ada pengeluaran</strong><span>Pengeluaran yang dikirim crew di tanggal ini akan muncul di sini.</span></div>
+        <div class="empty" id="crewExpenseEmpty" hidden><strong>Belum ada pengeluaran</strong><span>Pengeluaran yang dikirim crew akan muncul di sini.</span></div>
+      </div>
+      <div class="pagination" id="crewExpensePagination">
+        <button type="button" id="crewExpensePrevBtn" disabled>Sebelumnya</button>
+        <span id="crewExpensePageInfo"></span>
+        <button type="button" id="crewExpenseNextBtn" disabled>Berikutnya</button>
       </div>
     </section>
 
     </div><!-- /viewPengeluaran -->
 
+    <div class="dashboard-view hidden" id="viewOperasional">
+    <section class="panel records" id="opsExpenseFormPanel">
+      <div class="records-head"><h2>Input Pengeluaran Operasional</h2></div>
+      <div class="pin-panel-body">
+        <p class="hint">Isi pengeluaran operasional di sini (belanja kebutuhan properti, perbaikan, dan sejenisnya). Setelah disimpan, klik <strong>Kirim ke Admin</strong> pada daftar di bawah agar masuk ke menu Laporan Crew &amp; Operasional di Dashboard utama. Pengeluaran baru dihitung setelah diterima Admin.</p>
+        <form id="opsExpenseForm" class="edit-form" style="padding:0;margin-top:14px">
+          <label class="field" for="opsExpenseProperty"><span class="meta-label">Properti *</span><select id="opsExpenseProperty" required><option value="">— Pilih properti —</option></select></label>
+          <label class="field" for="opsExpenseCategory"><span class="meta-label">Jenis Pengeluaran *</span><select id="opsExpenseCategory" required><option value="">— Pilih jenis —</option></select></label>
+          <label class="field" for="opsExpenseAmount"><span class="meta-label">Jumlah (Rp) *</span><input id="opsExpenseAmount" type="text" inputmode="numeric" placeholder="contoh: 50.000" autocomplete="off" required /></label>
+          <label class="field" for="opsExpenseEntryDate"><span class="meta-label">Tanggal *</span><input id="opsExpenseEntryDate" type="date" required /></label>
+          <label class="field" for="opsExpenseNote" style="grid-column:1/-1"><span class="meta-label">Keterangan</span><input id="opsExpenseNote" type="text" maxlength="160" placeholder="contoh: beli sabun 2 botol" /></label>
+          <div class="field" style="grid-column:1/-1">
+            <label for="opsExpenseReceipt"><span class="meta-label">Foto Struk *</span></label>
+            <input id="opsExpenseReceipt" type="file" accept="image/*" />
+            <span class="hint" style="margin:0">Foto otomatis dikecilkan di bawah 100 KB.</span>
+            <img id="opsExpenseReceiptPreview" alt="Pratinjau struk" hidden style="max-height:180px;max-width:100%;border:1px solid var(--line);border-radius:var(--r);margin-top:6px;align-self:flex-start" />
+          </div>
+          <div style="grid-column:1/-1"><button class="button primary" id="opsExpenseSubmitBtn" type="submit" disabled>Simpan Pengeluaran</button></div>
+        </form>
+        <p id="opsExpenseFormMessage" class="pin-message" role="status" aria-live="polite"></p>
+      </div>
+    </section>
+
+    <section class="panel records" id="opsExpensePanel">
+      <div class="records-head">
+        <h2>Daftar Pengeluaran Operasional</h2>
+        <div style="display:flex;gap:8px;align-items:center">
+          <input type="date" id="opsExpenseDate" aria-label="Filter tanggal pengeluaran operasional (kosong = semua tanggal)" />
+          <button class="button" id="opsExpenseAllBtn" type="button">Semua tanggal</button>
+        </div>
+      </div>
+      <p id="opsExpenseMessage" class="pin-message" role="status" aria-live="polite" style="margin:0 20px 10px"></p>
+      <div class="table-wrap">
+        <table class="mobile-cards">
+          <thead><tr><th>Tanggal</th><th>Petugas</th><th>Jenis</th><th>Properti</th><th>Jumlah</th><th>Keterangan</th><th>Struk</th><th>Status</th><th>Aksi</th></tr></thead>
+          <tbody id="opsExpenseBody"></tbody>
+        </table>
+        <div class="empty" id="opsExpenseEmpty" hidden><strong>Belum ada pengeluaran operasional</strong><span>Pengeluaran yang Anda input di atas akan muncul di sini.</span></div>
+      </div>
+      <div class="pagination" id="opsExpensePagination">
+        <button type="button" id="opsExpensePrevBtn" disabled>Sebelumnya</button>
+        <span id="opsExpensePageInfo"></span>
+        <button type="button" id="opsExpenseNextBtn" disabled>Berikutnya</button>
+      </div>
+    </section>
+    </div><!-- /viewOperasional -->
+
     <div class="dashboard-view hidden" id="viewSlip">
     <section class="panel records" id="slipPanel">
-      <div class="records-head"><h2>Slip Gaji Bulanan</h2><span class="slip-period" id="slipPeriod">-</span></div>
+      <div class="records-head"><h2>Slip Gaji Bulanan <span class="slip-alert-badge" id="slipRejectBadge" hidden></span></h2><span class="slip-period" id="slipPeriod">-</span></div>
       <div class="table-wrap">
         <table class="mobile-cards">
           <thead><tr><th>Crew</th><th>Hari di Bulan</th><th>Hari Check In</th><th>Tidak Check In</th><th>Potongan</th><th>Gaji Dibayar</th><th>Uang Bensin</th><th>Properti Dikerjakan</th><th>Aksi</th></tr></thead>
@@ -651,7 +720,7 @@
     <section class="panel records">
       <div class="records-head"><h2>Gaji Pokok per Hari</h2><span class="records-count" id="gajiCount">0 crew</span></div>
       <div class="pin-panel-body">
-        <p class="hint">Honor per hari tiap crew, dipakai untuk honor, slip gaji, dan rekap (kalau kosong, Rp 100.000). Uang bensin per hari dikali jumlah hari check-in tiap bulan, masuk otomatis ke Gaji Tambahan slip dan kolom Uang Bensin di Slip Gaji Bulanan.</p>
+        <p class="hint">Honor per hari tiap crew, dipakai untuk honor, slip gaji, dan rekap (kalau kosong, Rp 100.000). Uang bensin per hari dikali jumlah hari check-in tiap bulan (dan dibagi rata per laporan hari itu, sama seperti gaji pokok), masuk otomatis ke Gaji Tambahan slip dan kolom Uang Bensin di Slip Gaji Bulanan.</p>
         <div class="table-wrap">
           <table class="mobile-cards"><thead><tr><th>Nama Crew</th><th>Gaji Pokok / Hari (Rp)</th><th>Uang Bensin / Hari (Rp)</th><th>Aksi</th></tr></thead><tbody id="gajiRows"></tbody></table>
         </div>
@@ -674,11 +743,15 @@
     </div><!-- /viewCheckin -->
 
     <div class="dashboard-view hidden" id="viewRiwayat">
+    <div class="top-actions">
+      <button class="button primary" id="manualEntryBtn" type="button">+ Tambah Data Manual</button>
+      <button class="button danger" id="deleteAllBtn" type="button">Hapus Semua Data</button>
+    </div>
     <section class="panel records">
       <div class="records-head"><h2>Laporan Pekerjaan</h2><span class="records-count" id="recordsCount">0 data</span></div>
       <div class="table-wrap">
         <table class="mobile-cards">
-          <thead><tr><th>Waktu</th><th>Crew</th><th>Properti</th><th>Pekerjaan</th><th>Honor/Properti</th><th>Bukti Foto</th><th>Sumber</th><th>Aksi</th></tr></thead>
+          <thead><tr><th>Waktu</th><th>Crew</th><th>Properti</th><th>Pekerjaan</th><th>Honor/Laporan</th><th>Bukti Foto</th><th>Sumber</th><th>Aksi</th></tr></thead>
           <tbody id="recordsBody"></tbody>
         </table>
         <div class="empty" id="emptyState"><strong>Belum ada data absensi</strong><span>Data check-in akan muncul di sini setelah crew menyimpan pekerjaan.</span></div>
@@ -798,11 +871,11 @@
         <h3>Gaji Tambahan</h3>
         <p class="hint">Isi kalau ada tambahan bulan ini &mdash; otomatis masuk ke Total Gaji, PDF, dan pesan WhatsApp di bawah.</p>
         <div class="detail-meta" id="extraPayGrid" style="padding:8px 0 0">
-          <div class="meta-item"><label class="meta-label" for="extraTunjangan">Tunjangan</label><input id="extraTunjangan" type="number" min="0" step="1000" placeholder="0"></div>
-          <div class="meta-item"><label class="meta-label" for="extraBonus">Bonus</label><input id="extraBonus" type="number" min="0" step="1000" placeholder="0"></div>
-          <div class="meta-item"><label class="meta-label" for="extraBensin">Uang Bensin (otomatis: hari × tarif)</label><input id="extraBensin" type="number" min="0" step="1000" placeholder="0"></div>
-          <div class="meta-item"><label class="meta-label" for="extraReimburse">Reimburse (Penggantian Biaya)</label><input id="extraReimburse" type="number" min="0" step="1000" placeholder="0"></div>
-          <div class="meta-item"><label class="meta-label" for="extraPulsa">Pulsa / Komunikasi</label><input id="extraPulsa" type="number" min="0" step="1000" placeholder="0"></div>
+          <div class="meta-item"><label class="meta-label" for="extraTunjangan">Tunjangan</label><input id="extraTunjangan" type="text" inputmode="numeric" autocomplete="off" placeholder="0"></div>
+          <div class="meta-item"><label class="meta-label" for="extraBonus">Bonus</label><input id="extraBonus" type="text" inputmode="numeric" autocomplete="off" placeholder="0"></div>
+          <div class="meta-item"><label class="meta-label" for="extraBensin">Uang Bensin (otomatis: hari × tarif, dibagi per laporan)</label><input id="extraBensin" type="text" inputmode="numeric" autocomplete="off" placeholder="0"></div>
+          <div class="meta-item"><label class="meta-label" for="extraReimburse">Reimburse (Penggantian Biaya)</label><input id="extraReimburse" type="text" inputmode="numeric" autocomplete="off" placeholder="0"></div>
+          <div class="meta-item"><label class="meta-label" for="extraPulsa">Pulsa / Komunikasi</label><input id="extraPulsa" type="text" inputmode="numeric" autocomplete="off" placeholder="0"></div>
           <div class="meta-item gold"><span class="meta-label">Total Gaji</span><div class="meta-value gold" id="slipTotalGaji">Rp 0</div></div>
         </div>
       </div>
@@ -813,7 +886,9 @@
         <div class="admin-actions">
           <button class="button" id="slipPdfBtn" type="button">Simpan PDF</button>
           <button class="button primary" id="slipWhatsappBtn" type="button">Kirim ke WhatsApp</button>
+          <button class="button primary" id="slipSendAdminBtn" type="button">Kirim ke Admin</button>
         </div>
+        <p class="hint">"Kirim ke Admin" mengirim slip ini ke menu Laporan Crew &amp; Operasional di Dashboard utama. Admin akan memeriksa lalu memasukkannya sebagai pengeluaran atau menolaknya. Jika ditolak, revisi di sini lalu kirim ulang.</p>
         <p id="slipActionMessage" class="pin-message" role="status" aria-live="polite"></p>
       </div>
     </div>
@@ -841,14 +916,20 @@
       </form>
     </div>
   </div>
-  <div class="modal" id="receiptModal">
-    <div class="modal-card" style="width:min(560px,100%)">
-      <div class="modal-head"><div><h2>Struk Pengeluaran</h2><p class="subtitle" id="receiptSubtitle"></p></div><button class="close" type="button" data-close="receiptModal" aria-label="Tutup">&times;</button></div>
-      <div style="padding:14px;text-align:center"><img id="receiptImage" alt="Struk pengeluaran" style="max-width:100%;max-height:70vh;border-radius:10px" /></div>
+  <div class="modal" id="sentNoticeModal" role="alertdialog" aria-modal="true" aria-labelledby="sentNoticeTitle" aria-describedby="sentNoticeText">
+    <div class="modal-card" style="width:min(420px,100%);text-align:center;padding:26px 22px">
+      <div class="sent-notice-icon" aria-hidden="true">&#10003;</div>
+      <h2 id="sentNoticeTitle" style="margin:12px 0 6px">Data sudah terkirim</h2>
+      <p id="sentNoticeText" class="subtitle" style="margin:0 0 18px"></p>
+      <button class="button primary" type="button" data-close="sentNoticeModal">OK</button>
     </div>
   </div>
-
-  <div class="lightbox" id="lightbox"><button type="button" data-close="lightbox" aria-label="Tutup foto">&times;</button><img id="lightboxImage" alt="Foto diperbesar" /></div>
+  <div class="modal" id="receiptModal">
+    <div class="modal-card" style="width:min(560px,100%)">
+      <div class="modal-head"><div><h2 id="receiptHeading">Struk Pengeluaran</h2><p class="subtitle" id="receiptSubtitle"></p></div><button class="close" type="button" data-close="receiptModal" aria-label="Tutup">&times;</button></div>
+      <div style="padding:14px;text-align:center"><img id="receiptImage" alt="Foto" style="max-width:100%;max-height:70vh;border-radius:10px" /></div>
+    </div>
+  </div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
   <script>
@@ -893,7 +974,7 @@
       sessionStorage.removeItem('dashboard_admin_token');
       sessionStorage.removeItem('dashboard_admin_login_date');
     }
-    const state = { records: [], filtered: [], salaryMap: {}, honorMap: {}, historyPage: 1, adminToken: sessionStorage.getItem('dashboard_admin_token') || '' };
+    const state = { records: [], filtered: [], salaryMap: {}, honorMap: {}, historyPage: 1, adminToken: sessionStorage.getItem('dashboard_admin_token') || '', slipReviews: { month: '', byCrew: {} } };
     let refreshInProgress = false;
     let detailRecord = null;
     let currentSlip = null;
@@ -1049,27 +1130,31 @@
     }
     // Hitung peta honor per crew+tanggal.
     // Kunci: `${crew}|${date}`. Setiap crew+date dapat 1 hari kerja (Rp 100.000),
-    // lalu dibagi rata ke jumlah properti unik yang dikunjungi hari itu.
+    // lalu dibagi rata ke jumlah laporan pekerjaan hari itu (3 laporan = 3 bagian, walau propertinya sama).
     function computeSalaryMap(records) {
       const groups = {};
       records.forEach(record => {
         if (!record.crew || !record.date) return;
         const key = `${record.crew}|${record.date}`;
-        if (!groups[key]) groups[key] = { crew: record.crew, date: record.date, units: new Set(), visits: 0 };
-        // Hanya laporan (ada properti) yang membagi honor; check-in lokasi tidak dihitung sebagai properti.
-        if (isReportRecord(record)) groups[key].units.add(String(record.unit).trim().toLowerCase());
+        if (!groups[key]) groups[key] = { crew: record.crew, date: record.date, units: new Set(), reports: 0, visits: 0 };
+        // Hanya laporan (ada properti) yang membagi honor; check-in lokasi tidak dihitung.
+        if (isReportRecord(record)) {
+          groups[key].units.add(String(record.unit).trim().toLowerCase());
+          groups[key].reports += 1;
+        }
         groups[key].visits += 1;
       });
       const map = {};
       Object.keys(groups).forEach(key => {
         const g = groups[key];
-        const count = Math.max(1, g.units.size);
+        const reports = Math.max(1, g.reports);
         map[key] = {
           crew: g.crew,
           date: g.date,
-          uniqueProperties: count,
+          uniqueProperties: Math.max(1, g.units.size),
+          reports,
           visits: g.visits,
-          perProperty: crewDailyRate(g.crew) / count,
+          perProperty: crewDailyRate(g.crew) / reports,
           totalForDay: crewDailyRate(g.crew)
         };
       });
@@ -1142,10 +1227,72 @@
       el('arrivalCount').textContent = `${arrivals.length} data`;
       el('arrivalEmpty').style.display = arrivals.length ? 'none' : 'block';
       body.innerHTML = arrivals.map(record => {
-        const gps = record.lat != null && record.lng != null ? `<a class="gps-link" href="https://www.google.com/maps?q=${Number(record.lat)},${Number(record.lng)}" target="_blank" rel="noopener">${Number(record.lat).toFixed(4)}, ${Number(record.lng).toFixed(4)} ↗</a>` : '-';
-        const selfie = record.photo ? `<a href="${escapeHtml(record.photo)}" target="_blank" rel="noopener"><img src="${escapeHtml(record.photo)}" alt="Selfie" style="width:56px;height:56px;object-fit:cover;border-radius:10px" /></a>` : '<span class="muted">Tanpa selfie</span>';
+        const hasCoords = record.lat != null && record.lng != null && Number.isFinite(Number(record.lat)) && Number.isFinite(Number(record.lng)) && !(Number(record.lat) === 0 && Number(record.lng) === 0);
+        const gps = hasCoords ? `<a class="gps-link" href="https://www.google.com/maps?q=${Number(record.lat)},${Number(record.lng)}" target="_blank" rel="noopener">${Number(record.lat).toFixed(4)}, ${Number(record.lng).toFixed(4)} ↗</a> <span class="muted" data-geo-key="${geoKey(record.lat, record.lng)}" data-geo-lat="${Number(record.lat)}" data-geo-lng="${Number(record.lng)}">· memuat wilayah…</span>` : '-';
+        const selfie = record.photo ? `<button type="button" data-arrival-photo="${escapeHtml(record.photo)}" data-arrival-title="${escapeHtml(`${record.crew || '-'} · ${formatDate(record.date)} ${formatTime(record)}`)}" title="Klik untuk memperbesar" aria-label="Perbesar selfie ${escapeHtml(record.crew || '')}" style="border:0;padding:0;background:none;cursor:zoom-in"><img src="${escapeHtml(record.photo)}" alt="Selfie" loading="lazy" style="width:36px;height:36px;object-fit:cover;border-radius:8px;display:block" /></button>` : '<span class="muted">Tanpa selfie</span>';
         return `<tr><td data-label="Waktu"><strong>${formatDate(record.date)}</strong><div class="muted">${formatTime(record)}</div></td><td data-label="Crew" class="crew">${escapeHtml(record.crew || '-')}</td><td data-label="GPS">${gps}</td><td data-label="Selfie">${selfie}</td></tr>`;
       }).join('');
+      body.querySelectorAll('[data-arrival-photo]').forEach(button => button.addEventListener('click', () => {
+        openReceiptModal(button.dataset.arrivalPhoto, button.dataset.arrivalTitle, 'Selfie Check-in');
+      }));
+      resolveArrivalDistricts();
+    }
+
+    // Nama kecamatan dari koordinat (reverse geocoding OpenStreetMap/Nominatim, gratis).
+    // Koordinat dibulatkan 3 desimal (~110 m) sebagai kunci cache di browser supaya tidak ditanya ulang.
+    // Nominatim membatasi ~1 permintaan/detik, jadi permintaan dikirim berurutan.
+    const GEO_CACHE_KEY = 'yh_geo_district_v1';
+    let geoQueueRunning = false;
+    function geoKey(lat, lng) { return `${Number(lat).toFixed(3)},${Number(lng).toFixed(3)}`; }
+    function readGeoCache() {
+      try { return JSON.parse(localStorage.getItem(GEO_CACHE_KEY) || '{}') || {}; } catch { return {}; }
+    }
+    function writeGeoCache(cache) {
+      try { localStorage.setItem(GEO_CACHE_KEY, JSON.stringify(cache)); } catch {}
+    }
+    function districtLabel(address) {
+      const area = address.city_district ? `Kec. ${address.city_district}`
+        : (address.suburb || address.village || address.town || address.municipality || '');
+      const city = address.city || address.county || address.regency || address.state_district || '';
+      return [area, city].filter(Boolean).join(', ');
+    }
+    function paintDistrict(key, label) {
+      document.querySelectorAll(`[data-geo-key="${key}"]`).forEach(node => {
+        node.textContent = label ? `· ${label}` : '· wilayah tidak diketahui';
+      });
+    }
+    async function resolveArrivalDistricts() {
+      if (geoQueueRunning) return;
+      geoQueueRunning = true;
+      try {
+        const cache = readGeoCache();
+        const pending = new Map();
+        document.querySelectorAll('#arrivalBody [data-geo-key]').forEach(node => {
+          const key = node.dataset.geoKey;
+          if (key in cache) paintDistrict(key, cache[key]);
+          else if (!pending.has(key)) pending.set(key, { lat: node.dataset.geoLat, lng: node.dataset.geoLng });
+        });
+        for (const [key, { lat, lng }] of pending) {
+          try {
+            const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&zoom=16&addressdetails=1&accept-language=id&lat=${encodeURIComponent(lat)}&lon=${encodeURIComponent(lng)}`);
+            if (response.status === 429) { paintDistrict(key, ''); break; }
+            if (!response.ok) throw new Error('HTTP ' + response.status);
+            const label = districtLabel((await response.json()).address || {});
+            cache[key] = label;
+            writeGeoCache(cache);
+            paintDistrict(key, label);
+          } catch (error) {
+            document.querySelectorAll(`[data-geo-key="${key}"]`).forEach(node => { node.textContent = ''; });
+          }
+          await new Promise(resolve => setTimeout(resolve, 1100));
+        }
+      } finally {
+        geoQueueRunning = false;
+      }
+      // Tabel bisa dirender ulang saat antrean berjalan; proses baris baru yang masih menunggu.
+      if ([...document.querySelectorAll('#arrivalBody [data-geo-key]')].some(node => node.textContent.includes('memuat wilayah'))) {
+        resolveArrivalDistricts();
+      }
     }
     // Laporan Kerja hanya memuat laporan (properti + foto + pekerjaan); check-in lokasi tidak ikut.
     function isReportRecord(record) {
@@ -1164,10 +1311,12 @@
         const photoCount = (record.workPhotos?.length || 0) + (record.photo ? 1 : 0);
         const salary = state.salaryMap[salaryKey(record)];
         const perProperti = salary ? formatRupiah(salary.perProperty) : '-';
-        const propCount = salary ? salary.uniqueProperties : 1;
+        const propCount = salary ? salary.reports : 1;
+        const fuelPerReport = crewFuelAllowance(record.crew) / Math.max(1, propCount);
+        const fuelLine = fuelPerReport > 0 ? `<div class="muted">+ bensin ${formatRupiah(fuelPerReport)}</div>` : '';
         const sourceLabel = record.source === 'admin' ? 'Admin' : 'Crew';
         const sourceClass = record.source === 'admin' ? 'admin' : 'crew';
-        return `<tr><td data-label="Waktu"><strong>${formatDate(record.date)}</strong><div class="muted">${formatTime(record)}</div></td><td data-label="Crew" class="crew">${escapeHtml(record.crew || '-')}</td><td data-label="Properti"><div class="unit">${escapeHtml(record.unit || '-')}</div><div class="muted">${escapeHtml(record.jobType || '-')}</div></td><td data-label="Pekerjaan"><span class="job">${escapeHtml(record.jobType || '-')}</span></td><td data-label="Honor/Properti"><span class="honor-chip">${perProperti}</span><div class="muted">dari ${propCount} properti hari itu</div></td><td data-label="Bukti Foto" class="photo-count">${photoCount} foto</td><td data-label="Sumber"><span class="source-badge ${sourceClass}">${sourceLabel}</span></td><td data-label="Aksi"><button class="detail-btn" type="button" data-detail="${index}">Lihat detail</button></td></tr>`;
+        return `<tr><td data-label="Waktu"><strong>${formatDate(record.date)}</strong><div class="muted">${formatTime(record)}</div></td><td data-label="Crew" class="crew">${escapeHtml(record.crew || '-')}</td><td data-label="Properti"><div class="unit">${escapeHtml(record.unit || '-')}</div><div class="muted">${escapeHtml(record.jobType || '-')}</div></td><td data-label="Pekerjaan"><span class="job">${escapeHtml(record.jobType || '-')}</span></td><td data-label="Honor/Properti"><span class="honor-chip">${perProperti}</span><div class="muted">dari ${propCount} laporan hari itu</div>${fuelLine}</td><td data-label="Bukti Foto" class="photo-count">${photoCount} foto</td><td data-label="Sumber"><span class="source-badge ${sourceClass}">${sourceLabel}</span></td><td data-label="Aksi"><button class="detail-btn" type="button" data-detail="${index}">Lihat detail</button></td></tr>`;
       }).join('');
       body.querySelectorAll('[data-detail]').forEach(button => button.addEventListener('click', () => openDetail(reports[pageStart + Number(button.dataset.detail)])));
       if (totalPages > 1) {
@@ -1192,23 +1341,28 @@
         propertyStats[unit].days.add(r.date);
         propertyStats[unit].visits += 1;
       });
-      // Hitung honor per properti berdasarkan pembagian honor harian ke seluruh properti yang dikunjungi hari itu.
+      // Honor dan uang bensin harian sama-sama dibagi rata per laporan; bagian sebuah properti =
+      // jumlah laporannya hari itu × bagian per laporan.
       Object.keys(propertyStats).forEach(unit => {
         propertyStats[unit].honor = 0;
+        propertyStats[unit].fuel = 0;
         propertyStats[unit].days.forEach(date => {
-          const dayProperties = new Set();
+          let dayReports = 0;
+          let unitReports = 0;
           state.records.forEach(r => {
-            if (r.crew === crew && r.date === date && r.unit) dayProperties.add(r.unit);
+            if (r.crew !== crew || r.date !== date || !r.unit) return;
+            dayReports += 1;
+            if (r.unit === unit) unitReports += 1;
           });
-          const propCount = Math.max(1, dayProperties.size);
-          propertyStats[unit].honor += crewDailyRate(crew) / propCount;
+          propertyStats[unit].honor += crewDailyRate(crew) * unitReports / Math.max(1, dayReports);
+          propertyStats[unit].fuel += crewFuelAllowance(crew) * unitReports / Math.max(1, dayReports);
         });
       });
       const list = Object.values(propertyStats).sort((a,b) => b.honor - a.honor || a.unit.localeCompare(b.unit, 'id'));
       const totalDays = new Set(state.records.filter(r => r.crew === crew && r.date && r.date.slice(0,7) === month).map(r => r.date)).size;
       const totalProperties = list.length;
       // Total honor = hari check-in × Rp 100.000, sama dengan Gaji Dibayar dan Slip Gaji.
-      return { list, totalHonor: totalDays * crewDailyRate(crew), totalDays, totalProperties };
+      return { list, totalHonor: totalDays * crewDailyRate(crew), totalFuel: totalDays * crewFuelAllowance(crew), totalDays, totalProperties };
     }
     function renderMonthlyMatrix(month) {
       const head = el('monthlyMatrixHead');
@@ -1272,9 +1426,53 @@
         const propertiInfo = recap.totalProperties > 0
           ? `<span class="honor-chip">${recap.totalProperties} properti</span><div class="muted">${checkInDays} hari · ${recap.totalProperties > 1 ? 'multi-properti' : '1 properti'}</div>`
           : `<span class="muted">-</span>`;
-        return `<tr><td data-label="Crew" class="crew">${escapeHtml(crew)}</td><td data-label="Hari di Bulan">${totalDays} hari</td><td data-label="Hari Check In"><span class="hadir">${checkInDays} hari</span></td><td data-label="Tidak Check In"><span class="absen">${tidakCheckIn} hari</span></td><td data-label="Potongan" class="potongan">- ${formatRupiah(potongan)}</td><td data-label="Gaji Dibayar" class="bayar">${formatRupiah(dibayar)}</td><td data-label="Uang Bensin">${formatRupiah(crewFuelAllowance(crew) * checkInDays)}</td><td data-label="Properti Dikerjakan">${propertiInfo}</td><td data-label="Aksi"><button class="detail-btn" type="button" data-slip="${escapeHtml(crew)}">Lihat slip</button></td></tr>`;
+        const review = activeSlipRejection(crew, month);
+        const crewCell = review
+          ? `<span class="slip-alert-dot" title="Slip ditolak Admin"></span>${escapeHtml(crew)}<span class="slip-alert-note">Ditolak: ${escapeHtml(review.review_note)} <button class="slip-alert-dismiss" type="button" data-dismiss-slip="${escapeHtml(crew)}">Sudah dibaca</button></span>`
+          : escapeHtml(crew);
+        return `<tr><td data-label="Crew" class="crew">${crewCell}</td><td data-label="Hari di Bulan">${totalDays} hari</td><td data-label="Hari Check In"><span class="hadir">${checkInDays} hari</span></td><td data-label="Tidak Check In"><span class="absen">${tidakCheckIn} hari</span></td><td data-label="Potongan" class="potongan">- ${formatRupiah(potongan)}</td><td data-label="Gaji Dibayar" class="bayar">${formatRupiah(dibayar)}</td><td data-label="Uang Bensin">${formatRupiah(crewFuelAllowance(crew) * checkInDays)}</td><td data-label="Properti Dikerjakan">${propertiInfo}</td><td data-label="Aksi"><button class="detail-btn" type="button" data-slip="${escapeHtml(crew)}">Lihat slip</button></td></tr>`;
       }).join('');
       body.querySelectorAll('[data-slip]').forEach(btn => btn.addEventListener('click', () => openSlip(btn.dataset.slip, month)));
+      body.querySelectorAll('[data-dismiss-slip]').forEach(btn => btn.addEventListener('click', () => dismissSlipRejection(btn.dataset.dismissSlip, month)));
+      const rejectedCount = crews.filter(crew => activeSlipRejection(crew, month)).length;
+      const badge = el('slipRejectBadge');
+      badge.hidden = rejectedCount === 0;
+      badge.textContent = rejectedCount ? `${rejectedCount} slip ditolak Admin` : '';
+      if (state.slipReviews.month !== month) loadSlipReviews(month);
+    }
+    // Penolakan yang sudah ditandai "Sudah dibaca" di perangkat ini tidak menyalakan lampu lagi; penolakan baru
+    // (setelah kirim ulang lalu ditolak lagi) punya updated_at berbeda sehingga lampu menyala kembali.
+    function slipRejectionSeenKey(review) {
+      return `slip_reject_seen:${review.id}:${review.updated_at}`;
+    }
+    function activeSlipRejection(crew, month) {
+      const review = state.slipReviews.month === month ? state.slipReviews.byCrew[crew] : null;
+      if (!review || review.status === 'paid' || !review.review_note) return null;
+      try { if (localStorage.getItem(slipRejectionSeenKey(review))) return null; } catch (error) { /* tanpa penyimpanan: lampu tetap menyala */ }
+      return review;
+    }
+    function dismissSlipRejection(crew, month) {
+      const review = state.slipReviews.month === month ? state.slipReviews.byCrew[crew] : null;
+      if (!review) return;
+      try { localStorage.setItem(slipRejectionSeenKey(review), '1'); } catch (error) { /* abaikan */ }
+      renderSlipGaji();
+    }
+    // Ambil status review slip bulan ini dari Admin supaya slip yang ditolak diberi indikator merah.
+    // Lampu hanya menyala untuk slip ditolak; gagal memuat (mis. bukan Master/Admin) berarti tidak ada lampu.
+    async function loadSlipReviews(month) {
+      state.slipReviews = { month, byCrew: {} };
+      try {
+        const response = await fetch(`${API_BASE}/dashboard/crew-payroll?month=${encodeURIComponent(month)}`, {
+          headers: { Authorization: `Bearer ${state.adminToken}` }
+        });
+        const result = await response.json().catch(() => ({}));
+        if (!response.ok || result.ok === false || !Array.isArray(result.data)) return;
+        if (state.slipReviews.month !== month) return;
+        result.data.forEach(row => { state.slipReviews.byCrew[row.crew] = row; });
+        renderSlipGaji();
+      } catch (error) {
+        console.warn('Status review slip gagal dimuat.', error);
+      }
     }
     function openSlip(crew, month) {
       const totalDays = daysInMonth(month);
@@ -1330,13 +1528,14 @@
               <span class="chip days">${dayText}</span>
               <span class="chip visits">${visitText}</span>
             </div>
-            <div class="recap-honor">${formatRupiah(stat.honor)}</div>
+            <div class="recap-honor">${formatRupiah(stat.honor)}${stat.fuel > 0 ? `<div class="muted" style="font-size:.7rem;font-weight:500">+ bensin ${formatRupiah(stat.fuel)}</div>` : ''}</div>
           </div>`;
         }).join('');
         const total = `<div class="recap-total">
           <div>
             <div class="recap-total-label">Total Honor (${recap.totalDays} hari · ${recap.totalProperties} properti)</div>
             <div class="recap-total-value">${formatRupiah(recap.totalHonor)}</div>
+            ${recap.totalFuel > 0 ? `<div class="muted" style="font-size:.78rem">+ Uang Bensin ${formatRupiah(recap.totalFuel)} (dibagi per laporan, sama seperti honor)</div>` : ''}
           </div>
         </div>`;
         el('recapGrid').innerHTML = items + total;
@@ -1348,10 +1547,56 @@
       currentSlip = { crew, month, totalDays, checkInDays, tidakCheckIn, potongan, dibayar, recap, extraPay, totalGaji: dibayar + sumExtraPay(extraPay) };
       EXTRA_PAY_FIELDS.forEach(field => {
         const input = el(`extra${field[0].toUpperCase()}${field.slice(1)}`);
-        if (input) { input.value = extraPay[field] || ''; input.readOnly = field === 'bensin'; }
+        if (input) { input.value = extraPay[field] ? Number(extraPay[field]).toLocaleString('id-ID') : ''; input.readOnly = field === 'bensin'; }
       });
       el('slipTotalGaji').textContent = formatRupiah(currentSlip.totalGaji);
       el('slipActionMessage').textContent = '';
+      loadSlipReviewStatus(crew, month);
+    }
+    // Ambil status review Admin untuk slip aktif: ditolak (beserta alasan) atau sudah masuk pengeluaran.
+    async function loadSlipReviewStatus(crew, month) {
+      const status = el('slipActionMessage');
+      const sendButton = el('slipSendAdminBtn');
+      sendButton.disabled = false;
+      try {
+        const response = await fetch(`${API_BASE}/dashboard/crew-payroll?month=${encodeURIComponent(month)}`, {
+          headers: { Authorization: `Bearer ${state.adminToken}` }
+        });
+        const result = await response.json().catch(() => ({}));
+        if (!response.ok || result.ok === false) return;
+        if (!currentSlip || currentSlip.crew !== crew || currentSlip.month !== month) return;
+        const rows = Array.isArray(result.data) ? result.data : (result.data?.rows || []);
+        const slip = rows.find(row => row.crew === crew && row.period_month === month);
+        if (!slip) return;
+        if (slip.status === 'paid') {
+          sendButton.disabled = true;
+          status.className = 'pin-message success';
+          status.textContent = 'Slip ini sudah dimasukkan Admin sebagai pengeluaran. Tidak bisa dikirim ulang.';
+        } else if (slip.review_note) {
+          status.className = 'pin-message error';
+          status.textContent = `Ditolak Admin: ${slip.review_note}. Revisi lalu kirim ulang.`;
+        } else {
+          status.className = 'pin-message';
+          status.textContent = 'Slip sudah terkirim dan menunggu review Admin.';
+        }
+      } catch (error) {
+        console.warn('Status review slip gagal dimuat.', error);
+      }
+    }
+    // Isian rupiah: tampil dengan pemisah ribuan (100000 jadi 100.000), kursor tetap di posisi angka yang sama.
+    function formatMoneyInput(input) {
+      const raw = input.value;
+      const caret = input.selectionStart ?? raw.length;
+      const digitsBeforeCaret = raw.slice(0, caret).replace(/\D/g, '').length;
+      const digits = raw.replace(/\D/g, '').replace(/^0+(?=\d)/, '');
+      input.value = digits ? Number(digits).toLocaleString('id-ID') : '';
+      let position = 0;
+      let seen = 0;
+      while (position < input.value.length && seen < digitsBeforeCaret) {
+        if (/\d/.test(input.value[position])) seen += 1;
+        position += 1;
+      }
+      try { input.setSelectionRange(position, position); } catch (error) { /* tipe input tidak mendukung kursor */ }
     }
     // Baca input Gaji Tambahan yang sedang tampil, simpan ke localStorage, dan perbarui total slip aktif.
     function refreshSlipExtraPay() {
@@ -1359,7 +1604,7 @@
       const values = {};
       EXTRA_PAY_FIELDS.forEach(field => {
         const input = el(`extra${field[0].toUpperCase()}${field.slice(1)}`);
-        values[field] = Math.max(0, Number(input?.value) || 0);
+        values[field] = Math.max(0, Number(String(input?.value || '').replace(/\D/g, '')) || 0);
       });
       setExtraPay(currentSlip.crew, currentSlip.month, values);
       currentSlip.extraPay = values;
@@ -1379,7 +1624,8 @@
       if (!slip.recap.list.length) return ['(tidak ada data properti pada bulan ini)'];
       return slip.recap.list.map(stat => {
         const dayText = stat.days.size === 1 ? '1 hari' : `${stat.days.size} hari`;
-        return `- ${stat.unit}: ${formatRupiah(stat.honor)} (${dayText}, ${stat.visits} kunjungan)`;
+        const fuelText = stat.fuel > 0 ? ` + bensin ${formatRupiah(stat.fuel)}` : '';
+        return `- ${stat.unit}: ${formatRupiah(stat.honor)}${fuelText} (${dayText}, ${stat.visits} kunjungan)`;
       });
     }
     function slipWhatsAppText(slip) {
@@ -1511,6 +1757,7 @@
       doc.text('PROPERTI', colProperty, y);
       doc.text('HARI', colDays, y);
       doc.text('KUNJUNGAN', colVisits, y);
+      doc.text('BENSIN', right - 85, y, { align:'right' });
       doc.text('HONOR', right, y, { align:'right' });
       doc.setTextColor(0);
       y += 6;
@@ -1533,6 +1780,7 @@
           doc.text(doc.splitTextToSize(String(stat.unit), 285)[0], colProperty, y);
           doc.text(String(stat.days.size), colDays, y);
           doc.text(String(stat.visits), colVisits, y);
+          doc.text(stat.fuel > 0 ? formatRupiah(stat.fuel) : '-', right - 85, y, { align:'right' });
           doc.text(formatRupiah(stat.honor), right, y, { align:'right' });
           y += 16;
         });
@@ -1613,6 +1861,49 @@
         ? `Membuka WhatsApp untuk ${number}.`
         : 'Nomor kosong: pilih kontak di WhatsApp lalu kirim.';
     }
+    // Kirim slip aktif ke Dashboard utama (menu Laporan Crew & Operasional > Slip Gaji).
+    async function sendSlipToAdmin() {
+      if (!currentSlip) return;
+      const slip = currentSlip;
+      const status = el('slipActionMessage');
+      const button = el('slipSendAdminBtn');
+      if (!confirm(`Periksa sebelum mengirim\n\nCek kembali slip ${slip.crew} (${formatMonth(slip.month)}) sebelum dikirim: hari check-in, gaji pokok, bensin, dan gaji tambahan.\nTotal gaji: ${formatRupiah(slip.totalGaji)}\n\nSlip yang sudah dikirim tidak bisa diedit oleh Admin. Jika ada yang salah, Admin akan menolaknya dan Anda harus merevisi lalu kirim ulang.\n\nJika sudah yakin, klik OK untuk mengirim.`)) return;
+      const payload = {
+        crew: slip.crew,
+        month: slip.month,
+        daily_rate: crewDailyRate(slip.crew),
+        total_days: slip.totalDays,
+        check_in_days: slip.checkInDays,
+        absent_days: slip.tidakCheckIn,
+        deduction: slip.potongan,
+        base_pay: slip.dibayar,
+        extra_pay: slip.extraPay || {},
+        total_pay: slip.totalGaji,
+        properties: slip.recap.list.map(stat => ({ unit: stat.unit, days: stat.days.size, visits: stat.visits, honor: Math.round(stat.honor), fuel: Math.round(stat.fuel || 0) }))
+      };
+      button.disabled = true;
+      status.className = 'pin-message';
+      status.textContent = 'Mengirim slip ke Admin...';
+      try {
+        const response = await fetch(`${API_BASE}/dashboard/crew-payroll`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${state.adminToken}` },
+          body: JSON.stringify(payload)
+        });
+        const result = await response.json().catch(() => ({}));
+        if (!response.ok || result.ok === false) throw new Error(result.error || `HTTP ${response.status}`);
+        status.className = 'pin-message success';
+        status.textContent = result.data?.updated ? 'Slip revisi terkirim ulang ke menu Laporan Crew & Operasional (Dashboard utama).' : 'Slip terkirim ke menu Laporan Crew & Operasional (Dashboard utama).';
+        loadSlipReviews(slip.month);
+        showSentNotice(result.data?.updated ? 'Slip revisi sudah terkirim ulang ke Admin (menu Laporan Crew & Operasional di Dashboard utama).' : 'Slip gaji sudah terkirim ke Admin (menu Laporan Crew & Operasional di Dashboard utama).');
+      } catch (error) {
+        console.error('Gagal mengirim slip ke Admin:', error);
+        status.className = 'pin-message error';
+        status.textContent = error.message || 'Slip gagal dikirim.';
+      } finally {
+        button.disabled = false;
+      }
+    }
     function photoButton(src, alt) {
       return `<button type="button" data-photo="${escapeHtml(src)}"><img src="${escapeHtml(src)}" alt="${escapeHtml(alt)}" loading="lazy" /></button>`;
     }
@@ -1622,20 +1913,27 @@
       el('detailSubtitle').textContent = `${record.crew || '-'} · ${formatDate(record.date)} ${formatTime(record)}`;
       const salary = state.salaryMap[salaryKey(record)];
       const honorPerProperti = salary ? formatRupiah(salary.perProperty) : formatRupiah(crewDailyRate(record.crew));
-      const propCount = salary ? salary.uniqueProperties : 1;
+      const propCount = salary ? salary.reports : 1;
       const totalDay = salary ? formatRupiah(salary.totalForDay) : formatRupiah(crewDailyRate(record.crew));
+      const fuelDay = crewFuelAllowance(record.crew);
+      const fuelMeta = fuelDay > 0
+        ? `<div class="meta-item gold"><span class="meta-label">Uang Bensin per Laporan</span><span class="meta-value gold">${formatRupiah(fuelDay / Math.max(1, propCount))}</span></div>
+        <div class="meta-item gold"><span class="meta-label">Total Uang Bensin Hari Ini</span><span class="meta-value gold">${formatRupiah(fuelDay)}</span></div>`
+        : '';
       const sourceLabel = record.source === 'admin' ? 'Admin pusat' : 'Crew';
       const sourceClass = record.source === 'admin' ? 'admin' : 'crew';
       el('detailMeta').innerHTML = `
         <div class="meta-item"><span class="meta-label">Crew</span><span class="meta-value">${escapeHtml(record.crew || '-')}</span></div>
         <div class="meta-item"><span class="meta-label">Pekerjaan</span><span class="meta-value">${escapeHtml(record.jobType || '-')}</span></div>
         <div class="meta-item"><span class="meta-label">Sumber Data</span><span class="meta-value"><span class="source-badge ${sourceClass}">${sourceLabel}</span></span></div>
-        <div class="meta-item gold"><span class="meta-label">Honor per Properti</span><span class="meta-value gold">${honorPerProperti}</span></div>
-        <div class="meta-item gold"><span class="meta-label">Properti Dikunjungi Hari Ini</span><span class="meta-value gold">${propCount} properti</span></div>
-        <div class="meta-item gold"><span class="meta-label">Total Honor Hari Ini</span><span class="meta-value gold">${totalDay}</span></div>`;
+        <div class="meta-item gold"><span class="meta-label">Honor per Laporan</span><span class="meta-value gold">${honorPerProperti}</span></div>
+        <div class="meta-item gold"><span class="meta-label">Laporan Hari Ini</span><span class="meta-value gold">${propCount} laporan</span></div>
+        <div class="meta-item gold"><span class="meta-label">Total Honor Hari Ini</span><span class="meta-value gold">${totalDay}</span></div>${fuelMeta}`;
       el('selfieGrid').innerHTML = record.photo ? photoButton(record.photo, 'Selfie bukti lokasi') : '<div class="no-photo">Tidak ada selfie tersimpan.</div>';
       el('workGrid').innerHTML = record.workPhotos?.length ? record.workPhotos.map((photo, index) => photoButton(photo, `Foto hasil kerja ${index + 1}`)).join('') : '<div class="no-photo">Tidak ada foto hasil kerja tersimpan.</div>';
-      document.querySelectorAll('[data-photo]').forEach(button => button.addEventListener('click', () => { el('lightboxImage').src = button.dataset.photo; el('lightbox').classList.add('open'); }));
+      document.querySelectorAll('[data-photo]').forEach(button => button.addEventListener('click', () => {
+        openReceiptModal(button.dataset.photo, el('detailSubtitle').textContent, button.querySelector('img')?.alt || 'Foto');
+      }));
       el('detailModal').classList.add('open');
     }
     function closeModal(id) { el(id).classList.remove('open'); }
@@ -1645,10 +1943,10 @@
     }
     function resetFilters() { el('monthFilter').value = ''; el('dateFilter').value = ''; el('crewFilter').value = ''; el('unitFilter').value = ''; el('jobFilter').value = ''; applyFilters(); }
     function exportCsv() {
-      const headers = ['Tanggal','Waktu','Crew','Properti','Pekerjaan','Properti Dikunjungi Hari Itu','Honor per Properti (Rp)','Total Honor Hari Itu (Rp)','Latitude','Longitude','Jumlah Foto'];
+      const headers = ['Tanggal','Waktu','Crew','Properti','Pekerjaan','Laporan Hari Itu','Honor per Laporan (Rp)','Total Honor Hari Itu (Rp)','Bensin per Laporan (Rp)','Latitude','Longitude','Jumlah Foto'];
       const rows = state.filtered.map(record => {
         const salary = state.salaryMap[salaryKey(record)];
-        const propCount = salary ? salary.uniqueProperties : 1;
+        const propCount = salary ? salary.reports : 1;
         const perProperti = salary ? Math.round(salary.perProperty) : crewDailyRate(record.crew);
         const totalDay = salary ? Math.round(salary.totalForDay) : crewDailyRate(record.crew);
         return [
@@ -1660,6 +1958,7 @@
           propCount,
           perProperti,
           totalDay,
+          Math.round(crewFuelAllowance(record.crew) / Math.max(1, propCount)),
           record.lat ?? '',
           record.lng ?? '',
           (record.workPhotos?.length || 0) + (record.photo ? 1 : 0)
@@ -2122,7 +2421,7 @@
       ['monthFilter','dateFilter','crewFilter','unitFilter','jobFilter'].forEach(function (id) {
         document.getElementById(id).addEventListener('change', applyFilters);
       });
-      document.getElementById('crewFilter').addEventListener('change', loadCrewExpensesDashboard);
+      document.getElementById('crewFilter').addEventListener('change', () => loadCrewExpensesDashboard(0));
       document.getElementById('resetBtn').addEventListener('click', resetFilters);
       document.getElementById('exportPdfBtn').addEventListener('click', exportPdf);
       document.getElementById('exportExcelBtn').addEventListener('click', exportExcel);
@@ -2140,9 +2439,10 @@
       el('crewCancelEditBtn').addEventListener('click', resetCrewManagementForm);
       el('slipPdfBtn').addEventListener('click', saveSlipPdf);
       el('slipWhatsappBtn').addEventListener('click', sendSlipWhatsApp);
+      el('slipSendAdminBtn').addEventListener('click', sendSlipToAdmin);
       EXTRA_PAY_FIELDS.forEach(field => {
         const input = el(`extra${field[0].toUpperCase()}${field.slice(1)}`);
-        if (input) input.addEventListener('input', refreshSlipExtraPay);
+        if (input) input.addEventListener('input', () => { formatMoneyInput(input); refreshSlipExtraPay(); });
       });
       document.getElementById('detailEditBtn').addEventListener('click', () => {
         closeModal('detailModal');
@@ -2310,6 +2610,7 @@
     checkin: 'viewCheckin',
     riwayat: 'viewRiwayat',
     pengeluaran: 'viewPengeluaran',
+    operasional: 'viewOperasional',
     slip: 'viewSlip',
     rekap: 'viewRekap',
     crew: 'viewDataCrew',
@@ -2808,46 +3109,305 @@
     renderAssignmentTable();
     loadAssignmentProperties();
     loadAssignmentBookings();
-    crewExpenseDateInput().value = formatLocalDateKey();
-    crewExpenseDateInput().addEventListener('change', loadCrewExpensesDashboard);
-    loadCrewExpensesDashboard();
+    // Default: semua tanggal (kolom tanggal kosong), 10 baris per halaman.
+    // Dua daftar dengan perilaku sama: pengeluaran Crew dan pengeluaran Operasional (input sendiri di menu Operasional).
+    Object.keys(EXPENSE_LISTS).forEach(kind => {
+      const { prefix } = EXPENSE_LISTS[kind];
+      document.getElementById(`${prefix}Date`).addEventListener('change', () => loadCrewExpensesDashboard(0, kind));
+      document.getElementById(`${prefix}AllBtn`).addEventListener('click', () => {
+        document.getElementById(`${prefix}Date`).value = '';
+        loadCrewExpensesDashboard(0, kind);
+      });
+      document.getElementById(`${prefix}Body`).addEventListener('click', event => handleCrewExpenseAction(event, kind));
+      document.getElementById(`${prefix}PrevBtn`).addEventListener('click', () => loadCrewExpensesDashboard(EXPENSE_LISTS[kind].offset - CREW_EXPENSE_PAGE_SIZE, kind));
+      document.getElementById(`${prefix}NextBtn`).addEventListener('click', () => loadCrewExpensesDashboard(EXPENSE_LISTS[kind].offset + CREW_EXPENSE_PAGE_SIZE, kind));
+      loadCrewExpensesDashboard(0, kind);
+    });
+    initOpsExpenseForm();
   }
 
-  function crewExpenseDateInput() {
-    return document.getElementById('crewExpenseDate');
+  const CREW_EXPENSE_PAGE_SIZE = 10;
+  // prefix = awal id elemen di HTML; source = filter ke Worker; byCrew = ikut filter "Pilih crew".
+  const EXPENSE_LISTS = {
+    crew: { prefix:'crewExpense', source:'crew', byCrew:true, offset:0, requestId:0 },
+    ops: { prefix:'opsExpense', source:'ops', byCrew:false, offset:0, requestId:0 },
+  };
+
+  // ===== Pengeluaran Operasional: form input =====
+  let opsExpenseReceipt = '';
+  function opsExpenseAmountValue() {
+    return Number(String(document.getElementById('opsExpenseAmount').value || '').replace(/\D/g, '')) || 0;
+  }
+  function refreshOpsExpenseSubmitState() {
+    document.getElementById('opsExpenseSubmitBtn').disabled = !(
+      document.getElementById('opsExpenseProperty').value && document.getElementById('opsExpenseCategory').value &&
+      opsExpenseAmountValue() > 0 && document.getElementById('opsExpenseEntryDate').value && opsExpenseReceipt
+    );
+  }
+  function setOpsExpenseFormMessage(text, tone = '') {
+    const message = document.getElementById('opsExpenseFormMessage');
+    message.className = `pin-message${tone ? ` ${tone}` : ''}`;
+    message.textContent = text;
+  }
+  // Foto struk dikecilkan sampai di bawah 100 KB (batas Worker), sama seperti form pengeluaran di halaman Check In Crew.
+  function compressReceiptUnder100Kb(file) {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      const objectUrl = URL.createObjectURL(file);
+      img.onload = () => {
+        URL.revokeObjectURL(objectUrl);
+        let scale = Math.min(1, 1280 / Math.max(img.width, img.height));
+        const attempt = () => {
+          const canvas = document.createElement('canvas');
+          canvas.width = Math.round(img.width * scale);
+          canvas.height = Math.round(img.height * scale);
+          canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+          for (const quality of [0.8, 0.6, 0.45, 0.3]) {
+            const dataUrl = canvas.toDataURL('image/jpeg', quality);
+            const bytes = Math.round((dataUrl.length - dataUrl.indexOf(',') - 1) * 0.75);
+            if (bytes < 100 * 1024) return resolve(dataUrl);
+          }
+          if (scale < 0.25) return reject(new Error('Foto struk terlalu besar. Coba foto ulang dengan jarak lebih dekat.'));
+          scale *= 0.7;
+          attempt();
+        };
+        attempt();
+      };
+      img.onerror = () => { URL.revokeObjectURL(objectUrl); reject(new Error('File foto tidak bisa dibaca.')); };
+      img.src = objectUrl;
+    });
+  }
+  async function loadOpsExpenseOptions() {
+    if (!state.adminToken) return;
+    const categorySelect = document.getElementById('opsExpenseCategory');
+    const propertySelect = document.getElementById('opsExpenseProperty');
+    try {
+      if (categorySelect.options.length <= 1) {
+        const response = await workerRequest(`${API_BASE}/dashboard/expense-categories?_=${Date.now()}`);
+        const groups = new Map();
+        (response.data || []).forEach(category => {
+          const key = category.group || '';
+          if (!groups.has(key)) groups.set(key, []);
+          groups.get(key).push(category);
+        });
+        groups.forEach((items, group) => {
+          // Grup berisi satu item bernama sama dengan grupnya (misal Laundry) cukup tampil sebagai pilihan biasa.
+          const flat = !group || (items.length === 1 && items[0].name.toLowerCase() === group.toLowerCase());
+          if (flat) { items.forEach(category => categorySelect.add(new Option(category.name, category.id))); return; }
+          const optgroup = document.createElement('optgroup');
+          optgroup.label = group;
+          items.forEach(category => optgroup.appendChild(new Option(category.name, category.id)));
+          categorySelect.appendChild(optgroup);
+        });
+      }
+      if (propertySelect.options.length <= 1) {
+        const response = await workerRequest(`${API_BASE}/admin/properties?_=${Date.now()}`);
+        const labels = { apartment:'Apartemen', villa:'Villa', guesthouse:'Guest House', kos:'Kosan' };
+        const groups = new Map();
+        (response.data || []).filter(property => property.active !== false && String(property.name || '').trim()).forEach(property => {
+          const group = labels[String(property.category || '').toLowerCase()] || 'Properti Lainnya';
+          if (!groups.has(group)) groups.set(group, []);
+          groups.get(group).push(String(property.name).trim());
+        });
+        ['Apartemen', 'Villa', 'Guest House', 'Kosan', 'Properti Lainnya'].forEach(label => {
+          const names = groups.get(label);
+          if (!names?.length) return;
+          const optgroup = document.createElement('optgroup');
+          optgroup.label = label;
+          names.sort((left, right) => left.localeCompare(right, 'id')).forEach(name => optgroup.appendChild(new Option(name, name)));
+          propertySelect.appendChild(optgroup);
+        });
+      }
+    } catch (error) {
+      setOpsExpenseFormMessage(error.message || 'Pilihan properti atau jenis pengeluaran gagal dimuat.', 'error');
+    }
+  }
+  async function submitOpsExpense(event) {
+    event.preventDefault();
+    const button = document.getElementById('opsExpenseSubmitBtn');
+    button.disabled = true;
+    setOpsExpenseFormMessage('Menyimpan pengeluaran...');
+    try {
+      await workerRequest(`${API_BASE}/dashboard/ops-expenses`, {
+        method: 'POST',
+        body: JSON.stringify({
+          category_id: document.getElementById('opsExpenseCategory').value,
+          property: document.getElementById('opsExpenseProperty').value,
+          amount: opsExpenseAmountValue(),
+          entry_date: document.getElementById('opsExpenseEntryDate').value,
+          description: document.getElementById('opsExpenseNote').value.trim(),
+          receipt: opsExpenseReceipt
+        })
+      });
+      document.getElementById('opsExpenseAmount').value = '';
+      document.getElementById('opsExpenseNote').value = '';
+      document.getElementById('opsExpenseReceipt').value = '';
+      document.getElementById('opsExpenseReceiptPreview').hidden = true;
+      opsExpenseReceipt = '';
+      setOpsExpenseFormMessage('Pengeluaran tersimpan. Klik "Kirim ke Admin" pada daftar di bawah agar masuk ke Laporan Crew & Operasional.', 'success');
+      loadCrewExpensesDashboard(0, 'ops');
+    } catch (error) {
+      setOpsExpenseFormMessage(error.message || 'Pengeluaran gagal disimpan.', 'error');
+    }
+    refreshOpsExpenseSubmitState();
+  }
+  function initOpsExpenseForm() {
+    document.getElementById('opsExpenseEntryDate').value = formatLocalDateKey();
+    document.getElementById('opsExpenseEntryDate').max = formatLocalDateKey();
+    ['opsExpenseProperty', 'opsExpenseCategory', 'opsExpenseEntryDate'].forEach(id =>
+      document.getElementById(id).addEventListener('change', refreshOpsExpenseSubmitState));
+    document.getElementById('opsExpenseAmount').addEventListener('input', event => {
+      formatMoneyInput(event.target);
+      refreshOpsExpenseSubmitState();
+    });
+    document.getElementById('opsExpenseReceipt').addEventListener('change', async event => {
+      const file = event.target.files?.[0];
+      opsExpenseReceipt = '';
+      refreshOpsExpenseSubmitState();
+      const preview = document.getElementById('opsExpenseReceiptPreview');
+      preview.hidden = true;
+      if (!file) return;
+      setOpsExpenseFormMessage('Mengecilkan foto struk...');
+      try {
+        opsExpenseReceipt = await compressReceiptUnder100Kb(file);
+        preview.src = opsExpenseReceipt;
+        preview.hidden = false;
+        setOpsExpenseFormMessage('');
+      } catch (error) {
+        setOpsExpenseFormMessage(error.message || 'Foto struk gagal diproses.', 'error');
+      }
+      refreshOpsExpenseSubmitState();
+    });
+    document.getElementById('opsExpenseForm').addEventListener('submit', submitOpsExpense);
+    document.querySelector('[data-dash-view="operasional"]').addEventListener('click', loadOpsExpenseOptions);
+    if (currentDashboardView() === 'operasional') loadOpsExpenseOptions();
   }
 
-  function openReceiptModal(src, title) {
+  // Pop-up foto bersama: struk pengeluaran, selfie check-in, dan foto laporan memakai tampilan yang sama.
+  function openReceiptModal(src, title, heading = 'Struk Pengeluaran') {
+    el('receiptHeading').textContent = heading;
     el('receiptImage').src = src;
+    el('receiptImage').alt = heading;
     el('receiptSubtitle').textContent = title || '';
     el('receiptModal').classList.add('open');
   }
-  async function loadCrewExpensesDashboard() {
-    const date = crewExpenseDateInput().value || formatLocalDateKey();
-    const body = document.getElementById('crewExpenseBody');
-    const empty = document.getElementById('crewExpenseEmpty');
+  // Status review pengeluaran crew: pending (belum dikirim), sent (menunggu Admin), rejected, approved (sudah dihitung).
+  // Setelah dikirim statusnya "Terkirim"; kalau Admin menolaknya di Laporan, statusnya menjadi "Ditolak".
+  function crewExpenseStatusBadge(item) {
+    if (item.review_status === 'rejected') return '<span class="exp-status rejected">Ditolak</span>';
+    if (item.review_sent_at) return '<span class="exp-status sent">Terkirim</span>';
+    if (item.review_status === 'pending') return '<span class="exp-status pending">Belum dikirim</span>';
+    if (item.review_status === 'rejected') return '<span class="exp-status rejected">Ditolak</span>';
+    return '<span class="exp-status approved">Tercatat</span>';
+  }
+  function crewExpenseActions(item, kind = 'crew') {
+    const id = escapeHtml(item.id);
+    const send = `<button type="button" class="detail-btn" data-exp-action="send" data-exp-id="${id}">Kirim ke Admin</button>`;
+    const reject = `<button type="button" class="detail-btn exp-danger" data-exp-action="reject" data-exp-id="${id}">Tolak</button>`;
+    const remove = `<button type="button" class="detail-btn exp-danger" data-exp-action="delete" data-exp-id="${id}" data-exp-sent="${item.review_sent_at ? '1' : '0'}">Hapus</button>`;
+    if (item.review_sent_at) return `<div class="exp-actions">${remove}</div>`;
+    // Pengeluaran Operasional adalah input sendiri, jadi tidak perlu tombol Tolak.
+    if (item.review_status === 'pending') return `<div class="exp-actions">${send}${kind === 'ops' ? '' : reject}${remove}</div>`;
+    if (item.review_status === 'rejected') return `<div class="exp-actions">${send}${remove}</div>`;
+    return '-';
+  }
+  // Pop-up konfirmasi setelah data berhasil dikirim ke Admin.
+  function showSentNotice(message) {
+    el('sentNoticeText').textContent = message;
+    el('sentNoticeModal').classList.add('open');
+  }
+  async function handleCrewExpenseAction(event, kind = 'crew') {
+    const button = event.target.closest('[data-exp-action]');
+    if (!button) return;
+    const action = button.dataset.expAction;
+    const id = button.dataset.expId;
+    const list = EXPENSE_LISTS[kind];
+    const message = el(`${list.prefix}Message`);
+    let pin = '';
+    if (action === 'send' && !confirm('Periksa sebelum mengirim\n\nCek kembali jenis, properti, jumlah, dan struk pengeluaran ini. Jika sudah yakin, klik OK untuk mengirim ke Admin.')) return;
+    if (action === 'reject' && !confirm('Tolak pengeluaran ini? Crew tidak akan diberi tahu.')) return;
+    if (action === 'delete') {
+      if (!confirm(button.dataset.expSent === '1'
+        ? 'Hapus dari daftar ini? Data yang sudah terkirim ke Admin tetap ada di Laporan Crew & Operasional.'
+        : 'Hapus pengeluaran ini? Tindakan ini tidak bisa dibatalkan.')) return;
+      pin = (window.prompt('Masukkan PIN Master (4 digit) untuk menyetujui penghapusan:') || '').trim();
+      if (!pin) return;
+    }
+    button.disabled = true;
+    message.className = 'pin-message';
+    message.textContent = 'Memproses...';
     try {
-      const res = await fetch(`${API_BASE}/dashboard/crew-expenses?date=${encodeURIComponent(date)}&_=${Date.now()}`, {
+      const response = await fetch(`${API_BASE}/dashboard/crew-expenses/${encodeURIComponent(id)}`, {
+        method: action === 'delete' ? 'DELETE' : 'PATCH',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${state.adminToken}` },
+        body: JSON.stringify(action === 'delete' ? { pin, scope:'crew' } : { action })
+      });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok || result.ok === false) throw new Error(result.error || `HTTP ${response.status}`);
+      message.textContent = '';
+      if (action === 'send') showSentNotice('Data pengeluaran sudah terkirim ke Admin (menu Laporan Crew & Operasional di Dashboard utama).');
+      else {
+        message.className = 'pin-message success';
+        message.textContent = action === 'reject' ? 'Pengeluaran ditolak.' : 'Pengeluaran dihapus.';
+      }
+      loadCrewExpensesDashboard(list.offset, kind);
+    } catch (error) {
+      message.className = 'pin-message error';
+      message.textContent = error.message || 'Aksi pengeluaran gagal.';
+      button.disabled = false;
+    }
+  }
+  async function loadCrewExpensesDashboard(offset = 0, kind = 'crew') {
+    const list = EXPENSE_LISTS[kind];
+    const pageOffset = Math.max(0, Number(offset) || 0);
+    const requestId = ++list.requestId;
+    const date = document.getElementById(`${list.prefix}Date`).value;
+    const body = document.getElementById(`${list.prefix}Body`);
+    const empty = document.getElementById(`${list.prefix}Empty`);
+    const prevButton = document.getElementById(`${list.prefix}PrevBtn`);
+    const nextButton = document.getElementById(`${list.prefix}NextBtn`);
+    const pageInfo = document.getElementById(`${list.prefix}PageInfo`);
+    prevButton.disabled = true;
+    nextButton.disabled = true;
+    try {
+      const params = new URLSearchParams({ limit:String(CREW_EXPENSE_PAGE_SIZE), offset:String(pageOffset), source:list.source, _:String(Date.now()) });
+      if (date) params.set('date', date);
+      const crewPick = el('crewFilter').value;
+      if (crewPick && list.byCrew) params.set('payee', crewPick);
+      const res = await fetch(`${API_BASE}/dashboard/crew-expenses?${params.toString()}`, {
         cache: 'no-store',
         headers: state.adminToken ? { Authorization: `Bearer ${state.adminToken}` } : {}
       });
       const json = await res.json();
       if (!res.ok || json.ok === false) throw new Error(json.error || ('HTTP ' + res.status));
-      const crewPick = el('crewFilter').value;
-      const records = (json.data || []).filter(item => !crewPick || item.payee === crewPick);
+      if (requestId !== list.requestId) return;
+      const records = json.data || [];
+      list.offset = pageOffset;
       empty.hidden = records.length > 0;
+      empty.style.display = records.length ? 'none' : 'block';
       body.innerHTML = records.map(item => `
         <tr>
-          <td>${escapeHtml(item.payee)}</td>
-          <td>${escapeHtml(item.category_name)}</td>
-          <td>${escapeHtml(item.property_name)}</td>
-          <td>Rp ${Math.round(item.amount).toLocaleString('id-ID')}</td>
-          <td>${escapeHtml(item.description || '-')}</td>
-          <td>${item.proof_url ? `<button type="button" class="detail-btn" data-receipt="${escapeHtml(item.proof_url)}" data-receipt-title="${escapeHtml(`${item.payee || '-'} · ${item.category_name || ''}`)}">Lihat</button>` : '-'}</td>
+          <td data-label="Tanggal">${escapeHtml(item.entry_date || '-')}</td>
+          <td data-label="Crew">${escapeHtml(item.payee)}</td>
+          <td data-label="Jenis">${escapeHtml(item.category_name)}</td>
+          <td data-label="Properti">${escapeHtml(item.property_name)}</td>
+          <td data-label="Jumlah">Rp ${Math.round(item.amount).toLocaleString('id-ID')}</td>
+          <td data-label="Keterangan">${escapeHtml(item.description || '-')}</td>
+          <td data-label="Struk">${item.proof_url ? `<button type="button" class="detail-btn" data-receipt="${escapeHtml(item.proof_url)}" data-receipt-title="${escapeHtml(`${item.payee || '-'} · ${item.category_name || ''}`)}">Lihat</button>` : '-'}</td>
+          <td data-label="Status">${crewExpenseStatusBadge(item)}</td>
+          <td data-label="Aksi">${crewExpenseActions(item, kind)}</td>
         </tr>`).join('');
       body.querySelectorAll('[data-receipt]').forEach(button => button.addEventListener('click', () => openReceiptModal(button.dataset.receipt, button.dataset.receiptTitle)));
+      const hasMore = Boolean(json.pagination?.has_more);
+      prevButton.disabled = list.offset === 0;
+      nextButton.disabled = !hasMore;
+      pageInfo.textContent = records.length ? `Halaman ${Math.floor(list.offset / CREW_EXPENSE_PAGE_SIZE) + 1}` : '';
     } catch (error) {
-      body.innerHTML = `<tr><td colspan="6">${escapeHtml(error.message || 'Gagal memuat pengeluaran crew.')}</td></tr>`;
+      if (requestId !== list.requestId) return;
+      empty.hidden = true;
+      body.innerHTML = `<tr><td colspan="9" class="empty-cell">${escapeHtml(error.message || 'Gagal memuat pengeluaran.')}</td></tr>`;
+      prevButton.disabled = list.offset === 0;
+      pageInfo.textContent = '';
     }
   }
   </script>

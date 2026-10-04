@@ -418,22 +418,41 @@ async function syncCheckinPayrollExpenses(env, affectedPairs) {
   const now = new Date().toISOString();
   const statements = [];
 
+  // Crew dan bulan yang slipnya sudah ditandai dibayar tidak disinkronkan lagi: slip menjadi sumber pengeluarannya.
+  const paidSlipKeys = new Set();
+  try {
+    const paidSlips = await env.DB.prepare(`SELECT crew, period_month FROM crew_payroll_slips WHERE status = 'paid'`).all();
+    (paidSlips.results || []).forEach(row => paidSlipKeys.add(`${row.crew}\u0000${row.period_month}`));
+  } catch (error) {
+    if (!/no such table: crew_payroll_slips/i.test(String(error?.message || error))) throw error;
+  }
+
   for (const [key, { crew, workDate }] of pairsByKey) {
+    if (paidSlipKeys.has(`${crew}\u0000${workDate.slice(0, 7)}`)) continue;
     const units = new Map();
+    const reportCounts = new Map();
     for (const row of checkinsByPair.get(key) || []) {
       const unit = String(row.unit || '').trim();
       if (!unit) continue;
       if (!units.has(unit)) units.set(unit, new Set());
+      reportCounts.set(unit, (reportCounts.get(unit) || 0) + 1);
       const jobType = String(row.job_type || '').trim();
       if (jobType) units.get(unit).add(jobType);
     }
 
+    // Honor harian Rp 100.000 dibagi rata per laporan: properti dengan 2 laporan menanggung 2 bagian.
     const sortedUnits = [...units.keys()].sort((left, right) => left.localeCompare(right, 'id'));
-    const baseAmount = sortedUnits.length ? Math.floor(100000 / sortedUnits.length) : 0;
-    const remainder = sortedUnits.length ? 100000 - baseAmount * sortedUnits.length : 0;
+    const totalReports = [...reportCounts.values()].reduce((sum, count) => sum + count, 0);
+    const unitAmounts = new Map(sortedUnits.map(unit => [unit, Math.floor(100000 * reportCounts.get(unit) / totalReports)]));
+    let remainder = sortedUnits.length ? 100000 - [...unitAmounts.values()].reduce((sum, amount) => sum + amount, 0) : 0;
+    for (const unit of sortedUnits) {
+      if (remainder <= 0) break;
+      unitAmounts.set(unit, unitAmounts.get(unit) + 1);
+      remainder -= 1;
+    }
     const expectedIds = new Set();
 
-    for (const [index, unit] of sortedUnits.entries()) {
+    for (const unit of sortedUnits) {
       const id = `checkin-payroll-${await sha256Hex(JSON.stringify([crew, workDate, unit]))}`;
       expectedIds.add(id);
       const propertyId = propertyIds.get(normalizePropertyName(unit)) || null;
@@ -456,7 +475,7 @@ async function syncCheckinPayrollExpenses(env, affectedPairs) {
         WHERE finance_entries.created_by = 'checkin-payroll'
       `).bind(
         id, category.id, category.name, propertyId, unit, workDate,
-        baseAmount + (index < remainder ? 1 : 0), description, crew, now
+        unitAmounts.get(unit), description, crew, now
       ));
     }
 
@@ -748,6 +767,84 @@ function parseDailySalary(value) {
   if (value === undefined || value === null || value === '') return null;
   const amount = Math.round(Number(value));
   return Number.isSafeInteger(amount) && amount >= 0 && amount <= 10000000 ? amount : NaN;
+}
+
+// Jenis pengeluaran lapangan. Daftar khusus Crew (crew_group terisi, urut crew_sort); sebelum migration dijalankan
+// atau kalau belum ada kategori yang ditandai, pakai seluruh kategori pengeluaran.
+async function listFieldExpenseCategories(env) {
+  try {
+    const grouped = await env.DB.prepare(`
+      SELECT id, name, crew_group AS "group" FROM finance_categories
+      WHERE kind = 'expense' AND active = 1 AND crew_group <> ''
+      ORDER BY crew_sort, name COLLATE NOCASE
+    `).all();
+    if ((grouped.results || []).length) return grouped.results;
+  } catch (error) {
+    if (!/no such column: crew_(group|sort)/i.test(String(error?.message || error))) throw error;
+  }
+  const result = await env.DB.prepare(`
+    SELECT id, name FROM finance_categories WHERE kind = 'expense' AND active = 1 ORDER BY name COLLATE NOCASE
+  `).all();
+  return result.results || [];
+}
+
+// Menyimpan pengeluaran lapangan (Crew atau Operasional) berstatus 'pending': belum dihitung sebagai pengeluaran sampai
+// dikirim ke Admin dari Dashboard Check In Crew dan diterima di menu Laporan Crew & Operasional. Tanpa kolom review
+// (migration belum dijalankan) ditolak, supaya tidak ada pengeluaran yang masuk tanpa melewati Laporan.
+// Mengembalikan { error, status } kalau gagal validasi, atau { id, proofUrl } kalau tersimpan.
+async function savePendingFieldExpense(env, origin, { createdBy, payee, body, dailyLimit = 0 }) {
+  const categoryId = String(body.category_id || '').trim();
+  const propertyName = String(body.property || '').trim();
+  const amount = Number(body.amount);
+  const entryDate = String(body.entry_date || '').trim();
+  const description = String(body.description || '').trim();
+  const receipt = String(body.receipt || '');
+  if (!propertyName || propertyName.length > 180 || !Number.isSafeInteger(amount) || amount <= 0 ||
+      !/^\d{4}-\d{2}-\d{2}$/.test(entryDate) || description.length > 160) {
+    return { error:'Properti, jumlah, dan tanggal pengeluaran wajib valid.', status:400 };
+  }
+  if (!receipt.startsWith('data:image/')) return { error:'Foto struk wajib dilampirkan.', status:400 };
+  const category = await env.DB.prepare(`
+    SELECT id, name FROM finance_categories WHERE id = ? AND kind = 'expense' AND active = 1
+  `).bind(categoryId).first();
+  if (!category) return { error:'Jenis pengeluaran tidak valid.', status:400 };
+  if (dailyLimit) {
+    const countRow = await env.DB.prepare(`
+      SELECT COUNT(*) AS count FROM finance_entries WHERE created_by = ? AND entry_date = ?
+    `).bind(createdBy, entryDate).first();
+    if (Number(countRow?.count || 0) >= dailyLimit) return { error:`Batas ${dailyLimit} struk per hari sudah tercapai.`, status:409 };
+  }
+  let parsedReceipt;
+  try { parsedReceipt = parseDataUrl(receipt); }
+  catch { return { error:'Foto struk tidak valid.', status:400 }; }
+  if (!String(parsedReceipt.contentType || '').startsWith('image/')) return { error:'Foto struk harus berupa gambar.', status:400 };
+  if (parsedReceipt.bytes.byteLength >= 100 * 1024) return { error:'Foto struk wajib di bawah 100 KB.', status:400 };
+
+  const id = crypto.randomUUID();
+  const receiptKey = `finance/crew-expense/${id}.jpg`;
+  await env.PHOTOS.put(receiptKey, parsedReceipt.bytes, {
+    httpMetadata:{ contentType:parsedReceipt.contentType || 'image/jpeg' },
+  });
+  const proofUrl = publicFileUrl(origin, receiptKey);
+  const propertyRow = await env.DB.prepare('SELECT id FROM properties WHERE name = ? COLLATE NOCASE LIMIT 1')
+    .bind(propertyName).first();
+  const createdAt = new Date().toISOString();
+  try {
+    await env.DB.prepare(`
+      INSERT INTO finance_entries (
+        id, kind, category_id, category_name, property_id, property_name,
+        entry_date, amount, description, payee, recurrence, created_by, created_at, proof_url,
+        review_status, review_sent_at
+      ) VALUES (?, 'expense', ?, ?, ?, ?, ?, ?, ?, ?, 'once', ?, ?, ?, 'pending', '')
+    `).bind(id, category.id, category.name, propertyRow?.id || null, propertyName,
+      entryDate, amount, description, payee, createdBy, createdAt, proofUrl).run();
+  } catch (error) {
+    if (/review_status|review_sent_at/i.test(String(error?.message || error))) {
+      return { error:'Pengeluaran belum bisa disimpan: fitur review belum aktif di server. Hubungi admin. (Jalankan migration-crew-expense-review.sql di D1.)', status:503 };
+    }
+    throw error;
+  }
+  return { id, proofUrl };
 }
 
 export default {
@@ -2423,10 +2520,32 @@ export default {
         const adminSecret = String(env.ADMIN_DASHBOARD_SECRET || '').trim();
         const crewSession = await getCrewTokenPayload(request, adminSecret);
         if (!crewSession) return bad('Login crew diperlukan.', 401);
-        const result = await env.DB.prepare(`
-          SELECT id, name FROM finance_categories WHERE kind = 'expense' AND active = 1 ORDER BY name COLLATE NOCASE
-        `).all();
-        return json({ ok:true, data:result.results || [] });
+        return json({ ok:true, data:await listFieldExpenseCategories(env) });
+      }
+
+      // Operasional (Dashboard Check In Crew): daftar jenis pengeluaran yang sama dengan form Crew.
+      if (request.method === 'GET' && path === '/dashboard/expense-categories') {
+        const adminSecret = String(env.ADMIN_DASHBOARD_SECRET || '').trim();
+        const tokenData = await getAdminTokenPayload(request, adminSecret);
+        if (!hasManagementRole(tokenData)) return bad('Hanya Master atau Admin yang dapat mengisi pengeluaran operasional.', 403);
+        return json({ ok:true, data:await listFieldExpenseCategories(env) });
+      }
+
+      // Operasional: input pengeluaran sendiri dari Dashboard Check In Crew. Alurnya sama dengan pengeluaran Crew
+      // (Belum dikirim -> Kirim ke Admin -> diterima di Laporan Crew & Operasional), dengan created_by 'ops:<akun>'.
+      if (request.method === 'POST' && path === '/dashboard/ops-expenses') {
+        const adminSecret = String(env.ADMIN_DASHBOARD_SECRET || '').trim();
+        const tokenData = await getAdminTokenPayload(request, adminSecret);
+        if (!hasManagementRole(tokenData) || !tokenData.account_id) return bad('Hanya Master atau Admin yang dapat mengisi pengeluaran operasional.', 403);
+        const account = await env.DB.prepare('SELECT display_name FROM dashboard_users WHERE account_id = ? AND active = 1')
+          .bind(tokenData.account_id).first();
+        if (!account) return bad('Akun Dashboard tidak aktif.', 401);
+        const payee = String(account.display_name || tokenData.account_id).trim().slice(0, 120);
+        const saved = await savePendingFieldExpense(env, url.origin, {
+          createdBy:`ops:${tokenData.account_id}`, payee, body:await request.json(),
+        });
+        if (saved.error) return bad(saved.error, saved.status);
+        return json({ ok:true, data:{ id:saved.id, proof_url:saved.proofUrl } }, 201);
       }
 
       // Crew: pengeluaran lapangan (rembuse) -- masuk finance_entries sebagai pengeluaran, maks 10 struk per hari.
@@ -2447,49 +2566,11 @@ export default {
         }
 
         if (request.method !== 'POST') return bad('Metode pengeluaran tidak didukung.', 405);
-        const body = await request.json();
-        const categoryId = String(body.category_id || '').trim();
-        const propertyName = String(body.property || '').trim();
-        const amount = Number(body.amount);
-        const entryDate = String(body.entry_date || '').trim();
-        const description = String(body.description || '').trim();
-        const receipt = String(body.receipt || '');
-        if (!propertyName || propertyName.length > 180 || !Number.isSafeInteger(amount) || amount <= 0 ||
-            !/^\d{4}-\d{2}-\d{2}$/.test(entryDate) || description.length > 160) {
-          return bad('Properti, jumlah, dan tanggal pengeluaran wajib valid.');
-        }
-        if (!receipt.startsWith('data:image/')) return bad('Foto struk wajib dilampirkan.');
-        const category = await env.DB.prepare(`
-          SELECT id, name FROM finance_categories WHERE id = ? AND kind = 'expense' AND active = 1
-        `).bind(categoryId).first();
-        if (!category) return bad('Jenis pengeluaran tidak valid.');
-        const countRow = await env.DB.prepare(`
-          SELECT COUNT(*) AS count FROM finance_entries WHERE created_by = ? AND entry_date = ?
-        `).bind(createdBy, entryDate).first();
-        if (Number(countRow?.count || 0) >= 10) return bad('Batas 10 struk per hari sudah tercapai.', 409);
-        let parsedReceipt;
-        try { parsedReceipt = parseDataUrl(receipt); }
-        catch { return bad('Foto struk tidak valid.'); }
-        if (!String(parsedReceipt.contentType || '').startsWith('image/')) return bad('Foto struk harus berupa gambar.');
-        if (parsedReceipt.bytes.byteLength >= 100 * 1024) return bad('Foto struk wajib di bawah 100 KB.');
-
-        const id = crypto.randomUUID();
-        const receiptKey = `finance/crew-expense/${id}.jpg`;
-        await env.PHOTOS.put(receiptKey, parsedReceipt.bytes, {
-          httpMetadata:{ contentType:parsedReceipt.contentType || 'image/jpeg' },
+        const saved = await savePendingFieldExpense(env, url.origin, {
+          createdBy, payee:crewSession.crew, body:await request.json(), dailyLimit:10,
         });
-        const proofUrl = publicFileUrl(url.origin, receiptKey);
-        const propertyRow = await env.DB.prepare('SELECT id FROM properties WHERE name = ? COLLATE NOCASE LIMIT 1')
-          .bind(propertyName).first();
-        const createdAt = new Date().toISOString();
-        await env.DB.prepare(`
-          INSERT INTO finance_entries (
-            id, kind, category_id, category_name, property_id, property_name,
-            entry_date, amount, description, payee, recurrence, created_by, created_at, proof_url
-          ) VALUES (?, 'expense', ?, ?, ?, ?, ?, ?, ?, ?, 'once', ?, ?, ?)
-        `).bind(id, category.id, category.name, propertyRow?.id || null, propertyName,
-          entryDate, amount, description, crewSession.crew, createdBy, createdAt, proofUrl).run();
-        return json({ ok:true, data:{ id, proof_url:proofUrl } }, 201);
+        if (saved.error) return bad(saved.error, saved.status);
+        return json({ ok:true, data:{ id:saved.id, proof_url:saved.proofUrl } }, 201);
       }
 
       // Admin: daftar pengeluaran lapangan crew per tanggal (dipakai di Dashboard Check In Crew).
@@ -2497,13 +2578,426 @@ export default {
         const adminSecret = String(env.ADMIN_DASHBOARD_SECRET || '').trim();
         const tokenData = await getAdminTokenPayload(request, adminSecret);
         if (!hasDashboardRole(tokenData)) return bad('Login dashboard diperlukan.', 401);
+        // Tanggal opsional: tanpa tanggal = semua pengeluaran crew. Selalu dipaginasi (default 10 baris).
         const date = String(url.searchParams.get('date') || '').trim();
-        if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return bad('Tanggal tidak valid.');
-        const result = await env.DB.prepare(`
-          SELECT id, payee, category_name, property_name, amount, description, proof_url, entry_date
-          FROM finance_entries WHERE created_by LIKE 'crew:%' AND entry_date = ? ORDER BY created_at DESC
-        `).bind(date).all();
-        return json({ ok:true, data:result.results || [] });
+        if (date && !/^\d{4}-\d{2}-\d{2}$/.test(date)) return bad('Tanggal tidak valid.');
+        const payee = String(url.searchParams.get('payee') || '').trim();
+        const month = String(url.searchParams.get('month') || '').trim();
+        if (month && !/^\d{4}-(0[1-9]|1[0-2])$/.test(month)) return bad('Bulan tidak valid.');
+        // review=admin: hanya pengeluaran yang pernah dikirim ke Admin (menu Laporan Crew > Pengeluaran).
+        const adminView = url.searchParams.get('review') === 'admin';
+        const limit = Math.min(50, Math.max(1, Math.trunc(Number(url.searchParams.get('limit'))) || 10));
+        const offset = Math.max(0, Math.trunc(Number(url.searchParams.get('offset'))) || 0);
+        // source=crew / ops memisahkan pengeluaran Crew dan Operasional; tanpa source = keduanya (menu Laporan di Dashboard utama).
+        const source = String(url.searchParams.get('source') || '').trim();
+        const conditions = [source === 'crew' ? "created_by LIKE 'crew:%'"
+          : source === 'ops' ? "created_by LIKE 'ops:%'"
+          : "(created_by LIKE 'crew:%' OR created_by LIKE 'ops:%')"];
+        const params = [];
+        if (date) { conditions.push('entry_date = ?'); params.push(date); }
+        if (payee) { conditions.push('payee = ?'); params.push(payee); }
+        if (month) {
+          const [monthYear, monthNumber] = month.split('-').map(Number);
+          conditions.push('entry_date >= ? AND entry_date < ?');
+          params.push(`${month}-01`, new Date(Date.UTC(monthYear, monthNumber, 1)).toISOString().slice(0, 10));
+        }
+        let rows;
+        try {
+          const queryCrewExpenses = hideCrewDeleted => env.DB.prepare(`
+            SELECT id, payee, category_name, property_name, amount, description, proof_url, entry_date,
+                   review_status, review_sent_at,
+                   CASE WHEN created_by LIKE 'ops:%' THEN 'operasional' ELSE 'crew' END AS source
+            FROM finance_entries WHERE ${[...conditions, ...(adminView ? ["review_sent_at <> ''", "review_status <> 'removed'"] : (hideCrewDeleted ? ['crew_hidden = 0'] : []))].join(' AND ')}
+            ORDER BY entry_date DESC, created_at DESC LIMIT ? OFFSET ?
+          `).bind(...params, limit + 1, offset).all();
+          // Kolom crew_hidden belum ada (migration belum dijalankan): tampilkan seperti biasa.
+          const result = await queryCrewExpenses(true).catch(error => {
+            if (!/no such column: crew_hidden/i.test(String(error?.message || error))) throw error;
+            return queryCrewExpenses(false);
+          });
+          rows = result.results || [];
+        } catch (error) {
+          if (!/no such column: review_/i.test(String(error?.message || error))) throw error;
+          if (adminView) return bad('Kolom review pengeluaran belum tersedia. Jalankan migration-crew-expense-review.sql di D1.', 503);
+          const legacy = await env.DB.prepare(`
+            SELECT id, payee, category_name, property_name, amount, description, proof_url, entry_date,
+                   CASE WHEN created_by LIKE 'ops:%' THEN 'operasional' ELSE 'crew' END AS source
+            FROM finance_entries WHERE ${conditions.join(' AND ')}
+            ORDER BY entry_date DESC, created_at DESC LIMIT ? OFFSET ?
+          `).bind(...params, limit + 1, offset).all();
+          rows = (legacy.results || []).map(row => ({ ...row, review_status:'approved', review_sent_at:'' }));
+        }
+        return json({ ok:true, data:rows.slice(0, limit), pagination:{ limit, offset, has_more:rows.length > limit } });
+      }
+
+      // Review pengeluaran lapangan crew: pending -> sent (Kirim ke Admin) -> approved (Terima) atau rejected (Tolak).
+      // Hanya yang approved masuk pengeluaran. Crew tidak diberi tahu soal penolakan.
+      const crewExpenseMatch = path.match(/^\/dashboard\/crew-expenses\/([^/]+)$/);
+      if (['PATCH', 'DELETE'].includes(request.method) && crewExpenseMatch) {
+        const adminSecret = String(env.ADMIN_DASHBOARD_SECRET || '').trim();
+        const tokenData = await getAdminTokenPayload(request, adminSecret);
+        if (!hasManagementRole(tokenData)) return bad('Hanya Master atau Admin yang dapat meninjau pengeluaran crew.', 403);
+        const id = decodeURIComponent(crewExpenseMatch[1]);
+        const missingReviewColumns = 'Kolom review pengeluaran belum tersedia. Jalankan migration-crew-expense-review.sql di D1.';
+        let entry;
+        try {
+          entry = await env.DB.prepare(`
+            SELECT id, created_by, review_status, review_sent_at FROM finance_entries WHERE id = ?
+          `).bind(id).first();
+        } catch (error) {
+          if (/no such column: review_/i.test(String(error?.message || error))) return bad(missingReviewColumns, 503);
+          throw error;
+        }
+        if (!entry || !/^(crew|ops):/.test(String(entry.created_by || ''))) return bad('Pengeluaran crew tidak ditemukan.', 404);
+
+        if (request.method === 'DELETE') {
+          let deleteBody = {};
+          try { deleteBody = await request.json(); } catch {}
+          const deletePin = String(deleteBody.pin || '').trim();
+          if (!/^\d{4}$/.test(deletePin)) return bad('Masukkan PIN Master tepat 4 digit.', 400);
+          const master = await env.DB.prepare(`
+            SELECT delete_pin_salt, delete_pin_hash FROM dashboard_users
+            WHERE account_id = 'master' AND active = 1
+          `).first();
+          if (!master?.delete_pin_hash) return bad('PIN Master belum diinisialisasi. Login sebagai Master terlebih dahulu.', 409);
+          const attemptedHash = await hashDashboardPassword(deletePin, master.delete_pin_salt);
+          if (!constantTimeEqual(attemptedHash, master.delete_pin_hash)) return bad('PIN Master salah.', 403);
+          if (deleteBody.scope === 'crew' && entry.review_sent_at) {
+            // Dihapus dari Dashboard Check In Crew: hanya menyembunyikan riwayat crew. Laporan Crew dan menu Pengeluaran
+            // tidak berubah, karena riwayat masing-masing tempat berdiri sendiri.
+            try {
+              await env.DB.prepare('UPDATE finance_entries SET crew_hidden = 1 WHERE id = ?').bind(id).run();
+            } catch (error) {
+              if (/crew_hidden/i.test(String(error?.message || error))) {
+                return bad('Kolom penyembunyi riwayat crew belum tersedia. Jalankan migration-crew-expense-hidden.sql di D1.', 503);
+              }
+              throw error;
+            }
+            return json({ ok:true, data:{ id, hidden:true } });
+          }
+          // Dihapus dari Laporan Crew & Operasional (atau belum pernah dikirim): baris aslinya ikut terhapus, jadi hilang juga
+          // dari Dashboard Check In Crew, dan salinannya di menu Pengeluaran (kalau sudah diterima) ikut dihapus.
+          await env.DB.batch([
+            env.DB.prepare('DELETE FROM finance_entries WHERE id = ?').bind(id),
+            env.DB.prepare(`DELETE FROM finance_entries WHERE id = ? AND created_by = 'crew-expense'`).bind(`crew-expense-${id}`),
+          ]);
+          return json({ ok:true, data:{ id, deleted:true } });
+        }
+
+        const body = await request.json();
+        const action = String(body.action || '').trim();
+        if (!['send', 'reject', 'accept'].includes(action)) return bad('Aksi pengeluaran tidak valid.');
+        if (entry.review_status === 'removed') return bad('Pengeluaran ini sudah dihapus dari Laporan Crew.', 409);
+        if (entry.review_status === 'approved') return bad('Pengeluaran ini sudah diterima dan masuk pengeluaran.', 409);
+        const now = new Date().toISOString();
+        if (action === 'send') {
+          if (entry.review_status === 'sent') return bad('Pengeluaran ini sudah dikirim ke Admin.', 409);
+          await env.DB.prepare(`UPDATE finance_entries SET review_status = 'sent', review_sent_at = ? WHERE id = ?`).bind(now, id).run();
+          return json({ ok:true, data:{ id, review_status:'sent', review_sent_at:now } });
+        }
+        if (action === 'reject') {
+          if (entry.review_status === 'rejected') return bad('Pengeluaran ini sudah ditolak.', 409);
+          await env.DB.prepare(`UPDATE finance_entries SET review_status = 'rejected' WHERE id = ?`).bind(id).run();
+          return json({ ok:true, data:{ id, review_status:'rejected', review_sent_at:entry.review_sent_at || '' } });
+        }
+        if (!entry.review_sent_at) return bad('Pengeluaran ini belum dikirim ke Admin dari Dashboard Check In Crew.', 409);
+        // Diterima: baris crew tetap jadi riwayat di Dashboard Check In Crew, sedangkan pengeluaran dicatat sebagai
+        // salinan terpisah (crew-expense-<id>) supaya menghapusnya di menu Pengeluaran tidak menghapus riwayat crew.
+        await env.DB.batch([
+          env.DB.prepare(`UPDATE finance_entries SET review_status = 'approved' WHERE id = ?`).bind(id),
+          env.DB.prepare(`
+            INSERT OR IGNORE INTO finance_entries (
+              id, kind, category_id, category_name, property_id, property_name,
+              entry_date, amount, description, payee, recurrence, created_by, created_at, proof_url
+            ) SELECT 'crew-expense-' || id, kind, category_id, category_name, property_id, property_name,
+              entry_date, amount, description, payee, recurrence, 'crew-expense', created_at, proof_url
+            FROM finance_entries WHERE id = ?
+          `).bind(id),
+        ]);
+        return json({ ok:true, data:{ id, review_status:'approved', review_sent_at:entry.review_sent_at } });
+      }
+
+      // Slip gaji crew yang dikirim dari Dashboard Check In Crew ke Dashboard utama (menu Gaji Crew).
+      // Satu slip per crew per bulan; mengirim ulang memperbarui slip selama belum ditandai dibayar.
+      if (path === '/dashboard/crew-payroll' && ['GET', 'POST'].includes(request.method)) {
+        const adminSecret = String(env.ADMIN_DASHBOARD_SECRET || '').trim();
+        const tokenData = await getAdminTokenPayload(request, adminSecret);
+        if (!hasManagementRole(tokenData)) return bad('Hanya Master atau Admin yang dapat mengelola slip gaji crew.', 403);
+        const missingTable = 'Slip gaji crew belum disiapkan. Jalankan migration-crew-payroll-slips.sql di D1.';
+        const missingReviewColumn = 'Kolom catatan review belum tersedia. Jalankan migration-crew-payroll-review-note.sql di D1.';
+
+        if (request.method === 'GET') {
+          const month = String(url.searchParams.get('month') || '').trim();
+          if (month && !/^\d{4}-(0[1-9]|1[0-2])$/.test(month)) return bad('Bulan tidak valid.');
+          try {
+            const result = await env.DB.prepare(`
+              SELECT id, crew, period_month, base_pay, extra_total, total_pay, data_json, status,
+                     review_note, submitted_by, submitted_at, updated_at, paid_at
+              FROM crew_payroll_slips ${month ? 'WHERE period_month = ?' : ''}
+              ORDER BY period_month DESC, crew COLLATE NOCASE LIMIT 500
+            `).bind(...(month ? [month] : [])).all();
+            const data = (result.results || []).map(row => {
+              let detail = {};
+              try { detail = JSON.parse(row.data_json); } catch {}
+              const { data_json, ...rest } = row;
+              return { ...rest, detail };
+            });
+            return json({ ok:true, data });
+          } catch (error) {
+            if (/no such table: crew_payroll_slips/i.test(String(error?.message || error))) return bad(missingTable, 503);
+            if (/no such column: review_note/i.test(String(error?.message || error))) return bad(missingReviewColumn, 503);
+            throw error;
+          }
+        }
+
+        const body = await request.json();
+        const crew = String(body.crew || '').trim();
+        const month = String(body.month || '').trim();
+        const wholeNumber = value => {
+          const number = Math.round(Number(value));
+          return Number.isSafeInteger(number) && number >= 0 && number <= 1_000_000_000 ? number : null;
+        };
+        const extraFields = ['tunjangan', 'bonus', 'bensin', 'reimburse', 'pulsa'];
+        const extraPay = {};
+        for (const field of extraFields) {
+          const amount = wholeNumber(body.extra_pay?.[field] ?? 0);
+          if (amount === null) return bad('Nominal gaji tambahan tidak valid.');
+          extraPay[field] = amount;
+        }
+        const dailyRate = wholeNumber(body.daily_rate);
+        const totalDays = wholeNumber(body.total_days);
+        const checkInDays = wholeNumber(body.check_in_days);
+        const absentDays = wholeNumber(body.absent_days);
+        const deduction = wholeNumber(body.deduction);
+        const basePay = wholeNumber(body.base_pay);
+        const totalPay = wholeNumber(body.total_pay);
+        const properties = Array.isArray(body.properties) ? body.properties : null;
+        if (crew.length < 2 || crew.length > 80 || !/^\d{4}-(0[1-9]|1[0-2])$/.test(month) ||
+            [dailyRate, totalDays, checkInDays, absentDays, deduction, basePay, totalPay].some(value => value === null) ||
+            !properties || properties.length > 300) {
+          return bad('Data slip gaji tidak valid.');
+        }
+        const extraTotal = extraFields.reduce((sum, field) => sum + extraPay[field], 0);
+        if (Math.abs(basePay + extraTotal - totalPay) > 1) return bad('Total gaji tidak sesuai dengan rinciannya.');
+        const cleanedProperties = [];
+        for (const item of properties) {
+          const unit = String(item?.unit || '').trim();
+          const days = wholeNumber(item?.days);
+          const visits = wholeNumber(item?.visits);
+          const honor = wholeNumber(item?.honor);
+          const fuel = wholeNumber(item?.fuel ?? 0);
+          if (!unit || unit.length > 180 || [days, visits, honor, fuel].some(value => value === null)) return bad('Rincian properti slip tidak valid.');
+          cleanedProperties.push({ unit, days, visits, honor, fuel });
+        }
+        const detail = {
+          daily_rate:dailyRate, total_days:totalDays, check_in_days:checkInDays, absent_days:absentDays,
+          deduction, extra_pay:extraPay, properties:cleanedProperties,
+        };
+        const now = new Date().toISOString();
+        try {
+          const existing = await env.DB.prepare('SELECT id, status FROM crew_payroll_slips WHERE crew = ? AND period_month = ?')
+            .bind(crew, month).first();
+          if (existing?.status === 'paid') return bad('Slip bulan ini sudah dimasukkan sebagai pengeluaran. Minta admin membatalkannya di menu Laporan Crew sebelum mengirim revisi.', 409);
+          const id = existing?.id || crypto.randomUUID();
+          // Kirim ulang (revisi) menghapus status ditolak dan mengembalikan slip ke antrean review.
+          await env.DB.prepare(`
+            INSERT INTO crew_payroll_slips (
+              id, crew, period_month, base_pay, extra_total, total_pay, data_json, status,
+              review_note, submitted_by, submitted_at, updated_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, 'submitted', '', ?, ?, ?)
+            ON CONFLICT(crew, period_month) DO UPDATE SET
+              base_pay = excluded.base_pay, extra_total = excluded.extra_total, total_pay = excluded.total_pay,
+              data_json = excluded.data_json, review_note = '', submitted_by = excluded.submitted_by,
+              updated_at = excluded.updated_at
+          `).bind(id, crew, month, basePay, extraTotal, totalPay, JSON.stringify(detail),
+            String(tokenData.account_id || ''), now, now).run();
+          return json({ ok:true, data:{ id, crew, period_month:month, total_pay:totalPay, updated:Boolean(existing) } }, existing ? 200 : 201);
+        } catch (error) {
+          if (/no such table: crew_payroll_slips/i.test(String(error?.message || error))) return bad(missingTable, 503);
+          if (/no such column: review_note|no column named review_note/i.test(String(error?.message || error))) return bad(missingReviewColumn, 503);
+          throw error;
+        }
+      }
+
+      const crewPayrollMatch = path.match(/^\/dashboard\/crew-payroll\/([^/]+)$/);
+      if (request.method === 'DELETE' && crewPayrollMatch) {
+        const adminSecret = String(env.ADMIN_DASHBOARD_SECRET || '').trim();
+        const tokenData = await getAdminTokenPayload(request, adminSecret);
+        if (!hasManagementRole(tokenData)) return bad('Hanya Master atau Admin yang dapat menghapus slip gaji crew.', 403);
+        const id = decodeURIComponent(crewPayrollMatch[1]);
+        let body = {};
+        try { body = await request.json(); } catch {}
+        const pin = String(body.pin || '').trim();
+        if (!/^\d{4}$/.test(pin)) return bad('Masukkan PIN Master tepat 4 digit.', 400);
+        const master = await env.DB.prepare(`
+          SELECT delete_pin_salt, delete_pin_hash FROM dashboard_users
+          WHERE account_id = 'master' AND active = 1
+        `).first();
+        if (!master?.delete_pin_hash) return bad('PIN Master belum diinisialisasi. Login sebagai Master terlebih dahulu.', 409);
+        const attemptedHash = await hashDashboardPassword(pin, master.delete_pin_salt);
+        if (!constantTimeEqual(attemptedHash, master.delete_pin_hash)) return bad('PIN Master salah.', 403);
+        let slip;
+        try {
+          slip = await env.DB.prepare('SELECT id, crew, period_month, status FROM crew_payroll_slips WHERE id = ?').bind(id).first();
+        } catch (error) {
+          if (/no such table: crew_payroll_slips/i.test(String(error?.message || error))) {
+            return bad('Slip gaji crew belum disiapkan. Jalankan migration-crew-payroll-slips.sql di D1.', 503);
+          }
+          throw error;
+        }
+        if (!slip) return bad('Slip tidak ditemukan.', 404);
+        // Slip yang sudah masuk pengeluaran ikut menghapus catatan pengeluarannya.
+        await env.DB.batch([
+          env.DB.prepare(`DELETE FROM finance_entries WHERE created_by = 'crew-payroll' AND substr(id, 1, ?) = ?`).bind(`crew-payroll-${slip.id}-`.length, `crew-payroll-${slip.id}-`),
+          env.DB.prepare('DELETE FROM crew_payroll_slips WHERE id = ?').bind(id),
+        ]);
+        if (slip.status === 'paid') {
+          // Catatan honor otomatis dari check-in bulan itu dikembalikan, sama seperti saat slip dibatalkan.
+          const [slipYear, slipMonth] = String(slip.period_month).split('-').map(Number);
+          const daysResult = await env.DB.prepare(`
+            SELECT DISTINCT work_date FROM checkins WHERE crew = ? AND work_date >= ? AND work_date < ?
+          `).bind(slip.crew, `${slip.period_month}-01`, new Date(Date.UTC(slipYear, slipMonth, 1)).toISOString().slice(0, 10)).all();
+          await safelySyncCheckinPayrollExpenses(env, (daysResult.results || []).map(row => ({ crew:slip.crew, workDate:row.work_date })));
+        }
+        return json({ ok:true, data:{ id, deleted:true } });
+      }
+      if (request.method === 'PATCH' && crewPayrollMatch) {
+        const adminSecret = String(env.ADMIN_DASHBOARD_SECRET || '').trim();
+        const tokenData = await getAdminTokenPayload(request, adminSecret);
+        if (!hasManagementRole(tokenData)) return bad('Hanya Master atau Admin yang dapat mengelola slip gaji crew.', 403);
+        const id = decodeURIComponent(crewPayrollMatch[1]);
+        const body = await request.json();
+        // accept = masukkan sebagai pengeluaran, reject = tolak (revisi di Dashboard Check In Crew),
+        // undo = batalkan slip yang sudah dimasukkan sebagai pengeluaran.
+        const action = String(body.action || '').trim();
+        if (!['accept', 'reject', 'undo'].includes(action)) return bad('Aksi slip tidak valid.');
+        const status = action === 'accept' ? 'paid' : 'submitted';
+        let slip;
+        try {
+          slip = await env.DB.prepare(`
+            SELECT id, crew, period_month, base_pay, extra_total, total_pay, data_json, status, review_note
+            FROM crew_payroll_slips WHERE id = ?
+          `).bind(id).first();
+        } catch (error) {
+          if (/no such table: crew_payroll_slips/i.test(String(error?.message || error))) {
+            return bad('Slip gaji crew belum disiapkan. Jalankan migration-crew-payroll-slips.sql di D1.', 503);
+          }
+          if (/no such column: review_note/i.test(String(error?.message || error))) {
+            return bad('Kolom catatan review belum tersedia. Jalankan migration-crew-payroll-review-note.sql di D1.', 503);
+          }
+          throw error;
+        }
+        if (!slip) return bad('Slip tidak ditemukan.', 404);
+        const reviewNote = action === 'reject' ? String(body.note || '').trim() : '';
+        if (action === 'accept') {
+          if (slip.status === 'paid') return bad('Slip ini sudah dimasukkan sebagai pengeluaran.', 409);
+          if (slip.review_note) return bad('Slip ini ditolak. Tunggu revisi yang dikirim ulang dari Dashboard Check In Crew.', 409);
+        }
+        if (action === 'reject') {
+          if (slip.status === 'paid') return bad('Slip sudah dimasukkan sebagai pengeluaran. Batalkan dulu sebelum menolak.', 409);
+          if (reviewNote.length < 3 || reviewNote.length > 200) return bad('Alasan penolakan wajib diisi (3-200 karakter).');
+        }
+        if (action === 'undo' && slip.status !== 'paid') return bad('Slip ini belum dimasukkan sebagai pengeluaran.', 409);
+
+        const now = new Date().toISOString();
+        const paidAt = status === 'paid' ? now : null;
+        const [slipYear, slipMonth] = String(slip.period_month).split('-').map(Number);
+        const monthStart = `${slip.period_month}-01`;
+        const nextMonthStart = new Date(Date.UTC(slipYear, slipMonth, 1)).toISOString().slice(0, 10);
+        const entryDate = new Date(Date.UTC(slipYear, slipMonth, 0)).toISOString().slice(0, 10);
+        const entryPrefix = `crew-payroll-${slip.id}-`;
+        // Catatan pengeluaran dari slip dihapus dulu lalu dibuat ulang, jadi aksi ini aman diulang.
+        const statements = [
+          env.DB.prepare(`DELETE FROM finance_entries WHERE created_by = 'crew-payroll' AND substr(id, 1, ?) = ?`).bind(entryPrefix.length, entryPrefix),
+        ];
+
+        if (status === 'paid') {
+          let detail = {};
+          try { detail = JSON.parse(slip.data_json); } catch {}
+          const categoryResult = await env.DB.prepare(`
+            SELECT id, name FROM finance_categories
+            WHERE id IN ('expense-crew-fee', 'expense-salary') AND kind = 'expense' AND active = 1
+          `).all();
+          const categoriesById = new Map((categoryResult.results || []).map(category => [category.id, category]));
+          const feeCategory = categoriesById.get('expense-crew-fee');
+          const salaryCategory = categoriesById.get('expense-salary') || feeCategory;
+          if (!feeCategory) return bad('Kategori Fee untuk Crew belum tersedia. Jalankan migration-crew-expense-category.sql di D1.', 409);
+
+          const propertyResult = await env.DB.prepare('SELECT id, name FROM properties WHERE active = 1').all();
+          const normalizeName = value => String(value || '').normalize('NFKD')
+            .replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+          const propertyIds = new Map((propertyResult.results || []).map(property => [normalizeName(property.name), property.id]));
+          const periodLabel = `${String(slip.period_month)}`;
+          const rupiah = value => `Rp ${Math.round(Number(value) || 0).toLocaleString('id-ID')}`;
+          const entries = [];
+          let allocatedHonor = 0;
+          let allocatedFuel = 0;
+
+          // Honor dan bensin per properti (sudah dibagi per laporan di slip).
+          for (const item of Array.isArray(detail.properties) ? detail.properties : []) {
+            const honor = Math.round(Number(item.honor) || 0);
+            const fuel = Math.round(Number(item.fuel) || 0);
+            allocatedHonor += honor;
+            allocatedFuel += fuel;
+            if (honor + fuel <= 0) continue;
+            entries.push({
+              key:`p-${(await sha256Hex(String(item.unit))).slice(0, 16)}`,
+              category:feeCategory,
+              propertyName:String(item.unit),
+              propertyId:propertyIds.get(normalizeName(item.unit)) || null,
+              amount:honor + fuel,
+              description:`Gaji ${slip.crew} ${periodLabel} - honor ${rupiah(honor)}${fuel ? ` + bensin ${rupiah(fuel)}` : ''}`,
+            });
+          }
+          // Sisa gaji pokok dan bensin pada hari yang tidak punya laporan properti.
+          const honorRest = Math.round(Number(slip.base_pay) || 0) - allocatedHonor;
+          if (honorRest > 0) {
+            entries.push({ key:'base-rest', category:feeCategory, propertyName:'', propertyId:null, amount:honorRest,
+              description:`Gaji pokok ${slip.crew} ${periodLabel} - hari tanpa laporan properti` });
+          }
+          const fuelRest = Math.round(Number(detail.extra_pay?.bensin) || 0) - allocatedFuel;
+          if (fuelRest > 0) {
+            entries.push({ key:'fuel-rest', category:feeCategory, propertyName:'', propertyId:null, amount:fuelRest,
+              description:`Uang bensin ${slip.crew} ${periodLabel} - hari tanpa laporan properti` });
+          }
+          // Tambahan lain. Reimburse tidak dicatat lagi karena struknya sudah masuk lewat Pengeluaran Lapangan.
+          const extraLabels = { tunjangan:'Tunjangan', bonus:'Bonus', pulsa:'Pulsa / Komunikasi' };
+          for (const [field, label] of Object.entries(extraLabels)) {
+            const amount = Math.round(Number(detail.extra_pay?.[field]) || 0);
+            if (amount > 0) {
+              entries.push({ key:field, category:salaryCategory, propertyName:'', propertyId:null, amount,
+                description:`${label} ${slip.crew} ${periodLabel}` });
+            }
+          }
+
+          // Slip menjadi sumber tunggal: catatan otomatis dari check-in untuk crew dan bulan ini diganti.
+          statements.push(env.DB.prepare(`
+            DELETE FROM finance_entries
+            WHERE created_by = 'checkin-payroll' AND payee = ? AND entry_date >= ? AND entry_date < ?
+          `).bind(slip.crew, monthStart, nextMonthStart));
+          for (const entry of entries) {
+            statements.push(env.DB.prepare(`
+              INSERT INTO finance_entries (
+                id, kind, category_id, category_name, property_id, property_name,
+                entry_date, amount, description, payee, recurrence, created_by, created_at
+              ) VALUES (?, 'expense', ?, ?, ?, ?, ?, ?, ?, ?, 'once', 'crew-payroll', ?)
+            `).bind(`${entryPrefix}${entry.key}`, entry.category.id, entry.category.name, entry.propertyId,
+              entry.propertyName, entryDate, entry.amount, entry.description.slice(0, 240), slip.crew, now));
+          }
+        }
+
+        statements.push(env.DB.prepare('UPDATE crew_payroll_slips SET status = ?, paid_at = ?, review_note = ?, updated_at = ? WHERE id = ?')
+          .bind(status, paidAt, reviewNote, now, id));
+        await env.DB.batch(statements);
+
+        if (action === 'undo') {
+          // Dibatalkan: kembalikan catatan honor otomatis dari data check-in bulan ini.
+          const daysResult = await env.DB.prepare(`
+            SELECT DISTINCT work_date FROM checkins WHERE crew = ? AND work_date >= ? AND work_date < ?
+          `).bind(slip.crew, monthStart, nextMonthStart).all();
+          await safelySyncCheckinPayrollExpenses(env, (daysResult.results || []).map(row => ({ crew:slip.crew, workDate:row.work_date })));
+        }
+        return json({ ok:true, data:{ id, status, paid_at:paidAt, review_note:reviewNote } });
       }
 
       // Crew: lapor barang baru yang ditemukan di lapangan (belum ada di daftar resmi).
@@ -3983,7 +4477,13 @@ export default {
         if (!(await getAdminTokenPayload(request, adminSecret))) return bad('Login admin diperlukan', 401);
         const [categoryResult, entryResult, syncSetting] = await Promise.all([
           env.DB.prepare('SELECT id, kind, name FROM finance_categories WHERE active = 1 ORDER BY kind, name COLLATE NOCASE').all(),
-          env.DB.prepare('SELECT * FROM finance_entries ORDER BY entry_date DESC, created_at DESC LIMIT 2000').all(),
+          // Baris riwayat crew (pending/sent/rejected, dan yang sudah diterima) tidak dihitung langsung; pengeluaran crew
+          // yang diterima Admin masuk lewat salinannya (crew-expense-<id>).
+          env.DB.prepare(`SELECT * FROM finance_entries WHERE review_status = 'approved' AND review_sent_at = '' ORDER BY entry_date DESC, created_at DESC LIMIT 2000`).all()
+            .catch(error => {
+              if (!/no such column: review_status/i.test(String(error?.message || error))) throw error;
+              return env.DB.prepare('SELECT * FROM finance_entries ORDER BY entry_date DESC, created_at DESC LIMIT 2000').all();
+            }),
           env.DB.prepare(`SELECT value FROM site_settings WHERE key = 'kosan_dashboard_sync'`).first(),
         ]);
         let entries = entryResult.results || [];
@@ -4106,6 +4606,9 @@ export default {
         if (financeEntry?.created_by === 'checkin-payroll') {
           return bad('Pengeluaran honor crew mengikuti data check-in. Edit atau hapus check-in sumber untuk memperbarui biaya ini.', 409);
         }
+        if (financeEntry?.created_by === 'crew-payroll') {
+          return bad('Pengeluaran ini berasal dari slip gaji crew. Klik Batalkan di Laporan Crew, revisi slip di Dashboard Check In Crew, lalu masukkan lagi sebagai pengeluaran.', 409);
+        }
         if (request.method === 'PATCH') {
           if (financeEntry.kind !== 'expense') return bad('Hanya transaksi pengeluaran yang dapat diedit dari form ini.', 400);
           const categoryId = String(body.category_id || '');
@@ -4143,6 +4646,12 @@ export default {
           return json({ ok:true, data:{ id, proof_url:proofUrl } });
         }
 
+        // Pengeluaran crew yang diterima (crew-expense-<id>): menghapusnya di sini juga menghapusnya dari Laporan Crew,
+        // tetapi riwayat di Dashboard Check In Crew tetap ada (berstatus Terkirim).
+        if (financeEntry.created_by === 'crew-expense' && id.startsWith('crew-expense-')) {
+          await env.DB.prepare(`UPDATE finance_entries SET review_status = 'removed' WHERE id = ? AND (created_by LIKE 'crew:%' OR created_by LIKE 'ops:%')`)
+            .bind(id.slice('crew-expense-'.length)).run();
+        }
         const result = await env.DB.prepare('DELETE FROM finance_entries WHERE id = ?').bind(id).run();
         if (!result.meta?.changes) return bad('Transaksi tidak ditemukan.', 404);
         return json({ ok: true, data: { id } });
