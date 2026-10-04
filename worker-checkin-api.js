@@ -18,7 +18,7 @@ function getCorsHeaders(request) {
   const isLocalOrigin = /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin);
   return {
     ...CORS,
-    'Access-Control-Allow-Origin': ['https://yourhome.id', 'https://admin.yourhome.id', 'https://owner.yourhome.id', 'https://agen.yourhome.id'].includes(origin) || isLocalOrigin
+    'Access-Control-Allow-Origin': ['https://yourhome.id', 'https://admin.yourhome.id', 'https://owner.yourhome.id', 'https://agen.yourhome.id', 'https://artikel.yourhome.id'].includes(origin) || isLocalOrigin
       ? origin
       : 'https://yourhome.id',
   };
@@ -600,6 +600,26 @@ function hasManagementRole(tokenData) {
   return ['Master', 'Admin'].includes(tokenData?.role);
 }
 
+// Akun Admin biasa (bukan Master, IT, dan bukan admin-1/"Operasional"): akses dibatasi. Mengubah Daftar Crew dan
+// Daftar Agen wajib PIN Master, dan tidak boleh menghapus/mereset absensi karyawan kantor.
+function isRestrictedAdmin(tokenData) {
+  return tokenData?.role === 'Admin' && tokenData?.account_id !== 'admin-1';
+}
+
+// Memverifikasi PIN Master 4 digit. Mengembalikan null kalau benar, atau { error, status } kalau gagal.
+async function checkMasterDeletePin(env, value) {
+  const pin = String(value || '').trim();
+  if (!/^\d{4}$/.test(pin)) return { error:'Masukkan PIN Master tepat 4 digit.', status:400 };
+  const master = await env.DB.prepare(`
+    SELECT delete_pin_salt, delete_pin_hash FROM dashboard_users
+    WHERE account_id = 'master' AND active = 1
+  `).first();
+  if (!master?.delete_pin_hash) return { error:'PIN Master belum diinisialisasi. Login sebagai Master terlebih dahulu.', status:409 };
+  const attemptedHash = await hashDashboardPassword(pin, master.delete_pin_salt);
+  if (!constantTimeEqual(attemptedHash, master.delete_pin_hash)) return { error:'PIN Master salah.', status:403 };
+  return null;
+}
+
 // Ganti Kode Properti: dibatasi ke Master dan akun admin-1 (ditampilkan sebagai
 // "Operasional" di Member Area), bukan ke seluruh role Admin/IT.
 function canEditPropertyCodes(tokenData) {
@@ -678,6 +698,15 @@ async function getOwnerTokenPayload(request, secret) {
 
 // Dipakai bersama oleh POST dan PATCH booking: validasi agen (opsional) dan hitung fee-nya.
 // Melempar Error dengan pesan siap pakai untuk bad() kalau datanya tidak valid.
+// Kolom guest_count baru ditambahkan lewat migration; sebelum dijalankan, booking tetap tersimpan tanpa jumlah tamu.
+async function saveBookingGuestCount(env, bookingId, guestCount) {
+  try {
+    await env.DB.prepare('UPDATE dashboard_bookings SET guest_count = ? WHERE id = ?').bind(guestCount, bookingId).run();
+  } catch (error) {
+    if (!/no such column|guest_count/i.test(String(error?.message || error))) throw error;
+  }
+}
+
 async function checkExtraBedStock(env, { propertyId, propertyName, checkin, checkout, quantity, excludeId = '' }) {
   const settingsResult = await env.DB.prepare(`SELECT property_id, stock FROM extra_bed_property_settings`).all();
   const settings = settingsResult.results || [];
@@ -799,33 +828,48 @@ async function savePendingFieldExpense(env, origin, { createdBy, payee, body, da
   const entryDate = String(body.entry_date || '').trim();
   const description = String(body.description || '').trim();
   const receipt = String(body.receipt || '');
+  const noReceiptReason = String(body.no_receipt_reason || '').trim();
   if (!propertyName || propertyName.length > 180 || !Number.isSafeInteger(amount) || amount <= 0 ||
       !/^\d{4}-\d{2}-\d{2}$/.test(entryDate) || description.length > 160) {
     return { error:'Properti, jumlah, dan tanggal pengeluaran wajib valid.', status:400 };
   }
-  if (!receipt.startsWith('data:image/')) return { error:'Foto struk wajib dilampirkan.', status:400 };
+  // Tanpa foto struk: wajib menulis alasan (kolom no_receipt_reason).
+  const hasReceipt = receipt.startsWith('data:image/');
+  if (!hasReceipt && (noReceiptReason.length < 3 || noReceiptReason.length > 160)) {
+    return { error:'Foto struk wajib dilampirkan, atau isi alasan tidak ada struk (3-160 karakter).', status:400 };
+  }
   const category = await env.DB.prepare(`
     SELECT id, name FROM finance_categories WHERE id = ? AND kind = 'expense' AND active = 1
   `).bind(categoryId).first();
   if (!category) return { error:'Jenis pengeluaran tidak valid.', status:400 };
   if (dailyLimit) {
-    const countRow = await env.DB.prepare(`
-      SELECT COUNT(*) AS count FROM finance_entries WHERE created_by = ? AND entry_date = ?
+    const countOwn = hideDeleted => env.DB.prepare(`
+      SELECT COUNT(*) AS count FROM finance_entries WHERE created_by = ? AND entry_date = ?${hideDeleted ? ' AND crew_hidden = 0' : ''}
     `).bind(createdBy, entryDate).first();
+    const countRow = await countOwn(true).catch(error => {
+      if (!/no such column: crew_hidden/i.test(String(error?.message || error))) throw error;
+      return countOwn(false);
+    });
     if (Number(countRow?.count || 0) >= dailyLimit) return { error:`Batas ${dailyLimit} struk per hari sudah tercapai.`, status:409 };
   }
-  let parsedReceipt;
-  try { parsedReceipt = parseDataUrl(receipt); }
-  catch { return { error:'Foto struk tidak valid.', status:400 }; }
-  if (!String(parsedReceipt.contentType || '').startsWith('image/')) return { error:'Foto struk harus berupa gambar.', status:400 };
-  if (parsedReceipt.bytes.byteLength >= 100 * 1024) return { error:'Foto struk wajib di bawah 100 KB.', status:400 };
+  let parsedReceipt = null;
+  if (hasReceipt) {
+    try { parsedReceipt = parseDataUrl(receipt); }
+    catch { return { error:'Foto struk tidak valid.', status:400 }; }
+    if (!String(parsedReceipt.contentType || '').startsWith('image/')) return { error:'Foto struk harus berupa gambar.', status:400 };
+    if (parsedReceipt.bytes.byteLength >= 100 * 1024) return { error:'Foto struk wajib di bawah 100 KB.', status:400 };
+  }
 
   const id = crypto.randomUUID();
-  const receiptKey = `finance/crew-expense/${id}.jpg`;
-  await env.PHOTOS.put(receiptKey, parsedReceipt.bytes, {
-    httpMetadata:{ contentType:parsedReceipt.contentType || 'image/jpeg' },
-  });
-  const proofUrl = publicFileUrl(origin, receiptKey);
+  let proofUrl = '';
+  if (parsedReceipt) {
+    const receiptKey = `finance/crew-expense/${id}.jpg`;
+    await env.PHOTOS.put(receiptKey, parsedReceipt.bytes, {
+      httpMetadata:{ contentType:parsedReceipt.contentType || 'image/jpeg' },
+    });
+    proofUrl = publicFileUrl(origin, receiptKey);
+  }
+  const reasonToStore = hasReceipt ? '' : noReceiptReason;
   const propertyRow = await env.DB.prepare('SELECT id FROM properties WHERE name = ? COLLATE NOCASE LIMIT 1')
     .bind(propertyName).first();
   const createdAt = new Date().toISOString();
@@ -834,17 +878,295 @@ async function savePendingFieldExpense(env, origin, { createdBy, payee, body, da
       INSERT INTO finance_entries (
         id, kind, category_id, category_name, property_id, property_name,
         entry_date, amount, description, payee, recurrence, created_by, created_at, proof_url,
-        review_status, review_sent_at
-      ) VALUES (?, 'expense', ?, ?, ?, ?, ?, ?, ?, ?, 'once', ?, ?, ?, 'pending', '')
+        review_status, review_sent_at${reasonToStore ? ', no_receipt_reason' : ''}
+      ) VALUES (?, 'expense', ?, ?, ?, ?, ?, ?, ?, ?, 'once', ?, ?, ?, 'pending', ''${reasonToStore ? ', ?' : ''})
     `).bind(id, category.id, category.name, propertyRow?.id || null, propertyName,
-      entryDate, amount, description, payee, createdBy, createdAt, proofUrl).run();
+      entryDate, amount, description, payee, createdBy, createdAt, proofUrl,
+      ...(reasonToStore ? [reasonToStore] : [])).run();
   } catch (error) {
+    if (reasonToStore && /no_receipt_reason/i.test(String(error?.message || error))) {
+      return { error:'Alasan tanpa struk belum bisa disimpan: jalankan migration-crew-expense-no-receipt.sql di D1.', status:503 };
+    }
     if (/review_status|review_sent_at/i.test(String(error?.message || error))) {
       return { error:'Pengeluaran belum bisa disimpan: fitur review belum aktif di server. Hubungi admin. (Jalankan migration-crew-expense-review.sql di D1.)', status:503 };
     }
     throw error;
   }
   return { id, proofUrl };
+}
+
+// ===== Artikel / Blog (artikel.yourhome.id) =====
+// Tabel: articles (migrations/migration-articles.sql). Gambar disimpan di R2 (PHOTOS) pada folder articles/.
+const ARTICLE_CATEGORIES = ['properti', 'wisata', 'pariwisata', 'kuliner', 'tips', 'budaya'];
+const ARTICLE_RESERVED_SLUGS = new Set(['categories', 'sitemap', 'rss', 'feed', 'images', 'page']);
+const ARTICLE_MIN_WORDS_PUBLISH = 100;
+const ARTICLE_MAX_TAGS = 8;
+const ARTICLE_MAX_IMAGE_BYTES = 2 * 1024 * 1024;
+const ARTICLE_IMAGE_TYPES = { 'image/webp':'webp', 'image/jpeg':'jpg', 'image/png':'png', 'image/gif':'gif' };
+const ARTICLE_LIST_COLUMNS = 'id, slug, title, excerpt, category, tags, cover_url, cover_alt, status, published_at, meta_title, meta_description, author, author_account_id, created_at, updated_at';
+const ARTICLE_ALLOWED_TAGS = { p:[], br:[], h2:[], h3:[], h4:[], strong:[], em:[], u:[], s:[], a:['href'], ul:[], ol:[], li:[], blockquote:[], img:['src', 'alt'] };
+const ARTICLE_TAG_MAP = { b:'strong', i:'em', h1:'h2', h5:'h4', h6:'h4' };
+const ARTICLE_DROP_TAGS = new Set(['script', 'style', 'iframe', 'object', 'embed', 'form', 'input', 'button', 'textarea', 'select', 'link', 'meta', 'noscript', 'svg', 'math', 'template', 'head', 'title', 'base', 'frame', 'frameset']);
+
+function slugifyArticle(value) {
+  return String(value || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/&/g, ' dan ')
+    .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 80).replace(/-+$/, '');
+}
+
+function safeArticleUrl(value, { image = false } = {}) {
+  const v = String(value || '').trim();
+  if (!v || v.length > 2048 || /[\u0000- \u007f]/.test(v)) return '';
+  if (image) return /^https:\/\//i.test(v) || /^\/(?!\/)/.test(v) ? v : '';
+  return /^https?:\/\//i.test(v) || /^(mailto:|tel:|#)/i.test(v) || /^\/(?!\/)/.test(v) ? v : '';
+}
+
+// Sanitasi isi artikel: hanya tag/atribut daftar putih yang lolos. Dijalankan di Worker karena data dari browser tidak boleh dipercaya.
+async function sanitizeArticleHtml(html) {
+  const rewriter = new HTMLRewriter()
+    .onDocument({ comments(comment) { comment.remove(); } })
+    .on('*', {
+      element(el) {
+        const original = el.tagName.toLowerCase();
+        if (ARTICLE_DROP_TAGS.has(original)) { el.remove(); return; }
+        const tag = ARTICLE_TAG_MAP[original] || original;
+        const allowedAttrs = ARTICLE_ALLOWED_TAGS[tag];
+        if (!allowedAttrs) { el.removeAndKeepContent(); return; }
+        const attrs = [...el.attributes];
+        for (const [name] of attrs) el.removeAttribute(name);
+        if (tag !== original) el.tagName = tag;
+        const attr = name => (attrs.find(([key]) => key.toLowerCase() === name) || [])[1];
+        if (tag === 'a') {
+          const href = safeArticleUrl(attr('href'));
+          if (!href) { el.removeAndKeepContent(); return; }
+          el.setAttribute('href', href);
+          if (/^https?:\/\//i.test(href) && !/^https?:\/\/([a-z0-9-]+\.)*yourhome\.id(\/|$)/i.test(href)) {
+            el.setAttribute('rel', 'noopener nofollow');
+            el.setAttribute('target', '_blank');
+          }
+        } else if (tag === 'img') {
+          const src = safeArticleUrl(attr('src'), { image:true });
+          if (!src) { el.remove(); return; }
+          el.setAttribute('src', src);
+          el.setAttribute('alt', String(attr('alt') || '').trim().slice(0, 200));
+        }
+      },
+    });
+  const cleaned = await rewriter
+    .transform(new Response(String(html || ''), { headers:{ 'Content-Type':'text/html; charset=utf-8' } }))
+    .text();
+  return cleaned.replace(/<p>(?:\s|&nbsp;|<br\s*\/?>)*<\/p>/gi, '').trim();
+}
+
+function articleWordCount(html) {
+  const text = String(html || '').replace(/<[^>]*>/g, ' ').replace(/&nbsp;/g, ' ').replace(/&[a-z#0-9]+;/gi, ' ').replace(/\s+/g, ' ').trim();
+  return text ? text.split(' ').length : 0;
+}
+
+function parseArticleTags(value) {
+  try {
+    const tags = JSON.parse(value || '[]');
+    return Array.isArray(tags) ? tags.map(tag => String(tag)).filter(Boolean) : [];
+  } catch {
+    return [];
+  }
+}
+
+function articleRow(row) {
+  return row ? { ...row, tags:parseArticleTags(row.tags) } : row;
+}
+
+// Memvalidasi payload editor. Mengembalikan { error } atau { value } yang siap disimpan.
+async function normalizeArticleInput(body, existing) {
+  const title = String(body.title || '').trim();
+  if (!title) return { error:'Judul wajib diisi.' };
+  if (title.length > 160) return { error:'Judul maksimal 160 karakter.' };
+
+  const slug = slugifyArticle(body.slug || title);
+  if (!slug) return { error:'Slug tidak valid.' };
+  if (ARTICLE_RESERVED_SLUGS.has(slug)) return { error:'Slug memakai kata yang dicadangkan sistem. Ubah slug.' };
+
+  const status = body.status === 'published' ? 'published' : 'draft';
+  const category = String(body.category || '').trim();
+  if (category && !ARTICLE_CATEGORIES.includes(category)) return { error:'Kategori tidak dikenal.' };
+
+  const excerpt = String(body.excerpt || '').trim();
+  const metaTitle = String(body.meta_title || '').trim();
+  const metaDescription = String(body.meta_description || '').trim();
+  const coverAlt = String(body.cover_alt || '').trim();
+  if (excerpt.length > 300) return { error:'Ringkasan maksimal 300 karakter.' };
+  if (metaTitle.length > 90) return { error:'Judul SEO maksimal 90 karakter.' };
+  if (metaDescription.length > 200) return { error:'Deskripsi SEO maksimal 200 karakter.' };
+  if (coverAlt.length > 140) return { error:'Teks alternatif gambar maksimal 140 karakter.' };
+
+  const rawContent = String(body.content || '');
+  if (rawContent.length > 400000) return { error:'Isi artikel terlalu panjang.' };
+  const content = await sanitizeArticleHtml(rawContent);
+
+  const coverUrl = body.cover_url ? safeArticleUrl(body.cover_url, { image:true }) : '';
+  if (body.cover_url && !coverUrl) return { error:'URL gambar utama tidak valid.' };
+
+  const tags = [...new Set((Array.isArray(body.tags) ? body.tags : [])
+    .map(tag => String(tag).toLowerCase().replace(/[^\p{L}\p{N}\s-]/gu, '').replace(/\s+/g, ' ').trim().slice(0, 30))
+    .filter(Boolean))];
+  if (tags.length > ARTICLE_MAX_TAGS) return { error:`Maksimal ${ARTICLE_MAX_TAGS} tag.` };
+
+  let publishedAt = null;
+  if (status === 'published') {
+    if (!category) return { error:'Pilih kategori sebelum menerbitkan.' };
+    if (!coverUrl) return { error:'Tambahkan gambar utama sebelum menerbitkan.' };
+    const words = articleWordCount(content);
+    if (words < ARTICLE_MIN_WORDS_PUBLISH) return { error:`Isi artikel baru ${words} kata. Minimal ${ARTICLE_MIN_WORDS_PUBLISH} kata untuk diterbitkan.` };
+    if (/<img(?![^>]*\balt="[^"]+")/i.test(content)) return { error:'Ada gambar di dalam artikel yang belum diberi teks alternatif.' };
+    const requested = body.published_at || (existing?.status === 'published' ? existing.published_at : null);
+    const parsed = requested ? new Date(requested) : new Date();
+    if (Number.isNaN(parsed.getTime())) return { error:'Waktu terbit tidak valid.' };
+    publishedAt = parsed.toISOString();
+  }
+
+  return { value:{ slug, title, excerpt, content, category, tags:JSON.stringify(tags), cover_url:coverUrl, cover_alt:coverAlt, status, published_at:publishedAt, meta_title:metaTitle, meta_description:metaDescription } };
+}
+
+const escapeLike = value => String(value).replace(/[\\%_]/g, char => `\\${char}`);
+
+async function handleArticleRoutes({ request, env, url, path, json, bad }) {
+  if (!/^\/(admin\/)?articles(\/|$)/.test(path)) return null;
+  const method = request.method;
+  const missingTable = error => /no such table: articles/i.test(String(error?.message || error));
+  const migrationNeeded = () => bad('Tabel articles belum ada. Jalankan migration-articles.sql di D1.', 503);
+
+  try {
+    // ---------- Publik: hanya artikel terbit (published_at sudah lewat) ----------
+    if (!path.startsWith('/admin/')) {
+      if (method !== 'GET') return bad('Metode tidak didukung', 405);
+      const cached = response => { response.headers.set('Cache-Control', 'public, max-age=60'); return response; };
+      const nowIso = new Date().toISOString();
+
+      if (path === '/articles/categories') {
+        const result = await env.DB.prepare(`
+          SELECT category, COUNT(*) AS total FROM articles
+          WHERE status = 'published' AND published_at <= ? AND category != ''
+          GROUP BY category
+        `).bind(nowIso).all();
+        return cached(json({ ok:true, data:result.results || [] }));
+      }
+
+      if (path === '/articles') {
+        const limit = Math.min(Math.max(parseInt(url.searchParams.get('limit'), 10) || 12, 1), 50);
+        const offset = Math.max(parseInt(url.searchParams.get('offset'), 10) || 0, 0);
+        const category = String(url.searchParams.get('category') || '').trim();
+        const tag = String(url.searchParams.get('tag') || '').toLowerCase().replace(/[^\p{L}\p{N}\s-]/gu, '').trim();
+        const q = String(url.searchParams.get('q') || '').trim().slice(0, 80);
+        const where = ["status = 'published'", 'published_at <= ?'];
+        const binds = [nowIso];
+        if (ARTICLE_CATEGORIES.includes(category)) { where.push('category = ?'); binds.push(category); }
+        if (tag) { where.push('tags LIKE ?'); binds.push(`%"${tag}"%`); }
+        if (q) { where.push("(title LIKE ? ESCAPE '\\' OR excerpt LIKE ? ESCAPE '\\')"); binds.push(`%${escapeLike(q)}%`, `%${escapeLike(q)}%`); }
+        const condition = where.join(' AND ');
+        const [rows, total] = await Promise.all([
+          env.DB.prepare(`SELECT ${ARTICLE_LIST_COLUMNS} FROM articles WHERE ${condition} ORDER BY published_at DESC LIMIT ? OFFSET ?`).bind(...binds, limit, offset).all(),
+          env.DB.prepare(`SELECT COUNT(*) AS total FROM articles WHERE ${condition}`).bind(...binds).first(),
+        ]);
+        return cached(json({ ok:true, data:(rows.results || []).map(articleRow), pagination:{ total:Number(total?.total || 0), limit, offset } }));
+      }
+
+      const slugMatch = path.match(/^\/articles\/([^/]+)$/);
+      if (slugMatch) {
+        const article = await env.DB.prepare(`SELECT * FROM articles WHERE slug = ? AND status = 'published' AND published_at <= ?`)
+          .bind(decodeURIComponent(slugMatch[1]), nowIso).first();
+        if (!article) return bad('Artikel tidak ditemukan', 404);
+        const related = await env.DB.prepare(`
+          SELECT ${ARTICLE_LIST_COLUMNS} FROM articles
+          WHERE status = 'published' AND published_at <= ? AND id != ? AND category = ?
+          ORDER BY published_at DESC LIMIT 3
+        `).bind(nowIso, article.id, article.category).all();
+        return cached(json({ ok:true, data:articleRow(article), related:(related.results || []).map(articleRow) }));
+      }
+      return bad('Endpoint tidak ditemukan', 404);
+    }
+
+    // ---------- Admin: Master / Admin ----------
+    const adminSecret = String(env.ADMIN_DASHBOARD_SECRET || '').trim();
+    const tokenData = await getAdminTokenPayload(request, adminSecret);
+    if (!tokenData) return bad('Login admin diperlukan', 401);
+    if (tokenData.account_id && !hasManagementRole(tokenData)) return bad('Hanya Master atau Admin yang dapat mengelola artikel.', 403);
+
+    // Upload gambar (gambar utama dan gambar di dalam isi) ke R2
+    if (method === 'POST' && path === '/admin/articles/images') {
+      const body = await request.json();
+      const dataUrl = String(body.data_url || '');
+      if (dataUrl.length > Math.ceil(ARTICLE_MAX_IMAGE_BYTES * 1.4)) return bad('Gambar terlalu besar. Maksimal 2 MB.', 413);
+      let parsed;
+      try { parsed = parseDataUrl(dataUrl); } catch { return bad('Format gambar tidak valid.'); }
+      const extension = ARTICLE_IMAGE_TYPES[parsed.contentType];
+      if (!extension) return bad('Format gambar harus JPG, PNG, WebP, atau GIF.');
+      if (parsed.bytes.byteLength > ARTICLE_MAX_IMAGE_BYTES) return bad('Gambar terlalu besar. Maksimal 2 MB.', 413);
+      const [year, month] = new Date().toISOString().slice(0, 7).split('-');
+      const key = `articles/${year}/${month}/${crypto.randomUUID()}.${extension}`;
+      await env.PHOTOS.put(key, parsed.bytes, { httpMetadata:{ contentType:parsed.contentType, cacheControl:'public, max-age=31536000, immutable' } });
+      return json({ ok:true, data:{ url:publicFileUrl(url.origin, key), key } }, 201);
+    }
+
+    if (method === 'GET' && path === '/admin/articles') {
+      const limit = Math.min(Math.max(parseInt(url.searchParams.get('limit'), 10) || 500, 1), 1000);
+      const rows = await env.DB.prepare(`SELECT ${ARTICLE_LIST_COLUMNS} FROM articles ORDER BY updated_at DESC LIMIT ?`).bind(limit).all();
+      return json({ ok:true, data:(rows.results || []).map(articleRow) });
+    }
+
+    if (method === 'POST' && path === '/admin/articles') {
+      const result = await normalizeArticleInput(await request.json(), null);
+      if (result.error) return bad(result.error);
+      const a = result.value;
+      const taken = await env.DB.prepare('SELECT id FROM articles WHERE slug = ?').bind(a.slug).first();
+      if (taken) return bad('Slug sudah dipakai artikel lain. Ubah slug.', 409);
+      let authorName = tokenData.account_id || 'Admin';
+      try {
+        const user = await env.DB.prepare('SELECT display_name FROM dashboard_users WHERE account_id = ?').bind(tokenData.account_id || '').first();
+        if (user?.display_name) authorName = user.display_name;
+      } catch { /* tabel akun belum ada: pakai account_id */ }
+      const id = crypto.randomUUID();
+      const now = new Date().toISOString();
+      await env.DB.prepare(`
+        INSERT INTO articles (id, slug, title, excerpt, content, category, tags, cover_url, cover_alt, status, published_at, meta_title, meta_description, author, author_account_id, created_at, updated_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `).bind(id, a.slug, a.title, a.excerpt, a.content, a.category, a.tags, a.cover_url, a.cover_alt, a.status, a.published_at, a.meta_title, a.meta_description, authorName, tokenData.account_id || '', now, now).run();
+      const created = await env.DB.prepare('SELECT * FROM articles WHERE id = ?').bind(id).first();
+      return json({ ok:true, data:articleRow(created) }, 201);
+    }
+
+    const idMatch = path.match(/^\/admin\/articles\/([^/]+)$/);
+    if (idMatch) {
+      const id = decodeURIComponent(idMatch[1]);
+      const existing = await env.DB.prepare('SELECT * FROM articles WHERE id = ?').bind(id).first();
+      if (!existing) return bad('Artikel tidak ditemukan', 404);
+
+      if (method === 'GET') return json({ ok:true, data:articleRow(existing) });
+
+      if (method === 'PUT') {
+        const result = await normalizeArticleInput(await request.json(), existing);
+        if (result.error) return bad(result.error);
+        const a = result.value;
+        const taken = await env.DB.prepare('SELECT id FROM articles WHERE slug = ? AND id != ?').bind(a.slug, id).first();
+        if (taken) return bad('Slug sudah dipakai artikel lain. Ubah slug.', 409);
+        await env.DB.prepare(`
+          UPDATE articles SET slug = ?, title = ?, excerpt = ?, content = ?, category = ?, tags = ?, cover_url = ?, cover_alt = ?,
+            status = ?, published_at = ?, meta_title = ?, meta_description = ?, updated_at = ?
+          WHERE id = ?
+        `).bind(a.slug, a.title, a.excerpt, a.content, a.category, a.tags, a.cover_url, a.cover_alt, a.status, a.published_at, a.meta_title, a.meta_description, new Date().toISOString(), id).run();
+        const updated = await env.DB.prepare('SELECT * FROM articles WHERE id = ?').bind(id).first();
+        return json({ ok:true, data:articleRow(updated) });
+      }
+
+      if (method === 'DELETE') {
+        await env.DB.prepare('DELETE FROM articles WHERE id = ?').bind(id).run();
+        return json({ ok:true, data:{ id } });
+      }
+    }
+    return bad('Endpoint tidak ditemukan', 404);
+  } catch (error) {
+    if (missingTable(error)) return migrationNeeded();
+    if (/UNIQUE constraint failed: articles\.slug/i.test(String(error?.message || error))) return bad('Slug sudah dipakai artikel lain. Ubah slug.', 409);
+    throw error;
+  }
 }
 
 export default {
@@ -1263,11 +1585,15 @@ export default {
         return json({ ok:true, data:properties });
       }
 
+      // Artikel/blog: /articles* (publik) dan /admin/articles* (Master/Admin)
+      const articleResponse = await handleArticleRoutes({ request, env, url, path, json, bad });
+      if (articleResponse) return articleResponse;
+
       // Ambil logo dan kontak website untuk halaman publik
       if (request.method === 'GET' && path === '/settings') {
         const result = await env.DB.prepare(`
           SELECT key, value FROM site_settings
-          WHERE key IN ('header_logo', 'footer_logo', 'dashboard_logo', 'footer_location', 'footer_phone', 'footer_email', 'footer_instagram', 'linktree_links', 'kosan_dashboard_sync')
+          WHERE key IN ('header_logo', 'footer_logo', 'dashboard_logo', 'footer_location', 'footer_phone', 'footer_email', 'footer_instagram', 'linktree_links', 'kosan_dashboard_sync', 'article_daily_target')
         `).all();
         return json({
           ok: true,
@@ -2290,6 +2616,7 @@ export default {
         if (!attendance) return bad('Data absen tidak ditemukan.', 404);
 
         if (request.method === 'DELETE') {
+          if (isRestrictedAdmin(tokenData)) return bad('Akun Admin hanya dapat melihat absensi, tidak dapat menghapus atau mereset.', 403);
           let body = {};
           try { body = await request.json(); } catch {}
           const pin = String(body.pin || '').trim();
@@ -2558,10 +2885,16 @@ export default {
         if (request.method === 'GET') {
           const date = String(url.searchParams.get('date') || '').trim();
           if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return bad('Tanggal tidak valid.');
-          const result = await env.DB.prepare(`
+          // Baris yang dihapus (disembunyikan) dari Dashboard Check In Crew tidak ikut tampil di aplikasi crew.
+          const queryOwn = hideDeleted => env.DB.prepare(`
             SELECT id, category_name, property_name, amount, description, proof_url
-            FROM finance_entries WHERE created_by = ? AND entry_date = ? ORDER BY created_at DESC
+            FROM finance_entries WHERE created_by = ? AND entry_date = ?${hideDeleted ? ' AND crew_hidden = 0' : ''}
+            ORDER BY created_at DESC
           `).bind(createdBy, date).all();
+          const result = await queryOwn(true).catch(error => {
+            if (!/no such column: crew_hidden/i.test(String(error?.message || error))) throw error;
+            return queryOwn(false);
+          });
           return json({ ok:true, data:result.results || [] });
         }
 
@@ -2603,17 +2936,23 @@ export default {
         }
         let rows;
         try {
-          const queryCrewExpenses = hideCrewDeleted => env.DB.prepare(`
+          const queryCrewExpenses = (hideCrewDeleted, withReason = true) => env.DB.prepare(`
             SELECT id, payee, category_name, property_name, amount, description, proof_url, entry_date,
-                   review_status, review_sent_at,
+                   review_status, review_sent_at, ${withReason ? 'no_receipt_reason' : "'' AS no_receipt_reason"},
                    CASE WHEN created_by LIKE 'ops:%' THEN 'operasional' ELSE 'crew' END AS source
-            FROM finance_entries WHERE ${[...conditions, ...(adminView ? ["review_sent_at <> ''", "review_status <> 'removed'"] : (hideCrewDeleted ? ['crew_hidden = 0'] : []))].join(' AND ')}
+            FROM finance_entries WHERE ${[...conditions, ...(adminView ? ["review_sent_at <> ''", "review_status NOT IN ('removed', 'removed-rejected')"] : (hideCrewDeleted ? ['crew_hidden = 0'] : []))].join(' AND ')}
             ORDER BY entry_date DESC, created_at DESC LIMIT ? OFFSET ?
           `).bind(...params, limit + 1, offset).all();
           // Kolom crew_hidden belum ada (migration belum dijalankan): tampilkan seperti biasa.
+          // Kolom no_receipt_reason belum ada: alasan tanpa struk dikosongkan.
           const result = await queryCrewExpenses(true).catch(error => {
-            if (!/no such column: crew_hidden/i.test(String(error?.message || error))) throw error;
-            return queryCrewExpenses(false);
+            const message = String(error?.message || error);
+            if (/no such column: no_receipt_reason/i.test(message)) return queryCrewExpenses(true, false);
+            if (!/no such column: crew_hidden/i.test(message)) throw error;
+            return queryCrewExpenses(false).catch(inner => {
+              if (!/no such column: no_receipt_reason/i.test(String(inner?.message || inner))) throw inner;
+              return queryCrewExpenses(false, false);
+            });
           });
           rows = result.results || [];
         } catch (error) {
@@ -2642,7 +2981,7 @@ export default {
         let entry;
         try {
           entry = await env.DB.prepare(`
-            SELECT id, created_by, review_status, review_sent_at FROM finance_entries WHERE id = ?
+            SELECT id, created_by, review_status, review_sent_at, proof_url, description FROM finance_entries WHERE id = ?
           `).bind(id).first();
         } catch (error) {
           if (/no such column: review_/i.test(String(error?.message || error))) return bad(missingReviewColumns, 503);
@@ -2675,19 +3014,72 @@ export default {
             }
             return json({ ok:true, data:{ id, hidden:true } });
           }
-          // Dihapus dari Laporan Crew & Operasional (atau belum pernah dikirim): baris aslinya ikut terhapus, jadi hilang juga
-          // dari Dashboard Check In Crew, dan salinannya di menu Pengeluaran (kalau sudah diterima) ikut dihapus.
+          // Belum pernah dikirim ke Admin (dihapus dari Dashboard Check In Crew): itu data milik crew sendiri, jadi dihapus betul-betul.
+          if (deleteBody.scope === 'crew') {
+            await env.DB.prepare('DELETE FROM finance_entries WHERE id = ?').bind(id).run();
+            return json({ ok:true, data:{ id, deleted:true } });
+          }
+          // Dihapus dari Dashboard utama (Laporan Crew & Operasional): satu arah, seperti dioda. Baris asli di Dashboard Check In
+          // Crew TIDAK ikut terhapus; hanya disembunyikan dari Laporan (status 'removed'). Yang ditolak tetap tampil Ditolak
+          // di dashboard crew ('removed-rejected'). Salinan di menu Pengeluaran (kalau sudah diterima) ikut dihapus.
           await env.DB.batch([
-            env.DB.prepare('DELETE FROM finance_entries WHERE id = ?').bind(id),
+            env.DB.prepare(`
+              UPDATE finance_entries
+              SET review_status = CASE WHEN review_status = 'rejected' THEN 'removed-rejected' ELSE 'removed' END
+              WHERE id = ? AND review_status NOT IN ('removed', 'removed-rejected')
+            `).bind(id),
             env.DB.prepare(`DELETE FROM finance_entries WHERE id = ? AND created_by = 'crew-expense'`).bind(`crew-expense-${id}`),
           ]);
-          return json({ ok:true, data:{ id, deleted:true } });
+          return json({ ok:true, data:{ id, removed:true } });
         }
 
         const body = await request.json();
         const action = String(body.action || '').trim();
-        if (!['send', 'reject', 'accept'].includes(action)) return bad('Aksi pengeluaran tidak valid.');
-        if (entry.review_status === 'removed') return bad('Pengeluaran ini sudah dihapus dari Laporan Crew.', 409);
+        if (!['send', 'reject', 'accept', 'edit'].includes(action)) return bad('Aksi pengeluaran tidak valid.');
+        if (action === 'edit') {
+          // Edit jumlah, keterangan, dan struk (struk sering menyusul). Boleh di semua status; kalau sudah diterima,
+          // salinannya di menu Pengeluaran ikut diperbarui.
+          const amount = Number(body.amount);
+          const description = String(body.description || '').trim();
+          const receipt = String(body.receipt || '');
+          const noReceiptReason = String(body.no_receipt_reason || '').trim();
+          if (!Number.isSafeInteger(amount) || amount <= 0 || description.length > 160) return bad('Jumlah atau keterangan tidak valid.');
+          let proofUrl = String(entry.proof_url || '');
+          let reason = '';
+          if (receipt.startsWith('data:image/')) {
+            let parsedReceipt;
+            try { parsedReceipt = parseDataUrl(receipt); }
+            catch { return bad('Foto struk tidak valid.'); }
+            if (!String(parsedReceipt.contentType || '').startsWith('image/')) return bad('Foto struk harus berupa gambar.');
+            if (parsedReceipt.bytes.byteLength >= 100 * 1024) return bad('Foto struk wajib di bawah 100 KB.');
+            const receiptKey = `finance/crew-expense/${crypto.randomUUID()}.jpg`;
+            await env.PHOTOS.put(receiptKey, parsedReceipt.bytes, {
+              httpMetadata:{ contentType:parsedReceipt.contentType || 'image/jpeg' },
+            });
+            proofUrl = publicFileUrl(url.origin, receiptKey);
+          } else if (noReceiptReason) {
+            if (noReceiptReason.length < 3 || noReceiptReason.length > 160) return bad('Alasan tidak ada struk 3-160 karakter.');
+            proofUrl = '';
+            reason = noReceiptReason;
+          }
+          const updateOwn = withReasonColumn => env.DB.prepare(`
+            UPDATE finance_entries SET amount = ?, description = ?, proof_url = ?${withReasonColumn ? ', no_receipt_reason = ?' : ''} WHERE id = ?
+          `).bind(amount, description, proofUrl, ...(withReasonColumn ? [reason] : []), id).run();
+          try {
+            await updateOwn(true);
+          } catch (error) {
+            if (!/no_receipt_reason/i.test(String(error?.message || error))) throw error;
+            if (reason) return bad('Alasan tanpa struk belum bisa disimpan: jalankan migration-crew-expense-no-receipt.sql di D1.', 503);
+            await updateOwn(false);
+          }
+          if (entry.review_status === 'approved' && entry.review_sent_at) {
+            await env.DB.prepare(`
+              UPDATE finance_entries SET amount = ?, description = ?, proof_url = ? WHERE id = ? AND created_by = 'crew-expense'
+            `).bind(amount, reason ? `${description} (Tanpa struk: ${reason})`.trim() : description, proofUrl, `crew-expense-${id}`).run();
+          }
+          return json({ ok:true, data:{ id, amount, description, proof_url:proofUrl, no_receipt_reason:reason } });
+        }
+        if (['removed', 'removed-rejected'].includes(entry.review_status)) return bad('Pengeluaran ini sudah dihapus dari Laporan Crew.', 409);
         if (entry.review_status === 'approved') return bad('Pengeluaran ini sudah diterima dan masuk pengeluaran.', 409);
         const now = new Date().toISOString();
         if (action === 'send') {
@@ -2703,6 +3095,14 @@ export default {
         if (!entry.review_sent_at) return bad('Pengeluaran ini belum dikirim ke Admin dari Dashboard Check In Crew.', 409);
         // Diterima: baris crew tetap jadi riwayat di Dashboard Check In Crew, sedangkan pengeluaran dicatat sebagai
         // salinan terpisah (crew-expense-<id>) supaya menghapusnya di menu Pengeluaran tidak menghapus riwayat crew.
+        // Alasan tanpa struk (kalau ada) ikut tercatat di keterangan salinan, karena menu Pengeluaran tidak punya kolom khusus.
+        let noReceiptReason = '';
+        try {
+          const reasonRow = await env.DB.prepare('SELECT no_receipt_reason FROM finance_entries WHERE id = ?').bind(id).first();
+          noReceiptReason = String(reasonRow?.no_receipt_reason || '').trim();
+        } catch (error) {
+          if (!/no_receipt_reason/i.test(String(error?.message || error))) throw error;
+        }
         await env.DB.batch([
           env.DB.prepare(`UPDATE finance_entries SET review_status = 'approved' WHERE id = ?`).bind(id),
           env.DB.prepare(`
@@ -2710,9 +3110,11 @@ export default {
               id, kind, category_id, category_name, property_id, property_name,
               entry_date, amount, description, payee, recurrence, created_by, created_at, proof_url
             ) SELECT 'crew-expense-' || id, kind, category_id, category_name, property_id, property_name,
-              entry_date, amount, description, payee, recurrence, 'crew-expense', created_at, proof_url
+              entry_date, amount,
+              CASE WHEN ? <> '' THEN trim(description || ' (Tanpa struk: ' || ? || ')') ELSE description END,
+              payee, recurrence, 'crew-expense', created_at, proof_url
             FROM finance_entries WHERE id = ?
-          `).bind(id),
+          `).bind(noReceiptReason, noReceiptReason, id),
         ]);
         return json({ ok:true, data:{ id, review_status:'approved', review_sent_at:entry.review_sent_at } });
       }
@@ -3230,6 +3632,11 @@ export default {
         }
 
         const body = await request.json();
+        // Admin biasa wajib PIN Master (master_pin) untuk mengubah data crew. 'pin' di sini adalah PIN login crew.
+        if (isRestrictedAdmin(tokenData)) {
+          const pinError = await checkMasterDeletePin(env, body.master_pin);
+          if (pinError) return bad(pinError.error, pinError.status);
+        }
         const name = String(body.name || '').trim().replace(/\s+/g, ' ');
         const crewCode = String(body.crew_code || '').trim().toUpperCase();
         const pin = String(body.pin || '').trim();
@@ -3352,6 +3759,11 @@ export default {
         }
 
         const body = await request.json();
+        // Admin biasa wajib PIN Master (master_pin) untuk mengubah data agen. 'pin' di sini adalah PIN login agen.
+        if (isRestrictedAdmin(tokenData)) {
+          const pinError = await checkMasterDeletePin(env, body.master_pin);
+          if (pinError) return bad(pinError.error, pinError.status);
+        }
         const name = String(body.name || '').trim().replace(/\s+/g, ' ');
         const agentCode = String(body.agent_code || '').trim().toUpperCase();
         const phone = String(body.phone || '').trim();
@@ -3735,6 +4147,42 @@ export default {
           `).bind(JSON.stringify(managementData), tokenData.account_id, now),
         ]);
         return json({ ok:true, data:{ id:dashboardId, deleted:true } });
+      }
+
+      // Hapus Owner dari Dashboard (PIN Master wajib). Ditolak selama masih ada properti yang tertaut ke owner ini.
+      // Akses Owner Portal-nya ikut dicabut; Laporan Akhir bagi hasil yang sudah tersimpan tetap ada sebagai riwayat.
+      const dashboardOwnerMatch = path.match(/^\/dashboard\/owners\/([^/]+)$/);
+      if (request.method === 'DELETE' && dashboardOwnerMatch) {
+        const adminSecret = String(env.ADMIN_DASHBOARD_SECRET || '').trim();
+        const tokenData = await getAdminTokenPayload(request, adminSecret);
+        if (!hasManagementRole(tokenData)) return bad('Hanya Master atau Admin yang dapat menghapus Owner.', 403);
+        const ownerId = decodeURIComponent(dashboardOwnerMatch[1]);
+        let body = {};
+        try { body = await request.json(); } catch {}
+        const pinError = await checkMasterDeletePin(env, body.pin);
+        if (pinError) return bad(pinError.error, pinError.status);
+        const management = await env.DB.prepare(`SELECT data_json FROM dashboard_management_data WHERE id = 'main'`).first();
+        if (!management) return bad('Data Owner belum tersedia di Dashboard.', 503);
+        let managementData;
+        try { managementData = JSON.parse(management.data_json); }
+        catch { return bad('Data Owner Dashboard tidak dapat dibaca.', 500); }
+        const owner = (managementData.owners || []).find(item => item?.id === ownerId);
+        if (!owner) return bad('Owner tidak ditemukan.', 404);
+        const linked = (managementData.properties || []).filter(property => (property.owners || []).some(item => item.id === ownerId));
+        if (linked.length) {
+          const names = linked.slice(0, 5).map(property => property.name).join(', ');
+          return bad(`Owner ${owner.name} masih terhubung ke ${linked.length} properti (${names}${linked.length > 5 ? ', ...' : ''}). Pindahkan properti tersebut ke owner lain terlebih dahulu.`, 409);
+        }
+        managementData.owners = managementData.owners.filter(item => item.id !== ownerId);
+        const now = new Date().toISOString();
+        await env.DB.prepare(`UPDATE dashboard_management_data SET data_json = ?, updated_by = ?, updated_at = ? WHERE id = 'main'`)
+          .bind(JSON.stringify(managementData), tokenData.account_id, now).run();
+        try {
+          await env.DB.prepare('DELETE FROM owner_portal_accounts WHERE owner_id = ?').bind(ownerId).run();
+        } catch (error) {
+          if (!/no such table: owner_portal_accounts/i.test(String(error?.message || error))) throw error;
+        }
+        return json({ ok:true, data:{ id:ownerId, deleted:true } });
       }
 
       if (path === '/dashboard/owner-share-calculations') {
@@ -4124,7 +4572,7 @@ export default {
           extraBedPaymentMethod:row.extra_bed_payment_method || '',
           cleaningFee:Number(row.cleaning_fee), platformFeePct:Number(row.platform_fee_pct),
           note:row.note, cancellationReason:row.cancellation_reason, refundAmount:Number(row.refund_amount),
-          captureImage:row.capture_image || '',
+          captureImage:row.capture_image || '', guestCount:Number(row.guest_count || 0),
           agentId:row.agent_id || '', agentName:row.agent_name || '',
           agentFeeType:row.agent_fee_type || '', agentFeeValue:Number(row.agent_fee_value || 0), agentFeeAmount:Number(row.agent_fee_amount || 0),
           createdAt:row.created_at,
@@ -4184,6 +4632,8 @@ export default {
           const stockError = await checkExtraBedStock(env, { propertyId, propertyName, checkin, checkout, quantity:extraBedQuantity });
           if (stockError) return bad(stockError, 409);
         }
+        const guestCount = Number(body.guestCount || 0);
+        if (!Number.isInteger(guestCount) || guestCount < 0 || guestCount > 99) return bad('Jumlah tamu harus bilangan bulat 0 sampai 99.');
         let bookingAgent;
         try {
           bookingAgent = await resolveBookingAgentFee(env, body, amount);
@@ -4249,6 +4699,7 @@ export default {
             bookingAgent.feeAmount, `Fee Agen ${bookingAgent.agentName} - Booking ${id}`, bookingAgent.agentName,
             tokenData.account_id || '', now, id, bookingAgent.feeAmount),
         ]);
+        await saveBookingGuestCount(env, id, guestCount);
         return json({ ok:true, data:{ id, created_at:now } }, 201);
       }
 
@@ -4368,6 +4819,8 @@ export default {
           const stockError = await checkExtraBedStock(env, { propertyId, propertyName, checkin, checkout, quantity:extraBedQuantity, excludeId:id });
           if (stockError) return bad(stockError, 409);
         }
+        const guestCount = Number(body.guestCount || 0);
+        if (!Number.isInteger(guestCount) || guestCount < 0 || guestCount > 99) return bad('Jumlah tamu harus bilangan bulat 0 sampai 99.');
         let bookingAgent;
         try {
           bookingAgent = await resolveBookingAgentFee(env, body, amount);
@@ -4406,6 +4859,7 @@ export default {
           env.DB.prepare(`UPDATE dashboard_bookings SET extra_bed_payment_method = ? WHERE id = ?`).bind(extraBedPaymentMethod, id),
         ]);
         if (!results[0]?.meta?.changes) return bad('Booking sudah berubah. Muat ulang lalu coba lagi.', 409);
+        await saveBookingGuestCount(env, id, guestCount);
         if (extraBedTotal > 0) {
           await env.DB.prepare(`
             INSERT INTO finance_entries (
@@ -4651,6 +5105,20 @@ export default {
         if (financeEntry.created_by === 'crew-expense' && id.startsWith('crew-expense-')) {
           await env.DB.prepare(`UPDATE finance_entries SET review_status = 'removed' WHERE id = ? AND (created_by LIKE 'crew:%' OR created_by LIKE 'ops:%')`)
             .bind(id.slice('crew-expense-'.length)).run();
+        }
+        // Baris lama crew/operasional (dibuat sebelum ada salinan terpisah) tampil langsung di menu Pengeluaran. Menghapusnya
+        // dari sini hanya menyembunyikannya (status 'removed'); riwayat di Dashboard Check In Crew tetap ada sebagai Terkirim.
+        if (/^(crew|ops):/.test(String(financeEntry.created_by || ''))) {
+          try {
+            await env.DB.prepare(`
+              UPDATE finance_entries
+              SET review_status = 'removed', review_sent_at = CASE WHEN review_sent_at = '' THEN ? ELSE review_sent_at END
+              WHERE id = ?
+            `).bind(new Date().toISOString(), id).run();
+            return json({ ok: true, data: { id } });
+          } catch (error) {
+            if (!/review_/i.test(String(error?.message || error))) throw error;
+          }
         }
         const result = await env.DB.prepare('DELETE FROM finance_entries WHERE id = ?').bind(id).run();
         if (!result.meta?.changes) return bad('Transaksi tidak ditemukan.', 404);
@@ -5411,12 +5879,19 @@ export default {
         const body = await request.json();
         const allowedKeys = new Set([
           'header_logo', 'footer_logo', 'dashboard_logo', 'footer_location', 'footer_phone',
-          'footer_email', 'footer_instagram', 'linktree_links',
+          'footer_email', 'footer_instagram', 'linktree_links', 'article_daily_target',
         ]);
         const key = String(body.key || '').trim();
         if (!allowedKeys.has(key)) return bad('Setting tidak dikenal');
 
         let value = String(body.value || '').trim();
+        if (key === 'article_daily_target') {
+          const tokenData = await getAdminTokenPayload(request, adminSecret);
+          if (tokenData?.role !== 'Master') return bad('Hanya Master yang dapat mengubah target artikel harian.', 403);
+          const target = Number(value);
+          if (!Number.isInteger(target) || target < 1 || target > 50) return bad('Target artikel harian harus 1 sampai 50.');
+          value = String(target);
+        }
         if (key === 'linktree_links') {
           let links;
           try { links = JSON.parse(value); }
@@ -5575,16 +6050,24 @@ export default {
         const itSession = await getAdminTokenPayload(request, adminSecret);
         if (!isItSupportAccount(itSession)) return bad('Akses khusus akun IT Support diperlukan.', 403);
 
+        // Jenis tiket. Kolom kind dibatasi CHECK ('bug','task') di D1, jadi jenis baru disimpan di kolom ticket_type
+        // dan kind diisi 'task' (kolom ticket_type: migration-it-ticket-type.sql).
+        const ticketTypes = ['bug', 'task', 'question', 'confirm', 'reminder', 'hidden'];
+
         if (request.method === 'GET') {
           try {
-            const result = await env.DB.prepare(`
-              SELECT id, kind, title, description, source, reported_by, created_at,
+            const listTickets = withType => env.DB.prepare(`
+              SELECT id, kind, ${withType ? 'ticket_type' : "'' AS ticket_type"}, title, description, source, reported_by, created_at,
                 status, completed_by, completed_at
               FROM it_support_tickets
               ORDER BY CASE status WHEN 'open' THEN 0 ELSE 1 END, created_at DESC
               LIMIT 500
             `).all();
-            return json({ ok:true, data:result.results || [] });
+            const result = await listTickets(true).catch(error => {
+              if (!/no such column: ticket_type/i.test(String(error?.message || error))) throw error;
+              return listTickets(false);
+            });
+            return json({ ok:true, data:(result.results || []).map(row => ({ ...row, ticket_type:row.ticket_type || row.kind })) });
           } catch (error) {
             if (/no such table: it_support_tickets/i.test(String(error?.message || error))) {
               return bad('Tabel antrean IT belum tersedia. Jalankan properties/migration-it-support-tickets.sql di D1.', 503);
@@ -5595,27 +6078,39 @@ export default {
 
         if (request.method === 'POST') {
           const body = await request.json();
-          const kind = String(body.kind || '').trim();
+          const ticketType = String(body.kind || '').trim();
           const title = String(body.title || '').trim();
           const description = String(body.description || '').trim();
-          if (!['bug', 'task'].includes(kind)) return bad('Jenis tiket tidak valid.');
+          if (!ticketTypes.includes(ticketType)) return bad('Jenis tiket tidak valid.');
           if (!title || title.length > 160) return bad('Judul wajib diisi dan maksimal 160 karakter.');
           if (!description || description.length > 4000) return bad('Catatan wajib diisi dan maksimal 4000 karakter.');
+          const kind = ticketType === 'bug' ? 'bug' : 'task';
+          const needsTypeColumn = !['bug', 'task'].includes(ticketType);
 
           const id = crypto.randomUUID();
           const createdAt = new Date().toISOString();
           try {
-            await env.DB.prepare(`
-              INSERT INTO it_support_tickets (id, kind, title, description, source, reported_by, created_at, status)
-              VALUES (?, ?, ?, ?, 'input_it', 'it', ?, 'open')
-            `).bind(id, kind, title, description, createdAt).run();
+            if (needsTypeColumn) {
+              await env.DB.prepare(`
+                INSERT INTO it_support_tickets (id, kind, ticket_type, title, description, source, reported_by, created_at, status)
+                VALUES (?, ?, ?, ?, ?, 'input_it', 'it', ?, 'open')
+              `).bind(id, kind, ticketType, title, description, createdAt).run();
+            } else {
+              await env.DB.prepare(`
+                INSERT INTO it_support_tickets (id, kind, title, description, source, reported_by, created_at, status)
+                VALUES (?, ?, ?, ?, 'input_it', 'it', ?, 'open')
+              `).bind(id, kind, title, description, createdAt).run();
+            }
           } catch (error) {
             if (/no such table: it_support_tickets/i.test(String(error?.message || error))) {
               return bad('Tabel antrean IT belum tersedia. Jalankan properties/migration-it-support-tickets.sql di D1.', 503);
             }
+            if (needsTypeColumn && /ticket_type/i.test(String(error?.message || error))) {
+              return bad('Jenis tiket baru belum aktif. Jalankan migrations/migration-it-ticket-type.sql di D1.', 503);
+            }
             throw error;
           }
-          return json({ ok:true, data:{ id, kind, title, description, source:'input_it', reported_by:'it', created_at:createdAt, status:'open' } }, 201);
+          return json({ ok:true, data:{ id, kind, ticket_type:ticketType, title, description, source:'input_it', reported_by:'it', created_at:createdAt, status:'open' } }, 201);
         }
 
         const id = decodeURIComponent(itTicketMatch[1]);
@@ -5630,16 +6125,28 @@ export default {
         const body = await request.json();
         const hasEditFields = ['kind', 'title', 'description'].some(field => Object.prototype.hasOwnProperty.call(body, field));
         if (hasEditFields) {
-          const kind = String(body.kind || '').trim();
+          const ticketType = String(body.kind || '').trim();
           const title = String(body.title || '').trim();
           const description = String(body.description || '').trim();
-          if (!['bug', 'task'].includes(kind)) return bad('Jenis tiket tidak valid.');
+          if (!ticketTypes.includes(ticketType)) return bad('Jenis tiket tidak valid.');
           if (!title || title.length > 160) return bad('Judul wajib diisi dan maksimal 160 karakter.');
           if (!description || description.length > 4000) return bad('Catatan wajib diisi dan maksimal 4000 karakter.');
-          await env.DB.prepare(`
-            UPDATE it_support_tickets SET kind = ?, title = ?, description = ? WHERE id = ?
-          `).bind(kind, title, description, id).run();
-          return json({ ok:true, data:{ id, kind, title, description } });
+          const kind = ticketType === 'bug' ? 'bug' : 'task';
+          try {
+            await env.DB.prepare(`
+              UPDATE it_support_tickets SET kind = ?, ticket_type = ?, title = ?, description = ? WHERE id = ?
+            `).bind(kind, ticketType, title, description, id).run();
+          } catch (error) {
+            if (!/ticket_type/i.test(String(error?.message || error))) throw error;
+            // Kolom ticket_type belum ada: hanya Bug/Tugas yang bisa disimpan.
+            if (!['bug', 'task'].includes(ticketType)) {
+              return bad('Jenis tiket baru belum aktif. Jalankan migrations/migration-it-ticket-type.sql di D1.', 503);
+            }
+            await env.DB.prepare(`
+              UPDATE it_support_tickets SET kind = ?, title = ?, description = ? WHERE id = ?
+            `).bind(kind, title, description, id).run();
+          }
+          return json({ ok:true, data:{ id, kind, ticket_type:ticketType, title, description } });
         }
 
         const status = String(body.status || '').trim();

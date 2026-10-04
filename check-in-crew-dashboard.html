@@ -924,6 +924,24 @@
       <button class="button primary" type="button" data-close="sentNoticeModal">OK</button>
     </div>
   </div>
+  <div class="modal" id="expEditModal" role="dialog" aria-modal="true" aria-labelledby="expEditTitle">
+    <div class="modal-card" style="width:min(460px,100%)">
+      <div class="modal-head"><div><h2 id="expEditTitle">Edit Pengeluaran</h2><p class="subtitle" id="expEditSubtitle"></p></div><button class="close" type="button" data-close="expEditModal" aria-label="Tutup">&times;</button></div>
+      <form class="edit-form" id="expEditForm">
+        <label class="field"><span class="meta-label">Jumlah (Rp)</span><input id="expEditAmount" type="text" inputmode="numeric" autocomplete="off" required /></label>
+        <label class="field"><span class="meta-label">Keterangan</span><input id="expEditNote" type="text" maxlength="160" /></label>
+        <div class="field">
+          <span class="meta-label">Foto Struk</span>
+          <p class="subtitle" id="expEditReceiptCurrent" style="margin:2px 0 6px"></p>
+          <input id="expEditReceipt" type="file" accept="image/*" />
+          <label style="display:flex;align-items:center;gap:8px;margin-top:10px"><input id="expEditNoReceipt" type="checkbox" style="width:auto;min-height:0" /> Tidak ada struk</label>
+          <div id="expEditReasonWrap" hidden style="margin-top:8px"><span class="meta-label">Alasan tidak ada struk</span><input id="expEditReason" type="text" maxlength="160" /></div>
+        </div>
+        <p id="expEditMessage" class="pin-message" role="status" aria-live="polite"></p>
+        <div class="edit-actions"><button class="button" type="button" data-close="expEditModal">Batal</button><button class="button primary" id="expEditSubmitBtn" type="submit">Simpan Perubahan</button></div>
+      </form>
+    </div>
+  </div>
   <div class="modal" id="receiptModal">
     <div class="modal-card" style="width:min(560px,100%)">
       <div class="modal-head"><div><h2 id="receiptHeading">Struk Pengeluaran</h2><p class="subtitle" id="receiptSubtitle"></p></div><button class="close" type="button" data-close="receiptModal" aria-label="Tutup">&times;</button></div>
@@ -3124,6 +3142,7 @@
       loadCrewExpensesDashboard(0, kind);
     });
     initOpsExpenseForm();
+    bindExpenseEdit();
   }
 
   const CREW_EXPENSE_PAGE_SIZE = 10;
@@ -3294,7 +3313,7 @@
   // Status review pengeluaran crew: pending (belum dikirim), sent (menunggu Admin), rejected, approved (sudah dihitung).
   // Setelah dikirim statusnya "Terkirim"; kalau Admin menolaknya di Laporan, statusnya menjadi "Ditolak".
   function crewExpenseStatusBadge(item) {
-    if (item.review_status === 'rejected') return '<span class="exp-status rejected">Ditolak</span>';
+    if (item.review_status === 'rejected' || item.review_status === 'removed-rejected') return '<span class="exp-status rejected">Ditolak</span>';
     if (item.review_sent_at) return '<span class="exp-status sent">Terkirim</span>';
     if (item.review_status === 'pending') return '<span class="exp-status pending">Belum dikirim</span>';
     if (item.review_status === 'rejected') return '<span class="exp-status rejected">Ditolak</span>';
@@ -3305,16 +3324,92 @@
     const send = `<button type="button" class="detail-btn" data-exp-action="send" data-exp-id="${id}">Kirim ke Admin</button>`;
     const reject = `<button type="button" class="detail-btn exp-danger" data-exp-action="reject" data-exp-id="${id}">Tolak</button>`;
     const remove = `<button type="button" class="detail-btn exp-danger" data-exp-action="delete" data-exp-id="${id}" data-exp-sent="${item.review_sent_at ? '1' : '0'}">Hapus</button>`;
-    if (item.review_sent_at) return `<div class="exp-actions">${remove}</div>`;
+    // Edit tersedia di semua status (struk sering menyusul setelah data dikirim).
+    const edit = `<button type="button" class="detail-btn" data-exp-action="edit" data-exp-id="${id}">Edit</button>`;
+    if (item.review_sent_at) return `<div class="exp-actions">${edit}${remove}</div>`;
     // Pengeluaran Operasional adalah input sendiri, jadi tidak perlu tombol Tolak.
-    if (item.review_status === 'pending') return `<div class="exp-actions">${send}${kind === 'ops' ? '' : reject}${remove}</div>`;
-    if (item.review_status === 'rejected') return `<div class="exp-actions">${send}${remove}</div>`;
-    return '-';
+    if (item.review_status === 'pending') return `<div class="exp-actions">${edit}${send}${kind === 'ops' ? '' : reject}${remove}</div>`;
+    if (item.review_status === 'rejected') return `<div class="exp-actions">${edit}${send}${remove}</div>`;
+    return `<div class="exp-actions">${edit}</div>`;
   }
   // Pop-up konfirmasi setelah data berhasil dikirim ke Admin.
   function showSentNotice(message) {
     el('sentNoticeText').textContent = message;
     el('sentNoticeModal').classList.add('open');
+  }
+  // ===== Edit pengeluaran: jumlah, keterangan, dan struk (struk boleh menyusul) =====
+  let expEdit = { id:'', kind:'crew', receipt:'' };
+  function openExpenseEdit(item, kind) {
+    expEdit = { id:item.id, kind, receipt:'' };
+    el('expEditSubtitle').textContent = `${item.payee || '-'} · ${item.category_name || ''} · ${item.property_name || ''}`;
+    el('expEditAmount').value = Math.round(item.amount).toLocaleString('id-ID');
+    el('expEditNote').value = item.description || '';
+    el('expEditReceipt').value = '';
+    el('expEditReceiptCurrent').textContent = item.proof_url ? 'Struk sudah ada. Pilih foto baru hanya jika ingin menggantinya.' : 'Belum ada struk.';
+    el('expEditNoReceipt').checked = !item.proof_url && Boolean(item.no_receipt_reason);
+    el('expEditReason').value = item.no_receipt_reason || '';
+    el('expEditReasonWrap').hidden = !el('expEditNoReceipt').checked;
+    el('expEditMessage').className = 'pin-message';
+    el('expEditMessage').textContent = '';
+    el('expEditModal').classList.add('open');
+  }
+  function bindExpenseEdit() {
+    el('expEditAmount').addEventListener('input', event => {
+      const digits = String(event.target.value || '').replace(/\D/g, '');
+      event.target.value = digits ? Number(digits).toLocaleString('id-ID') : '';
+    });
+    el('expEditNoReceipt').addEventListener('change', event => {
+      el('expEditReasonWrap').hidden = !event.target.checked;
+    });
+    el('expEditReceipt').addEventListener('change', async event => {
+      const file = event.target.files && event.target.files[0];
+      expEdit.receipt = '';
+      if (!file) return;
+      el('expEditMessage').className = 'pin-message';
+      el('expEditMessage').textContent = 'Mengecilkan foto struk...';
+      try {
+        expEdit.receipt = await compressReceiptUnder100Kb(file);
+        el('expEditMessage').textContent = '';
+        el('expEditNoReceipt').checked = false;
+        el('expEditReasonWrap').hidden = true;
+      } catch (error) {
+        event.target.value = '';
+        el('expEditMessage').className = 'pin-message error';
+        el('expEditMessage').textContent = error.message || 'Foto struk gagal diproses.';
+      }
+    });
+    el('expEditForm').addEventListener('submit', async event => {
+      event.preventDefault();
+      const message = el('expEditMessage');
+      const button = el('expEditSubmitBtn');
+      const amount = Number(String(el('expEditAmount').value).replace(/\D/g, '')) || 0;
+      const noReceipt = el('expEditNoReceipt').checked && !expEdit.receipt;
+      const reason = el('expEditReason').value.trim();
+      if (amount <= 0) { message.className = 'pin-message error'; message.textContent = 'Jumlah wajib diisi.'; return; }
+      if (noReceipt && reason.length < 3) { message.className = 'pin-message error'; message.textContent = 'Isi alasan tidak ada struk (minimal 3 karakter).'; return; }
+      button.disabled = true;
+      message.className = 'pin-message';
+      message.textContent = 'Menyimpan...';
+      try {
+        const response = await fetch(`${API_BASE}/dashboard/crew-expenses/${encodeURIComponent(expEdit.id)}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${state.adminToken}` },
+          body: JSON.stringify({
+            action: 'edit', amount, description: el('expEditNote').value.trim(),
+            receipt: expEdit.receipt, no_receipt_reason: noReceipt ? reason : ''
+          })
+        });
+        const result = await response.json().catch(() => ({}));
+        if (!response.ok || result.ok === false) throw new Error(result.error || `HTTP ${response.status}`);
+        el('expEditModal').classList.remove('open');
+        loadCrewExpensesDashboard(EXPENSE_LISTS[expEdit.kind].offset, expEdit.kind);
+      } catch (error) {
+        message.className = 'pin-message error';
+        message.textContent = error.message || 'Perubahan gagal disimpan.';
+      } finally {
+        button.disabled = false;
+      }
+    });
   }
   async function handleCrewExpenseAction(event, kind = 'crew') {
     const button = event.target.closest('[data-exp-action]');
@@ -3323,6 +3418,11 @@
     const id = button.dataset.expId;
     const list = EXPENSE_LISTS[kind];
     const message = el(`${list.prefix}Message`);
+    if (action === 'edit') {
+      const item = (list.records || []).find(entry => entry.id === id);
+      if (item) openExpenseEdit(item, kind);
+      return;
+    }
     let pin = '';
     if (action === 'send' && !confirm('Periksa sebelum mengirim\n\nCek kembali jenis, properti, jumlah, dan struk pengeluaran ini. Jika sudah yakin, klik OK untuk mengirim ke Admin.')) return;
     if (action === 'reject' && !confirm('Tolak pengeluaran ini? Crew tidak akan diberi tahu.')) return;
@@ -3382,6 +3482,7 @@
       if (!res.ok || json.ok === false) throw new Error(json.error || ('HTTP ' + res.status));
       if (requestId !== list.requestId) return;
       const records = json.data || [];
+      list.records = records;
       list.offset = pageOffset;
       empty.hidden = records.length > 0;
       empty.style.display = records.length ? 'none' : 'block';
@@ -3393,7 +3494,7 @@
           <td data-label="Properti">${escapeHtml(item.property_name)}</td>
           <td data-label="Jumlah">Rp ${Math.round(item.amount).toLocaleString('id-ID')}</td>
           <td data-label="Keterangan">${escapeHtml(item.description || '-')}</td>
-          <td data-label="Struk">${item.proof_url ? `<button type="button" class="detail-btn" data-receipt="${escapeHtml(item.proof_url)}" data-receipt-title="${escapeHtml(`${item.payee || '-'} · ${item.category_name || ''}`)}">Lihat</button>` : '-'}</td>
+          <td data-label="Struk">${item.proof_url ? `<button type="button" class="detail-btn" data-receipt="${escapeHtml(item.proof_url)}" data-receipt-title="${escapeHtml(`${item.payee || '-'} · ${item.category_name || ''}`)}">Lihat</button>` : (item.no_receipt_reason ? `<strong>Tanpa struk</strong><br><small>${escapeHtml(item.no_receipt_reason)}</small>` : '-')}</td>
           <td data-label="Status">${crewExpenseStatusBadge(item)}</td>
           <td data-label="Aksi">${crewExpenseActions(item, kind)}</td>
         </tr>`).join('');

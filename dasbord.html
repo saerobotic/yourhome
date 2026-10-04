@@ -419,6 +419,15 @@
           <span class="hidden sm:inline">Tambah</span>
         </button>
       </div>
+      <!-- Filter tipe kerja sama: Keduanya / Full Management / Agen (menyaring tampilan saja) -->
+      <div class="flex flex-wrap items-center gap-x-3 gap-y-1 px-4 sm:px-6 pb-2.5 -mt-0.5">
+        <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Tampilkan</span>
+        <div id="managementFilter" class="flex gap-1 bg-slate-100 p-1 rounded-lg" role="group" aria-label="Filter tipe kerja sama">
+          <button type="button" class="tab-btn active" data-management-filter="all" aria-pressed="true" onclick="setManagementFilter('all')" title="Full Management dan Agen">Keduanya <span data-management-count class="opacity-60 font-semibold">0</span></button>
+          <button type="button" class="tab-btn" data-management-filter="managed" aria-pressed="false" onclick="setManagementFilter('managed')" title="Properti kelola penuh (bagi hasil dengan Owner)">Full Management <span data-management-count class="opacity-60 font-semibold">0</span></button>
+          <button type="button" class="tab-btn" data-management-filter="partner" aria-pressed="false" onclick="setManagementFilter('partner')" title="Properti dengan owner Agen (atau bertipe Mitra)">Agen <span data-management-count class="opacity-60 font-semibold">0</span></button>
+        </div>
+      </div>
     </header>
 
     <!-- ============== VIEWS ============== -->
@@ -867,7 +876,7 @@
           <p id="managementDataSyncMessage" class="text-sm text-amber-800 mt-1">Jika data tersimpan di browser lama, buka dashboard dari browser dan alamat tersebut dahulu agar bisa diimpor.</p>
           <button id="managementDataInitializeButton" type="button" onclick="initializeDashboardManagementData()" class="hidden mt-3 text-sm font-semibold px-3 py-2 rounded-lg bg-amber-700 hover:bg-amber-800 text-white">Jadikan data browser ini sumber utama</button>
         </section>
-        <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4" id="ownerGrid"></div>
+        <div class="grid grid-cols-1 xl:grid-cols-3 gap-4 items-stretch" id="ownerGrid"></div>
       </div>
 
       <!-- =========================================== -->
@@ -1691,6 +1700,11 @@
         </div>
       </div>
       <div>
+        <label for="newBookingGuestCount" class="text-xs text-slate-500 font-semibold">Jumlah Tamu Menginap (orang)</label>
+        <input id="newBookingGuestCount" type="number" min="0" max="99" step="1" value="" placeholder="0" class="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 mt-0.5">
+        <p id="newBookingGuestCountHint" class="text-[11px] text-slate-400 mt-1">Kosongkan jika belum diketahui. Dipakai sebagai acuan jumlah extra bed.</p>
+      </div>
+      <div>
         <label id="newBookingAmountLabel" class="text-xs text-slate-500 font-semibold">Nilai Booking (Rp)</label>
         <input id="newBookingAmount" type="text" inputmode="numeric" pattern="[0-9.]*" data-currency-input required placeholder="5.000.000" class="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 mt-0.5">
       </div>
@@ -2171,6 +2185,7 @@
       <input id="crewEditId" type="hidden">
       <label class="block"><span class="block text-xs font-semibold text-slate-600 mb-1">Nama karyawan</span><input id="crewNameInput" required minlength="2" maxlength="80" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm"></label>
       <label id="crewPinField" class="block"><span class="block text-xs font-semibold text-slate-600 mb-1">PIN login Check In Crew (wajib 6 digit)</span><span class="relative block"><input id="crewPinInputDashboard" type="password" inputmode="numeric" pattern="[0-9]{6}" minlength="6" maxlength="6" autocomplete="new-password" placeholder="6 digit" class="w-full border border-slate-200 rounded-lg px-3 py-2 pr-12 text-sm"><button type="button" data-toggle-password="crewPinInputDashboard" aria-label="Tampilkan PIN" class="absolute inset-y-0 right-0 px-3 text-slate-500 hover:text-slate-800"><svg data-eye-icon width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg></button></span></label>
+      <label id="crewMasterPinField" class="block hidden"><span class="block text-xs font-semibold text-slate-600 mb-1">PIN Master (4 digit) untuk menyimpan perubahan</span><span class="relative block"><input id="crewMasterPin" type="password" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" autocomplete="off" placeholder="PIN persetujuan Master" class="w-full border border-slate-200 rounded-lg px-3 py-2 pr-12 text-sm"><button type="button" data-toggle-password="crewMasterPin" aria-label="Tampilkan PIN" class="absolute inset-y-0 right-0 px-3 text-slate-500 hover:text-slate-800"><svg data-eye-icon width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg></button></span></label>
       <p class="text-xs text-slate-500">Tambah Crew cukup dengan nama dan PIN 6 digit. ID Crew dibuat otomatis dan dapat diganti Admin di Dashboard Check In Crew. Menghapus karyawan menonaktifkan login dan mempertahankan riwayat check-in.</p>
       <p id="crewFormStatus" class="text-sm" role="status" aria-live="polite"></p>
       <div class="flex gap-2"><button type="button" onclick="closeModal('modal-crew')" class="flex-1 border border-slate-200 rounded-lg px-4 py-2 text-sm font-semibold">Batal</button><button id="crewSaveButton" type="submit" class="flex-1 bg-brand-600 hover:bg-brand-700 text-white rounded-lg px-4 py-2 text-sm font-semibold">Simpan</button></div>
@@ -2217,6 +2232,7 @@
         <label class="block"><span class="block text-xs font-semibold text-slate-600 mb-1">Tipe fee default</span><select id="agentFeeTypeInput" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm bg-white"><option value="amount">Nominal (Rp)</option><option value="percent">Persen (%)</option></select></label>
         <label class="block"><span class="block text-xs font-semibold text-slate-600 mb-1">Nilai fee default</span><input id="agentFeeValueInput" type="text" inputmode="numeric" pattern="[0-9.]*" data-currency-input value="0" class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm"></label>
       </div>
+      <label id="agentMasterPinField" class="block hidden"><span class="block text-xs font-semibold text-slate-600 mb-1">PIN Master (4 digit) untuk menyimpan perubahan</span><span class="relative block"><input id="agentMasterPin" type="password" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" autocomplete="off" placeholder="PIN persetujuan Master" class="w-full border border-slate-200 rounded-lg px-3 py-2 pr-12 text-sm"><button type="button" data-toggle-password="agentMasterPin" aria-label="Tampilkan PIN" class="absolute inset-y-0 right-0 px-3 text-slate-500 hover:text-slate-800"><svg data-eye-icon width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg></button></span></label>
       <p class="text-xs text-slate-500">Fee default ini akan otomatis terisi tiap kali agen ini dipilih di form booking, tapi tetap bisa diubah per booking.</p>
       <p id="agentFormStatus" class="text-sm" role="status" aria-live="polite"></p>
       <div class="flex gap-2"><button type="button" onclick="closeModal('modal-agent')" class="flex-1 border border-slate-200 rounded-lg px-4 py-2 text-sm font-semibold">Batal</button><button id="agentSaveButton" type="submit" class="flex-1 bg-brand-600 hover:bg-brand-700 text-white rounded-lg px-4 py-2 text-sm font-semibold">Simpan</button></div>
@@ -2233,6 +2249,20 @@
       <label class="block"><span class="block text-xs font-semibold text-slate-600 mb-1">PIN Master (4 digit)</span><span class="relative block"><input id="deleteAgentPin" type="password" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" required autocomplete="off" class="w-full border border-slate-200 rounded-lg px-3 py-2 pr-12 text-sm" placeholder="PIN persetujuan Master"><button type="button" data-toggle-password="deleteAgentPin" aria-label="Tampilkan PIN" class="absolute inset-y-0 right-0 px-3 text-slate-500 hover:text-slate-800"><svg data-eye-icon width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg></button></span></label>
       <p id="deleteAgentStatus" class="text-sm" role="status" aria-live="polite"></p>
       <div class="flex gap-2"><button type="button" onclick="closeModal('modal-delete-agent')" class="flex-1 border border-slate-200 rounded-lg px-4 py-2 text-sm font-semibold">Batal</button><button id="deleteAgentButton" type="submit" class="flex-1 bg-rose-600 hover:bg-rose-700 text-white rounded-lg px-4 py-2 text-sm font-semibold">Nonaktifkan</button></div>
+    </form>
+  </div>
+</div>
+
+<div id="modal-delete-owner" class="modal-overlay fixed inset-0 bg-slate-900/50 z-50 hidden items-center justify-center p-4">
+  <div class="modal-panel bg-white rounded-xl max-w-sm w-full p-5">
+    <div class="flex items-center justify-between mb-4"><h3 class="font-bold text-lg text-rose-700">Hapus Owner</h3><button type="button" onclick="closeModal('modal-delete-owner')" aria-label="Tutup" class="p-1 hover:bg-slate-100 rounded-lg"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg></button></div>
+    <p id="deleteOwnerDescription" class="text-sm text-slate-600"></p>
+    <p class="text-xs text-slate-500 mt-2">Akses Owner Portal owner ini ikut dicabut. Laporan Akhir bagi hasil yang sudah tersimpan tetap ada sebagai riwayat.</p>
+    <form id="deleteOwnerForm" class="mt-4 space-y-3">
+      <input id="deleteOwnerId" type="hidden">
+      <label class="block"><span class="block text-xs font-semibold text-slate-600 mb-1">PIN Master (4 digit)</span><span class="relative block"><input id="deleteOwnerPin" type="password" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" required autocomplete="off" class="w-full border border-slate-200 rounded-lg px-3 py-2 pr-12 text-sm" placeholder="PIN persetujuan Master"><button type="button" data-toggle-password="deleteOwnerPin" aria-label="Tampilkan PIN" class="absolute inset-y-0 right-0 px-3 text-slate-500 hover:text-slate-800"><svg data-eye-icon width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg></button></span></label>
+      <p id="deleteOwnerStatus" class="text-sm" role="status" aria-live="polite"></p>
+      <div class="flex gap-2"><button type="button" onclick="closeModal('modal-delete-owner')" class="flex-1 border border-slate-200 rounded-lg px-4 py-2 text-sm font-semibold">Batal</button><button id="deleteOwnerButton" type="submit" class="flex-1 bg-rose-600 hover:bg-rose-700 text-white rounded-lg px-4 py-2 text-sm font-semibold">Hapus Owner</button></div>
     </form>
   </div>
 </div>
@@ -2432,6 +2462,12 @@ function getDashboardToken(){
   return readDashboardSession()?.token || '';
 }
 
+// Admin biasa (bukan Master, IT, atau admin-1/"Operasional"): tanpa Manajemen Pengguna, absensi hanya lihat,
+// dan mengubah Daftar Crew/Agen wajib PIN Master. Pembatasan yang sama dijaga di Worker.
+function isRestrictedAdmin(account=currentDashboardAccount){
+  return account?.role === 'Admin' && account.account_id !== 'admin-1';
+}
+
 function updateAccountDisplay(account){
   currentDashboardAccount = account;
   document.getElementById('dashboardGreetingName').textContent = account.display_name;
@@ -2452,7 +2488,7 @@ function applyDashboardSession(token, expiresIn=86400){
 function showDashboardApp(account){
   updateAccountDisplay(account);
   updateStaffChatClearAccess();
-  document.getElementById('userManagementPanel').hidden = account.role === 'IT';
+  document.getElementById('userManagementPanel').hidden = account.role === 'IT' || isRestrictedAdmin(account);
   document.getElementById('createAdminButton').classList.toggle('hidden', account.account_id !== 'master');
   document.getElementById('userActionsHeader').hidden = account.account_id !== 'master';
   document.getElementById('crewManagementPanel').hidden = account.role === 'IT';
@@ -2772,6 +2808,8 @@ function openCrewModal(crewId=''){
   document.getElementById('crewNameInput').value = crew?.name || '';
   document.getElementById('crewModalTitle').textContent = crew ? 'Edit Nama Karyawan' : 'Tambah Karyawan';
   document.getElementById('crewPinField').classList.toggle('hidden', Boolean(crew));
+  document.getElementById('crewMasterPinField').classList.toggle('hidden', !(crew && isRestrictedAdmin()));
+  document.getElementById('crewMasterPin').required = Boolean(crew && isRestrictedAdmin());
   document.getElementById('crewPinInputDashboard').required = !crew;
   document.getElementById('crewSaveButton').textContent = crew ? 'Simpan Perubahan' : 'Tambah Karyawan';
   document.getElementById('crewFormStatus').textContent = '';
@@ -2787,6 +2825,18 @@ async function submitCrewForm(event){
   if(!id) {
     body.pin = document.getElementById('crewPinInputDashboard').value.trim();
     body.crew_code = `CR-${crypto.randomUUID().replace(/-/g, '').slice(0, 8).toUpperCase()}`;
+  } else {
+    // Edit: Worker mewajibkan ID Crew yang sudah ada; Admin biasa juga wajib PIN Master 4 digit.
+    body.crew_code = crewMembers.find(item => item.id === id)?.crew_code || '';
+    if(isRestrictedAdmin()){
+      const masterPin = document.getElementById('crewMasterPin').value.trim();
+      if(!/^\d{4}$/.test(masterPin)){
+        status.className = 'text-sm text-rose-600';
+        status.textContent = 'Masukkan PIN Master tepat 4 digit.';
+        return;
+      }
+      body.master_pin = masterPin;
+    }
   }
   button.disabled = true;
   status.className = 'text-sm text-slate-500';
@@ -2909,6 +2959,8 @@ function openAgentModal(agentId=''){
   document.getElementById('agentFeeTypeInput').value = agent?.default_fee_type || 'amount';
   setCurrencyInputValue(document.getElementById('agentFeeValueInput'), agent?.default_fee_value ?? 0);
   document.getElementById('agentPinInput').required = !agent;
+  document.getElementById('agentMasterPinField').classList.toggle('hidden', !(agent && isRestrictedAdmin()));
+  document.getElementById('agentMasterPin').required = Boolean(agent && isRestrictedAdmin());
   document.getElementById('agentPinLabel').textContent = agent
     ? 'PIN login Agen Portal (kosongkan jika tidak diubah)'
     : 'PIN login Agen Portal (wajib 6 digit)';
@@ -2943,6 +2995,15 @@ async function submitAgentForm(event){
     default_fee_value: parseCurrencyInput(document.getElementById('agentFeeValueInput').value),
     ...(pin ? { pin } : {}),
   };
+  if(id && isRestrictedAdmin()){
+    const masterPin = document.getElementById('agentMasterPin').value.trim();
+    if(!/^\d{4}$/.test(masterPin)){
+      status.className = 'text-sm text-rose-600';
+      status.textContent = 'Masukkan PIN Master tepat 4 digit.';
+      return;
+    }
+    body.master_pin = masterPin;
+  }
   button.disabled = true;
   status.className = 'text-sm text-slate-500';
   status.textContent = id ? 'Menyimpan agen...' : 'Menambahkan agen...';
@@ -3479,6 +3540,69 @@ function financeEntryMatchesProperty(entry, property){
   }
   return Boolean(entryName && entryName === normalizePropertyNameForMatch(property.name));
 }
+/* ============== FILTER TIPE KERJA SAMA (Full Management / Agen) ============== */
+/* Properti Agen = owner-nya bernama "Agen" (atau bertipe Mitra); selain itu Full Management.
+   Mengikuti owner, jadi cukup ganti owner properti ke "Agen" untuk memindahkannya ke kategori Agen.
+   Filter ini hanya menyaring tampilan (Dashboard, Properti, Booking, Keuangan, Omset), bukan data. */
+const MANAGEMENT_FILTER_KEY = 'yourhome_management_filter';
+let currentManagementFilter = 'all';
+function isAgentOwner(ownerId){
+  const owner = OWNERS.find(item => item.id === ownerId);
+  return String(owner?.name || '').trim().toLowerCase() === 'agen';
+}
+function propertyManagementKind(property){
+  if(property?.managementType === 'partner') return 'partner';
+  const owners = Array.isArray(property?.owners) ? property.owners : [];
+  return owners.length && owners.every(owner => isAgentOwner(owner.id)) ? 'partner' : 'managed';
+}
+function matchesManagementFilter(property){
+  return currentManagementFilter === 'all' || (Boolean(property) && propertyManagementKind(property) === currentManagementFilter);
+}
+function bookingMatchesManagementFilter(booking){
+  return currentManagementFilter === 'all' || matchesManagementFilter(PROPERTIES.find(property => property.id === booking.propId));
+}
+// Transaksi tanpa properti (Operasional Umum) hanya tampil saat memilih "Keduanya".
+function entryMatchesManagementFilter(entry){
+  return currentManagementFilter === 'all' || matchesManagementFilter(PROPERTIES.find(property => financeEntryMatchesProperty(entry, property)));
+}
+const scopedBookings = () => currentManagementFilter === 'all' ? BOOKINGS : BOOKINGS.filter(bookingMatchesManagementFilter);
+const scopedIncomes = () => currentManagementFilter === 'all' ? INCOMES : INCOMES.filter(entryMatchesManagementFilter);
+const scopedExpenses = () => currentManagementFilter === 'all' ? EXPENSES : EXPENSES.filter(entryMatchesManagementFilter);
+
+function renderManagementFilter(){
+  const active = PROPERTIES.filter(property => property.active !== false);
+  const counts = {
+    all:active.length,
+    managed:active.filter(property => propertyManagementKind(property) === 'managed').length,
+    partner:active.filter(property => propertyManagementKind(property) === 'partner').length,
+  };
+  document.querySelectorAll('#managementFilter [data-management-filter]').forEach(button => {
+    const kind = button.dataset.managementFilter;
+    const selected = kind === currentManagementFilter;
+    button.classList.toggle('active', selected);
+    button.setAttribute('aria-pressed', String(selected));
+    const count = button.querySelector('[data-management-count]');
+    if(count) count.textContent = counts[kind];
+  });
+}
+
+function setManagementFilter(kind, options={}){
+  currentManagementFilter = ['managed', 'partner'].includes(kind) ? kind : 'all';
+  try { localStorage.setItem(MANAGEMENT_FILTER_KEY, currentManagementFilter); } catch {}
+  renderManagementFilter();
+  if(options.silent) return;
+  renderDashboard();
+  renderProperties();
+  renderCalendar();
+  renderBookingsTable();
+  renderIncomeSummary();
+  renderIncomeTable();
+  renderExpenseSummary();
+  renderExpenseTable();
+  const label = { all:'Full Management + Agen', managed:'Full Management', partner:'Agen' }[currentManagementFilter];
+  showToast(`Tampilan: ${label}`);
+}
+
 function getPropExpenses(propId, period=currentPeriod){
   const property = PROPERTIES.find(item => item.id === propId);
   return EXPENSES.filter(entry => property && financeEntryMatchesProperty(entry, property) && isDateInReportPeriod(entry.date, period));
@@ -3721,13 +3845,13 @@ function propertyGradientOf(property){
 
 /* ============== DASHBOARD ============== */
 function renderDashboard(){
-  const monthBookings = BOOKINGS.filter(b => isDateInReportPeriod(b.checkin));
+  const monthBookings = scopedBookings().filter(b => isDateInReportPeriod(b.checkin));
   const activeMonthBookings = monthBookings.filter(b => !isBookingCancelled(b));
   const bookingRevenue = monthBookings.reduce((sum, booking) => sum + getBookingNetAmount(booking), 0);
-  const extraIncome = INCOMES.filter(entry => isDateInReportPeriod(entry.date) && !REPORT_EXCLUDED_INCOME.includes(entry.categoryId))
+  const extraIncome = scopedIncomes().filter(entry => isDateInReportPeriod(entry.date) && !REPORT_EXCLUDED_INCOME.includes(entry.categoryId))
     .reduce((sum, entry) => sum + entry.amount, 0);
   const totalRevenue = bookingRevenue + extraIncome;
-  const totalExpense = EXPENSES.filter(e=>isDateInReportPeriod(e.date)).reduce((s,e)=>s+e.amount,0);
+  const totalExpense = scopedExpenses().filter(e=>isDateInReportPeriod(e.date)).reduce((s,e)=>s+e.amount,0);
   const netProfit = totalRevenue - totalExpense;
   document.getElementById('stat-revenue').textContent = fmtRpShort(totalRevenue);
   document.getElementById('stat-expense').textContent = fmtRpShort(totalExpense);
@@ -3735,7 +3859,7 @@ function renderDashboard(){
   document.getElementById('stat-bookings').textContent = activeMonthBookings.length;
 
   /* Recent bookings */
-  const recent = BOOKINGS.filter(booking => isDateInReportPeriod(booking.checkin)).sort((a,b)=>b.checkin.localeCompare(a.checkin)).slice(0,5);
+  const recent = scopedBookings().filter(booking => isDateInReportPeriod(booking.checkin)).sort((a,b)=>b.checkin.localeCompare(a.checkin)).slice(0,5);
   document.getElementById('recentBookingsBody').innerHTML = recent.map(b => `
     <tr>
       <td class="px-5 py-3">
@@ -3749,7 +3873,7 @@ function renderDashboard(){
     </tr>`).join('');
 
   /* Top properties */
-  const propStats = PROPERTIES.filter(property => property.active !== false).map(p => {
+  const propStats = PROPERTIES.filter(property => property.active !== false && matchesManagementFilter(property)).map(p => {
     const allBookings = BOOKINGS.filter(b => b.propId === p.id && isDateInReportPeriod(b.checkin));
     const bk = allBookings.filter(b => !isBookingCancelled(b));
     const bookingRev = allBookings.reduce((sum, booking) => sum + getBookingNetAmount(booking), 0);
@@ -3809,11 +3933,14 @@ function initCharts(){
   /* Tren Pendapatan vs Pengeluaran, bergulir N bulan + proyeksi akhir bulan berjalan */
   const monthKeys = getRecentMonthKeys(dashboardChartMonths);
   const months = monthKeys.map(month => new Date(`${month}-01T00:00:00`).toLocaleDateString('id-ID', { month:'short', year:dashboardChartMonths > 6 ? '2-digit' : undefined }));
+  const chartBookings = scopedBookings();
+  const chartIncomes = scopedIncomes();
+  const chartExpenses = scopedExpenses();
   const revData = monthKeys.map(month =>
-    BOOKINGS.filter(booking => booking.checkin.startsWith(month)).reduce((sum, booking) => sum + getBookingNetAmount(booking), 0) +
-    INCOMES.filter(entry => entry.date.startsWith(month) && !REPORT_EXCLUDED_INCOME.includes(entry.categoryId)).reduce((sum, entry) => sum + entry.amount, 0)
+    chartBookings.filter(booking => booking.checkin.startsWith(month)).reduce((sum, booking) => sum + getBookingNetAmount(booking), 0) +
+    chartIncomes.filter(entry => entry.date.startsWith(month) && !REPORT_EXCLUDED_INCOME.includes(entry.categoryId)).reduce((sum, entry) => sum + entry.amount, 0)
   );
-  const expData = monthKeys.map(month => EXPENSES.filter(expense => expense.date.startsWith(month)).reduce((sum, expense) => sum + expense.amount, 0));
+  const expData = monthKeys.map(month => chartExpenses.filter(expense => expense.date.startsWith(month)).reduce((sum, expense) => sum + expense.amount, 0));
 
   const now = new Date();
   const currentMonthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
@@ -3862,8 +3989,8 @@ function initCharts(){
   const dayLabels = Array.from({ length:daysInCurrentMonth }, (_, i) => String(i + 1));
   const dailyRevData = dayLabels.map((_, i) => {
     const dayKey = `${currentMonthKey}-${String(i + 1).padStart(2, '0')}`;
-    return BOOKINGS.filter(booking => booking.checkin === dayKey).reduce((sum, booking) => sum + getBookingNetAmount(booking), 0) +
-      INCOMES.filter(entry => entry.date === dayKey && !REPORT_EXCLUDED_INCOME.includes(entry.categoryId)).reduce((sum, entry) => sum + entry.amount, 0);
+    return chartBookings.filter(booking => booking.checkin === dayKey).reduce((sum, booking) => sum + getBookingNetAmount(booking), 0) +
+      chartIncomes.filter(entry => entry.date === dayKey && !REPORT_EXCLUDED_INCOME.includes(entry.categoryId)).reduce((sum, entry) => sum + entry.amount, 0);
   });
   document.getElementById('chartDailySub').textContent = new Date(`${currentMonthKey}-01T00:00:00`).toLocaleDateString('id-ID', { month:'long', year:'numeric' });
   if(charts.dailyRevenue) charts.dailyRevenue.destroy();
@@ -3881,8 +4008,8 @@ function initCharts(){
   });
 
   /* Okupansi Harian, bulan berjalan -- persentase properti aktif dengan booking yang menginap pada hari itu */
-  const activeProps = PROPERTIES.filter(property => property.active !== false);
-  const occBookings = BOOKINGS.filter(booking => !isBookingCancelled(booking));
+  const activeProps = PROPERTIES.filter(property => property.active !== false && matchesManagementFilter(property));
+  const occBookings = chartBookings.filter(booking => !isBookingCancelled(booking));
   const occData = dayLabels.map((_, i) => {
     const dayKey = `${currentMonthKey}-${String(i + 1).padStart(2, '0')}`;
     if(!activeProps.length) return 0;
@@ -3936,7 +4063,7 @@ function initCharts(){
 
   /* Platform distribution */
   const platformCounts = {};
-  BOOKINGS.filter(b=>isDateInReportPeriod(b.checkin)).forEach(b => { platformCounts[b.platform] = (platformCounts[b.platform]||0)+1; });
+  chartBookings.filter(b=>isDateInReportPeriod(b.checkin)).forEach(b => { platformCounts[b.platform] = (platformCounts[b.platform]||0)+1; });
   const platLabels = Object.keys(platformCounts);
   const platData = platLabels.map(p=>platformCounts[p]);
   const platColors = platLabels.map(p=>PLATFORM_COLORS[p]);
@@ -3958,7 +4085,7 @@ function initCharts(){
 
   /* Expense breakdown */
   const catTotals = {};
-  EXPENSES.filter(e=>isDateInReportPeriod(e.date)).forEach(e=>{ catTotals[e.cat] = (catTotals[e.cat]||0)+e.amount; });
+  chartExpenses.filter(e=>isDateInReportPeriod(e.date)).forEach(e=>{ catTotals[e.cat] = (catTotals[e.cat]||0)+e.amount; });
   const sortedCats = Object.keys(catTotals).sort((a,b)=>catTotals[b]-catTotals[a]);
   if(charts.expense) charts.expense.destroy();
   charts.expense = new Chart(document.getElementById('chartExpense'), {
@@ -3985,9 +4112,9 @@ function setChartTab(btn,months){
 
 /* ============== PROPERTIES ============== */
 function getFilteredProperties(){
-  const activeProperties = PROPERTIES.filter(property => property.active !== false);
+  const activeProperties = PROPERTIES.filter(property => property.active !== false && matchesManagementFilter(property));
   return currentPropFilter === 'archived'
-    ? PROPERTIES.filter(property => property.active === false)
+    ? PROPERTIES.filter(property => property.active === false && matchesManagementFilter(property))
     : currentPropFilter === 'all' ? activeProperties : activeProperties.filter(property => property.type === currentPropFilter);
 }
 function movePropertyOrder(propertyId, direction){
@@ -4081,13 +4208,15 @@ function updatePropertyCounts(){
   };
   const navCount = document.getElementById('propertyNavCount');
   const activeProperties = PROPERTIES.filter(property => property.active !== false);
+  const scopedProperties = activeProperties.filter(matchesManagementFilter);
   if(navCount) navCount.textContent = activeProperties.length;
   Object.entries(countIds).forEach(([type, id]) => {
     const count = document.getElementById(id);
-    if(count) count.textContent = type === 'all' ? activeProperties.length : activeProperties.filter(property => property.type === type).length;
+    if(count) count.textContent = type === 'all' ? scopedProperties.length : scopedProperties.filter(property => property.type === type).length;
   });
   const archivedCount = document.getElementById('propCountArchived');
-  if(archivedCount) archivedCount.textContent = PROPERTIES.filter(property => property.active === false).length;
+  if(archivedCount) archivedCount.textContent = PROPERTIES.filter(property => property.active === false && matchesManagementFilter(property)).length;
+  renderManagementFilter();
 }
 
 async function refreshDashboardPropertyData(){
@@ -4406,7 +4535,7 @@ function renderCalendar(){
   const platformFilter = document.getElementById('filterPlatformBooking')?.value || 'all';
   // Properti kos tidak pernah punya booking di sini (transaksinya lewat kosan.html), jadi baris
   // kalendernya cuma akan kosong terus -- dikeluarkan supaya kalender tidak penuh baris kosong.
-  const activeProperties = PROPERTIES.filter(property => property.active !== false && property.type !== 'kos');
+  const activeProperties = PROPERTIES.filter(property => property.active !== false && property.type !== 'kos' && matchesManagementFilter(property));
   const calendarProperties = propertyCategory === 'all'
     ? activeProperties
     : activeProperties.filter(property => property.type === propertyCategory);
@@ -4496,7 +4625,7 @@ function renderBookingView(){
 function renderBookingsTable(){
   const categoryFilter = document.getElementById('filterPropBooking')?.value || 'all';
   const platFilter = document.getElementById('filterPlatformBooking')?.value || 'all';
-  let filtered = [...BOOKINGS].sort((a,b)=>a.checkin.localeCompare(b.checkin));
+  let filtered = [...scopedBookings()].sort((a,b)=>a.checkin.localeCompare(b.checkin));
   filtered = filtered.filter(booking => isDateInReportPeriod(booking.checkin, currentPeriod));
   if(currentBookingStatus !== 'all') filtered = filtered.filter(booking => normalizeBookingStatus(booking.status) === normalizeBookingStatus(currentBookingStatus));
   if(categoryFilter !== 'all') filtered = filtered.filter(booking => PROPERTIES.some(property => property.id === booking.propId && property.type === categoryFilter));
@@ -4519,7 +4648,7 @@ function renderBookingsTable(){
         <td class="px-5 py-3"><span class="text-xs font-mono text-slate-500">${b.id}</span></td>
         <td class="px-3 py-3">
           <div class="font-semibold text-slate-900 text-sm">${escapeHtml(b.guest)}</div>
-          <div class="text-xs text-slate-400">${b.nights} malam${b.phone?' · '+escapeHtml(b.phone):''}${b.note?' · '+escapeHtml(b.note):''}</div>
+          <div class="text-xs text-slate-400">${b.nights} malam${b.guestCount?' · '+b.guestCount+' tamu':''}${b.phone?' · '+escapeHtml(b.phone):''}${b.note?' · '+escapeHtml(b.note):''}</div>
           ${b.extraBedPaymentStatus === 'pending' && !isBookingCancelled(b) ? `<span class="badge bg-amber-50 text-amber-700 mt-1 inline-flex">Extra Bed Belum Dibayar (${fmtRp(Number(b.extraBedQuantity || 0) * Number(b.extraBedPrice || 0))})</span>` : ''}
         </td>
         <td class="px-3 py-3 hidden md:table-cell text-sm text-slate-600">${escapeHtml(b.propName)}</td>
@@ -4751,7 +4880,7 @@ function renderAttendanceDashboard(records){
         <a href="${checkInMapUrl}" target="_blank" rel="noopener noreferrer" class="text-brand-600 hover:text-brand-700 text-xs font-semibold">Masuk${record.accuracy ? ` (±${Math.round(record.accuracy)}m)` : ''}</a>
         ${checkOutMapUrl ? `<br><a href="${checkOutMapUrl}" target="_blank" rel="noopener noreferrer" class="text-brand-600 hover:text-brand-700 text-xs font-semibold">Pulang${record.checkout_accuracy ? ` (±${Math.round(record.checkout_accuracy)}m)` : ''}</a>` : ''}
       </td>
-      <td class="px-4 py-3 text-right whitespace-nowrap"><button type="button" onclick="resetAttendanceRecord('${record.id}','${escapeHtml(record.employee_name)}')" class="text-xs font-semibold text-rose-600 hover:text-rose-800">Reset</button></td>
+      <td class="px-4 py-3 text-right whitespace-nowrap">${isRestrictedAdmin() ? '<span class="text-xs text-slate-300">—</span>' : `<button type="button" onclick="resetAttendanceRecord('${record.id}','${escapeHtml(record.employee_name)}')" class="text-xs font-semibold text-rose-600 hover:text-rose-800">Reset</button>`}</td>
     </tr>`;
   }).join('') : '<tr><td colspan="7" class="px-4 py-8 text-center text-sm text-slate-400">Belum ada absen masuk pada tanggal ini.</td></tr>';
 
@@ -5002,7 +5131,7 @@ function renderCrewExpenseReports(hasMore){
       <td class="px-4 py-3">${escapeHtml(item.property_name || '-')}</td>
       <td class="px-4 py-3 text-right font-semibold whitespace-nowrap">${fmtRp(item.amount)}</td>
       <td class="px-4 py-3 text-slate-500">${escapeHtml(item.description || '-')}</td>
-      <td class="px-4 py-3">${item.proof_url ? `<button type="button" onclick="viewCrewExpenseProof('${escapeHtml(item.proof_url)}')" class="text-xs font-semibold text-indigo-600 hover:text-indigo-800">Lihat</button>` : '-'}</td>
+      <td class="px-4 py-3">${item.proof_url ? `<button type="button" onclick="viewCrewExpenseProof('${escapeHtml(item.proof_url)}')" class="text-xs font-semibold text-indigo-600 hover:text-indigo-800">Lihat</button>` : (item.no_receipt_reason ? `<span class="text-xs font-semibold text-amber-700">Tanpa struk</span><div class="text-xs text-slate-500 max-w-[180px] whitespace-normal">${escapeHtml(item.no_receipt_reason)}</div>` : '-')}</td>
       <td class="px-4 py-3"><span class="inline-flex px-2.5 py-1 rounded-full text-xs font-semibold ${classes}">${label}</span></td>
       <td class="px-4 py-3 text-right whitespace-nowrap">${actions}</td>
     </tr>`;
@@ -5037,7 +5166,7 @@ async function deleteCrewExpenseReport(id){
   const item = crewExpenseReports.find(entry => entry.id === id);
   const who = item ? `${item.payee || 'crew'} - ${item.category_name || ''} ${fmtRp(item.amount)}` : 'pengeluaran ini';
   const wasApproved = item?.review_status === 'approved';
-  if(!confirm(`Hapus ${who}?\n\nData ini juga hilang dari Dashboard Check In Crew.${wasApproved ? ' Pengeluaran ini sudah masuk pengeluaran dan ikut terhapus dari sana.' : ''}\nTindakan ini tidak bisa dibatalkan.`)) return;
+  if(!confirm(`Hapus ${who}?\n\nData di Dashboard Check In Crew tetap ada, hanya dihapus dari sini.${wasApproved ? ' Pengeluaran ini sudah masuk pengeluaran dan ikut terhapus dari sana.' : ''}\nTindakan ini tidak bisa dibatalkan.`)) return;
   const pin = window.prompt('Masukkan PIN Master (4 digit) untuk menyetujui penghapusan:');
   if(pin === null) return;
   const status = document.getElementById('crewExpenseReportStatus');
@@ -5913,7 +6042,7 @@ async function submitFinanceDelete(event){
 }
 
 function renderIncomeSummary(){
-  const periodEntries = INCOMES.filter(entry => isDateInReportPeriod(entry.date));
+  const periodEntries = scopedIncomes().filter(entry => isDateInReportPeriod(entry.date));
   const bookingIncome = periodEntries.filter(entry => entry.categoryId === 'income-booking')
     .reduce((sum, entry) => sum + entry.amount, 0);
   const openingBalance = periodEntries.filter(entry => entry.cat === 'Saldo Awal / Carry-over')
@@ -5932,10 +6061,10 @@ const MONTHLY_REVENUE_LABELS = ['Januari','Februari','Maret','April','Mei','Juni
 // lalu ditambah pemasukan non-booking (misalnya Extra Bed). Income Booking
 // dikecualikan di sini karena sudah dihitung dari daftar booking.
 function monthlyRevenueEntries(){
-  const bookingRevenue = BOOKINGS
+  const bookingRevenue = scopedBookings()
     .filter(booking => /^\d{4}-\d{2}/.test(String(booking.checkin || '')))
     .map(booking => ({ date:booking.checkin, amount:getBookingNetAmount(booking) }));
-  const nonBookingIncome = INCOMES.filter(entry =>
+  const nonBookingIncome = scopedIncomes().filter(entry =>
     entry.categoryId !== 'income-booking' &&
     entry.cat !== 'Saldo Awal / Carry-over' &&
     /^\d{4}-\d{2}/.test(String(entry.date || ''))
@@ -5972,14 +6101,14 @@ function renderMonthlyRevenue(){
   }).join('');
   const totalRow = `<tr class="bg-slate-50"><td class="px-5 py-3 text-sm font-bold text-slate-900">Total Omset</td>${years.map(year => `<td class="px-4 py-3 text-right font-extrabold text-emerald-700 whitespace-nowrap">${fmtRp(totals[year].reduce((sum, value) => sum + value, 0))}</td>`).join('')}</tr>`;
   body.innerHTML = monthRows + totalRow;
-  document.getElementById('monthlyRevenueNote').textContent = `${years.length} tahun · ${BOOKINGS.length} booking + ${INCOMES.filter(entry => entry.categoryId !== 'income-booking' && entry.cat !== 'Saldo Awal / Carry-over').length} pemasukan non-booking`;
+  document.getElementById('monthlyRevenueNote').textContent = `${years.length} tahun · ${scopedBookings().length} booking + ${scopedIncomes().filter(entry => entry.categoryId !== 'income-booking' && entry.cat !== 'Saldo Awal / Carry-over').length} pemasukan non-booking`;
 }
 
 function renderIncomeTable(){
   const body = document.getElementById('incomeTableBody');
   if(!body) return;
   const canDelete = currentDashboardAccount?.role !== 'IT';
-  const periodEntries = INCOMES.filter(entry => isDateInReportPeriod(entry.date));
+  const periodEntries = scopedIncomes().filter(entry => isDateInReportPeriod(entry.date));
   body.innerHTML = periodEntries.length ? [...periodEntries].sort((a,b)=>b.date.localeCompare(a.date)).map(entry => `
     <tr>
       <td class="px-5 py-3 text-sm text-slate-600">${fmtDate(entry.date)}</td>
@@ -5994,7 +6123,7 @@ function renderIncomeTable(){
 
 /* ============== EXPENSE ============== */
 function renderExpenseSummary(){
-  const exp = EXPENSES.filter(e=>isDateInReportPeriod(e.date));
+  const exp = scopedExpenses().filter(e=>isDateInReportPeriod(e.date));
   const total = exp.reduce((s,e)=>s+e.amount,0);
   document.getElementById('expTotal').textContent = fmtRp(total);
   document.getElementById('expCount').textContent = exp.length;
@@ -6066,7 +6195,7 @@ function renderExpenseTable(){
   const propFilter = document.getElementById('filterPropExp')?.value || 'all';
   const selectedProperty = PROPERTIES.find(property => property.id === propFilter);
   const canEdit = currentDashboardAccount?.role !== 'IT';
-  let filtered = [...EXPENSES].filter(entry => isDateInReportPeriod(entry.date)).sort((a,b)=>b.date.localeCompare(a.date));
+  let filtered = [...scopedExpenses()].filter(entry => isDateInReportPeriod(entry.date)).sort((a,b)=>b.date.localeCompare(a.date));
   if(currentExpCat !== 'all') filtered = filtered.filter(entry => entry.categoryId === currentExpCat);
   if(propFilter !== 'all') filtered = filtered.filter(entry => selectedProperty && financeEntryMatchesProperty(entry, selectedProperty));
   document.getElementById('expenseTableBody').innerHTML = filtered.length === 0 ?
@@ -6156,6 +6285,64 @@ function submitOwner(event){
   closeModal('modal-owner');
   showToast(`${name} berhasil ditambahkan. Pilih owner ini saat mengatur properti.`);
 }
+function openOwnerDeleteModal(ownerId){
+  const owner = OWNERS.find(item => item.id === ownerId);
+  if(!owner || currentDashboardAccount?.role === 'IT') return;
+  const linked = getOwnerProps(ownerId);
+  document.getElementById('deleteOwnerForm').reset();
+  document.getElementById('deleteOwnerId').value = ownerId;
+  document.getElementById('deleteOwnerDescription').textContent = `Hapus owner ${owner.name} (ID ${owner.id})?`;
+  const status = document.getElementById('deleteOwnerStatus');
+  if(linked.length){
+    status.className = 'text-sm text-amber-700';
+    status.textContent = `Owner ini masih terhubung ke ${linked.length} properti. Pindahkan properti tersebut ke owner lain dulu, baru bisa dihapus.`;
+  } else {
+    status.textContent = '';
+  }
+  openModal('modal-delete-owner');
+  document.getElementById('deleteOwnerPin').focus();
+}
+
+async function submitOwnerDelete(event){
+  event.preventDefault();
+  const ownerId = document.getElementById('deleteOwnerId').value;
+  const pinInput = document.getElementById('deleteOwnerPin');
+  const status = document.getElementById('deleteOwnerStatus');
+  const button = document.getElementById('deleteOwnerButton');
+  const owner = OWNERS.find(item => item.id === ownerId);
+  if(!owner) return closeModal('modal-delete-owner');
+  if(!/^\d{4}$/.test(pinInput.value)){
+    status.className = 'text-sm text-rose-600';
+    status.textContent = 'Masukkan PIN Master tepat 4 digit.';
+    return;
+  }
+  button.disabled = true;
+  status.className = 'text-sm text-slate-500';
+  status.textContent = 'Memverifikasi PIN Master dan menghapus owner...';
+  try {
+    await dashboardApi(`/dashboard/owners/${encodeURIComponent(ownerId)}`, { method:'DELETE', body:JSON.stringify({ pin:pinInput.value }) });
+    const index = OWNERS.findIndex(item => item.id === ownerId);
+    if(index >= 0) OWNERS.splice(index, 1);
+    persistDashboardData({ skipCloudSync:true });
+    populatePropertyOwnerSelect();
+    populateOwnerSelect();
+    populateShareCalculatorOwners();
+    renderOwners();
+    renderProperties();
+    renderManagementFilter();
+    if(currentView === 'laporan') renderReport();
+    if(currentView === 'bagi-hasil') renderShareCalculatorInputs();
+    closeModal('modal-delete-owner');
+    showToast(`Owner ${owner.name} dihapus.`);
+  } catch(error) {
+    pinInput.value = '';
+    status.className = 'text-sm text-rose-600';
+    status.textContent = error.message || 'Owner gagal dihapus.';
+  } finally {
+    button.disabled = false;
+  }
+}
+
 function openOwnerPortalPasswordModal(ownerId, ownerName){
   document.getElementById('ownerPortalAccountLabel').textContent = ownerName;
   document.getElementById('ownerPortalPasswordForm').reset();
@@ -6206,7 +6393,8 @@ async function saveOwnerPortalPassword(event){
   }
 }
 function renderOwners(){
-  document.getElementById('ownerGrid').innerHTML = OWNERS.map(owner => {
+  const ownerCard = owner => {
+    const isAgent = isAgentOwner(owner.id);
     const properties = getOwnerProps(owner.id);
     const totalRevenue = properties.reduce((sum, property) => {
       const bookings = BOOKINGS.filter(item => item.propId === property.id && isDateInReportPeriod(item.checkin));
@@ -6219,13 +6407,13 @@ function renderOwners(){
       return sum + expenses.reduce((subtotal, expense) => subtotal + expense.amount, 0);
     }, 0);
     return `
-      <div class="bg-white rounded-2xl p-5 border border-slate-100">
+      <div class="bg-white rounded-2xl p-5 border border-slate-100${isAgent ? ' flex flex-col flex-1' : ''}">
         <div class="flex items-center gap-3 mb-4">
           <div class="w-12 h-12 rounded-full bg-gradient-to-br ${owner.color} flex items-center justify-center text-white font-bold">${escapeHtml(owner.initial)}</div>
           <div class="flex-1 min-w-0"><h3 class="font-bold text-slate-900 truncate">${escapeHtml(owner.name)}</h3><p class="text-xs text-slate-500 truncate">ID Owner: ${escapeHtml(owner.id)}</p></div>
-          <div class="flex items-center gap-2"><button type="button" onclick="openOwnerPortalPasswordModal('${escapeHtml(owner.id)}','${escapeHtml(owner.name)}')" class="shrink-0 rounded-lg border border-brand-200 bg-brand-50 px-2.5 py-1.5 text-xs font-bold text-brand-700 hover:bg-brand-100">Buat Login Portal</button><button type="button" onclick="switchView('laporan');setTimeout(()=>{document.getElementById('reportOwner').value='${escapeHtml(owner.id)}';renderReport();},100)" class="shrink-0 text-xs font-semibold text-brand-600 hover:text-brand-700">Laporan →</button></div>
+          <div class="flex items-center gap-2"><button type="button" onclick="openOwnerPortalPasswordModal('${escapeHtml(owner.id)}','${escapeHtml(owner.name)}')" class="shrink-0 rounded-lg border border-brand-200 bg-brand-50 px-2.5 py-1.5 text-xs font-bold text-brand-700 hover:bg-brand-100">Buat Login Portal</button><button type="button" onclick="switchView('laporan');setTimeout(()=>{document.getElementById('reportOwner').value='${escapeHtml(owner.id)}';renderReport();},100)" class="shrink-0 text-xs font-semibold text-brand-600 hover:text-brand-700">Laporan →</button><button type="button" onclick="openOwnerDeleteModal('${escapeHtml(owner.id)}')" aria-label="Hapus owner ${escapeHtml(owner.name)}" title="Hapus owner (PIN Master)" class="shrink-0 p-1.5 rounded-md text-slate-400 hover:text-rose-700 hover:bg-rose-50"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2m-9 0 1 14h8l1-14M10 11v5m4-5v5"/></svg></button></div>
         </div>
-        <div class="space-y-2 mb-4">${properties.map(property => {
+        <div class="space-y-2 mb-4${isAgent ? ' flex-1' : ''}">${properties.map(property => {
           const share = property.owners.find(item => item.id === owner.id)?.share || 0;
           return `<div class="flex items-center gap-2 p-2 bg-slate-50 rounded-lg"><div class="w-7 h-7 rounded bg-gradient-to-br ${property.gradient} flex items-center justify-center text-white text-[8px] font-bold">${escapeHtml(property.code.split('-')[0])}</div><div class="flex-1 min-w-0"><div class="text-xs font-semibold text-slate-800 truncate">${escapeHtml(property.name)}</div><div class="text-[10px] text-slate-400">${escapeHtml(property.area)}</div></div><span class="text-xs font-bold text-brand-600">${share}%</span></div>`;
         }).join('')}</div>
@@ -6235,7 +6423,14 @@ function renderOwners(){
           <div class="flex justify-between pt-2 border-t border-slate-100"><span class="text-slate-700 font-bold">Status bagi hasil</span><span class="font-bold text-amber-600">Belum dihitung</span></div>
         </div>
       </div>`;
-  }).join('');
+  };
+  // Owner "Agen" tampil sendiri di kolom kanan yang memanjang ke bawah; owner lain dua kolom di sebelah kirinya.
+  const agentOwners = OWNERS.filter(owner => isAgentOwner(owner.id));
+  const regularOwners = OWNERS.filter(owner => !isAgentOwner(owner.id));
+  document.getElementById('ownerGrid').innerHTML = agentOwners.length
+    ? `<div class="xl:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4 content-start">${regularOwners.map(ownerCard).join('')}</div>
+       <div class="flex flex-col gap-4">${agentOwners.map(ownerCard).join('')}</div>`
+    : `<div class="xl:col-span-3 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 content-start">${regularOwners.map(ownerCard).join('')}</div>`;
 }
 
 /* ============== REPORTS ============== */
@@ -6335,7 +6530,8 @@ function renderReport(){
         <table class="w-full text-sm">
           <thead class="bg-slate-50 text-slate-500 text-xs uppercase tracking-wider">
             <tr>
-              <th class="text-left font-semibold px-5 py-3">Properti</th>
+              <th class="text-center font-semibold pl-5 pr-2 py-3 w-12">No</th>
+              <th class="text-left font-semibold px-3 py-3">Properti</th>
               <th class="text-center font-semibold px-3 py-3 hidden sm:table-cell">Booking</th>
               <th class="text-right font-semibold px-3 py-3">Revenue Booking</th>
               <th class="text-right font-semibold px-3 py-3">Pemasukan Tambahan</th>
@@ -6346,9 +6542,10 @@ function renderReport(){
             </tr>
           </thead>
           <tbody class="divide-y divide-slate-100">
-            ${propStats.map(s => `
+            ${propStats.map((s, index) => `
               <tr>
-                <td class="px-5 py-3">
+                <td class="pl-5 pr-2 py-3 text-center text-slate-500 font-semibold">${index + 1}</td>
+                <td class="px-3 py-3">
                   <div class="flex items-center gap-3">
                     <div class="w-8 h-8 rounded-lg bg-gradient-to-br ${s.p.gradient} flex items-center justify-center text-white text-[9px] font-bold">${s.p.code}</div>
                     <div>
@@ -6366,7 +6563,8 @@ function renderReport(){
                 <td class="px-5 py-3 text-center text-slate-600">${(s.p.agents || []).map(agent => `${escapeHtml(agent.name)} ${agent.share}%`).join(', ') || '—'}</td>
               </tr>`).join('')}
             <tr class="bg-slate-50 font-bold">
-              <td class="px-5 py-3 text-slate-900">TOTAL</td>
+              <td class="pl-5 pr-2 py-3"></td>
+              <td class="px-3 py-3 text-slate-900">TOTAL</td>
               <td class="px-3 py-3 text-center text-slate-900 hidden sm:table-cell">${totals.bookings}</td>
               <td class="px-3 py-3 text-right text-slate-900">${fmtRpShort(totals.grossRev)}</td>
               <td class="px-3 py-3 text-right text-emerald-700">${fmtRpShort(totals.otherIncome)}</td>
@@ -9134,6 +9332,7 @@ function openBookingModal(bookingId=''){
   document.getElementById('newBookingCheckin').value = booking?.checkin || new Date().toISOString().slice(0, 10);
   document.getElementById('newBookingCheckout').value = booking?.checkout || new Date(Date.now() + 86400000).toISOString().slice(0, 10);
   document.getElementById('newBookingExtraBedQuantity').value = booking?.extraBedQuantity ?? 0;
+  document.getElementById('newBookingGuestCount').value = booking?.guestCount ? booking.guestCount : '';
   const extraBedSetting = extraBedPropertySettings[booking?.propId];
   const latestLoanGuestPrice = extraBedSuppliers.find(item => item.guest_price > 0)?.guest_price;
   setCurrencyInputValue(document.getElementById('newBookingExtraBedPrice'), extraBedSetting?.price || latestLoanGuestPrice || booking?.extraBedPrice || 0);
@@ -9189,6 +9388,25 @@ function updateBookingFormForPropertyType(){
   document.getElementById('newBookingAmountLabel').textContent = isPartner ? 'Fee Kita (Rp)' : 'Nilai Booking (Rp)';
   document.getElementById('newBookingAmount').placeholder = isPartner ? 'cth: 150.000' : '5.000.000';
   document.getElementById('newBookingGrossAmountField').classList.toggle('hidden', !isPartner);
+  updateBookingGuestCountHint();
+}
+
+// Petunjuk jumlah tamu terhadap kapasitas properti; hanya peringatan, tidak memblokir simpan.
+function updateBookingGuestCountHint(){
+  const hint = document.getElementById('newBookingGuestCountHint');
+  if(!hint) return;
+  const property = PROPERTIES.find(item => item.id === document.getElementById('newBookingProp').value);
+  const capacity = Number(property?.guests) || 0;
+  const count = Number(document.getElementById('newBookingGuestCount').value) || 0;
+  if(capacity > 0 && count > capacity){
+    hint.className = 'text-[11px] text-amber-700 font-semibold mt-1';
+    hint.textContent = `Melebihi kapasitas ${property.name} (${capacity} tamu). Pertimbangkan extra bed.`;
+    return;
+  }
+  hint.className = 'text-[11px] text-slate-400 mt-1';
+  hint.textContent = capacity > 0
+    ? `Kapasitas ${property.name}: ${capacity} tamu. Kosongkan jika belum diketahui; dipakai sebagai acuan jumlah extra bed.`
+    : 'Kosongkan jika belum diketahui. Dipakai sebagai acuan jumlah extra bed.';
 }
 
 function openBookingCancelModal(bookingId){
@@ -9231,8 +9449,14 @@ async function submitBooking(){
   const agent = AGENTS.find(item => item.id === agentId);
   const agentFeeType = document.getElementById('newBookingAgentFeeType').value;
   const agentFeeValue = parseCurrencyInput(document.getElementById('newBookingAgentFeeValue').value);
+  const guestCount = Number(document.getElementById('newBookingGuestCount').value) || 0;
   const statusElement = document.getElementById('bookingFormStatus');
   const button = document.getElementById('bookingSubmitButton');
+  if(!Number.isInteger(guestCount) || guestCount < 0 || guestCount > 99){
+    statusElement.className = 'text-sm text-rose-600';
+    statusElement.textContent = 'Jumlah tamu harus bilangan bulat 0 sampai 99.';
+    return;
+  }
   if(!prop || checkout <= checkin || !Number.isSafeInteger(amount) || amount <= 0 || !Number.isSafeInteger(extraBedQuantity) || extraBedQuantity < 0 || !Number.isSafeInteger(extraBedPrice) || extraBedPrice < 0 || !Number.isSafeInteger(grossAmount) || grossAmount < 0){
     statusElement.className = 'text-sm text-rose-600';
     statusElement.textContent = 'Properti, rentang tanggal, dan jumlah booking wajib valid.';
@@ -9280,7 +9504,7 @@ async function submitBooking(){
   const agentFeeAmount = agentId ? (agentFeeType === 'percent' ? Math.round(amount * agentFeeValue / 100) : agentFeeValue) : 0;
   const payload = {
     ...(editId ? { id:editId } : {}), propId, propName:prop.name, propCode:prop.code,
-    guest, phone, platform, status:cancelledEdit ? editedBooking.status : status, checkin, checkout, amount, grossAmount, managementType, extraBedQuantity, extraBedPrice, extraBedPaymentStatus, platformFeePct, note, captureImage,
+    guest, phone, guestCount, platform, status:cancelledEdit ? editedBooking.status : status, checkin, checkout, amount, grossAmount, managementType, extraBedQuantity, extraBedPrice, extraBedPaymentStatus, platformFeePct, note, captureImage,
     agentId, agentFeeType, agentFeeValue, extraBedPaymentMethod,
     ...(cancelledEdit ? { pin:approvalPin, refund_amount:retainedRefund } : {})
   };
@@ -9295,7 +9519,7 @@ async function submitBooking(){
       ...(editedBooking || {}),
       id:editId || saveResult.data?.id,
       createdAt:saveResult.data?.created_at || editedBooking?.createdAt || new Date().toISOString(),
-      propId, propName:prop.name, propCode:prop.code, guest, phone, platform,
+      propId, propName:prop.name, propCode:prop.code, guest, phone, guestCount, platform,
       status:payload.status, checkin, checkout,
       nights:Math.round((Date.parse(`${checkout}T00:00:00Z`) - Date.parse(`${checkin}T00:00:00Z`)) / 86400000),
       amount, grossAmount, extraBedQuantity, extraBedPrice, extraBedPaymentStatus, platformFeePct, note, captureImage,
@@ -10231,6 +10455,7 @@ async function clearStaffChat(){
 }
 /* ============== INIT ============== */
 document.addEventListener('DOMContentLoaded', () => {
+  try { setManagementFilter(localStorage.getItem(MANAGEMENT_FILTER_KEY) || 'all', { silent:true }); } catch { renderManagementFilter(); }
   document.getElementById('dashboardLoginForm').addEventListener('submit', loginDashboard);
   loadLoginAccountOptions();
   document.getElementById('createAdminForm').addEventListener('submit', submitCreateAdmin);
@@ -10250,7 +10475,9 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('agentForm').addEventListener('submit', submitAgentForm);
   document.getElementById('agentTableBody').addEventListener('click', handleAgentTableAction);
   document.getElementById('deleteAgentForm').addEventListener('submit', submitAgentDelete);
+  document.getElementById('deleteOwnerForm').addEventListener('submit', submitOwnerDelete);
   document.getElementById('newBookingPlatform').addEventListener('change', updateBookingDirectInvoiceVisibility);
+  document.getElementById('newBookingGuestCount').addEventListener('input', updateBookingGuestCountHint);
   document.getElementById('newBookingProp').addEventListener('change', () => {
     const setting = extraBedPropertySettings[document.getElementById('newBookingProp').value];
     const priceInput = document.getElementById('newBookingExtraBedPrice');

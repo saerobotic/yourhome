@@ -1,0 +1,1137 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#241915" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>Admin Artikel | YOUR HOME</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Playfair+Display:wght@600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/quill/1.3.7/quill.snow.min.css" />
+  <style>
+    :root{
+      --ink:#241915;--ink-2:#3d2c25;--bg:#f1f0ed;--paper:#ffffff;--sunken:#f7f6f3;
+      --line:#e4e0da;--line-strong:#d2cbc2;--muted:#6f675f;
+      --accent:#6b3f2a;--accent-hover:#56321f;--brass:#b5832f;--brass-soft:#f6ecdb;
+      --success:#2e6a4c;--success-soft:#e7f2ec;--danger:#b3261e;--danger-soft:#fbeae8;
+      --info:#2f5d8a;--info-soft:#e8f0f8;
+      --ring:0 0 0 3px rgba(181,131,47,.32);
+      --shadow:0 1px 2px rgba(36,25,21,.05),0 10px 28px -16px rgba(36,25,21,.22);
+      --r-sm:6px;--r:9px;--r-lg:14px;--r-xl:18px;
+    }
+    *{box-sizing:border-box}
+    html{-webkit-text-size-adjust:100%}
+    body{margin:0;background:var(--bg);color:var(--ink);font-family:'Plus Jakarta Sans',system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
+    .hidden{display:none!important}
+    h1,h2,h3{margin:0;letter-spacing:-.015em;color:inherit}
+    h1{font-size:1.6rem;font-weight:800;line-height:1.2}
+    h2{font-size:1.08rem;font-weight:700}
+    h3{font-size:.92rem;font-weight:700}
+    :focus-visible{outline:none;box-shadow:var(--ring)}
+    .subtitle,.hint{color:var(--muted);font-size:.84rem;margin:4px 0 0;line-height:1.5}
+    .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+    /* Buttons */
+    .button{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:40px;border:1px solid var(--line-strong);background:var(--paper);color:var(--ink);padding:9px 16px;border-radius:var(--r);font:inherit;font-size:.86rem;font-weight:600;text-decoration:none;cursor:pointer;transition:background .15s,border-color .15s,color .15s;white-space:nowrap}
+    .button:hover{background:var(--sunken);border-color:var(--ink-2)}
+    .button.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+    .button.primary:hover{background:var(--accent-hover);border-color:var(--accent-hover)}
+    .button.danger{border-color:#e6b4ae;color:var(--danger)}
+    .button.danger:hover{background:var(--danger);border-color:var(--danger);color:#fff}
+    .button.small{min-height:34px;padding:6px 12px;font-size:.78rem}
+    .button.ghost{border-color:transparent;background:transparent}
+    .button.ghost:hover{background:var(--sunken);border-color:var(--line)}
+    .button:disabled{opacity:.5;cursor:not-allowed;pointer-events:none}
+    .actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+    .icon{width:16px;height:16px;flex:none;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+
+    /* Page + top bar */
+    .page{max-width:1320px;margin:0 auto;padding:20px 20px 72px}
+    .topbar{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:18px;padding:22px 26px;background:var(--ink);color:#fff;border-radius:var(--r-xl);position:relative;overflow:hidden}
+    .topbar::after{content:"";position:absolute;right:-60px;top:-80px;width:260px;height:260px;border-radius:50%;border:38px solid rgba(181,131,47,.13);pointer-events:none}
+    .topbar>*{position:relative;z-index:1}
+    .topbar .subtitle{color:#cdbfb6}
+    .topbar .button{background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.2);color:#fff}
+    .topbar .button:hover{background:rgba(255,255,255,.16);border-color:rgba(255,255,255,.35)}
+    .topbar .button.danger{color:#ffc7c0}
+    .topbar .button.danger:hover{background:var(--danger);border-color:var(--danger);color:#fff}
+    .user-chip{display:inline-flex;align-items:center;gap:8px;padding:6px 12px;border:1px solid rgba(255,255,255,.2);border-radius:999px;font-size:.8rem;font-weight:600;color:#fff;background:rgba(255,255,255,.07)}
+    .user-chip small{color:#cdbfb6;font-weight:500}
+
+    .panel{background:var(--paper);border:1px solid var(--line);border-radius:var(--r-lg);box-shadow:var(--shadow);padding:22px;margin-bottom:18px}
+    .panel-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap}
+    .banner{display:flex;gap:10px;align-items:flex-start;padding:12px 16px;border-radius:var(--r);background:var(--brass-soft);color:#6b4a14;font-size:.84rem;margin-bottom:18px;border:1px solid #ecd9b5}
+    .banner strong{font-weight:700}
+
+    /* Form controls */
+    .field{display:flex;flex-direction:column;gap:6px;min-width:0}
+    .field>label,.field>.meta-label,.meta-label{font-size:.8rem;font-weight:600;color:var(--ink-2)}
+    input[type=text],input[type=search],input[type=number],input[type=datetime-local],input[type=password],select,textarea{border:1px solid var(--line-strong);border-radius:var(--r);background:var(--paper);color:var(--ink);padding:9px 12px;font:inherit;font-size:.9rem;width:100%;min-height:40px;transition:border-color .15s,box-shadow .15s}
+    input:hover,select:hover,textarea:hover{border-color:var(--ink-2)}
+    input:focus,select:focus,textarea:focus{outline:none;border-color:var(--brass);box-shadow:var(--ring)}
+    textarea{resize:vertical;line-height:1.55;min-height:84px}
+    select{appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5l5 5 5-5' fill='none' stroke='%236f675f' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:34px;cursor:pointer}
+    .counter{font-size:.74rem;color:var(--muted);font-weight:600;text-align:right;margin-top:-2px}
+    .counter.ok{color:var(--success)}.counter.warn{color:var(--brass)}.counter.bad{color:var(--danger)}
+    .label-row{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+    .status{min-height:1.2em;font-size:.82rem;font-weight:600;margin:0}
+    .status:empty{display:none}
+    #loginMessage:not(:empty){padding:9px 12px;border-radius:var(--r);background:var(--danger-soft);color:var(--danger)}
+
+    /* Login */
+    .login{min-height:100vh;display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr)}
+    .login-aside{position:relative;overflow:hidden;background:var(--ink);color:#fff;padding:48px 56px;display:flex;flex-direction:column;justify-content:space-between}
+    .login-aside::before{content:"";position:absolute;left:-120px;bottom:-140px;width:460px;height:460px;border-radius:50%;border:64px solid rgba(181,131,47,.14)}
+    .login-aside::after{content:"";position:absolute;right:48px;top:48px;width:120px;height:120px;border-radius:50%;border:1px solid rgba(255,255,255,.12)}
+    .login-aside>*{position:relative;z-index:1}
+    .login-aside-brand{font-weight:800;letter-spacing:.02em;font-size:1rem}
+    .login-aside h2{font-size:clamp(1.7rem,2.6vw,2.4rem);font-weight:800;line-height:1.15;letter-spacing:-.025em;max-width:16ch}
+    .login-aside p{color:#cdbfb6;max-width:42ch;margin:14px 0 0;font-size:.95rem}
+    .login-aside small{color:#9d8e85;font-size:.78rem}
+    .login-main{display:grid;place-items:center;padding:32px 20px;background:var(--bg)}
+    .login-card{width:min(400px,100%);background:var(--paper);border:1px solid var(--line);border-radius:var(--r-xl);box-shadow:var(--shadow);padding:30px}
+    .login-logo{display:block;width:min(200px,100%);height:60px;object-fit:contain;object-position:left center;margin:0 0 22px}
+    .login-form{display:grid;gap:16px;margin-top:26px}
+    .login-form .button.primary{min-height:44px;margin-top:4px}
+    .password-wrap{position:relative;display:block}
+    .password-wrap input{padding-right:44px}
+    .password-toggle{position:absolute;right:4px;top:50%;transform:translateY(-50%);width:36px;height:36px;border:0;background:transparent;border-radius:var(--r-sm);cursor:pointer;color:var(--muted);font-size:1rem}
+    .password-toggle:hover{background:var(--sunken)}
+
+    /* Target harian */
+    .target-panel{display:grid;grid-template-columns:auto minmax(0,1.1fr) minmax(0,1fr);gap:28px;align-items:center;padding:24px 28px}
+    .ring-wrap{position:relative;width:132px;height:132px}
+    .ring-wrap svg{width:100%;height:100%;transform:rotate(-90deg)}
+    .ring-track{fill:none;stroke:var(--sunken);stroke-width:11}
+    .ring-sched{fill:none;stroke:var(--brass-soft);stroke-width:11;stroke-linecap:round;transition:stroke-dasharray .6s ease}
+    .ring-done{fill:none;stroke:var(--accent);stroke-width:11;stroke-linecap:round;transition:stroke-dasharray .6s ease}
+    .ring-done.reached{stroke:var(--success)}
+    .ring-center{position:absolute;inset:0;display:grid;place-content:center;text-align:center;line-height:1}
+    .ring-center strong{font-size:2.3rem;font-weight:800;letter-spacing:-.04em}
+    .ring-center span{font-size:.74rem;color:var(--muted);font-weight:600;margin-top:5px}
+    .target-info h2{font-size:1.25rem;font-weight:800;letter-spacing:-.02em}
+    .target-info .subtitle{font-size:.88rem}
+    .target-stats{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+    .stat{display:inline-flex;align-items:center;gap:7px;padding:6px 11px;border-radius:999px;background:var(--sunken);border:1px solid var(--line);font-size:.78rem;font-weight:600;color:var(--ink-2)}
+    .stat b{font-weight:800;color:var(--ink);font-size:.86rem}
+    .stat i{width:8px;height:8px;border-radius:50%;display:inline-block;background:var(--accent)}
+    .stat i.s{background:var(--brass)}.stat i.d{background:var(--line-strong)}.stat i.k{background:var(--success)}
+    .target-meta{display:flex;gap:18px;flex-wrap:wrap;margin-top:14px;font-size:.8rem;color:var(--muted)}
+    .target-meta b{color:var(--ink);font-weight:700}
+    .week{min-width:0}
+    .week-head{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:10px}
+    .week-head h3{font-size:.8rem;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-weight:700}
+    .bars{position:relative;display:grid;grid-template-columns:repeat(7,1fr);gap:8px;height:104px;align-items:end;padding-bottom:20px}
+    .bar-col{position:relative;height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center}
+    .bar{width:100%;max-width:30px;min-height:3px;border-radius:5px 5px 2px 2px;background:var(--line-strong);transition:height .5s ease}
+    .bar.hit{background:var(--success)}
+    .bar.today{background:var(--brass)}
+    .bar.today.hit{background:var(--success)}
+    .bar-val{font-size:.7rem;font-weight:700;color:var(--ink-2);margin-bottom:3px}
+    .bar-day{position:absolute;bottom:-20px;font-size:.68rem;color:var(--muted);font-weight:600}
+    .bar-col.is-today .bar-day{color:var(--ink);font-weight:800}
+    .goal-line{position:absolute;left:0;right:0;border-top:1.5px dashed var(--danger);opacity:.55;pointer-events:none}
+    .goal-line span{position:absolute;right:0;top:-17px;font-size:.66rem;font-weight:700;color:var(--danger);background:var(--paper);padding:0 3px}
+
+    /* List */
+    .toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:16px}
+    .tabs{display:inline-flex;gap:4px;padding:4px;background:var(--sunken);border:1px solid var(--line);border-radius:var(--r);flex-wrap:wrap}
+    .tab{border:0;background:transparent;font:inherit;font-size:.8rem;font-weight:600;color:var(--muted);padding:7px 12px;border-radius:7px;cursor:pointer;display:inline-flex;gap:6px;align-items:center}
+    .tab:hover{color:var(--ink)}
+    .tab[aria-pressed="true"]{background:var(--paper);color:var(--ink);box-shadow:0 1px 2px rgba(36,25,21,.12)}
+    .tab em{font-style:normal;font-size:.72rem;background:var(--line);border-radius:999px;padding:0 7px;color:var(--ink-2)}
+    .toolbar .grow{flex:1 1 220px;min-width:180px}
+    .toolbar select{width:auto;min-width:170px}
+    .article-list{display:grid;grid-template-columns:minmax(0,1fr);gap:8px;margin-top:16px}
+    .article-item{display:grid;grid-template-columns:76px minmax(0,1fr) auto auto;gap:14px;align-items:center;padding:10px 12px;border:1px solid var(--line);border-radius:var(--r);background:var(--paper);transition:border-color .15s,background .15s}
+    .article-item:hover{border-color:var(--line-strong);background:var(--sunken)}
+    .thumb{width:76px;height:54px;border-radius:7px;background:var(--sunken) center/cover no-repeat;border:1px solid var(--line);display:grid;place-items:center;color:var(--line-strong)}
+    .article-main{min-width:0}
+    .article-main strong{display:block;font-size:.93rem;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .article-main span{display:block;color:var(--muted);font-size:.76rem;margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .badge{display:inline-block;padding:3px 10px;border-radius:999px;font-size:.7rem;font-weight:700;letter-spacing:.02em}
+    .badge.published{background:var(--success-soft);color:var(--success)}
+    .badge.scheduled{background:var(--info-soft);color:var(--info)}
+    .badge.draft{background:var(--brass-soft);color:#7a5513}
+    .row-actions{display:flex;gap:6px}
+    .empty{padding:40px 20px;text-align:center;color:var(--muted);border:1px dashed var(--line-strong);border-radius:var(--r);font-size:.88rem}
+    .empty strong{display:block;color:var(--ink);font-size:.96rem;margin-bottom:4px}
+    .more{display:flex;justify-content:center;margin-top:16px}
+
+    /* Editor */
+    .editor-bar{position:sticky;top:0;z-index:20;display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:12px 16px;margin:0 0 18px;background:rgba(255,255,255,.94);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border:1px solid var(--line);border-radius:var(--r-lg);box-shadow:var(--shadow)}
+    .editor-bar .spacer{flex:1}
+    .save-state{font-size:.78rem;color:var(--muted);font-weight:600}
+    .save-state.dirty{color:var(--brass)}
+    .save-state.ok{color:var(--success)}
+    .mini-target{display:inline-flex;align-items:center;gap:8px;padding:5px 11px;border-radius:999px;background:var(--sunken);border:1px solid var(--line);font-size:.78rem;font-weight:700}
+    .mini-target.reached{background:var(--success-soft);border-color:#bfdccc;color:var(--success)}
+    .mini-track{width:44px;height:6px;border-radius:99px;background:var(--line);overflow:hidden}
+    .mini-track i{display:block;height:100%;background:var(--accent);border-radius:99px;transition:width .4s}
+    .mini-target.reached .mini-track i{background:var(--success)}
+    .editor-grid{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:18px;align-items:start}
+    .editor-main{min-width:0}
+    .editor-side{display:grid;grid-template-columns:minmax(0,1fr);gap:14px;min-width:0}
+    .title-input{font-size:1.7rem!important;font-weight:800!important;letter-spacing:-.02em;line-height:1.25;padding:14px 16px!important;min-height:auto!important;border-radius:var(--r-lg)!important}
+    .slug-row{display:flex;align-items:center;gap:8px;margin:10px 2px 14px;font-size:.8rem;color:var(--muted);flex-wrap:wrap}
+    .slug-row .prefix{font-weight:600}
+    .slug-row input{flex:1 1 200px;min-height:34px;padding:5px 10px;font-size:.82rem}
+    .card{background:var(--paper);border:1px solid var(--line);border-radius:var(--r-lg);box-shadow:var(--shadow);padding:16px}
+    .card h3{margin-bottom:12px;display:flex;justify-content:space-between;align-items:center}
+    .card .field+.field{margin-top:12px}
+    .excerpt-box{margin-top:14px}
+    .editor-foot{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;padding:10px 4px 0;font-size:.78rem;color:var(--muted);font-weight:600}
+    .info-line{font-size:.8rem;padding:9px 11px;border-radius:var(--r);background:var(--sunken);color:var(--ink-2);margin-bottom:12px}
+    .info-line.live{background:var(--success-soft);color:var(--success)}
+    .info-line.sched{background:var(--info-soft);color:var(--info)}
+
+    /* Tags */
+    .tag-box{display:flex;flex-wrap:wrap;gap:6px;padding:6px 8px;border:1px solid var(--line-strong);border-radius:var(--r);background:var(--paper);min-height:42px;align-items:center}
+    .tag-box:focus-within{border-color:var(--brass);box-shadow:var(--ring)}
+    .tag-box input{border:0!important;box-shadow:none!important;flex:1 1 90px;min-width:90px;min-height:28px;padding:2px 4px;background:transparent}
+    .chip{display:inline-flex;align-items:center;gap:5px;padding:3px 4px 3px 10px;border-radius:999px;background:var(--brass-soft);color:#6b4a14;font-size:.76rem;font-weight:600}
+    .chip button{border:0;background:rgba(107,74,20,.12);color:#6b4a14;width:18px;height:18px;border-radius:50%;cursor:pointer;line-height:1;font-size:.8rem;padding:0}
+    .chip button:hover{background:var(--danger);color:#fff}
+
+    /* Cover */
+    .dropzone{position:relative;display:grid;place-items:center;text-align:center;gap:4px;padding:22px 14px;border:1.5px dashed var(--line-strong);border-radius:var(--r);background:var(--sunken);color:var(--muted);font-size:.8rem;cursor:pointer;transition:border-color .15s,background .15s}
+    .dropzone:hover,.dropzone.over{border-color:var(--brass);background:var(--brass-soft)}
+    .dropzone strong{color:var(--ink);font-size:.86rem}
+    .dropzone input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+    .cover-preview{position:relative;border-radius:var(--r);overflow:hidden;border:1px solid var(--line);aspect-ratio:16/9;background:var(--sunken)}
+    .cover-preview img{width:100%;height:100%;object-fit:cover;display:block}
+    .cover-preview .button{position:absolute;top:8px;right:8px;background:rgba(36,25,21,.78);border-color:transparent;color:#fff;min-height:30px;padding:4px 10px;font-size:.74rem}
+    .cover-preview .button:hover{background:var(--danger)}
+    .uploading{font-size:.78rem;color:var(--brass);font-weight:600;margin-top:6px}
+
+    /* SEO */
+    .seo-score{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+    .seo-score b{font-size:1.5rem;font-weight:800;letter-spacing:-.03em;min-width:3ch}
+    .seo-bar{flex:1;height:8px;border-radius:99px;background:var(--line);overflow:hidden}
+    .seo-bar i{display:block;height:100%;border-radius:99px;transition:width .4s,background .3s}
+    .checklist{list-style:none;margin:12px 0 0;padding:0;display:grid;gap:6px}
+    .checklist li{display:flex;gap:8px;align-items:flex-start;font-size:.78rem;color:var(--muted);line-height:1.4}
+    .checklist li::before{content:"";flex:none;width:16px;height:16px;margin-top:1px;border-radius:50%;border:1.5px solid var(--line-strong);background:var(--paper)}
+    .checklist li.ok{color:var(--ink-2)}
+    .checklist li.ok::before{background:var(--success) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M4.2 8.3l2.5 2.5 5-5.2' fill='none' stroke='white' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/100% no-repeat;border-color:var(--success)}
+    .checklist small{color:var(--muted);font-weight:600}
+    .serp{padding:12px 14px;border:1px solid var(--line);border-radius:var(--r);background:var(--paper);margin-top:12px}
+    .serp .u{font-size:.74rem;color:#4d5156;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .serp .t{font-size:1.02rem;color:#1a0dab;line-height:1.3;margin:2px 0 3px;font-weight:500}
+    .serp .d{font-size:.8rem;color:#4d5156;line-height:1.45}
+
+    /* Quill */
+    .editor-wrap{background:var(--paper);border:1px solid var(--line-strong);border-radius:var(--r-lg);overflow:clip}
+    .editor-wrap:focus-within{border-color:var(--brass);box-shadow:var(--ring)}
+    .ql-toolbar.ql-snow{border:0;border-bottom:1px solid var(--line);background:var(--sunken);padding:8px 10px;position:sticky;top:59px;z-index:10;font-family:inherit}
+    .ql-container.ql-snow{border:0;font-family:inherit;font-size:1rem}
+    .ql-editor{min-height:440px;padding:22px 26px;line-height:1.75;color:var(--ink)}
+    .ql-editor.ql-blank::before{font-style:normal;color:#a39a90;left:26px}
+    .ql-editor h2{font-size:1.45rem;font-weight:800;letter-spacing:-.02em;margin:1.3em 0 .5em}
+    .ql-editor h3{font-size:1.15rem;font-weight:700;margin:1.2em 0 .4em}
+    .ql-editor p{margin:0 0 1em}
+    .ql-editor blockquote{border-left:4px solid var(--brass);background:var(--brass-soft);margin:1.2em 0;padding:10px 16px;color:#5b4318;border-radius:0 var(--r) var(--r) 0}
+    .ql-editor img{border-radius:10px;max-width:100%;height:auto;cursor:pointer;transition:outline-color .15s;outline:2px solid transparent;outline-offset:2px}
+    .ql-editor img:hover{outline-color:var(--brass)}
+    .ql-editor img:not([alt]),.ql-editor img[alt=""]{outline:2px dashed var(--danger);outline-offset:2px}
+    .ql-snow .ql-picker.ql-header .ql-picker-label::before,.ql-snow .ql-picker.ql-header .ql-picker-item::before{content:'Paragraf'}
+    .ql-snow .ql-picker.ql-header .ql-picker-label[data-value="2"]::before,.ql-snow .ql-picker.ql-header .ql-picker-item[data-value="2"]::before{content:'Subjudul (H2)'}
+    .ql-snow .ql-picker.ql-header .ql-picker-label[data-value="3"]::before,.ql-snow .ql-picker.ql-header .ql-picker-item[data-value="3"]::before{content:'Sub-subjudul (H3)'}
+    .ql-snow .ql-picker.ql-header{width:140px}
+    .ql-snow .ql-tooltip{z-index:30;border-radius:var(--r);border-color:var(--line-strong);box-shadow:var(--shadow)}
+    .ql-snow .ql-tooltip[data-mode=link]::before{content:"Alamat tautan:"}
+    .ql-snow .ql-tooltip.ql-editing a.ql-action::after{content:'Simpan'}
+    .ql-snow .ql-tooltip a.ql-action::after{content:'Ubah'}
+    .ql-snow .ql-tooltip a.ql-remove::before{content:'Hapus'}
+    .ql-snow .ql-tooltip::before{content:"Kunjungi:"}
+
+    /* Dialog */
+    dialog{border:0;border-radius:var(--r-xl);padding:0;box-shadow:0 24px 70px -20px rgba(36,25,21,.5);color:var(--ink);max-width:min(94vw,440px);width:100%}
+    dialog::backdrop{background:rgba(36,25,21,.55);backdrop-filter:blur(2px)}
+    .dlg{padding:24px}
+    .dlg h2{font-size:1.15rem;margin-bottom:6px}
+    .dlg p{margin:0 0 16px;color:var(--muted);font-size:.88rem}
+    .dlg .actions{justify-content:flex-end;margin-top:18px}
+    dialog.wide{max-width:min(96vw,860px)}
+    .preview-head{display:flex;justify-content:space-between;align-items:center;padding:14px 20px;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--paper);z-index:2}
+    .preview-head h2{font-size:.95rem}
+    .preview-seg{display:inline-flex;gap:4px;padding:3px;background:var(--sunken);border-radius:var(--r);border:1px solid var(--line)}
+    .preview-seg button{border:0;background:transparent;font:inherit;font-size:.76rem;font-weight:600;padding:5px 11px;border-radius:6px;cursor:pointer;color:var(--muted)}
+    .preview-seg button[aria-pressed=true]{background:var(--paper);color:var(--ink);box-shadow:0 1px 2px rgba(36,25,21,.12)}
+    .preview-stage{background:#faf7f2;padding:24px 16px;max-height:76vh;overflow:auto}
+    .preview-frame{margin:0 auto;background:#faf7f2;max-width:720px;transition:max-width .2s}
+    .preview-frame.mobile{max-width:390px;border:1px solid var(--line-strong);border-radius:18px;padding:18px;background:#fff}
+    .pv-cat{font-size:.74rem;letter-spacing:.14em;text-transform:uppercase;color:#a0522d;font-weight:700}
+    .pv-title{font-family:'Playfair Display',Georgia,serif;font-size:2.1rem;line-height:1.2;margin:10px 0;color:#2c2620;font-weight:700}
+    .pv-meta{font-size:.82rem;color:#8c857c;margin-bottom:18px}
+    .pv-cover{width:100%;border-radius:14px;margin-bottom:22px;display:block}
+    .pv-body{font-size:1.04rem;line-height:1.85;color:#2c2620}
+    .pv-body h2{font-family:'Playfair Display',Georgia,serif;font-size:1.5rem;margin:1.6em 0 .5em}
+    .pv-body h3{font-size:1.15rem;margin:1.4em 0 .4em}
+    .pv-body img{max-width:100%;border-radius:12px;height:auto}
+    .pv-body blockquote{border-left:4px solid #a0522d;margin:1.4em 0;padding:4px 18px;color:#5c4033;font-style:italic}
+    .pv-body a{color:#a0522d}
+
+    /* Toast */
+    .toast{position:fixed;left:50%;bottom:26px;transform:translate(-50%,20px);background:var(--ink);color:#fff;padding:12px 18px;border-radius:12px;font-size:.86rem;font-weight:600;box-shadow:0 14px 40px -10px rgba(36,25,21,.55);opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;z-index:100;max-width:min(92vw,460px);text-align:center}
+    .toast.show{opacity:1;transform:translate(-50%,0)}
+    .toast.success{background:var(--success)}
+    .toast.error{background:var(--danger)}
+
+    @media(max-width:1100px){
+      .target-panel{grid-template-columns:auto minmax(0,1fr)}
+      .week{grid-column:1/-1}
+    }
+    @media(max-width:960px){
+      .editor-grid{grid-template-columns:minmax(0,1fr)}
+      .ql-toolbar.ql-snow{top:0;position:static}
+      .login{grid-template-columns:1fr}.login-aside{display:none}
+    }
+    @media(max-width:700px){
+      .page{padding:12px 12px 64px}
+      .topbar{padding:18px}
+      .panel{padding:16px}
+      .target-panel{grid-template-columns:1fr;justify-items:center;text-align:center;padding:20px 16px}
+      .target-stats,.target-meta{justify-content:center}
+      .week{width:100%}
+      .article-item{grid-template-columns:64px minmax(0,1fr);gap:10px}
+      .article-item .thumb{width:64px;height:48px}
+      .article-item .badge-cell{grid-column:2}
+      .article-item .row-actions{grid-column:1/-1}
+      .article-item .row-actions .button{flex:1}
+      .title-input{font-size:1.3rem!important}
+      .ql-editor{padding:16px;min-height:360px}
+      .editor-bar .hide-m{display:none}
+    }
+    @media(prefers-reduced-motion:reduce){*{transition:none!important}}
+  </style>
+</head>
+<body>
+  <!-- ===== LOGIN ===== -->
+  <section id="loginScreen" class="login hidden">
+    <aside class="login-aside" aria-hidden="true">
+      <div class="login-aside-brand">YOUR HOME</div>
+      <div>
+        <h2>Tulis, jadwalkan, terbitkan.</h2>
+        <p>Kelola artikel untuk artikel.yourhome.id dan pantau target posting harian Anda dari satu tempat.</p>
+      </div>
+      <small>Panel khusus staf YOUR HOME</small>
+    </aside>
+    <div class="login-main">
+      <div class="login-card">
+        <img id="loginLogo" class="login-logo" src="https://ik.imagekit.io/o1hnx31yy/yh%20(2).png?tr=f-jpg" alt="YOUR HOME" />
+        <h1>Admin Artikel</h1>
+        <p class="subtitle">Kelola artikel dan blog YOUR HOME.</p>
+        <form id="loginForm" class="login-form">
+          <div class="field"><label for="adminStaffId">ID Staf</label><select id="adminStaffId" autocomplete="username" required><option value="master">Master</option></select></div>
+          <div class="field"><label for="adminPassword">Password</label><span class="password-wrap"><input id="adminPassword" type="password" autocomplete="current-password" required /><button id="togglePassword" class="password-toggle" type="button" aria-label="Tampilkan password">&#128065;</button></span></div>
+          <button class="button primary" type="submit">Masuk</button>
+          <p id="loginMessage" class="status" role="alert"></p>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== APP ===== -->
+  <main id="app" class="page hidden">
+    <header class="topbar">
+      <div>
+        <h1>Admin Artikel</h1>
+        <p class="subtitle">Tulis, jadwalkan, dan terbitkan artikel untuk <strong>artikel.yourhome.id</strong>.</p>
+      </div>
+      <div class="actions">
+        <span class="user-chip" id="userChip"></span>
+        <a class="button" href="https://artikel.yourhome.id" target="_blank" rel="noopener noreferrer">Lihat Blog</a>
+        <a class="button" href="dasbord.html">Dashboard</a>
+        <button class="button danger" id="logoutBtn" type="button">Logout</button>
+      </div>
+    </header>
+
+    <div id="modeBanner" class="banner hidden" role="status">
+      <div><strong>Mode lokal.</strong> Server artikel belum aktif, jadi artikel hanya tersimpan di browser ini dan belum tayang di artikel.yourhome.id. Setelah endpoint Worker siap, halaman ini otomatis memakai server.</div>
+    </div>
+
+    <!-- ===== DAFTAR ===== -->
+    <div id="viewList">
+      <section class="panel target-panel" aria-labelledby="targetTitle">
+        <div class="ring-wrap" aria-hidden="true">
+          <svg viewBox="0 0 120 120">
+            <circle class="ring-track" cx="60" cy="60" r="52"></circle>
+            <circle class="ring-sched" id="ringSched" cx="60" cy="60" r="52" stroke-dasharray="0 999"></circle>
+            <circle class="ring-done" id="ringDone" cx="60" cy="60" r="52" stroke-dasharray="0 999"></circle>
+          </svg>
+          <div class="ring-center"><strong id="ringNum">0</strong><span id="ringTarget">dari 5</span></div>
+        </div>
+        <div class="target-info">
+          <h2 id="targetTitle">Target hari ini</h2>
+          <p class="subtitle" id="targetMsg"></p>
+          <div class="target-stats" id="targetStats"></div>
+          <div class="target-meta" id="targetMeta"></div>
+          <button class="button small ghost hidden" id="editTargetBtn" type="button" style="margin-top:10px;margin-left:-8px">Ubah target harian</button>
+        </div>
+        <div class="week">
+          <div class="week-head"><h3>7 hari terakhir</h3><span class="hint" id="weekAvg" style="margin:0"></span></div>
+          <div class="bars" id="bars" role="img" aria-label="Grafik jumlah artikel terbit 7 hari terakhir"></div>
+        </div>
+      </section>
+
+      <section class="panel" aria-labelledby="listTitle">
+        <div class="panel-head">
+          <div><h2 id="listTitle">Daftar Artikel</h2><p class="hint" id="listHint"></p></div>
+          <button class="button primary" id="newArticleBtn" type="button"><svg class="icon" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>Artikel Baru</button>
+        </div>
+        <div class="toolbar">
+          <div class="tabs" id="statusTabs" role="group" aria-label="Filter status"></div>
+          <input class="grow" id="searchInput" type="search" placeholder="Cari judul, tag, atau penulis..." aria-label="Cari artikel" />
+          <select id="categoryFilter" aria-label="Filter kategori"><option value="">Semua kategori</option></select>
+        </div>
+        <div class="article-list" id="articleList"></div>
+        <div class="more"><button class="button hidden" id="moreBtn" type="button">Tampilkan lebih banyak</button></div>
+      </section>
+    </div>
+
+    <!-- ===== EDITOR ===== -->
+    <div id="viewEditor" class="hidden">
+      <div class="editor-bar">
+        <button class="button small" id="backBtn" type="button">&larr; Daftar</button>
+        <span class="badge draft" id="editorBadge">Draft</span>
+        <span class="save-state" id="saveState" role="status" aria-live="polite"></span>
+        <span class="spacer"></span>
+        <span class="mini-target hide-m" id="miniTarget" title="Target posting hari ini"><span id="miniText">0/5 hari ini</span><span class="mini-track"><i id="miniFill" style="width:0"></i></span></span>
+        <button class="button small" id="previewBtn" type="button">Pratinjau</button>
+        <button class="button small" id="draftBtn" type="button">Simpan Draft</button>
+        <button class="button small primary" id="publishBtn" type="button">Terbitkan</button>
+      </div>
+
+      <div class="editor-grid">
+        <div class="editor-main">
+          <input id="fTitle" class="title-input" type="text" placeholder="Judul artikel..." maxlength="160" autocomplete="off" aria-label="Judul artikel" />
+          <div class="slug-row"><span class="prefix">artikel.yourhome.id/</span><input id="fSlug" type="text" maxlength="90" aria-label="Slug URL" placeholder="slug-otomatis-dari-judul" autocomplete="off" /></div>
+          <div class="editor-wrap">
+            <div id="quillToolbar">
+              <span class="ql-formats"><select class="ql-header"><option value="2"></option><option value="3"></option><option selected></option></select></span>
+              <span class="ql-formats"><button class="ql-bold" aria-label="Tebal"></button><button class="ql-italic" aria-label="Miring"></button><button class="ql-underline" aria-label="Garis bawah"></button></span>
+              <span class="ql-formats"><button class="ql-link" aria-label="Tautan"></button><button class="ql-blockquote" aria-label="Kutipan"></button></span>
+              <span class="ql-formats"><button class="ql-list" value="ordered" aria-label="Daftar bernomor"></button><button class="ql-list" value="bullet" aria-label="Daftar poin"></button></span>
+              <span class="ql-formats"><button class="ql-image" aria-label="Sisipkan gambar"></button><button class="ql-clean" aria-label="Hapus format"></button></span>
+            </div>
+            <div id="quillEditor"></div>
+          </div>
+          <div class="editor-foot"><span id="wordCount">0 kata</span><span id="readTime">~1 menit baca</span></div>
+          <div class="card excerpt-box">
+            <div class="field">
+              <div class="label-row"><label for="fExcerpt">Ringkasan</label><span class="counter" id="excerptCount">0/300</span></div>
+              <textarea id="fExcerpt" maxlength="300" placeholder="Ringkasan singkat yang tampil di kartu artikel dan hasil pencarian."></textarea>
+            </div>
+          </div>
+        </div>
+
+        <aside class="editor-side">
+          <div class="card">
+            <h3>Penerbitan</h3>
+            <div class="info-line" id="pubInfo"></div>
+            <div class="field">
+              <label for="fPubAt" id="pubAtLabel">Jadwalkan (opsional)</label>
+              <input id="fPubAt" type="datetime-local" />
+              <p class="hint" id="pubAtHint" style="margin:0"></p>
+            </div>
+            <button class="button small danger hidden" id="unpublishBtn" type="button" style="margin-top:12px;width:100%">Tarik kembali jadi draft</button>
+          </div>
+
+          <div class="card">
+            <h3>Kategori &amp; Tag</h3>
+            <div class="field"><label for="fCategory">Kategori</label><select id="fCategory"><option value="">Pilih kategori...</option></select></div>
+            <div class="field"><label for="fTagInput">Tag <span class="hint" style="display:inline">(Enter atau koma, maks. 8)</span></label>
+              <div class="tag-box" id="tagBox"><input id="fTagInput" type="text" placeholder="mis. lembang" maxlength="30" autocomplete="off" /></div>
+            </div>
+          </div>
+
+          <div class="card">
+            <h3>Gambar Utama</h3>
+            <div id="coverEmpty" class="dropzone" tabindex="-1"><strong>Pilih atau seret gambar ke sini</strong><span>JPG / PNG / WebP · dikompres otomatis</span><input id="fCoverFile" type="file" accept="image/*" aria-label="Unggah gambar utama" /></div>
+            <div id="coverFilled" class="hidden"><div class="cover-preview"><img id="coverImg" alt="" /><button class="button" id="coverRemove" type="button">Ganti / hapus</button></div></div>
+            <div class="uploading hidden" id="coverUploading">Mengunggah gambar...</div>
+            <div class="field" style="margin-top:12px"><label for="fCoverAlt">Teks alternatif gambar</label><input id="fCoverAlt" type="text" maxlength="140" placeholder="Deskripsikan isi gambar" autocomplete="off" /></div>
+          </div>
+
+          <div class="card">
+            <h3>SEO <span class="hint" style="margin:0">Google</span></h3>
+            <div class="seo-score"><b id="seoNum">0</b><div class="seo-bar"><i id="seoFill" style="width:0"></i></div></div>
+            <div class="field">
+              <div class="label-row"><label for="fMetaTitle">Judul SEO</label><span class="counter" id="metaTitleCount">0/60</span></div>
+              <input id="fMetaTitle" type="text" maxlength="90" placeholder="Kosongkan untuk memakai judul artikel" autocomplete="off" />
+            </div>
+            <div class="field">
+              <div class="label-row"><label for="fMetaDesc">Deskripsi SEO</label><span class="counter" id="metaDescCount">0/160</span></div>
+              <textarea id="fMetaDesc" maxlength="200" style="min-height:76px" placeholder="Kosongkan untuk memakai ringkasan"></textarea>
+            </div>
+            <div class="serp" aria-label="Pratinjau hasil Google"><div class="u" id="serpUrl"></div><div class="t" id="serpTitle"></div><div class="d" id="serpDesc"></div></div>
+            <ul class="checklist" id="seoList"></ul>
+          </div>
+        </aside>
+      </div>
+    </div>
+  </main>
+
+  <!-- ===== DIALOG ===== -->
+  <dialog id="dlgConfirm"><form method="dialog" class="dlg"><h2 id="dlgConfirmTitle"></h2><p id="dlgConfirmText"></p><div class="actions"><button class="button" value="cancel">Batal</button><button class="button primary" id="dlgConfirmOk" value="ok"></button></div></form></dialog>
+
+  <dialog id="dlgAlt"><form method="dialog" class="dlg" id="altForm"><h2>Gambar di dalam artikel</h2><p>Teks alternatif membantu SEO dan pembaca tunanetra. Jelaskan isi gambar secara singkat.</p><div class="field"><label for="altInput">Teks alternatif</label><input id="altInput" type="text" maxlength="140" autocomplete="off" /></div><div class="actions"><button class="button danger" type="button" id="altRemove">Hapus gambar</button><span style="flex:1"></span><button class="button" value="cancel">Batal</button><button class="button primary" id="altSave" value="ok">Simpan</button></div></form></dialog>
+
+  <dialog id="dlgTarget"><form method="dialog" class="dlg"><h2>Target posting harian</h2><p>Jumlah artikel yang harus terbit per hari. Berlaku untuk semua admin.</p><div class="field"><label for="targetInput">Artikel per hari</label><input id="targetInput" type="number" min="1" max="50" /></div><div class="actions"><button class="button" value="cancel">Batal</button><button class="button primary" id="targetSave" value="ok">Simpan</button></div></form></dialog>
+
+  <dialog id="dlgPreview" class="wide"><div class="preview-head"><h2>Pratinjau artikel</h2><div class="actions"><span class="preview-seg" role="group" aria-label="Ukuran layar"><button type="button" data-w="desktop" aria-pressed="true">Desktop</button><button type="button" data-w="mobile" aria-pressed="false">Ponsel</button></span><button class="button small" type="button" id="previewClose">Tutup</button></div></div><div class="preview-stage"><article class="preview-frame" id="previewFrame"></article></div></dialog>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/quill/1.3.7/quill.min.js"></script>
+  <script>
+  /* =====================================================================
+   * Admin Artikel — YOUR HOME
+   *
+   * Kontrak API Worker (belum ada; halaman ini otomatis pindah ke "mode lokal"
+   * bila endpoint membalas 404). Semua endpoint /admin/* memakai
+   * Authorization: Bearer <token dashboard>.
+   *
+   *   GET    /admin/articles            -> { ok, data:[artikel tanpa content] }
+   *   GET    /admin/articles/:id        -> { ok, data:artikel lengkap }
+   *   POST   /admin/articles            -> { ok, data:artikel }  (409 bila slug dipakai)
+   *   PUT    /admin/articles/:id        -> { ok, data:artikel }
+   *   DELETE /admin/articles/:id        -> { ok }
+   *   POST   /admin/articles/images     -> { ok, data:{ url } }  body { data_url, filename }
+   *   GET    /settings                  -> data.article_daily_target
+   *   POST   /admin/settings            -> { key:'article_daily_target', value:'5' }
+   *
+   * Bentuk artikel: id, slug, title, excerpt, content (HTML), category, tags[],
+   * cover_url, cover_alt, status ('draft'|'published'), published_at (ISO / null),
+   * meta_title, meta_description, author, created_at, updated_at.
+   * "Terjadwal" = status published dengan published_at di masa depan.
+   * ===================================================================== */
+  const API_BASE = 'https://your-home-checkin-api.saerobotic.workers.dev';
+  const SITE_HOST = 'artikel.yourhome.id';
+  const DEFAULT_TARGET = 5;
+  const MIN_WORDS_PUBLISH = 100;
+  const MAX_TAGS = 8;
+  const PAGE_SIZE = 20;
+  const TZ = 'Asia/Jakarta';
+  const CATEGORIES = [
+    { id: 'properti', label: 'Properti & Akomodasi' },
+    { id: 'wisata', label: 'Wisata Bandung' },
+    { id: 'pariwisata', label: 'Pariwisata Indonesia' },
+    { id: 'kuliner', label: 'Kuliner' },
+    { id: 'tips', label: 'Tips & Panduan' },
+    { id: 'budaya', label: 'Budaya & Event' },
+  ];
+  const DEMO = new URLSearchParams(location.search).get('demo') === '1';
+
+  const state = {
+    token: sessionStorage.getItem('dashboard_admin_token') || '',
+    user: null, mode: 'remote', articles: [], target: DEFAULT_TARGET,
+    filter: 'all', search: '', category: '', visible: PAGE_SIZE,
+    cur: null, tags: [], coverUrl: '', slugTouched: false, dirty: false, busy: false, uploads: 0, savedAt: null,
+  };
+  const el = id => document.getElementById(id);
+  const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const catLabel = id => (CATEGORIES.find(c => c.id === id) || {}).label || '—';
+
+  /* ---------- Waktu (WIB) ---------- */
+  const dayFmt = new Intl.DateTimeFormat('en-CA', { timeZone: TZ, year: 'numeric', month: '2-digit', day: '2-digit' });
+  const dayKey = d => dayFmt.format(new Date(d));
+  const dtFmt = new Intl.DateTimeFormat('id-ID', { timeZone: TZ, day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' });
+  const fmtDateTime = d => { const p = Object.fromEntries(dtFmt.formatToParts(new Date(d)).map(x => [x.type, x.value])); return `${p.day} ${p.month} ${p.year}, ${p.hour}.${p.minute}`; };
+  const fmtDate = d => new Intl.DateTimeFormat('id-ID', { timeZone: TZ, day: 'numeric', month: 'long', year: 'numeric' }).format(new Date(d));
+  const isoToLocalInput = iso => new Date(new Date(iso).getTime() + 7 * 3600e3).toISOString().slice(0, 16);
+  const localInputToIso = v => new Date(v + ':00+07:00').toISOString();
+  const nowLocalInput = () => isoToLocalInput(new Date().toISOString());
+
+  function articleStatus(a) {
+    if (a.status !== 'published') return 'draft';
+    return a.published_at && new Date(a.published_at) > new Date() ? 'scheduled' : 'published';
+  }
+  const STATUS_LABEL = { published: 'Terbit', scheduled: 'Terjadwal', draft: 'Draft' };
+
+  /* ---------- Util ---------- */
+  function slugify(s) {
+    return String(s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/&/g, ' dan ')
+      .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 80).replace(/-+$/, '');
+  }
+  function debounce(fn, ms) { let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); }; }
+  let toastTimer;
+  function toast(msg, type = '') {
+    const t = el('toast'); t.textContent = msg; t.className = 'toast show ' + type;
+    clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('show'), 3600);
+  }
+  function confirmDialog({ title, text, ok = 'Ya', danger = false }) {
+    return new Promise(resolve => {
+      el('dlgConfirmTitle').textContent = title; el('dlgConfirmText').textContent = text;
+      const b = el('dlgConfirmOk'); b.textContent = ok; b.className = 'button ' + (danger ? 'danger' : 'primary');
+      const d = el('dlgConfirm');
+      d.addEventListener('close', () => resolve(d.returnValue === 'ok'), { once: true });
+      d.showModal();
+    });
+  }
+  const textOf = html => { const d = document.createElement('div'); d.innerHTML = html || ''; return (d.textContent || '').replace(/\s+/g, ' ').trim(); };
+  const countWords = html => { const t = textOf(html); return t ? t.split(' ').length : 0; };
+
+  /* ---------- Sanitasi HTML (server wajib melakukan hal yang sama) ---------- */
+  const ALLOWED_TAGS = { P: [], BR: [], H2: [], H3: [], H4: [], STRONG: [], EM: [], U: [], S: [], A: ['href'], UL: [], OL: [], LI: [], BLOCKQUOTE: [], IMG: ['src', 'alt'] };
+  const TAG_MAP = { B: 'STRONG', I: 'EM', H1: 'H2', H5: 'H4', H6: 'H4' };
+  const DROP_TAGS = new Set(['SCRIPT', 'STYLE', 'IFRAME', 'OBJECT', 'EMBED', 'FORM', 'INPUT', 'BUTTON', 'LINK', 'META', 'NOSCRIPT', 'SVG', 'MATH']);
+  function safeUrl(url, { img = false } = {}) {
+    const u = String(url || '').trim();
+    if (/^https?:\/\//i.test(u) || u.startsWith('/') || (!img && /^(mailto:|tel:|#)/i.test(u))) return u;
+    if (img && /^data:image\/(png|jpe?g|webp|gif);base64,/i.test(u)) return u;
+    return '';
+  }
+  function sanitizeHtml(html) {
+    const src = new DOMParser().parseFromString(html || '', 'text/html').body;
+    const out = document.createElement('div');
+    (function walk(from, to) {
+      from.childNodes.forEach(node => {
+        if (node.nodeType === 3) { to.appendChild(document.createTextNode(node.nodeValue)); return; }
+        if (node.nodeType !== 1) return;
+        let tag = node.tagName; tag = TAG_MAP[tag] || tag;
+        if (DROP_TAGS.has(tag)) return;
+        const attrs = ALLOWED_TAGS[tag];
+        if (!attrs) { walk(node, to); return; }
+        const copy = document.createElement(tag);
+        attrs.forEach(name => {
+          const raw = node.getAttribute(name); if (raw == null) return;
+          if (name === 'href') { const v = safeUrl(raw); if (v) copy.setAttribute('href', v); }
+          else if (name === 'src') { const v = safeUrl(raw, { img: true }); if (v) copy.setAttribute('src', v); }
+          else copy.setAttribute(name, raw.slice(0, 200));
+        });
+        if (tag === 'IMG' && !copy.getAttribute('src')) return;
+        if (tag === 'A') { if (!copy.getAttribute('href')) { walk(node, to); return; } if (/^https?:/i.test(copy.getAttribute('href')) && !copy.getAttribute('href').includes('yourhome.id')) { copy.setAttribute('rel', 'noopener nofollow'); copy.setAttribute('target', '_blank'); } }
+        walk(node, copy); to.appendChild(copy);
+      });
+    })(src, out);
+    out.querySelectorAll('p').forEach(p => { if (!p.textContent.trim() && !p.querySelector('img')) p.remove(); });
+    return out.innerHTML.trim();
+  }
+
+  /* ---------- API ---------- */
+  async function request(url, options = {}) {
+    const response = await fetch(url, { ...options, headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${state.token}`, ...(options.headers || {}) } });
+    const text = await response.text();
+    let data = {}; try { data = text ? JSON.parse(text) : {}; } catch { data = {}; }
+    if (!response.ok || data.ok === false) { const e = new Error(data.error || data.message || `HTTP ${response.status}`); e.status = response.status; throw e; }
+    return data;
+  }
+  function normalize(a) {
+    let tags = a.tags; if (typeof tags === 'string') { try { tags = JSON.parse(tags); } catch { tags = tags.split(','); } }
+    return { ...a, tags: Array.isArray(tags) ? tags.map(t => String(t).trim()).filter(Boolean) : [], content: a.content || '', excerpt: a.excerpt || '', meta_title: a.meta_title || '', meta_description: a.meta_description || '', cover_url: a.cover_url || '', cover_alt: a.cover_alt || '', category: a.category || '', status: a.status === 'published' ? 'published' : 'draft', published_at: a.published_at || null };
+  }
+
+  const remoteStore = {
+    async list() { const r = await request(`${API_BASE}/admin/articles?limit=1000&_=${Date.now()}`); return (r.data || []).map(normalize); },
+    async get(id) { const r = await request(`${API_BASE}/admin/articles/${encodeURIComponent(id)}`); return normalize(r.data); },
+    async create(a) { const r = await request(`${API_BASE}/admin/articles`, { method: 'POST', body: JSON.stringify(a) }); return normalize(r.data); },
+    async update(id, a) { const r = await request(`${API_BASE}/admin/articles/${encodeURIComponent(id)}`, { method: 'PUT', body: JSON.stringify(a) }); return normalize(r.data); },
+    async remove(id) { await request(`${API_BASE}/admin/articles/${encodeURIComponent(id)}`, { method: 'DELETE' }); },
+    async image(dataUrl, filename) { const r = await request(`${API_BASE}/admin/articles/images`, { method: 'POST', body: JSON.stringify({ data_url: dataUrl, filename }) }); return r.data?.url || r.url; },
+    async getTarget() { try { const r = await fetch(`${API_BASE}/settings?_=${Date.now()}`, { cache: 'no-store' }); const j = await r.json(); return Number(j.data?.article_daily_target) || DEFAULT_TARGET; } catch { return DEFAULT_TARGET; } },
+    async setTarget(n) { await request(`${API_BASE}/admin/settings`, { method: 'POST', body: JSON.stringify({ key: 'article_daily_target', value: String(n) }) }); },
+  };
+
+  const LS = { articles: 'yh_artikel_lokal_v1', target: 'yh_artikel_target_v1' };
+  const localStore = {
+    read() { try { return JSON.parse(localStorage.getItem(LS.articles) || '[]'); } catch { return []; } },
+    write(list) { try { localStorage.setItem(LS.articles, JSON.stringify(list)); } catch { throw new Error('Penyimpanan browser penuh. Hapus beberapa artikel atau gambar lalu coba lagi.'); } },
+    checkSlug(list, slug, id) { if (list.some(x => x.slug === slug && x.id !== id)) { const e = new Error('Slug sudah dipakai artikel lain. Ubah slug.'); e.status = 409; throw e; } },
+    async list() { return this.read().map(a => normalize({ ...a, content: '' })); },
+    async get(id) { const a = this.read().find(x => x.id === id); if (!a) throw new Error('Artikel tidak ditemukan.'); return normalize(a); },
+    async create(a) { const list = this.read(); this.checkSlug(list, a.slug, null); const now = new Date().toISOString(); const rec = { ...a, id: (crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2)), created_at: now, updated_at: now }; list.unshift(rec); this.write(list); return normalize(rec); },
+    async update(id, a) { const list = this.read(); const i = list.findIndex(x => x.id === id); if (i < 0) throw new Error('Artikel tidak ditemukan.'); this.checkSlug(list, a.slug, id); list[i] = { ...list[i], ...a, id, updated_at: new Date().toISOString() }; this.write(list); return normalize(list[i]); },
+    async remove(id) { this.write(this.read().filter(x => x.id !== id)); },
+    async image(dataUrl) { return dataUrl; },
+    async getTarget() { return Number(localStorage.getItem(LS.target)) || DEFAULT_TARGET; },
+    async setTarget(n) { localStorage.setItem(LS.target, String(n)); },
+  };
+  const store = () => state.mode === 'local' ? localStore : remoteStore;
+
+  /* ---------- Kompres gambar ---------- */
+  function compressImage(file, maxW = 1600, quality = 0.82) {
+    return new Promise((resolve, reject) => {
+      if (!/^image\//.test(file.type)) { reject(new Error('File harus berupa gambar.')); return; }
+      const url = URL.createObjectURL(file); const img = new Image();
+      img.onload = () => {
+        URL.revokeObjectURL(url);
+        const scale = Math.min(1, maxW / img.width);
+        const c = document.createElement('canvas'); c.width = Math.round(img.width * scale); c.height = Math.round(img.height * scale);
+        const ctx = c.getContext('2d'); ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, c.width, c.height); ctx.drawImage(img, 0, 0, c.width, c.height);
+        const type = c.toDataURL('image/webp', 0.5).startsWith('data:image/webp') ? 'image/webp' : 'image/jpeg';
+        resolve(c.toDataURL(type, quality));
+      };
+      img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('Gambar tidak dapat dibaca.')); };
+      img.src = url;
+    });
+  }
+  async function uploadFile(file) {
+    const dataUrl = await compressImage(file);
+    const ext = dataUrl.startsWith('data:image/webp') ? 'webp' : 'jpg';
+    return store().image(dataUrl, `${slugify(file.name.replace(/\.[^.]+$/, '')) || 'gambar'}.${ext}`);
+  }
+  function setUploading(delta) { state.uploads += delta; el('coverUploading').classList.toggle('hidden', state.uploads <= 0); }
+
+  /* ---------- Quill ---------- */
+  let quill;
+  function initQuill() {
+    quill = new Quill('#quillEditor', { theme: 'snow', placeholder: 'Mulai menulis artikel di sini...', modules: { toolbar: { container: '#quillToolbar', handlers: { image: pickInlineImage } } }, formats: ['header', 'bold', 'italic', 'underline', 'link', 'blockquote', 'list', 'image', 'alt'] });
+    // Format alt agar tidak dibuang Quill.
+    const Parchment = Quill.import('parchment'); const Image = Quill.import('formats/image');
+    const orig = Image.formats; Image.formats = dom => { const f = orig.call(Image, dom) || {}; const alt = dom.getAttribute('alt'); if (alt != null) f.alt = alt; return f; };
+    const origFormat = Image.prototype.format; Image.prototype.format = function (name, value) { if (name === 'alt') { value ? this.domNode.setAttribute('alt', value) : this.domNode.removeAttribute('alt'); } else origFormat.call(this, name, value); };
+    quill.on('text-change', (delta, old, source) => {
+      refreshContentDerived();
+      if (source === 'user') { markDirty(); convertPastedImages(); }
+    });
+    quill.root.addEventListener('click', e => { if (e.target.tagName === 'IMG') editInlineImage(e.target); });
+  }
+  function pickInlineImage() {
+    const input = document.createElement('input'); input.type = 'file'; input.accept = 'image/*';
+    input.onchange = async () => {
+      const file = input.files[0]; if (!file) return;
+      const range = quill.getSelection(true); toast('Mengunggah gambar...');
+      try {
+        const url = await uploadFile(file);
+        quill.insertEmbed(range.index, 'image', url, 'user'); quill.setSelection(range.index + 1, 0);
+        const img = [...quill.root.querySelectorAll('img')].find(i => i.getAttribute('src') === url);
+        if (img) editInlineImage(img);
+      } catch (e) { toast(e.message, 'error'); }
+    };
+    input.click();
+  }
+  async function convertPastedImages() {
+    const imgs = [...quill.root.querySelectorAll('img[src^="data:"]')].filter(i => !i.dataset.busy);
+    if (state.mode === 'local' || !imgs.length) return;
+    for (const img of imgs) {
+      img.dataset.busy = '1';
+      try {
+        const blob = await (await fetch(img.src)).blob();
+        const url = await uploadFile(new File([blob], 'tempel.png', { type: blob.type }));
+        img.setAttribute('src', url); quill.update('user');
+      } catch (e) { toast('Gambar tempel gagal diunggah: ' + e.message, 'error'); }
+      delete img.dataset.busy;
+    }
+  }
+  function editInlineImage(img) {
+    const dlg = el('dlgAlt'); el('altInput').value = img.getAttribute('alt') || '';
+    const onClose = () => {
+      dlg.removeEventListener('close', onClose);
+      if (dlg.returnValue === 'ok') { img.setAttribute('alt', el('altInput').value.trim()); quill.update('user'); }
+      else if (dlg.returnValue === 'remove') { const blot = Quill.find(img); if (blot) quill.deleteText(quill.getIndex(blot), 1, 'user'); }
+    };
+    dlg.addEventListener('close', onClose); dlg.showModal(); el('altInput').focus();
+  }
+  const contentHtml = () => sanitizeHtml(quill.root.innerHTML);
+  function setContent(html) { quill.setContents([], 'silent'); if (html) quill.clipboard.dangerouslyPasteHTML(0, html, 'silent'); quill.history.clear(); }
+
+  /* ---------- Target harian ---------- */
+  function liveCounts() {
+    const now = new Date(), map = {}; let sched = 0, todayKey = dayKey(now);
+    state.articles.forEach(a => {
+      if (a.status !== 'published' || !a.published_at) return;
+      const k = dayKey(a.published_at);
+      if (new Date(a.published_at) <= now) map[k] = (map[k] || 0) + 1;
+      else if (k === todayKey) sched++;
+    });
+    return { map, sched, todayKey };
+  }
+  function renderTarget() {
+    const T = state.target, { map, sched, todayKey } = liveCounts();
+    const done = map[todayKey] || 0, drafts = state.articles.filter(a => a.status !== 'published').length;
+    const reached = done >= T, left = Math.max(0, T - done);
+    const C = 2 * Math.PI * 52;
+    el('ringDone').setAttribute('stroke-dasharray', `${Math.min(done / T, 1) * C} ${C}`);
+    el('ringSched').setAttribute('stroke-dasharray', `${Math.min((done + sched) / T, 1) * C} ${C}`);
+    el('ringDone').classList.toggle('reached', reached);
+    el('ringNum').textContent = done; el('ringTarget').textContent = `dari ${T} artikel`;
+    el('targetTitle').textContent = reached ? 'Target hari ini tercapai' : 'Target hari ini';
+    el('targetMsg').textContent = reached
+      ? (done > T ? `Luar biasa, ${done - T} artikel melebihi target.` : 'Kerja bagus! Semua artikel hari ini sudah tayang.')
+      : sched && done + sched >= T ? `${sched} artikel terjadwal hari ini akan memenuhi target.`
+      : `Tinggal ${left} artikel lagi.${drafts ? ` Ada ${drafts} draft yang bisa segera diterbitkan.` : ''}`;
+    el('targetStats').innerHTML = `<span class="stat"><i class="${reached ? 'k' : ''}"></i><b>${done}</b> tayang</span><span class="stat"><i class="s"></i><b>${sched}</b> terjadwal</span><span class="stat"><i class="d"></i><b>${drafts}</b> draft</span>`;
+    // Streak
+    let streak = 0, d = Date.now() - (reached ? 0 : 864e5);
+    for (let i = 0; i < 365; i++, d -= 864e5) { if ((map[dayKey(d)] || 0) >= T) streak++; else break; }
+    // Bulan ini
+    const ym = todayKey.slice(0, 7); let monthTotal = 0, hit = 0;
+    Object.entries(map).forEach(([k, n]) => { if (k.startsWith(ym)) { monthTotal += n; if (n >= T) hit++; } });
+    const daysElapsed = Number(todayKey.slice(8, 10));
+    el('targetMeta').innerHTML = `<span><b>${streak}</b> hari beruntun target tercapai</span><span>Bulan ini <b>${monthTotal}</b> artikel · target tercapai <b>${hit}/${daysElapsed}</b> hari</span>`;
+    // Grafik 7 hari
+    const days = [], names = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'];
+    for (let i = 6; i >= 0; i--) { const k = dayKey(Date.now() - i * 864e5); days.push({ k, n: map[k] || 0, name: names[new Date(k + 'T12:00:00+07:00').getDay()], today: i === 0 }); }
+    const max = Math.max(T, ...days.map(x => x.n)) * 1.08;
+    el('bars').innerHTML = `<div class="goal-line" style="bottom:calc(${(T / max) * 100}% * .8 + 20px)"><span>${T}</span></div>` + days.map(x =>
+      `<div class="bar-col ${x.today ? 'is-today' : ''}" title="${x.k}: ${x.n} artikel"><span class="bar-val">${x.n}</span><div class="bar ${x.n >= T ? 'hit' : ''} ${x.today ? 'today' : ''}" style="height:${(x.n / max) * 80}%"></div><span class="bar-day">${x.today ? 'Hari ini' : x.name}</span></div>`).join('');
+    const sum = days.reduce((s, x) => s + x.n, 0); el('weekAvg').textContent = `Rata-rata ${(sum / 7).toFixed(1)}/hari`;
+    // Mini target di editor
+    const mt = el('miniTarget'); mt.classList.toggle('reached', reached);
+    el('miniText').textContent = `${done}/${T} hari ini`; el('miniFill').style.width = Math.min(100, done / T * 100) + '%';
+    el('editTargetBtn').classList.toggle('hidden', state.user?.role !== 'Master');
+  }
+
+  /* ---------- Daftar ---------- */
+  function renderFilters() {
+    const c = { all: state.articles.length, published: 0, scheduled: 0, draft: 0 };
+    state.articles.forEach(a => c[articleStatus(a)]++);
+    el('statusTabs').innerHTML = [['all', 'Semua'], ['published', 'Terbit'], ['scheduled', 'Terjadwal'], ['draft', 'Draft']]
+      .map(([k, l]) => `<button class="tab" type="button" data-f="${k}" aria-pressed="${state.filter === k}">${l}<em>${c[k]}</em></button>`).join('');
+  }
+  function renderList() {
+    renderFilters();
+    const q = state.search.trim().toLowerCase();
+    const items = state.articles.filter(a => {
+      if (state.filter !== 'all' && articleStatus(a) !== state.filter) return false;
+      if (state.category && a.category !== state.category) return false;
+      return !q || `${a.title} ${(a.tags || []).join(' ')} ${a.author || ''}`.toLowerCase().includes(q);
+    }).sort((a, b) => new Date(b.updated_at || b.created_at || 0) - new Date(a.updated_at || a.created_at || 0));
+    el('listHint').textContent = `${state.articles.length} artikel · urut dari yang terakhir diubah`;
+    const shown = items.slice(0, state.visible);
+    el('moreBtn').classList.toggle('hidden', items.length <= shown.length);
+    if (!shown.length) {
+      el('articleList').innerHTML = state.articles.length
+        ? `<div class="empty"><strong>Tidak ada artikel yang cocok</strong>Ubah filter atau kata kunci pencarian.</div>`
+        : `<div class="empty"><strong>Belum ada artikel</strong>Mulai dengan menekan tombol “Artikel Baru”.</div>`;
+      return;
+    }
+    el('articleList').innerHTML = shown.map(a => {
+      const st = articleStatus(a);
+      const when = st === 'draft' ? `Diubah ${fmtDateTime(a.updated_at || a.created_at)}` : `${st === 'scheduled' ? 'Tayang' : 'Terbit'} ${fmtDateTime(a.published_at)}`;
+      return `<div class="article-item" data-id="${esc(a.id)}">
+        <div class="thumb" style="${a.cover_url ? `background-image:url('${esc(a.cover_url)}')` : ''}">${a.cover_url ? '' : '<svg class="icon" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></svg>'}</div>
+        <div class="article-main"><strong>${esc(a.title || '(Tanpa judul)')}</strong><span>${esc(catLabel(a.category))} · ${esc(a.author || '—')} · ${esc(when)}</span></div>
+        <div class="badge-cell"><span class="badge ${st}">${STATUS_LABEL[st]}</span></div>
+        <div class="row-actions"><button class="button small" data-act="edit" type="button">Edit</button><button class="button small" data-act="dup" type="button">Duplikat</button><button class="button small danger" data-act="del" type="button">Hapus</button></div>
+      </div>`;
+    }).join('');
+  }
+
+  /* ---------- Editor ---------- */
+  const newArticle = () => ({ id: null, title: '', slug: '', excerpt: '', content: '', category: '', tags: [], cover_url: '', cover_alt: '', status: 'draft', published_at: null, meta_title: '', meta_description: '' });
+  const BACKUP_PREFIX = 'yh_artikel_cadangan_';
+  const backupKey = () => BACKUP_PREFIX + (state.cur?.id || 'baru');
+
+  function markDirty() {
+    state.dirty = true; const s = el('saveState'); s.textContent = 'Perubahan belum disimpan'; s.className = 'save-state dirty';
+    saveBackup();
+  }
+  const saveBackup = debounce(() => {
+    if (!state.dirty) return;
+    try { localStorage.setItem(backupKey(), JSON.stringify({ at: Date.now(), form: readForm(true) })); } catch { /* abaikan */ }
+  }, 1500);
+  function clearBackup() { try { localStorage.removeItem(backupKey()); } catch { /* abaikan */ } }
+
+  function readForm(raw = false) {
+    return {
+      title: el('fTitle').value.trim(), slug: el('fSlug').value.trim() || slugify(el('fTitle').value),
+      excerpt: el('fExcerpt').value.trim(), content: raw ? quill.root.innerHTML : contentHtml(),
+      category: el('fCategory').value, tags: [...state.tags], cover_url: state.coverUrl, cover_alt: el('fCoverAlt').value.trim(),
+      meta_title: el('fMetaTitle').value.trim(), meta_description: el('fMetaDesc').value.trim(),
+      pub_at: el('fPubAt').value,
+    };
+  }
+  function fillForm(a) {
+    el('fTitle').value = a.title; el('fSlug').value = a.slug; el('fExcerpt').value = a.excerpt;
+    el('fCategory').value = a.category; el('fCoverAlt').value = a.cover_alt; el('fMetaTitle').value = a.meta_title; el('fMetaDesc').value = a.meta_description;
+    state.tags = [...(a.tags || [])]; state.coverUrl = a.cover_url || ''; setContent(a.content);
+    el('fPubAt').value = a.status === 'published' && a.published_at ? isoToLocalInput(a.published_at) : '';
+  }
+  async function openEditor(id) {
+    try {
+      const a = id ? await store().get(id) : newArticle();
+      state.cur = a; state.slugTouched = !!a.id; state.dirty = false; state.savedAt = null;
+      fillForm(a);
+      let backup = null; try { backup = JSON.parse(localStorage.getItem(backupKey()) || 'null'); } catch { /* abaikan */ }
+      if (backup && backup.at > new Date(a.updated_at || 0).getTime() && (backup.form.title || textOf(backup.form.content))) {
+        if (await confirmDialog({ title: 'Pulihkan draf yang belum tersimpan?', text: `Ditemukan perubahan dari ${fmtDateTime(backup.at)} yang belum sempat disimpan ke server.`, ok: 'Pulihkan' })) {
+          const f = backup.form; fillForm({ ...a, ...f, status: a.status, published_at: a.published_at }); el('fPubAt').value = f.pub_at || el('fPubAt').value; state.slugTouched = true; state.dirty = true;
+        } else clearBackup();
+      }
+      el('viewList').classList.add('hidden'); el('viewEditor').classList.remove('hidden');
+      refreshEditorUi(); window.scrollTo({ top: 0 });
+      if (!state.dirty) { el('saveState').textContent = ''; el('saveState').className = 'save-state'; }
+      if (!id) el('fTitle').focus();
+    } catch (e) { toast(e.message, 'error'); }
+  }
+  async function closeEditor(force = false) {
+    if (!force && state.dirty && !(await confirmDialog({ title: 'Tinggalkan editor?', text: 'Ada perubahan yang belum disimpan. Draf cadangan tetap disimpan di browser ini.', ok: 'Tinggalkan', danger: true }))) return;
+    state.cur = null; state.dirty = false;
+    el('viewEditor').classList.add('hidden'); el('viewList').classList.remove('hidden');
+    renderTarget(); renderList(); window.scrollTo({ top: 0 });
+  }
+
+  function refreshEditorUi() {
+    const a = state.cur || newArticle(), st = articleStatus(a), live = a.status === 'published';
+    const b = el('editorBadge'); b.textContent = a.id ? STATUS_LABEL[st] : 'Baru'; b.className = 'badge ' + (a.id ? st : 'draft');
+    const info = el('pubInfo');
+    if (st === 'published') { info.className = 'info-line live'; info.textContent = `Tayang sejak ${fmtDateTime(a.published_at)}`; }
+    else if (st === 'scheduled') { info.className = 'info-line sched'; info.textContent = `Terjadwal tayang ${fmtDateTime(a.published_at)}`; }
+    else { info.className = 'info-line'; info.textContent = 'Belum diterbitkan. Artikel tidak tampil di blog.'; }
+    el('pubAtLabel').textContent = live ? 'Waktu terbit' : 'Jadwalkan (opsional)';
+    el('pubAtHint').textContent = live ? 'Ubah untuk memindah tanggal terbit. Waktu WIB.' : 'Kosongkan untuk terbit sekarang. Waktu WIB.';
+    el('unpublishBtn').classList.toggle('hidden', !live);
+    el('draftBtn').classList.toggle('hidden', live);
+    updatePublishLabel(); renderTags(); renderCover(); refreshContentDerived(); refreshMeta();
+  }
+  function updatePublishLabel() {
+    const live = state.cur?.status === 'published';
+    el('publishBtn').textContent = live ? 'Perbarui' : (el('fPubAt').value ? 'Jadwalkan' : 'Terbitkan');
+  }
+  function refreshContentDerived() {
+    if (!quill || el('viewEditor').classList.contains('hidden')) return;
+    const words = countWords(quill.root.innerHTML);
+    el('wordCount').textContent = `${words.toLocaleString('id-ID')} kata`; el('readTime').textContent = `~${Math.max(1, Math.round(words / 200))} menit baca`;
+    renderSeo();
+  }
+  function counter(id, n, min, max) { const c = el(id); c.textContent = `${n}/${max}`; c.className = 'counter ' + (n === 0 ? '' : n >= min && n <= max ? 'ok' : n > max ? 'bad' : 'warn'); }
+  function refreshMeta() {
+    const f = readForm(true);
+    counter('excerptCount', f.excerpt.length, 80, 300);
+    counter('metaTitleCount', (f.meta_title || f.title).length, 30, 60);
+    counter('metaDescCount', (f.meta_description || f.excerpt).length, 100, 160);
+    const t = f.meta_title || f.title || 'Judul artikel Anda', d = f.meta_description || f.excerpt || textOf(f.content).slice(0, 160) || 'Deskripsi artikel akan tampil di sini.';
+    el('serpUrl').textContent = `${SITE_HOST} › ${f.slug || 'slug-artikel'}`;
+    el('serpTitle').textContent = t.length > 60 ? t.slice(0, 58) + '…' : t; el('serpDesc').textContent = d.length > 160 ? d.slice(0, 157) + '…' : d;
+    renderSeo();
+  }
+  function seoChecks(f) {
+    const tLen = (f.meta_title || f.title).length, dLen = (f.meta_description || f.excerpt).length, words = countWords(f.content);
+    const holder = document.createElement('div'); holder.innerHTML = f.content;
+    const imgs = [...holder.querySelectorAll('img')];
+    return [
+      { ok: tLen >= 30 && tLen <= 60, t: 'Judul 30–60 karakter', s: `${tLen} karakter` },
+      { ok: dLen >= 100 && dLen <= 160, t: 'Deskripsi 100–160 karakter', s: `${dLen} karakter` },
+      { ok: !!f.cover_url && !!f.cover_alt, t: 'Gambar utama + teks alternatif' },
+      { ok: words >= 300, t: 'Isi minimal 300 kata', s: `${words} kata` },
+      { ok: !!holder.querySelector('h2'), t: 'Memakai subjudul (H2)' },
+      { ok: imgs.every(i => (i.getAttribute('alt') || '').trim()), t: 'Semua gambar di isi punya teks alternatif' },
+      { ok: f.tags.length >= 2, t: 'Minimal 2 tag', s: `${f.tags.length} tag` },
+      { ok: f.slug.length > 0 && f.slug.length <= 70, t: 'Slug singkat (maks. 70 karakter)' },
+    ];
+  }
+  function renderSeo() {
+    if (!quill) return;
+    const checks = seoChecks(readForm(true)), score = Math.round(checks.filter(c => c.ok).length / checks.length * 100);
+    el('seoNum').textContent = score; const fill = el('seoFill'); fill.style.width = score + '%';
+    fill.style.background = score >= 80 ? 'var(--success)' : score >= 50 ? 'var(--brass)' : 'var(--danger)';
+    el('seoList').innerHTML = checks.map(c => `<li class="${c.ok ? 'ok' : ''}"><span>${esc(c.t)}${c.s ? ` <small>· ${esc(c.s)}</small>` : ''}</span></li>`).join('');
+  }
+  function renderTags() {
+    const box = el('tagBox'); box.querySelectorAll('.chip').forEach(c => c.remove());
+    state.tags.forEach((t, i) => { const c = document.createElement('span'); c.className = 'chip'; c.innerHTML = `${esc(t)}<button type="button" aria-label="Hapus tag ${esc(t)}" data-i="${i}">&times;</button>`; box.insertBefore(c, el('fTagInput')); });
+  }
+  function addTag(raw) {
+    const t = raw.replace(/[,#]/g, '').trim().toLowerCase().slice(0, 30);
+    if (!t || state.tags.includes(t)) return;
+    if (state.tags.length >= MAX_TAGS) { toast(`Maksimal ${MAX_TAGS} tag.`, 'error'); return; }
+    state.tags.push(t); renderTags(); markDirty(); renderSeo();
+  }
+  function renderCover() {
+    el('coverEmpty').classList.toggle('hidden', !!state.coverUrl); el('coverFilled').classList.toggle('hidden', !state.coverUrl);
+    el('coverImg').src = state.coverUrl || ''; el('coverImg').alt = el('fCoverAlt').value;
+  }
+  async function setCover(file) {
+    if (!file) return;
+    setUploading(1);
+    try { state.coverUrl = await uploadFile(file); if (!el('fCoverAlt').value) el('fCoverAlt').value = el('fTitle').value.trim(); renderCover(); markDirty(); renderSeo(); }
+    catch (e) { toast(e.message, 'error'); } finally { setUploading(-1); }
+  }
+
+  /* ---------- Simpan ---------- */
+  function validate(f, publishing) {
+    if (!f.title) return 'Judul wajib diisi.';
+    if (!f.slug) return 'Slug tidak valid.';
+    if (!publishing) return '';
+    if (!f.category) return 'Pilih kategori sebelum menerbitkan.';
+    if (!f.cover_url) return 'Tambahkan gambar utama sebelum menerbitkan.';
+    const words = countWords(f.content);
+    if (words < MIN_WORDS_PUBLISH) return `Isi artikel baru ${words} kata. Minimal ${MIN_WORDS_PUBLISH} kata untuk diterbitkan.`;
+    if (/<img(?![^>]*\balt="[^"]+")/.test(f.content)) return 'Ada gambar di dalam artikel yang belum diberi teks alternatif (klik gambar bertanda merah).';
+    return '';
+  }
+  async function submit(action) { // 'draft' | 'publish' | 'unpublish'
+    if (state.busy) return;
+    if (state.uploads > 0) { toast('Tunggu unggahan gambar selesai.', 'error'); return; }
+    const f = readForm(), cur = state.cur, wasLive = cur.status === 'published';
+    const publishing = action === 'publish';
+    const err = validate(f, publishing); if (err) { toast(err, 'error'); return; }
+    let status = 'draft', published_at = null;
+    if (publishing) {
+      status = 'published';
+      if (f.pub_at) {
+        published_at = localInputToIso(f.pub_at);
+        if (!wasLive && new Date(published_at) < new Date(Date.now() - 60e3)) { toast('Waktu terbit sudah lewat. Kosongkan kolom untuk terbit sekarang.', 'error'); return; }
+      } else published_at = wasLive ? cur.published_at : new Date().toISOString();
+    }
+    if (action === 'unpublish' && !(await confirmDialog({ title: 'Tarik jadi draft?', text: 'Artikel tidak lagi tampil di blog sampai diterbitkan ulang.', ok: 'Tarik jadi draft', danger: true }))) return;
+    const payload = { title: f.title, slug: f.slug, excerpt: f.excerpt, content: f.content, category: f.category, tags: f.tags, cover_url: f.cover_url, cover_alt: f.cover_alt, meta_title: f.meta_title, meta_description: f.meta_description, author: cur.author || state.user?.display_name || state.user?.account_id || 'Admin', status, published_at };
+    state.busy = true; ['draftBtn', 'publishBtn', 'unpublishBtn'].forEach(i => el(i).disabled = true);
+    try {
+      const saved = cur.id ? await store().update(cur.id, payload) : await store().create(payload);
+      const idx = state.articles.findIndex(x => x.id === saved.id);
+      const light = { ...saved, content: '' }; if (idx >= 0) state.articles[idx] = light; else state.articles.unshift(light);
+      clearBackup(); state.cur = saved; state.dirty = false;
+      el('fSlug').value = saved.slug; refreshEditorUi(); renderTarget();
+      const s = el('saveState'); s.textContent = `Tersimpan ${new Date().toLocaleTimeString('id-ID', { timeZone: TZ, hour: '2-digit', minute: '2-digit' }).replace(':', '.')}`; s.className = 'save-state ok';
+      if (publishing && !wasLive) {
+        const { map, todayKey } = liveCounts(), done = map[todayKey] || 0, T = state.target;
+        toast(articleStatus(saved) === 'scheduled' ? 'Artikel dijadwalkan.' : done >= T ? `Terbit! Target hari ini tercapai (${done}/${T}).` : `Terbit! ${done}/${T} hari ini.`, 'success');
+        await closeEditor(true);
+      } else toast(action === 'unpublish' ? 'Artikel dikembalikan ke draft.' : publishing ? 'Perubahan disimpan.' : 'Draft tersimpan.', 'success');
+    } catch (e) { toast(e.message, 'error'); }
+    finally { state.busy = false; ['draftBtn', 'publishBtn', 'unpublishBtn'].forEach(i => el(i).disabled = false); }
+  }
+
+  async function duplicateArticle(id) {
+    try {
+      const a = await store().get(id);
+      const copy = { ...a, title: `${a.title} (salinan)`, slug: `${a.slug}-salinan-${Date.now().toString(36).slice(-4)}`, status: 'draft', published_at: null, author: state.user?.display_name || a.author };
+      delete copy.id; delete copy.created_at; delete copy.updated_at;
+      const saved = await store().create(copy); state.articles.unshift({ ...saved, content: '' });
+      renderList(); renderTarget(); toast('Artikel diduplikat sebagai draft.', 'success');
+    } catch (e) { toast(e.message, 'error'); }
+  }
+  async function deleteArticle(id) {
+    const a = state.articles.find(x => x.id === id); if (!a) return;
+    if (!(await confirmDialog({ title: 'Hapus artikel?', text: `“${a.title || 'Tanpa judul'}” akan dihapus permanen${articleStatus(a) === 'published' ? ' dan hilang dari blog' : ''}.`, ok: 'Hapus', danger: true }))) return;
+    try { await store().remove(id); state.articles = state.articles.filter(x => x.id !== id); try { localStorage.removeItem(BACKUP_PREFIX + id); } catch { /* abaikan */ } renderList(); renderTarget(); toast('Artikel dihapus.'); }
+    catch (e) { toast(e.message, 'error'); }
+  }
+
+  /* ---------- Pratinjau ---------- */
+  function openPreview() {
+    const f = readForm(), cur = state.cur;
+    const date = cur?.published_at && cur.status === 'published' ? cur.published_at : (f.pub_at ? localInputToIso(f.pub_at) : new Date().toISOString());
+    const words = countWords(f.content);
+    el('previewFrame').innerHTML = `<div class="pv-cat">${esc(catLabel(f.category))}</div><h1 class="pv-title">${esc(f.title || 'Judul artikel')}</h1><div class="pv-meta">${esc(cur?.author || state.user?.display_name || 'Admin')} · ${esc(fmtDate(date))} · ${Math.max(1, Math.round(words / 200))} menit baca</div>${f.cover_url ? `<img class="pv-cover" src="${esc(f.cover_url)}" alt="${esc(f.cover_alt)}" />` : ''}<div class="pv-body">${f.content || '<p style="color:#8c857c">Belum ada isi.</p>'}</div>`;
+    el('dlgPreview').showModal();
+  }
+
+  /* ---------- Sesi & boot ---------- */
+  function showLogin(msg = '') { el('app').classList.add('hidden'); el('loginScreen').classList.remove('hidden'); el('loginMessage').textContent = msg; }
+  function showApp() { el('loginScreen').classList.add('hidden'); el('app').classList.remove('hidden'); }
+  function loginAccountLabel(account) {
+    const id = String(account.account_id || '').trim().toLowerCase();
+    if (id === 'master') return 'Master'; if (id === 'admin') return 'Admin'; if (id === 'admin-1') return 'Operasional';
+    const m = id.match(/^admin-(\d+)$/); return m ? `Admin ${m[1]}` : id;
+  }
+  async function loadLoginAccountOptions() {
+    try {
+      const r = await fetch(`${API_BASE}/dashboard/login-accounts`, { cache: 'no-store' }); const j = await r.json().catch(() => ({}));
+      const accounts = (Array.isArray(j.data) ? j.data : []).filter(a => a.role !== 'IT'); if (!accounts.length) return;
+      el('adminStaffId').replaceChildren(...accounts.map(a => new Option(loginAccountLabel(a), a.account_id)));
+    } catch { /* gunakan opsi bawaan */ }
+  }
+  async function login(event) {
+    event.preventDefault();
+    const btn = event.currentTarget.querySelector('button[type=submit]'); btn.disabled = true;
+    try {
+      const r = await fetch(`${API_BASE}/dashboard/login`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ account_id: el('adminStaffId').value, password: el('adminPassword').value }) });
+      const data = await r.json().catch(() => ({}));
+      if (!r.ok || data.ok === false) throw new Error(data.error || 'Login gagal.');
+      if (data.data?.role === 'IT') throw new Error('Akun IT tidak memiliki akses ke Admin Artikel.');
+      state.token = data.token; sessionStorage.setItem('dashboard_admin_token', state.token); el('adminPassword').value = '';
+      state.user = data.data || null; await boot();
+    } catch (e) { showLogin(e.message); } finally { btn.disabled = false; }
+  }
+  function logout() { sessionStorage.removeItem('dashboard_admin_token'); state.token = ''; state.user = null; state.articles = []; el('viewEditor').classList.add('hidden'); el('viewList').classList.remove('hidden'); showLogin(); }
+
+  async function boot() {
+    if (DEMO) { state.mode = 'local'; state.user = { account_id: 'demo', display_name: 'Demo', role: 'Master' }; }
+    else {
+      if (!state.token) { showLogin(); return; }
+      if (!state.user) {
+        try { const r = await request(`${API_BASE}/dashboard/profile`); state.user = r.data; }
+        catch (e) { if (e.status === 401 || /401|login/i.test(e.message)) { state.token = ''; sessionStorage.removeItem('dashboard_admin_token'); showLogin('Sesi berakhir. Silakan login kembali.'); return; } state.user = { account_id: 'admin', role: 'Admin' }; }
+      }
+      if (state.user.role === 'IT') { showLogin('Akun IT tidak memiliki akses ke Admin Artikel.'); return; }
+      try { state.mode = 'remote'; state.articles = await remoteStore.list(); }
+      catch (e) {
+        if (e.status === 401) { state.token = ''; sessionStorage.removeItem('dashboard_admin_token'); showLogin('Sesi berakhir. Silakan login kembali.'); return; }
+        if (e.status === 404 || e instanceof TypeError) state.mode = 'local'; else { showApp(); toast(e.message, 'error'); return; }
+      }
+    }
+    if (state.mode === 'local') state.articles = await localStore.list();
+    state.target = await store().getTarget();
+    el('userChip').innerHTML = `${esc(state.user.display_name || state.user.account_id)} <small>${esc(state.user.role || '')}</small>`;
+    el('modeBanner').classList.toggle('hidden', state.mode !== 'local');
+    showApp(); renderTarget(); renderList();
+  }
+
+  /* ---------- Event ---------- */
+  function bind() {
+    el('categoryFilter').innerHTML += CATEGORIES.map(c => `<option value="${c.id}">${esc(c.label)}</option>`).join('');
+    el('fCategory').innerHTML += CATEGORIES.map(c => `<option value="${c.id}">${esc(c.label)}</option>`).join('');
+    el('loginForm').addEventListener('submit', login);
+    el('togglePassword').addEventListener('click', () => { const i = el('adminPassword'); i.type = i.type === 'password' ? 'text' : 'password'; });
+    el('logoutBtn').addEventListener('click', async () => { if (state.dirty && !(await confirmDialog({ title: 'Logout?', text: 'Ada perubahan yang belum disimpan.', ok: 'Logout', danger: true }))) return; state.dirty = false; logout(); });
+
+    el('statusTabs').addEventListener('click', e => { const b = e.target.closest('[data-f]'); if (!b) return; state.filter = b.dataset.f; state.visible = PAGE_SIZE; renderList(); });
+    el('searchInput').addEventListener('input', debounce(e => { state.search = e.target.value; state.visible = PAGE_SIZE; renderList(); }, 200));
+    el('categoryFilter').addEventListener('change', e => { state.category = e.target.value; state.visible = PAGE_SIZE; renderList(); });
+    el('moreBtn').addEventListener('click', () => { state.visible += PAGE_SIZE; renderList(); });
+    el('newArticleBtn').addEventListener('click', () => openEditor(null));
+    el('articleList').addEventListener('click', e => {
+      const b = e.target.closest('[data-act]'), row = e.target.closest('.article-item'); if (!row) return;
+      const id = row.dataset.id, act = b?.dataset.act || 'edit';
+      if (act === 'edit') openEditor(id); else if (act === 'dup') duplicateArticle(id); else if (act === 'del') deleteArticle(id);
+    });
+    el('editTargetBtn').addEventListener('click', () => {
+      const d = el('dlgTarget'); el('targetInput').value = state.target;
+      d.addEventListener('close', async () => {
+        if (d.returnValue !== 'ok') return;
+        const n = Math.round(Number(el('targetInput').value)); if (!(n >= 1 && n <= 50)) { toast('Target harus 1 sampai 50.', 'error'); return; }
+        try { await store().setTarget(n); state.target = n; renderTarget(); toast('Target harian diperbarui.', 'success'); } catch (e) { toast(e.message, 'error'); }
+      }, { once: true });
+      d.showModal();
+    });
+
+    el('backBtn').addEventListener('click', () => closeEditor());
+    el('draftBtn').addEventListener('click', () => submit('draft'));
+    el('publishBtn').addEventListener('click', () => submit('publish'));
+    el('unpublishBtn').addEventListener('click', () => submit('unpublish'));
+    el('previewBtn').addEventListener('click', openPreview);
+    el('previewClose').addEventListener('click', () => el('dlgPreview').close());
+    el('dlgPreview').addEventListener('click', e => { if (e.target === el('dlgPreview')) el('dlgPreview').close(); });
+    document.querySelectorAll('.preview-seg button').forEach(b => b.addEventListener('click', () => {
+      document.querySelectorAll('.preview-seg button').forEach(x => x.setAttribute('aria-pressed', x === b)); el('previewFrame').classList.toggle('mobile', b.dataset.w === 'mobile');
+    }));
+    el('altRemove').addEventListener('click', () => el('dlgAlt').close('remove'));
+
+    el('fTitle').addEventListener('input', () => { if (!state.slugTouched) el('fSlug').value = slugify(el('fTitle').value); markDirty(); refreshMeta(); });
+    el('fSlug').addEventListener('input', () => { state.slugTouched = true; markDirty(); refreshMeta(); });
+    el('fSlug').addEventListener('blur', () => { el('fSlug').value = slugify(el('fSlug').value) || slugify(el('fTitle').value); refreshMeta(); });
+    ['fExcerpt', 'fMetaTitle', 'fMetaDesc', 'fCategory'].forEach(id => el(id).addEventListener('input', () => { markDirty(); refreshMeta(); }));
+    el('fCoverAlt').addEventListener('input', () => { el('coverImg').alt = el('fCoverAlt').value; markDirty(); renderSeo(); });
+    el('fPubAt').addEventListener('input', () => { markDirty(); updatePublishLabel(); });
+    el('fTagInput').addEventListener('keydown', e => {
+      if (e.key === 'Enter' || e.key === ',') { e.preventDefault(); addTag(e.target.value); e.target.value = ''; }
+      else if (e.key === 'Backspace' && !e.target.value && state.tags.length) { state.tags.pop(); renderTags(); markDirty(); renderSeo(); }
+    });
+    el('fTagInput').addEventListener('blur', e => { if (e.target.value.trim()) { addTag(e.target.value); e.target.value = ''; } });
+    el('tagBox').addEventListener('click', e => { const b = e.target.closest('button[data-i]'); if (b) { state.tags.splice(Number(b.dataset.i), 1); renderTags(); markDirty(); renderSeo(); } else el('fTagInput').focus(); });
+
+    el('fCoverFile').addEventListener('change', e => { setCover(e.target.files[0]); e.target.value = ''; });
+    el('coverRemove').addEventListener('click', () => { state.coverUrl = ''; renderCover(); markDirty(); renderSeo(); });
+    const dz = el('coverEmpty');
+    ['dragenter', 'dragover'].forEach(ev => dz.addEventListener(ev, e => { e.preventDefault(); dz.classList.add('over'); }));
+    ['dragleave', 'drop'].forEach(ev => dz.addEventListener(ev, e => { e.preventDefault(); dz.classList.remove('over'); }));
+    dz.addEventListener('drop', e => setCover(e.dataTransfer.files[0]));
+
+    document.addEventListener('keydown', e => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's' && !el('viewEditor').classList.contains('hidden')) { e.preventDefault(); submit(state.cur?.status === 'published' ? 'publish' : 'draft'); }
+    });
+    window.addEventListener('beforeunload', e => { if (state.dirty) { e.preventDefault(); e.returnValue = ''; } });
+    setInterval(() => { if (!el('app').classList.contains('hidden') && state.articles.length) { renderTarget(); if (!el('viewList').classList.contains('hidden')) renderList(); } }, 60000);
+  }
+
+  initQuill(); bind(); loadLoginAccountOptions(); boot();
+  </script>
+</body>
+</html>
