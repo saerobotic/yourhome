@@ -1079,6 +1079,9 @@ async function handleArticleRoutes({ request, env, url, path, json, bad }) {
         const category = String(url.searchParams.get('category') || '').trim();
         const tag = String(url.searchParams.get('tag') || '').toLowerCase().replace(/[^\p{L}\p{N}\s-]/gu, '').trim();
         const q = String(url.searchParams.get('q') || '').trim().slice(0, 80);
+        const includeParam = String(url.searchParams.get('include') || '').toLowerCase();
+        const includeContent = includeParam.split(',').map(part => part.trim()).includes('content');
+        const selectColumns = includeContent ? `${ARTICLE_LIST_COLUMNS}, content` : ARTICLE_LIST_COLUMNS;
         const where = ["status = 'published'", 'published_at <= ?'];
         const binds = [nowIso];
         if (ARTICLE_CATEGORIES.includes(category)) { where.push('category = ?'); binds.push(category); }
@@ -1086,7 +1089,7 @@ async function handleArticleRoutes({ request, env, url, path, json, bad }) {
         if (q) { where.push("(title LIKE ? ESCAPE '\\' OR excerpt LIKE ? ESCAPE '\\')"); binds.push(`%${escapeLike(q)}%`, `%${escapeLike(q)}%`); }
         const condition = where.join(' AND ');
         const [rows, total] = await Promise.all([
-          env.DB.prepare(`SELECT ${ARTICLE_LIST_COLUMNS} FROM articles WHERE ${condition} ORDER BY published_at DESC LIMIT ? OFFSET ?`).bind(...binds, limit, offset).all(),
+          env.DB.prepare(`SELECT ${selectColumns} FROM articles WHERE ${condition} ORDER BY published_at DESC LIMIT ? OFFSET ?`).bind(...binds, limit, offset).all(),
           env.DB.prepare(`SELECT COUNT(*) AS total FROM articles WHERE ${condition}`).bind(...binds).first(),
         ]);
         return cached(json({ ok:true, data:(rows.results || []).map(articleRow), pagination:{ total:Number(total?.total || 0), limit, offset } }));
