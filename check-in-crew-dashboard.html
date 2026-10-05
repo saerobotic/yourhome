@@ -73,6 +73,9 @@
     .view-btn:hover{color:var(--ink)}
     .view-btn.active{background:var(--danger-soft);color:var(--danger);box-shadow:0 1px 2px rgba(36,25,21,.08),0 4px 12px -6px rgba(36,25,21,.25)}
     .view-btn.active svg{color:var(--danger)}
+    .view-switch-toggle{display:none}
+    .view-switch-close{display:none}
+    .view-switch-backdrop{display:none}
     .dashboard-view{min-width:0}
     .dashboard-view.hidden{display:none}
     .dashboard-column{display:flex;flex-direction:column;gap:16px;min-width:0}
@@ -376,8 +379,21 @@
       #exportPdfBtn .btn-icon,#exportExcelBtn .btn-icon{width:18px;height:18px}
       .view-btn{padding:10px 8px;font-size:.8rem}
       .dash-shell{grid-template-columns:minmax(0,1fr)}
-      .view-switch{position:static;flex-direction:row;overflow-x:auto;gap:4px}
-      .view-switch .view-btn{flex:0 0 auto;width:auto;white-space:nowrap}
+      /* Menu sidebar jadi hamburger di mobile: tombol pemicu + panel geser (drawer) dari kanan */
+      .view-switch-toggle{display:flex;align-items:center;gap:10px;width:100%;padding:11px 14px;background:var(--sunken-2);border:1px solid var(--line);border-radius:12px;color:var(--ink);font-weight:700;font-size:.86rem}
+      .view-switch-toggle svg{flex:0 0 auto}
+      .view-switch-toggle .view-switch-toggle-label{flex:1;text-align:left;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+      .view-switch-toggle .chevron{transition:transform .15s;transform:rotate(-90deg)}
+      .view-switch-toggle[aria-expanded="true"] .chevron{transform:rotate(90deg)}
+      .view-switch-backdrop{display:none;position:fixed;inset:0;background:rgba(20,14,11,.45);z-index:55;opacity:0;transition:opacity .2s ease}
+      .view-switch-backdrop.open{display:block;opacity:1}
+      .view-switch{position:fixed;top:0;right:0;bottom:0;left:auto;width:min(78vw,300px);max-height:none;height:100vh;z-index:60;flex-direction:column;gap:3px;overflow-x:visible;overflow-y:auto;opacity:1;pointer-events:auto;box-shadow:-12px 0 32px -10px rgba(36,25,21,.35);border-radius:0;border-width:0 0 0 1px;padding:16px 12px;transform:translateX(100%);transition:transform .22s ease}
+      .view-switch.open{transform:translateX(0)}
+      .view-switch .view-btn{flex:0 0 auto;width:100%;white-space:nowrap;justify-content:flex-start}
+      .view-switch-close{display:flex;align-items:center;justify-content:space-between;padding:4px 6px 12px;font-weight:700;color:var(--ink);border-bottom:1px solid var(--line);margin-bottom:6px}
+      .view-switch-close button{border:0;background:transparent;color:var(--muted);padding:6px;border-radius:8px;display:flex}
+      .view-switch-close button:hover{color:var(--ink);background:var(--sunken-2)}
+      .dash-shell{position:relative}
       .summary{grid-template-columns:repeat(2,1fr);gap:9px}
       .summary .stat-wide{grid-column:1/-1}
       .stat{padding:13px 14px}
@@ -457,6 +473,8 @@
       table.mobile-cards tbody td{padding:7px 11px;font-size:.8rem}
       .cal-crews{display:none}
       .site-footer{align-items:flex-start;flex-direction:column;gap:6px}
+      .crew-picker{align-items:stretch;flex-direction:column;gap:6px}
+      .crew-picker select{min-width:0;width:100%}
     }
     /* ===== Tampilan padat (lebih kecil agar data banyak muat) ===== */
     body{font-size:13px}
@@ -470,10 +488,10 @@
     .top-actions{gap:6px;margin-bottom:10px}
     .button{min-height:32px;padding:6px 11px;font-size:.78rem;gap:5px}
     .detail-btn{font-size:.74rem}
-    .dash-shell{grid-template-columns:172px minmax(0,1fr);gap:12px}
+    .dash-shell{gap:12px}
     .dash-main{gap:10px}
     .dash-shared{gap:10px}
-    .view-switch{top:10px;padding:6px;gap:3px;border-radius:12px}
+    .view-switch{padding:6px;gap:3px;border-radius:12px}
     .view-btn{padding:7px 10px;font-size:.78rem;gap:6px}
     .summary{grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px}
     .stat{padding:9px 11px}
@@ -504,11 +522,16 @@
     .meta-value{font-size:.82rem}
     .modal-head{padding:12px 14px}
     .modal-head h2{font-size:1.05rem}
-    .filters{grid-template-columns:repeat(4,minmax(0,1fr)) auto}
     .crew-picker{display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--paper);border:1px solid var(--line);border-radius:var(--r-lg);box-shadow:var(--shadow)}
     .crew-picker label{font-size:.76rem;font-weight:700;color:var(--ink-2);white-space:nowrap}
     .crew-picker select{min-height:32px;min-width:220px;border:1px solid var(--line-strong);border-radius:var(--r);background-color:var(--paper);padding:5px 34px 5px 10px;font-size:.8rem;color:var(--ink);outline:none}
     .crew-picker select:focus{border-color:var(--brass);box-shadow:var(--ring)}
+    /* Kolom sidebar + filter 4 kolom hanya untuk layar >760px, agar tidak menimpa tampilan mobile di atas */
+    @media(min-width:761px){
+      .dash-shell{grid-template-columns:172px minmax(0,1fr)}
+      .filters{grid-template-columns:repeat(4,minmax(0,1fr)) auto}
+      .view-switch{top:10px}
+    }
     @media(prefers-reduced-motion:reduce){*{transition:none!important}}
   </style>
 </head>
@@ -555,7 +578,17 @@
     </div>
 
     <div class="dash-shell">
-    <nav class="view-switch" aria-label="Menu dashboard">
+    <button class="view-switch-toggle" id="viewSwitchToggle" type="button" aria-expanded="false" aria-controls="dashViewSwitch">
+      <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+      <span class="view-switch-toggle-label" id="viewSwitchToggleLabel">Laporan Kerja</span>
+      <svg class="chevron" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+    </button>
+    <div class="view-switch-backdrop" id="viewSwitchBackdrop"></div>
+    <nav class="view-switch" id="dashViewSwitch" aria-label="Menu dashboard">
+      <div class="view-switch-close">
+        <span>Menu Dashboard</span>
+        <button type="button" id="viewSwitchCloseBtn" aria-label="Tutup menu"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+      </div>
       <button class="view-btn" data-dash-view="checkin" type="button"><span>Check-in Lokasi</span></button>
       <button class="view-btn active" data-dash-view="riwayat" type="button" aria-current="page"><span>Laporan Kerja</span></button>
       <button class="view-btn" data-dash-view="pengeluaran" type="button"><span>Pengeluaran Crew</span></button>
@@ -2635,6 +2668,24 @@
     gaji: 'viewGaji',
   };
   const DASHBOARD_VIEWS = Object.keys(DASHBOARD_VIEW_ELEMENTS);
+  const DASHBOARD_VIEW_LABELS = {
+    checkin: 'Check-in Lokasi',
+    riwayat: 'Laporan Kerja',
+    pengeluaran: 'Pengeluaran Crew',
+    operasional: 'Operasional',
+    slip: 'Slip Gaji',
+    rekap: 'Rekap Bulanan',
+    crew: 'Data Crew',
+    gaji: 'Gaji Pokok',
+  };
+  function closeViewSwitchMenu() {
+    const nav = assignEl('dashViewSwitch');
+    const toggle = assignEl('viewSwitchToggle');
+    const backdrop = assignEl('viewSwitchBackdrop');
+    if (nav) nav.classList.remove('open');
+    if (toggle) toggle.setAttribute('aria-expanded', 'false');
+    if (backdrop) backdrop.classList.remove('open');
+  }
   function switchDashboardView(view) {
     const target = DASHBOARD_VIEWS.includes(view) ? view : 'riwayat';
     DASHBOARD_VIEWS.forEach(name => assignEl(DASHBOARD_VIEW_ELEMENTS[name]).classList.toggle('hidden', target !== name));
@@ -2646,6 +2697,9 @@
     // Ringkasan & filter ditampilkan hanya di menu yang memakainya.
     const shared = document.querySelector('[data-dash-shared]');
     shared.classList.toggle('hidden', !shared.dataset.dashViews.split(' ').includes(target));
+    const toggleLabel = assignEl('viewSwitchToggleLabel');
+    if (toggleLabel) toggleLabel.textContent = DASHBOARD_VIEW_LABELS[target] || '';
+    closeViewSwitchMenu();
     try { localStorage.setItem(DASHBOARD_VIEW_KEY, target); } catch {}
   }
   function currentDashboardView() {
@@ -3121,6 +3175,20 @@
     assignEl('taskDate').value = formatLocalDateKey();
     document.querySelectorAll('[data-dash-view]').forEach(btn => {
       btn.addEventListener('click', () => switchDashboardView(btn.dataset.dashView));
+    });
+    assignEl('viewSwitchToggle').addEventListener('click', () => {
+      const nav = assignEl('dashViewSwitch');
+      const toggle = assignEl('viewSwitchToggle');
+      const backdrop = assignEl('viewSwitchBackdrop');
+      const willOpen = !nav.classList.contains('open');
+      nav.classList.toggle('open', willOpen);
+      backdrop.classList.toggle('open', willOpen);
+      toggle.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
+    });
+    assignEl('viewSwitchCloseBtn').addEventListener('click', closeViewSwitchMenu);
+    assignEl('viewSwitchBackdrop').addEventListener('click', closeViewSwitchMenu);
+    document.addEventListener('keydown', event => {
+      if (event.key === 'Escape' && assignEl('dashViewSwitch').classList.contains('open')) closeViewSwitchMenu();
     });
     switchDashboardView(currentDashboardView());
     refreshAssignCrewFilter();
