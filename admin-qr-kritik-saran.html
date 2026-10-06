@@ -87,6 +87,9 @@ table.feedback tbody tr:hover{background:var(--cream)}
 .badge.mid{background:#fef3c7;color:#92400e}
 .badge.low{background:#fee2e2;color:#b91c1c}
 .link-btn{background:none;border:none;color:var(--terracotta);font:600 .78rem Poppins,sans-serif;cursor:pointer;text-decoration:underline}
+.delete-btn{background:none;border:1px solid #fecaca;color:#b91c1c;border-radius:7px;padding:5px 9px;font:600 .75rem Poppins,sans-serif;margin-left:8px}
+.delete-btn:hover{background:#fee2e2}
+.delete-btn:disabled{opacity:.55;cursor:wait}
 
 /* ---- detail modal ---- */
 .modal-overlay{position:fixed;inset:0;background:rgba(62,39,35,.5);display:flex;align-items:center;justify-content:center;padding:16px;z-index:50}
@@ -150,7 +153,7 @@ table.feedback tbody tr:hover{background:var(--cream)}
         </div>
         <div style="overflow-x:auto">
           <table class="feedback">
-            <thead><tr><th>Tanggal</th><th>Properti</th><th>Tamu</th><th>Kontak</th><th>Rating</th><th>NPS</th><th>Tindak Lanjut</th><th></th></tr></thead>
+            <thead><tr><th>Tanggal</th><th>Properti</th><th>Tamu</th><th>Kontak</th><th>Rating</th><th>NPS</th><th>Tindak Lanjut</th><th>Aksi</th></tr></thead>
             <tbody id="feedbackTableBody"><tr><td colspan="8" style="text-align:center;padding:30px;color:var(--grey)">Memuat data...</td></tr></tbody>
           </table>
         </div>
@@ -411,13 +414,14 @@ async function loadGuestFeedback(){
 
 function renderGuestFeedbackStats(){
   const total = guestFeedbackEntries.length;
+  const ratedEntries = guestFeedbackEntries.filter(e => e.feedback_type !== 'criticism');
   el('feedbackTotalCount').textContent = total;
   el('feedbackUnreadCount').textContent = guestFeedbackEntries.filter(e => e.status === 'unread').length;
-  const avgRating = total ? guestFeedbackEntries.reduce((sum,e) => sum + Number(e.avg_rating || 0), 0) / total : 0;
-  el('feedbackAvgRating').textContent = total ? avgRating.toFixed(1) + ' / 5.0' : '—';
-  const avgNps = total ? guestFeedbackEntries.reduce((sum,e) => sum + Number(e.nps_score || 0), 0) / total : 0;
-  el('feedbackAvgNps').textContent = total ? avgNps.toFixed(1) + ' / 10' : '—';
-  el('feedbackFollowUpCount').textContent = guestFeedbackEntries.filter(e => Number(e.follow_up_consent) === 1).length;
+  const avgRating = ratedEntries.length ? ratedEntries.reduce((sum,e) => sum + Number(e.avg_rating || 0), 0) / ratedEntries.length : 0;
+  el('feedbackAvgRating').textContent = ratedEntries.length ? avgRating.toFixed(1) + ' / 5.0' : '—';
+  const avgNps = ratedEntries.length ? ratedEntries.reduce((sum,e) => sum + Number(e.nps_score || 0), 0) / ratedEntries.length : 0;
+  el('feedbackAvgNps').textContent = ratedEntries.length ? avgNps.toFixed(1) + ' / 10' : '—';
+  el('feedbackFollowUpCount').textContent = ratedEntries.filter(e => Number(e.follow_up_consent) === 1).length;
 }
 
 function fmtDate(value){
@@ -441,15 +445,44 @@ function renderGuestFeedbackTable(){
   tbody.innerHTML = guestFeedbackEntries.map(e => `
     <tr>
       <td>${fmtDate(e.created_at)}${e.status === 'unread' ? ' <span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#ef4444;margin-left:4px" title="Belum dibaca"></span>' : ''}</td>
-      <td>${escapeHtml(e.property_name)}</td>
+      <td>${escapeHtml(e.property_name || (e.feedback_type === 'criticism' ? 'Umum' : '—'))}</td>
       <td style="font-weight:${e.status === 'unread' ? '800' : '600'}">${escapeHtml(e.guest_name)}</td>
       <td style="color:var(--grey);font-size:.76rem">${escapeHtml(e.guest_phone)}</td>
-      <td style="font-weight:700">${Number(e.avg_rating || 0).toFixed(1)} ⭐</td>
-      <td><span class="badge ${npsBadgeClass(e.nps_score)}">${e.nps_score}</span></td>
-      <td>${Number(e.follow_up_consent) === 1 ? '<span style="color:#b91c1c;font-weight:700;font-size:.76rem">Ya</span>' : '<span style="color:var(--grey-l)">—</span>'}</td>
-      <td><button type="button" class="link-btn" onclick="openFeedbackDetail('${escapeHtml(e.id)}')">Detail</button></td>
+      <td style="font-weight:700">${e.feedback_type === 'criticism' ? 'Kritik' : `${Number(e.avg_rating || 0).toFixed(1)} ⭐`}</td>
+      <td>${e.feedback_type === 'criticism' ? '—' : `<span class="badge ${npsBadgeClass(e.nps_score)}">${e.nps_score}</span>`}</td>
+      <td>${e.feedback_type === 'criticism' ? '—' : Number(e.follow_up_consent) === 1 ? '<span style="color:#b91c1c;font-weight:700;font-size:.76rem">Ya</span>' : '<span style="color:var(--grey-l)">—</span>'}</td>
+      <td>
+        <button type="button" class="link-btn" data-feedback-detail="${escapeHtml(e.id)}">Detail</button>
+        <button type="button" class="delete-btn" data-feedback-delete="${escapeHtml(e.id)}">Hapus</button>
+      </td>
     </tr>
   `).join('');
+  tbody.querySelectorAll('[data-feedback-detail]').forEach(button => {
+    button.addEventListener('click', () => openFeedbackDetail(button.dataset.feedbackDetail));
+  });
+  tbody.querySelectorAll('[data-feedback-delete]').forEach(button => {
+    button.addEventListener('click', () => deleteGuestFeedback(button.dataset.feedbackDelete, button));
+  });
+}
+
+async function deleteGuestFeedback(id, button){
+  const entry = guestFeedbackEntries.find(e => e.id === id);
+  if(!entry) return;
+  const confirmed = window.confirm(`Hapus masukan dari ${entry.guest_name}${entry.property_name ? ` untuk ${entry.property_name}` : ''} secara permanen? Tindakan ini tidak dapat dibatalkan.`);
+  if(!confirmed) return;
+
+  button.disabled = true;
+  button.textContent = 'Menghapus...';
+  try {
+    await api(`/admin/guest-feedback/${encodeURIComponent(id)}`, { method:'DELETE' });
+    guestFeedbackEntries = guestFeedbackEntries.filter(e => e.id !== id);
+    renderGuestFeedbackStats();
+    renderGuestFeedbackTable();
+  } catch(error) {
+    button.disabled = false;
+    button.textContent = 'Hapus';
+    window.alert(`Gagal menghapus masukan: ${error.message}`);
+  }
 }
 
 async function openFeedbackDetail(id){
@@ -461,6 +494,19 @@ async function openFeedbackDetail(id){
     renderGuestFeedbackTable();
     try { await api(`/admin/guest-feedback/${encodeURIComponent(id)}`, { method:'PATCH', body:JSON.stringify({ status:'read' }) }); }
     catch(error){ console.warn('Gagal menandai masukan sebagai sudah dibaca.', error); }
+  }
+  if(entry.feedback_type === 'criticism'){
+    el('feedbackDetailBody').innerHTML = `
+      <div class="detail-grid">
+        <div><div class="k">Properti</div><div class="v">${escapeHtml(entry.property_name || 'Umum')}</div></div>
+        <div><div class="k">Nama Tamu</div><div class="v">${escapeHtml(entry.guest_name)}</div></div>
+        <div><div class="k">WhatsApp</div><div class="v">${escapeHtml(entry.guest_phone)}</div></div>
+        <div><div class="k">Tanggal</div><div class="v">${fmtDate(entry.created_at)}</div></div>
+      </div>
+      <div class="feedback-block"><div class="k">Kritik Anda</div><p>${escapeHtml(entry.liked)}</p></div>
+    `;
+    el('feedbackModal').classList.remove('hidden');
+    return;
   }
   el('feedbackDetailBody').innerHTML = `
     <div class="detail-grid">
