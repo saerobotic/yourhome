@@ -241,7 +241,7 @@ function drawStickerCanvas(propertyName, categoryLabel){
   roundRect(ctx, 1, 1, width - 2, height - 2, 14);
   ctx.stroke();
 
-  // header banner "KRITIK & SARAN"
+  // header banner title and slogan
   ctx.save();
   roundRect(ctx, 1, 1, width - 2, headerH, 13);
   ctx.clip();
@@ -254,10 +254,10 @@ function drawStickerCanvas(propertyName, categoryLabel){
   ctx.textAlign = 'center';
   ctx.fillStyle = '#ffffff';
   ctx.font = '800 22px Playfair Display, Georgia, serif';
-  ctx.fillText('KRITIK & SARAN', width / 2, 33);
-  ctx.font = '500 11px Poppins, sans-serif';
+  ctx.fillText('KRITIKLAH KAMI', width / 2, 33);
+  ctx.font = '500 10px Poppins, sans-serif';
   ctx.fillStyle = 'rgba(255,255,255,.88)';
-  ctx.fillText('Ceritakan pengalaman menginap Anda', width / 2, 52);
+  ctx.fillText('Masukan Anda, Langkah Kami Lebih Baik', width / 2, 52);
 
   // kotak QR
   const qrLeft = (width - qrSize) / 2;
