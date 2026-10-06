@@ -179,6 +179,9 @@
     .close:hover,.task-modal-close:hover{background:var(--line)}
     .detail-meta{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:18px 20px 4px}
     .meta-item{background:var(--sunken);border:1px solid var(--line);border-radius:10px;padding:11px 13px}
+    .manual-photo-field{grid-column:1/-1}
+    .manual-photo-preview{display:flex;align-items:flex-start;gap:10px;flex-wrap:wrap}
+    .manual-photo-preview img{display:block;max-width:100%;max-height:180px;border:1px solid var(--line);border-radius:var(--r)}
     .meta-item.gold{background:var(--warn-soft);border-color:var(--warn-line)}
     .meta-item input{width:100%;margin-top:6px;border:1px solid var(--line-strong);border-radius:7px;background:var(--paper);color:var(--ink);padding:7px 9px;font:inherit;font-size:.88rem;outline:none;transition:border-color .15s,box-shadow .15s}
     .meta-item input:hover{border-color:var(--ink-2)}
@@ -767,7 +770,7 @@
       <div class="records-head"><h2>Riwayat Check-in Lokasi</h2><span class="records-count" id="arrivalCount">0 data</span></div>
       <div class="table-wrap">
         <table class="mobile-cards">
-          <thead><tr><th>Waktu</th><th>Crew</th><th>GPS</th><th>Selfie</th></tr></thead>
+          <thead><tr><th>Waktu</th><th>Crew</th><th>GPS</th><th>Selfie</th><th>Aksi</th></tr></thead>
           <tbody id="arrivalBody"></tbody>
         </table>
         <div class="empty" id="arrivalEmpty"><strong>Belum ada check-in lokasi</strong><span>Check-in lokasi dari crew (GPS dan selfie) akan muncul di sini.</span></div>
@@ -945,6 +948,13 @@
         </select><input id="editCustomUnit" class="hidden" placeholder="Tulis nama properti atau unit" /></label>
         <label class="field"><span class="meta-label">Pekerjaan</span><select id="editJobType" required><option value="">Pilih jenis pekerjaan</option><option value="Check-in Tamu">Check-in Tamu</option><option value="Cleaning">Cleaning</option><option value="Maintenance">Maintenance</option><option value="Laundry">Laundry</option><option value="Lainnya">Lainnya</option></select></label>
         <label class="field"><span class="meta-label">Tanggal</span><input id="editDate" type="date" required /></label>
+        <div class="field manual-photo-field hidden" id="manualPhotoField">
+          <label for="manualWorkPhotoFile"><span class="meta-label">Foto bukti kerja (opsional)</span></label>
+          <input id="manualWorkPhotoFile" type="file" accept="image/*" />
+          <p id="manualPhotoMessage" class="pin-message" role="status" aria-live="polite"></p>
+          <div id="manualPhotoPreview" class="manual-photo-preview hidden"><img id="manualPhotoPreviewImage" alt="Pratinjau foto bukti kerja" /></div>
+          <button class="button danger hidden" id="removeManualWorkPhoto" type="button">Hapus foto</button>
+        </div>
         <div class="edit-actions"><button class="button" type="button" data-close="editModal">Batal</button><button class="button primary" id="editSubmitBtn" type="submit">Simpan Perubahan</button></div>
       </form>
     </div>
@@ -1031,6 +1041,9 @@
     let currentSlip = null;
     let slipLogoDataUrl = null;
     let manualEntryMode = false;
+    let manualWorkPhoto = '';
+    let manualWorkPhotoError = '';
+    let manualWorkPhotoBusy = false;
     const el = id => document.getElementById(id);
     const FIELD_TASKS_KEY = 'yourhome_field_tasks_draft_v1';
     const EXTRA_PAY_KEY = 'yourhome_extra_pay_v1';
@@ -1093,6 +1106,80 @@
       }
       return [];
     }
+    function dataUrlSizeBytes(value) {
+      const base64 = String(value || '').split(',', 2)[1] || '';
+      const padding = base64.endsWith('==') ? 2 : base64.endsWith('=') ? 1 : 0;
+      return Math.floor(base64.length * 3 / 4) - padding;
+    }
+    function compressManualWorkPhoto(file) {
+      return new Promise((resolve, reject) => {
+        const image = new Image();
+        const objectUrl = URL.createObjectURL(file);
+        image.onerror = () => { URL.revokeObjectURL(objectUrl); reject(new Error('Foto tidak bisa dibaca.')); };
+        image.onload = () => {
+          URL.revokeObjectURL(objectUrl);
+          const originalWidth = image.naturalWidth || 1280;
+          let width = Math.min(originalWidth, 1280);
+          let height = Math.max(1, Math.round((image.naturalHeight || 720) * width / originalWidth));
+          const canvas = document.createElement('canvas');
+          const context = canvas.getContext('2d');
+          for (let resize = 0; resize < 9; resize++) {
+            canvas.width = width;
+            canvas.height = height;
+            context.drawImage(image, 0, 0, width, height);
+            for (const quality of [0.82, 0.72, 0.62, 0.52, 0.42, 0.32, 0.22]) {
+              const compressed = canvas.toDataURL('image/jpeg', quality);
+              if (dataUrlSizeBytes(compressed) < 60 * 1024) return resolve(compressed);
+            }
+            width = Math.round(width * 0.82);
+            height = Math.max(1, Math.round(height * 0.82));
+          }
+          reject(new Error('Foto belum bisa dikompres di bawah 60 KB. Coba foto dengan resolusi lebih kecil.'));
+        };
+        image.src = objectUrl;
+      });
+    }
+    async function handleManualWorkPhotoChange(event) {
+      const file = event.target.files?.[0];
+      manualWorkPhoto = '';
+      manualWorkPhotoError = '';
+      el('manualPhotoPreview').classList.add('hidden');
+      el('removeManualWorkPhoto').classList.toggle('hidden', !file);
+      el('manualPhotoMessage').className = 'pin-message';
+      el('manualPhotoMessage').textContent = '';
+      if (!file) return;
+      manualWorkPhotoBusy = true;
+      el('editSubmitBtn').disabled = true;
+      el('removeManualWorkPhoto').disabled = true;
+      el('manualPhotoMessage').textContent = 'Mengompres foto...';
+      try {
+        manualWorkPhoto = await compressManualWorkPhoto(file);
+        const sizeKb = (dataUrlSizeBytes(manualWorkPhoto) / 1024).toFixed(1);
+        el('manualPhotoPreviewImage').src = manualWorkPhoto;
+        el('manualPhotoPreview').classList.remove('hidden');
+        el('manualPhotoMessage').className = 'pin-message success';
+        el('manualPhotoMessage').textContent = `Foto siap · ${sizeKb} KB (maksimal 60 KB).`;
+      } catch (error) {
+        manualWorkPhotoError = error.message || 'Foto gagal dikompres.';
+        el('manualPhotoMessage').className = 'pin-message error';
+        el('manualPhotoMessage').textContent = manualWorkPhotoError;
+      } finally {
+        manualWorkPhotoBusy = false;
+        el('editSubmitBtn').disabled = false;
+        el('removeManualWorkPhoto').disabled = false;
+      }
+    }
+    function clearManualWorkPhoto() {
+      manualWorkPhoto = '';
+      manualWorkPhotoError = '';
+      el('manualWorkPhotoFile').value = '';
+      el('removeManualWorkPhoto').classList.add('hidden');
+      el('removeManualWorkPhoto').disabled = false;
+      el('manualPhotoPreviewImage').removeAttribute('src');
+      el('manualPhotoPreview').classList.add('hidden');
+      el('manualPhotoMessage').className = 'pin-message';
+      el('manualPhotoMessage').textContent = '';
+    }
     function formatLocalDateKey(date = new Date()) {
       return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
     }
@@ -1102,7 +1189,8 @@
       const fallbackDate = createdDate && !Number.isNaN(createdDate.getTime()) ? formatLocalDateKey(createdDate) : '';
       const hasGps = !(Number(row.lat) === 0 && Number(row.lng) === 0);
       const workPhotos = parseWorkPhotos(row.work_photo_urls);
-      const isManual = !hasGps && !row.selfie_url && workPhotos.length === 0;
+      const hasAdminManualPhoto = workPhotos.some(photo => String(photo).includes('/files/admin-manual/'));
+      const isManual = hasAdminManualPhoto || (!hasGps && !row.selfie_url && workPhotos.length === 0);
       return {
         id: row.id,
         crew: String(row.crew || '').trim(),
@@ -1281,12 +1369,32 @@
         const hasCoords = record.lat != null && record.lng != null && Number.isFinite(Number(record.lat)) && Number.isFinite(Number(record.lng)) && !(Number(record.lat) === 0 && Number(record.lng) === 0);
         const gps = hasCoords ? `<a class="gps-link" href="https://www.google.com/maps?q=${Number(record.lat)},${Number(record.lng)}" target="_blank" rel="noopener">${Number(record.lat).toFixed(4)}, ${Number(record.lng).toFixed(4)} ↗</a> <span class="muted" data-geo-key="${geoKey(record.lat, record.lng)}" data-geo-lat="${Number(record.lat)}" data-geo-lng="${Number(record.lng)}">· memuat wilayah…</span>` : '-';
         const selfie = record.photo ? `<button type="button" data-arrival-photo="${escapeHtml(record.photo)}" data-arrival-title="${escapeHtml(`${record.crew || '-'} · ${formatDate(record.date)} ${formatTime(record)}`)}" title="Klik untuk memperbesar" aria-label="Perbesar selfie ${escapeHtml(record.crew || '')}" style="border:0;padding:0;background:none;cursor:zoom-in"><img src="${escapeHtml(record.photo)}" alt="Selfie" loading="lazy" style="width:36px;height:36px;object-fit:cover;border-radius:8px;display:block" /></button>` : '<span class="muted">Tanpa selfie</span>';
-        return `<tr><td data-label="Waktu"><strong>${formatDate(record.date)}</strong><div class="muted">${formatTime(record)}</div></td><td data-label="Crew" class="crew">${escapeHtml(record.crew || '-')}</td><td data-label="GPS">${gps}</td><td data-label="Selfie">${selfie}</td></tr>`;
+        return `<tr><td data-label="Waktu"><strong>${formatDate(record.date)}</strong><div class="muted">${formatTime(record)}</div></td><td data-label="Crew" class="crew">${escapeHtml(record.crew || '-')}</td><td data-label="GPS">${gps}</td><td data-label="Selfie">${selfie}</td><td data-label="Aksi"><button type="button" class="detail-btn exp-danger" data-delete-arrival="${escapeHtml(record.id)}" data-delete-arrival-crew="${escapeHtml(record.crew || '')}" data-delete-arrival-date="${escapeHtml(record.date || '')}">Hapus</button></td></tr>`;
       }).join('');
       body.querySelectorAll('[data-arrival-photo]').forEach(button => button.addEventListener('click', () => {
         openReceiptModal(button.dataset.arrivalPhoto, button.dataset.arrivalTitle, 'Selfie Check-in');
       }));
+      body.querySelectorAll('[data-delete-arrival]').forEach(button => button.addEventListener('click', () => {
+        deleteArrivalRecord(button.dataset.deleteArrival, button.dataset.deleteArrivalCrew, button.dataset.deleteArrivalDate);
+      }));
       resolveArrivalDistricts();
+    }
+
+    async function deleteArrivalRecord(id, crew, date) {
+      if (!id) return;
+      if (!confirmPhrase(`hapus check-in lokasi ${crew || ''} tanggal ${formatDate(date)}`, 'HAPUS LOKASI')) return;
+      const pin = (window.prompt('Masukkan PIN Master (4 digit) untuk menghapus check-in lokasi:') || '').trim();
+      if (!pin) return;
+      if (!/^\d{4}$/.test(pin)) { alert('PIN Master harus tepat 4 digit.'); return; }
+      try {
+        await workerRequest(`${API_BASE}/checkins/${encodeURIComponent(id)}/arrival`, {
+          method:'DELETE',
+          body:JSON.stringify({ pin }),
+        });
+        await refreshDashboardData();
+      } catch (error) {
+        alert(`Check-in lokasi belum dihapus. ${error.message || 'Periksa koneksi lalu coba lagi.'}`);
+      }
     }
 
     // Nama kecamatan dari koordinat (reverse geocoding OpenStreetMap/Nominatim, gratis).
@@ -2230,6 +2338,8 @@
     let editingRecord = null;
     function openManualEntry() {
       manualEntryMode = true;
+      clearManualWorkPhoto();
+      manualWorkPhotoBusy = false;
       editingRecord = null;
       fillEditSelect('editCrew', 'crew', '');
       el('editUnit').value = '';
@@ -2237,13 +2347,16 @@
       el('editCustomUnit').classList.add('hidden');
       el('editJobType').value = '';
       el('editDate').value = '';
+      el('manualPhotoField').classList.remove('hidden');
       el('editTitle').textContent = 'Tambah Data Manual';
-      el('editSubtitle').textContent = 'Masukkan check-in historis tanpa foto dan GPS.';
+      el('editSubtitle').textContent = 'Masukkan laporan historis tanpa GPS. Foto bukti opsional dan otomatis dikompres di bawah 60 KB.';
       el('editSubmitBtn').textContent = 'Simpan Data Manual';
       el('editModal').classList.add('open');
     }
     function editRecord(record) {
       manualEntryMode = false;
+      clearManualWorkPhoto();
+      el('manualPhotoField').classList.add('hidden');
       if (!record?.id) return;
       editingRecord = record;
       fillEditSelect('editCrew', 'crew', record.crew);
@@ -2290,6 +2403,10 @@
           alert('Lengkapi crew, properti, pekerjaan, dan tanggal terlebih dahulu.');
           return;
         }
+        if (manualWorkPhotoBusy || (el('manualWorkPhotoFile').files.length && !manualWorkPhoto)) {
+          alert(manualWorkPhotoError || 'Tunggu kompresi foto selesai atau hapus foto yang gagal diproses.');
+          return;
+        }
         if (!confirmPhrase('tambah data manual', 'TAMBAH DATA')) return;
         const pin = window.prompt('Masukkan PIN Master (4 digit) untuk menyetujui penambahan data manual:');
         if (pin === null) return;
@@ -2305,6 +2422,7 @@
               unit,
               job_type: jobType,
               work_date: workDate,
+              work_photo_base64: manualWorkPhoto,
               pin: pin.trim()
             })
           });
@@ -2501,6 +2619,8 @@
       });
       document.getElementById('detailDeleteBtn').addEventListener('click', () => deleteRecord(detailRecord));
       document.getElementById('editForm').addEventListener('submit', saveEdit);
+      document.getElementById('manualWorkPhotoFile').addEventListener('change', handleManualWorkPhotoChange);
+      document.getElementById('removeManualWorkPhoto').addEventListener('click', clearManualWorkPhoto);
       document.getElementById('editUnit').addEventListener('change', () => {
         const isOther = el('editUnit').value === 'Lainnya';
         el('editCustomUnit').classList.toggle('hidden', !isOther);

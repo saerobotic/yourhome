@@ -71,6 +71,8 @@
     /* Foto kecil di riwayat/dokumentasi; klik untuk membuka pop-up foto. */
     .photo-mini { width: 44px; height: 44px; object-fit: cover; border-radius: 8px; border: 1px solid var(--line, #e2dbd0); display: block; }
     .photo-mini-row { display: flex; flex-wrap: wrap; gap: 6px; }
+    .report-photo-item { position: relative; display: inline-flex; }
+    .report-photo-remove { position: absolute; top: -5px; right: -5px; display: grid; width: 20px; height: 20px; place-items: center; border: 1px solid #fff; border-radius: 50%; color: #fff; background: #b42318; font-size: 13px; font-weight: 700; line-height: 1; }
     [data-photo-src] { cursor: zoom-in; padding: 0; border: 0; background: none; line-height: 0; }
     .work-photo-thumb { width: 64px; height: 64px; object-fit: cover; border-radius: 8px; border: 2px solid var(--line); }
     .work-photo-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; }
@@ -375,13 +377,13 @@
 
         <!-- Upload foto hasil kerja, maksimal 30 foto -->
         <div>
-          <p class="text-xs text-gray-500 mb-1.5">Cara kirim photo, bisa sekaligus banyak dengan pilih di galeri. Max 30 Photo</p>
+          <p class="text-xs text-gray-500 mb-1.5">Pilih satu atau beberapa foto hasil kerja sekaligus dari galeri. Tidak ada batas jumlah; maksimal 60 KB per foto.</p>
           <label class="block text-sm font-semibold text-gray-700 mb-1.5">Foto Hasil Kerjaan <span class="text-red-500">*</span></label>
           <label for="workPhotoInput" class="block cursor-pointer bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold py-3.5 rounded-xl text-center text-sm transition">
             Pilih Foto Hasil Kerjaan
           </label>
           <input type="file" id="workPhotoInput" accept="image/*" capture="environment" multiple class="hidden" />
-          <p id="workPhotoCount" class="text-xs text-gray-400 mt-2">Belum ada foto. Pilih 1–30 foto.</p>
+          <p id="workPhotoCount" class="text-xs text-gray-400 mt-2">Belum ada foto. Pilih satu atau beberapa foto.</p>
           <div id="workPhotoPreview" class="work-photo-grid mt-3"></div>
         </div>
 
@@ -500,7 +502,7 @@
           <label for="expenseReceipt" class="block text-sm font-semibold text-gray-700 mb-1.5">Foto Struk *</label>
           <div id="expenseReceiptFileWrap">
             <input id="expenseReceipt" type="file" accept="image/*" capture="environment" class="w-full text-sm" />
-            <p class="mt-1 text-xs text-gray-500">Foto otomatis dikecilkan di bawah 100 KB.</p>
+            <p class="mt-1 text-xs text-gray-500">Foto otomatis dikecilkan di bawah 60 KB.</p>
             <img id="expenseReceiptPreview" alt="" class="hidden mt-2 max-h-48 rounded-lg border border-gray-200" />
           </div>
           <label class="mt-3 flex items-center gap-2 text-sm font-semibold text-gray-700">
@@ -603,8 +605,7 @@
     ACCURACY_THRESHOLD: 100,
     // Batas ukuran foto sebelum diunggah ke Storage
     PHOTO_MAX_WIDTH: 640,
-    PHOTO_MAX_BYTES: 100 * 1024,
-    MAX_WORK_PHOTOS: 30
+    PHOTO_MAX_BYTES: 60 * 1024,
   };
   const PENDING_KEY = 'pending_checkins_v1';
   const FIELD_TASKS_KEY = 'yourhome_field_tasks_draft_v1';
@@ -880,29 +881,36 @@
 
   let expenseReceiptDataUrl = '';
 
-  function compressReceiptToUnder100Kb(file) {
+  function dataUrlSizeBytes(value) {
+    const base64 = String(value || '').split(',', 2)[1] || '';
+    const padding = base64.endsWith('==') ? 2 : base64.endsWith('=') ? 1 : 0;
+    return Math.floor(base64.length * 3 / 4) - padding;
+  }
+
+  function compressReceiptToUnder60Kb(file) {
     return new Promise((resolve, reject) => {
       const img = new Image();
+      const objectUrl = URL.createObjectURL(file);
       img.onload = () => {
-        let scale = Math.min(1, 1280 / Math.max(img.width, img.height));
-        const attempt = () => {
+        URL.revokeObjectURL(objectUrl);
+        let width = Math.min(img.naturalWidth || 1280, 1280);
+        let height = Math.max(1, Math.round((img.naturalHeight || 720) * width / (img.naturalWidth || 1280)));
+        for (let resize = 0; resize < 12; resize++) {
           const canvas = document.createElement('canvas');
-          canvas.width = Math.round(img.width * scale);
-          canvas.height = Math.round(img.height * scale);
+          canvas.width = width;
+          canvas.height = height;
           canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
-          for (const quality of [0.8, 0.6, 0.45, 0.3]) {
+          for (const quality of [0.82, 0.72, 0.62, 0.52, 0.42, 0.32, 0.22, 0.12]) {
             const dataUrl = canvas.toDataURL('image/jpeg', quality);
-            const bytes = Math.round((dataUrl.length - dataUrl.indexOf(',') - 1) * 0.75);
-            if (bytes < 100 * 1024) return resolve(dataUrl);
+            if (dataUrlSizeBytes(dataUrl) < CONFIG.PHOTO_MAX_BYTES) return resolve(dataUrl);
           }
-          if (scale < 0.25) return reject(new Error('Foto struk terlalu besar. Coba foto ulang dengan jarak lebih dekat.'));
-          scale *= 0.7;
-          attempt();
-        };
-        attempt();
+          width = Math.max(1, Math.round(width * 0.75));
+          height = Math.max(1, Math.round(height * 0.75));
+        }
+        reject(new Error('Foto struk belum bisa dikompres di bawah 60 KB. Coba foto ulang dengan jarak lebih dekat.'));
       };
-      img.onerror = () => reject(new Error('File foto tidak bisa dibaca.'));
-      img.src = URL.createObjectURL(file);
+      img.onerror = () => { URL.revokeObjectURL(objectUrl); reject(new Error('File foto tidak bisa dibaca.')); };
+      img.src = objectUrl;
     });
   }
 
@@ -1064,7 +1072,7 @@
       if (!file) return;
       document.getElementById('expenseStatus').textContent = 'Mengecilkan foto struk...';
       try {
-        expenseReceiptDataUrl = await compressReceiptToUnder100Kb(file);
+        expenseReceiptDataUrl = await compressReceiptToUnder60Kb(file);
         const preview = document.getElementById('expenseReceiptPreview');
         preview.src = expenseReceiptDataUrl;
         preview.classList.remove('hidden');
@@ -1479,17 +1487,23 @@
         ctx.drawImage(img, 0, 0, width, height);
         let quality = 0.72;
         let compressed = canvas.toDataURL('image/jpeg', quality);
-        while (compressed.length * 0.75 > CONFIG.PHOTO_MAX_BYTES && quality > 0.25) {
+        while (dataUrlSizeBytes(compressed) >= CONFIG.PHOTO_MAX_BYTES && quality > 0.1) {
           quality -= 0.08;
           compressed = canvas.toDataURL('image/jpeg', quality);
         }
-        while (compressed.length * 0.75 > CONFIG.PHOTO_MAX_BYTES && width > 320) {
+        while (dataUrlSizeBytes(compressed) >= CONFIG.PHOTO_MAX_BYTES && width > 1) {
           width = Math.round(width * 0.85);
-          height = Math.round(height * 0.85);
+          height = Math.max(1, Math.round(height * 0.85));
           canvas.width = width;
           canvas.height = height;
           ctx.drawImage(img, 0, 0, width, height);
           compressed = canvas.toDataURL('image/jpeg', quality);
+        }
+        if (dataUrlSizeBytes(compressed) >= CONFIG.PHOTO_MAX_BYTES) {
+          canvas.width = 1;
+          canvas.height = 1;
+          ctx.drawImage(img, 0, 0, 1, 1);
+          compressed = canvas.toDataURL('image/jpeg', 0.1);
         }
         callback(compressed);
       };
@@ -1739,6 +1753,9 @@
     document.getElementById('confirmSaveCheckinBtn').addEventListener('click', confirmCheckinSubmission);
 
     // --- Refresh riwayat ---
+    const reportHistoryList = document.getElementById('laporanHistoryList');
+    reportHistoryList.addEventListener('change', handleReportPhotoChange);
+    reportHistoryList.addEventListener('click', handleReportPhotoClick);
     const refreshHistoryButtons = ['refreshHistoryBtn', 'refreshLaporanHistoryBtn'].map(id => document.getElementById(id));
     refreshHistoryButtons.forEach(button => button.addEventListener('click', async () => {
       if (!state.currentCrew || button.disabled) return;
@@ -1928,12 +1945,6 @@
   async function handleWorkPhotoUpload(e) {
     const selectedFiles = Array.from(e.target.files || []);
     if (!selectedFiles.length) return;
-    const availableSlots = CONFIG.MAX_WORK_PHOTOS - state.workPhotos.length;
-    if (selectedFiles.length > availableSlots) {
-      showToast(`Maksimal ${CONFIG.MAX_WORK_PHOTOS} foto hasil kerja.`, 'error');
-      e.target.value = '';
-      return;
-    }
     showLoading(`Memproses ${selectedFiles.length} foto hasil kerja…`);
     try {
       const compressedPhotos = await Promise.all(selectedFiles.map(file => new Promise(resolve => {
@@ -1952,8 +1963,8 @@
   function renderWorkPhotoPreview() {
     const preview = document.getElementById('workPhotoPreview');
     document.getElementById('workPhotoCount').textContent = state.workPhotos.length
-      ? `${state.workPhotos.length}/${CONFIG.MAX_WORK_PHOTOS} foto siap dikirim. Maksimal 250 KB per foto.`
-      : 'Belum ada foto. Pilih 1–30 foto.';
+      ? `${state.workPhotos.length} foto siap dikirim. Maksimal 60 KB per foto.`
+      : 'Belum ada foto. Pilih satu atau beberapa foto.';
     preview.innerHTML = state.workPhotos.map((photo, index) => `
       <button type="button" class="relative" data-remove-work-photo="${index}" aria-label="Hapus foto hasil kerja ${index + 1}">
         <img src="${photo}" class="work-photo-thumb" alt="Foto hasil kerja ${index + 1}" />

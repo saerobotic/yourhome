@@ -349,7 +349,7 @@
       <div class="actions">
         <span class="user-chip" id="userChip"></span>
         <a class="button" href="https://artikel.yourhome.id" target="_blank" rel="noopener noreferrer">Lihat Blog</a>
-        <a class="button" href="dasbord.html">Dashboard</a>
+        <a class="button" href="https://admin.yourhome.id/">Dashboard</a>
         <button class="button danger" id="logoutBtn" type="button">Logout</button>
       </div>
     </header>
@@ -437,6 +437,17 @@
           <div class="card">
             <h3>Penerbitan</h3>
             <div class="info-line" id="pubInfo"></div>
+            <div class="field">
+              <label for="fAuthor">Penulis</label>
+              <select id="fAuthor"><option value="">Pilih penulis...</option></select>
+            </div>
+            <div class="field">
+              <label for="newAuthorInput">Tambah nama penulis</label>
+              <div style="display:flex; gap:8px; align-items:center;">
+                <input id="newAuthorInput" type="text" placeholder="Masukkan nama baru" autocomplete="off" style="flex:1" />
+                <button class="button small" id="addAuthorBtn" type="button">Tambah</button>
+              </div>
+            </div>
             <div class="field">
               <label for="fPubAt" id="pubAtLabel">Jadwalkan (opsional)</label>
               <input id="fPubAt" type="datetime-local" />
@@ -539,9 +550,53 @@
     filter: 'all', search: '', category: '', visible: PAGE_SIZE,
     cur: null, tags: [], coverUrl: '', slugTouched: false, dirty: false, busy: false, uploads: 0, savedAt: null,
   };
+  const AUTHOR_STORAGE_KEY = 'yh_article_author_names';
+  const AUTHOR_SUGGESTIONS = ['Admin YOUR HOME', 'Andri Fernando', 'Tim Editorial', 'Content Writer', 'Master'];
   const el = id => document.getElementById(id);
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const catLabel = id => (CATEGORIES.find(c => c.id === id) || {}).label || '—';
+  function getStoredAuthorNames() {
+    try {
+      const raw = JSON.parse(localStorage.getItem(AUTHOR_STORAGE_KEY) || '[]');
+      return Array.isArray(raw) ? raw.map(v => String(v).trim()).filter(Boolean) : [];
+    } catch {
+      return [];
+    }
+  }
+  function saveAuthorNames(names) {
+    try {
+      localStorage.setItem(AUTHOR_STORAGE_KEY, JSON.stringify(names));
+    } catch {
+      // abaikan jika browser storage penuh
+    }
+  }
+  function addAuthorToList(name) {
+    const value = String(name || '').trim();
+    if (!value) return false;
+    const names = getStoredAuthorNames();
+    const existing = names.find(item => item.toLocaleLowerCase('id') === value.toLocaleLowerCase('id'));
+    if (existing) {
+      el('fAuthor').value = existing;
+      return false;
+    }
+    const next = [...names, value].sort((a, b) => a.localeCompare(b, 'id'));
+    saveAuthorNames(next);
+    syncAuthorSuggestions();
+    el('fAuthor').value = value;
+    return true;
+  }
+  function syncAuthorSuggestions() {
+    const names = [...new Set([
+      ...getStoredAuthorNames(),
+      ...AUTHOR_SUGGESTIONS,
+      ...state.articles.map(a => a.author).filter(Boolean),
+      ...(state.cur ? [state.cur.author].filter(Boolean) : []),
+    ])].filter(Boolean).sort((a, b) => a.localeCompare(b, 'id'));
+    const select = el('fAuthor');
+    const current = select.value;
+    select.innerHTML = '<option value="">Pilih penulis...</option>' + names.map(name => `<option value="${esc(name)}">${esc(name)}</option>`).join('');
+    if (names.includes(current)) select.value = current;
+  }
 
   /* ---------- Waktu (WIB) ---------- */
   const dayFmt = new Intl.DateTimeFormat('en-CA', { timeZone: TZ, year: 'numeric', month: '2-digit', day: '2-digit' });
@@ -561,7 +616,7 @@
 
   /* ---------- Util ---------- */
   function slugify(s) {
-    return String(s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/&/g, ' dan ')
+    return String(s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/&/g, ' dan ')
       .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 80).replace(/-+$/, '');
   }
   function debounce(fn, ms) { let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); }; }
@@ -858,12 +913,14 @@
       excerpt: el('fExcerpt').value.trim(), content: raw ? quill.root.innerHTML : contentHtml(),
       category: el('fCategory').value, tags: [...state.tags], cover_url: state.coverUrl, cover_alt: el('fCoverAlt').value.trim(),
       meta_title: el('fMetaTitle').value.trim(), meta_description: el('fMetaDesc').value.trim(),
+      author: el('fAuthor').value.trim() || 'Admin YOUR HOME',
       pub_at: el('fPubAt').value,
     };
   }
   function fillForm(a) {
     el('fTitle').value = a.title; el('fSlug').value = a.slug; el('fExcerpt').value = a.excerpt;
     el('fCategory').value = a.category; el('fCoverAlt').value = a.cover_alt; el('fMetaTitle').value = a.meta_title; el('fMetaDesc').value = a.meta_description;
+    el('fAuthor').value = a.author || '';
     state.tags = [...(a.tags || [])]; state.coverUrl = a.cover_url || ''; setContent(a.content);
     el('fPubAt').value = a.status === 'published' && a.published_at ? isoToLocalInput(a.published_at) : '';
   }
@@ -995,10 +1052,13 @@
       } else published_at = wasLive ? cur.published_at : new Date().toISOString();
     }
     if (action === 'unpublish' && !(await confirmDialog({ title: 'Tarik jadi draft?', text: 'Artikel tidak lagi tampil di blog sampai diterbitkan ulang.', ok: 'Tarik jadi draft', danger: true }))) return;
-    const payload = { title: f.title, slug: f.slug, excerpt: f.excerpt, content: f.content, category: f.category, tags: f.tags, cover_url: f.cover_url, cover_alt: f.cover_alt, meta_title: f.meta_title, meta_description: f.meta_description, author: cur.author || state.user?.display_name || state.user?.account_id || 'Admin', status, published_at };
+    const payload = { title: f.title, slug: f.slug, excerpt: f.excerpt, content: f.content, category: f.category, tags: f.tags, cover_url: f.cover_url, cover_alt: f.cover_alt, meta_title: f.meta_title, meta_description: f.meta_description, author: f.author, status, published_at };
     state.busy = true; ['draftBtn', 'publishBtn', 'unpublishBtn'].forEach(i => el(i).disabled = true);
     try {
       const saved = cur.id ? await store().update(cur.id, payload) : await store().create(payload);
+      if (String(saved.author || '').trim() !== f.author) {
+        throw new Error('Server belum menyimpan nama penulis. Deploy Worker terbaru, lalu simpan artikel ini lagi.');
+      }
       const idx = state.articles.findIndex(x => x.id === saved.id);
       const light = { ...saved, content: '' }; if (idx >= 0) state.articles[idx] = light; else state.articles.unshift(light);
       clearBackup(); state.cur = saved; state.dirty = false;
@@ -1016,7 +1076,7 @@
   async function duplicateArticle(id) {
     try {
       const a = await store().get(id);
-      const copy = { ...a, title: `${a.title} (salinan)`, slug: `${a.slug}-salinan-${Date.now().toString(36).slice(-4)}`, status: 'draft', published_at: null, author: state.user?.display_name || a.author };
+      const copy = { ...a, title: `${a.title} (salinan)`, slug: `${a.slug}-salinan-${Date.now().toString(36).slice(-4)}`, status: 'draft', published_at: null, author: a.author || 'Admin YOUR HOME' };
       delete copy.id; delete copy.created_at; delete copy.updated_at;
       const saved = await store().create(copy); state.articles.unshift({ ...saved, content: '' });
       renderList(); renderTarget(); toast('Artikel diduplikat sebagai draft.', 'success');
@@ -1038,7 +1098,8 @@
     const f = article || readForm(), cur = article || state.cur;
     const date = cur?.published_at && cur.status === 'published' ? cur.published_at : (f.pub_at ? localInputToIso(f.pub_at) : new Date().toISOString());
     const words = countWords(f.content);
-    el('previewFrame').innerHTML = `<div class="pv-cat">${esc(catLabel(f.category))}</div><h1 class="pv-title">${esc(f.title || 'Judul artikel')}</h1><div class="pv-meta">${esc(cur?.author || state.user?.display_name || 'Admin')} · ${esc(fmtDate(date))} · ${Math.max(1, Math.round(words / 200))} menit baca</div>${f.cover_url ? `<img class="pv-cover" src="${esc(f.cover_url)}" alt="${esc(f.cover_alt)}" />` : ''}<div class="pv-body">${f.content || '<p style="color:#8c857c">Belum ada isi.</p>'}</div>`;
+    const authorName = f.author || cur?.author || 'Admin YOUR HOME';
+    el('previewFrame').innerHTML = `<div class="pv-cat">${esc(catLabel(f.category))}</div><h1 class="pv-title">${esc(f.title || 'Judul artikel')}</h1><div class="pv-meta">${esc(authorName)} · ${esc(fmtDate(date))} · ${Math.max(1, Math.round(words / 200))} menit baca</div>${f.cover_url ? `<img class="pv-cover" src="${esc(f.cover_url)}" alt="${esc(f.cover_alt)}" />` : ''}<div class="pv-body">${f.content || '<p style="color:#8c857c">Belum ada isi.</p>'}</div>`;
     el('dlgPreview').showModal();
   }
   async function previewSavedArticle(id) {
@@ -1092,6 +1153,7 @@
     }
     if (state.mode === 'local') state.articles = await localStore.list();
     state.target = await store().getTarget();
+    syncAuthorSuggestions();
     el('userChip').innerHTML = `${esc(state.user.display_name || state.user.account_id)} <small>${esc(state.user.role || '')}</small>`;
     el('modeBanner').classList.toggle('hidden', state.mode !== 'local');
     showApp(); renderTarget(); renderList();
@@ -1101,6 +1163,25 @@
   function bind() {
     el('categoryFilter').innerHTML += CATEGORIES.map(c => `<option value="${c.id}">${esc(c.label)}</option>`).join('');
     el('fCategory').innerHTML += CATEGORIES.map(c => `<option value="${c.id}">${esc(c.label)}</option>`).join('');
+    syncAuthorSuggestions();
+    el('addAuthorBtn').addEventListener('click', () => {
+      const name = el('newAuthorInput').value.trim();
+      if (!name) { toast('Isi nama penulis dulu.', 'error'); el('newAuthorInput').focus(); return; }
+      if (addAuthorToList(name)) {
+        toast('Nama penulis ditambahkan ke daftar.', 'success');
+      } else {
+        toast('Nama penulis sudah ada di daftar.', 'success');
+      }
+      markDirty();
+      refreshMeta();
+      el('newAuthorInput').value = '';
+    });
+    el('newAuthorInput').addEventListener('keydown', e => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        el('addAuthorBtn').click();
+      }
+    });
     el('loginForm').addEventListener('submit', login);
     el('togglePassword').addEventListener('click', () => { const i = el('adminPassword'); i.type = i.type === 'password' ? 'text' : 'password'; });
     el('logoutBtn').addEventListener('click', async () => { if (state.dirty && !(await confirmDialog({ title: 'Logout?', text: 'Ada perubahan yang belum disimpan.', ok: 'Logout', danger: true }))) return; state.dirty = false; logout(); });
@@ -1146,6 +1227,7 @@
     el('fSlug').addEventListener('input', () => { state.slugTouched = true; markDirty(); refreshMeta(); });
     el('fSlug').addEventListener('blur', () => { el('fSlug').value = slugify(el('fSlug').value) || slugify(el('fTitle').value); refreshMeta(); });
     ['fExcerpt', 'fMetaTitle', 'fMetaDesc', 'fCategory'].forEach(id => el(id).addEventListener('input', () => { markDirty(); refreshMeta(); }));
+    el('fAuthor').addEventListener('change', () => { markDirty(); refreshMeta(); });
     el('fCoverAlt').addEventListener('input', () => { el('coverImg').alt = el('fCoverAlt').value; markDirty(); renderSeo(); });
     el('fPubAt').addEventListener('input', () => { markDirty(); updatePublishLabel(); });
     el('fTagInput').addEventListener('keydown', e => {

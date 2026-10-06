@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#241915" />
+  <title>Tugas Admin · Ceklis Properti | YOUR HOME</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root{--ink:#241915;--ink-2:#3d2c25;--bg:#f1f0ed;--paper:#fff;--line:#e4e0da;--line-strong:#d2cbc2;--muted:#6f675f;--accent:#6b3f2a;--accent-hover:#56321f;--brass:#b5832f;--brass-soft:#f6ecdb;--success:#2e6a4c;--success-soft:#e7f2ec;--danger:#b3261e;--danger-soft:#fbeae8;--blue:#315e78;--blue-soft:#e8f0f8;--radius:12px}
+    *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.55 'Plus Jakarta Sans',system-ui,-apple-system,'Segoe UI',sans-serif}button,input,select{font:inherit}.hidden{display:none!important}button,a{cursor:pointer}.button{display:inline-flex;align-items:center;justify-content:center;min-height:38px;padding:8px 13px;border:1px solid var(--line-strong);border-radius:8px;background:var(--paper);color:var(--ink);text-decoration:none;font-size:12px;font-weight:700}.button:hover{border-color:var(--ink-2);background:#faf9f7}.button.primary{background:var(--accent);border-color:var(--accent);color:#fff}.button.primary:hover{background:var(--accent-hover)}
+    .login-screen{min-height:100vh;display:grid;place-items:center;padding:22px;background:linear-gradient(145deg,#241915,#543725)}.login-card{width:min(420px,100%);padding:28px;background:#fff;border-radius:16px;box-shadow:0 24px 70px #160d0a55}.brand{display:grid;place-items:center;width:42px;height:42px;border-radius:11px;background:var(--brass-soft);color:var(--accent);font-weight:800}.eyebrow{margin:18px 0 4px;color:var(--accent);font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase}.login-card h1{margin:0;font-size:25px}.login-card>p{margin:7px 0;color:var(--muted);font-size:13px}.field{display:grid;gap:6px;margin-top:14px}.field label{font-size:12px;font-weight:700;color:var(--ink-2)}.field input,.field select,.search{width:100%;min-height:42px;padding:9px 11px;border:1px solid var(--line-strong);border-radius:8px;background:#fff;color:var(--ink)}.field input:focus,.field select:focus,.search:focus{outline:3px solid #b5832f33;border-color:var(--brass)}.password-wrap{display:flex;gap:6px}.password-wrap input{flex:1;min-width:0}.password-toggle{width:42px;border:1px solid var(--line);border-radius:8px;background:#fff;color:var(--muted)}.notice{min-height:20px;margin:10px 0 0;color:var(--danger);font-size:12px}.login-card .primary{width:100%;margin-top:13px}
+    .topbar{background:var(--ink);color:#fff}.topbar-inner{max-width:1200px;margin:auto;display:flex;align-items:center;gap:14px;padding:17px 22px}.brand-mini{display:grid;place-items:center;width:36px;height:36px;border-radius:9px;background:#f6ecdb;color:var(--accent);font-weight:800}.topbar-title{font-weight:800}.topbar-sub{color:#cdbfb6;font-size:11px}.spacer{flex:1}.user-chip{border:1px solid #ffffff44;border-radius:7px;padding:6px 9px;color:#e9ded7;font-size:11px;font-weight:700}.main{max-width:1200px;margin:auto;padding:26px 22px 56px}.heading{display:flex;justify-content:space-between;align-items:flex-end;gap:18px;flex-wrap:wrap;margin-bottom:17px}.heading h1{font-size:25px;line-height:1.2}.heading p{margin:6px 0 0;color:var(--muted)}.stats{display:flex;gap:9px}.stat{min-width:120px;padding:10px 13px;border:1px solid var(--line);border-radius:9px;background:#fff}.stat span{display:block;color:var(--muted);font-size:10px;font-weight:700}.stat strong{display:block;font-size:20px}.stat.complete strong{color:var(--success)}.stat.todo strong{color:var(--brass)}
+    .card{border:1px solid var(--line);border-radius:var(--radius);background:#fff;box-shadow:0 5px 20px #2419150a}.chooser{padding:17px;margin-bottom:15px}.chooser-grid{display:grid;grid-template-columns:minmax(200px,.8fr) minmax(230px,1.5fr) auto;gap:12px;align-items:end}.chooser .field{margin:0}.chooser-actions{display:flex;gap:7px;flex-wrap:wrap}.hint{color:var(--muted);font-size:11px}.property-summary{display:flex;justify-content:space-between;align-items:center;gap:15px;flex-wrap:wrap;margin:0 0 14px;padding:14px 16px}.property-title{font-size:17px;font-weight:800}.property-meta{color:var(--muted);font-size:11px}.badge{display:inline-flex;align-items:center;min-height:23px;padding:3px 9px;border-radius:999px;background:#eee;color:#5d5a55;font-size:10px;font-weight:800}.badge.active{background:var(--success-soft);color:var(--success)}.badge.draft{background:var(--brass-soft);color:#755519}.badge.archived{background:#ececea;color:#666}.badge.progress{background:var(--blue-soft);color:var(--blue)}.progress-card{padding:15px 17px;margin-bottom:14px}.progress-label{display:flex;justify-content:space-between;gap:10px;margin-bottom:7px;color:var(--muted);font-size:11px;font-weight:700}.progress-label strong{color:var(--ink)}progress{display:block;width:100%;height:8px;border:0;border-radius:99px;overflow:hidden;accent-color:var(--accent)}progress::-webkit-progress-bar{background:#f0efec;border-radius:99px}progress::-webkit-progress-value{background:var(--accent);border-radius:99px}progress::-moz-progress-bar{background:var(--accent);border-radius:99px}
+    .checklist{overflow:hidden}.checklist-head{padding:16px 18px;border-bottom:1px solid var(--line)}.checklist-head h2{margin:0;font-size:14px}.checklist-head p{margin:4px 0 0;color:var(--muted);font-size:11px}.group{padding:12px 18px 5px}.group h3{margin:0 0 5px;color:var(--accent);font-size:11px;letter-spacing:.04em;text-transform:uppercase}.check-row{display:grid;grid-template-columns:20px minmax(0,1fr) auto;gap:10px;align-items:center;min-height:48px;padding:8px 0;border-top:1px solid #f0eeeb;cursor:pointer}.check-row input{width:17px;height:17px;margin:0;accent-color:var(--success)}.check-text{font-size:12px;font-weight:700}.check-detail{display:block;margin-top:2px;color:var(--muted);font-size:10px;font-weight:400}.check-row input:checked~.check-copy .check-text{color:var(--success)}.field-state{color:var(--muted);font-size:10px;text-align:right}.check-row input:checked~.field-state{color:var(--success);font-weight:800}.empty{padding:48px 20px;text-align:center;color:var(--muted)}.empty strong{display:block;margin-bottom:4px;color:var(--ink)}.footer-note{padding:12px 17px;border-top:1px solid var(--line);color:var(--muted);font-size:10px}.toast{position:fixed;left:50%;bottom:20px;transform:translate(-50%,15px);max-width:92vw;padding:10px 15px;border-radius:9px;background:var(--ink);color:#fff;font-size:12px;font-weight:700;opacity:0;pointer-events:none;transition:.2s}.toast.show{opacity:1;transform:translate(-50%,0)}
+    @media(max-width:760px){.topbar-inner{padding:13px 14px}.main{padding:19px 13px 38px}.heading{align-items:flex-start;flex-direction:column}.stats{width:100%}.stat{flex:1;min-width:0}.chooser-grid{grid-template-columns:1fr}.chooser-actions .button{flex:1}.property-summary{align-items:flex-start}.check-row{grid-template-columns:20px minmax(0,1fr)}.field-state{grid-column:2;text-align:left;margin-top:-7px}.user-chip{display:none}}
+  </style>
+</head>
+<body>
+  <section id="loginScreen" class="login-screen hidden">
+    <form id="loginForm" class="login-card">
+      <div class="brand">YH</div><p class="eyebrow">YOUR HOME · INTERNAL</p><h1>Tugas Admin</h1><p>Masuk untuk melihat daftar properti dan progres ceklis.</p>
+      <div class="field"><label for="staffId">ID Staf</label><select id="staffId" required><option value="master">Master</option></select></div>
+      <div class="field"><label for="password">Password</label><div class="password-wrap"><input id="password" type="password" autocomplete="current-password" required /><button id="togglePassword" class="password-toggle" type="button" aria-label="Tampilkan password" title="Tampilkan password">&#128065;</button></div></div>
+      <p id="loginNotice" class="notice" role="alert" aria-live="polite"></p><button id="loginButton" class="button primary" type="submit">Masuk</button>
+    </form>
+    </section>
+  <div id="appShell" class="hidden">
+    <header class="topbar"><div class="topbar-inner"><div class="brand-mini">YH</div><div><div class="topbar-title">YOUR HOME · TUGAS ADMIN</div><div class="topbar-sub">Cek kelengkapan input setiap properti</div></div><div class="spacer"></div><span id="userChip" class="user-chip">ADMIN</span><a class="button" href="admin-properti.html">Admin Website</a><button id="logoutButton" class="button" type="button">Keluar</button></div></header>
+    <main class="main">
+      <div class="heading"><div><h1>Ceklis Kelengkapan Properti</h1><p>Pilih properti, lalu centang setiap kolom setelah diperiksa di Admin Website.</p></div><div class="stats"><div class="stat"><span>Total properti dimuat</span><strong id="totalProperties">0</strong></div><div class="stat complete"><span>Ceklis lengkap</span><strong id="completeProperties">0</strong></div><div class="stat todo"><span>Belum lengkap</span><strong id="incompleteProperties">0</strong></div></div></div>
+      <section class="card chooser" aria-label="Pilih properti"><div class="chooser-grid"><label class="field"><span>Filter status website</span><select id="statusFilter"><option value="all" selected>Semua status</option><option value="current">Aktif &amp; Draft</option><option value="draft">Draft</option><option value="active">Aktif / Publish</option><option value="archived">Arsip</option></select></label><label class="field"><span>Pilih properti</span><select id="propertySelect"><option value="">Memuat properti...</option></select></label><div class="chooser-actions"><button id="refreshButton" class="button" type="button">Muat ulang</button></div></div><p id="loadNotice" class="hint" role="status" aria-live="polite" style="margin:10px 0 0"></p></section>
+      <div id="propertyContent" class="hidden">
+        <section class="card property-summary"><div><div id="propertyTitle" class="property-title"></div><div id="propertyMeta" class="property-meta"></div></div><div style="display:flex;gap:7px;align-items:center;flex-wrap:wrap"><span id="propertyStatus" class="badge"></span><span id="propertyProgressBadge" class="badge progress"></span><a id="editPropertyLink" class="button primary" href="admin-properti.html">Buka di Admin Website</a></div></section>
+        <section class="card progress-card"><div class="progress-label"><span>Progres properti terpilih</span><strong id="selectedProgressText">0 dari 0</strong></div><progress id="selectedProgress" max="1" value="0" aria-label="Progres properti"></progress></section>
+        <section class="card checklist"><div class="checklist-head"><h2>Cek kolom kelengkapan</h2><p>Ceklis ini hanya mencatat pemeriksaan; untuk mengubah data gunakan tombol Admin Website.</p></div><div id="checklistGroups"></div><p class="footer-note">Progres disimpan di browser/perangkat ini dan tetap ada setelah halaman dimuat ulang.</p></section>
+      </div>
+      <section id="emptyState" class="card empty"><strong>Pilih properti untuk memulai</strong>Daftar mencakup properti yang diterima dari server.</section>
+    </main>
+  </div>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <script>
+    const API_BASE='https://your-home-checkin-api.saerobotic.workers.dev';
+    const TOKEN_KEY='dashboard_admin_token';
+    const STORAGE_KEY='yourhome_admin_property_checklist_v1';
+    const el=id=>document.getElementById(id);
+    let properties=[];
+    let checklistState={};
+    let selectedId='';
+    let userLabel='Admin';
+    const esc=value=>String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
+    const statusText={active:'Aktif · tampil di website',draft:'Draft · perlu dilengkapi',archived:'Arsip'};
+    const categoryText={apartment:'Apartemen',villa:'Villa',guesthouse:'Guest House',kos:'Kosan'};
+    function readChecklist(){try{const saved=JSON.parse(localStorage.getItem(STORAGE_KEY)||'{}');checklistState=saved&&typeof saved==='object'?saved:{}}catch{checklistState={}}}
+    function saveChecklist(){try{localStorage.setItem(STORAGE_KEY,JSON.stringify(checklistState));return true}catch{return false}}
+    async function api(path,options={}){
+      const response=await fetch(`${API_BASE}${path}`,{...options,headers:{'Content-Type':'application/json',Authorization:`Bearer ${sessionStorage.getItem(TOKEN_KEY)||''}`,...(options.headers||{})},cache:'no-store'});
+      const data=await response.json().catch(()=>({}));
+      if(response.status===401){sessionStorage.removeItem(TOKEN_KEY);throw new Error('Sesi berakhir. Silakan login kembali.')}
+      if(!response.ok||data.ok===false)throw new Error(data.error||data.message||`HTTP ${response.status}`);
+      return data;
+    }
+    function showLogin(message=''){el('appShell').classList.add('hidden');el('loginScreen').classList.remove('hidden');el('loginNotice').textContent=message}
+    function showApp(){el('loginScreen').classList.add('hidden');el('appShell').classList.remove('hidden')}
+    function loginLabel(accountId){const id=String(accountId||'').trim().toLowerCase();if(id==='master')return'Master';if(id==='admin')return'Admin';if(id==='admin-1')return'Operasional';const match=id.match(/^admin-(\d+)$/);return match?`Admin ${match[1]}`:id}
+    async function loadLoginOptions(){try{const result=await fetch(`${API_BASE}/dashboard/login-accounts`,{cache:'no-store'}).then(response=>response.json());const accounts=(Array.isArray(result.data)?result.data:[]).filter(account=>account.role!=='IT');if(accounts.length)el('staffId').replaceChildren(...accounts.map(account=>new Option(loginLabel(account.account_id),account.account_id)))}catch{}}
+    function checklistFor(property){
+      const common=[{id:'location',label:'Lokasi',detail:'Lokasi/alamat properti sudah diisi.'}];
+      if(property.category==='kos')common.push({id:'room_options',label:'Tipe kamar & harga bulanan',detail:'Semua tipe kamar, harga per bulan, dan detail fasilitas sudah diinput.'});
+      else common.push({id:'weekday_price',label:'Harga Hari Biasa',detail:'Harga weekday sudah diisi dengan nominal yang benar.'},{id:'weekend_price',label:'Harga Jumat/Sabtu',detail:'Harga Jumat/Sabtu sudah diisi dengan nominal yang benar.'});
+      common.push({id:'beds',label:'Jumlah Kamar Tidur',detail:'Jumlah kamar tidur sesuai data properti.'},{id:'baths',label:'Jumlah Kamar Mandi',detail:'Jumlah kamar mandi sesuai data properti.'},{id:'guests',label:'Kapasitas Tamu',detail:'Kapasitas tamu sudah diinput.'},{id:'main_photo',label:'Foto utama',detail:'Foto utama tersedia dan tampil dengan benar.'},{id:'gallery',label:'Foto galeri',detail:'Foto galeri sudah diunggah dan urutannya benar.'},{id:'maps',label:'Google Maps',detail:'Pencarian/link/embed Google Maps sudah diisi dan diuji.'},{id:'sort_order',label:'Urutan tampil',detail:'Urutan tampil sudah ditetapkan sesuai posisi yang diinginkan.'},{id:'description',label:'Deskripsi',detail:'Deskripsi properti sudah diisi dan diperiksa.'},{id:'publish',label:'Publish ke website',detail:'Status Aktif bila harus tampil; bila belum siap, biarkan Draft dan jangan centang.'});
+      const groups=[{title:'Informasi & harga',items:common.slice(0,property.category==='kos'?4:6)}];
+      groups.push({title:'Foto, lokasi peta & publikasi',items:common.slice(property.category==='kos'?4:6)});
+      return groups;
+    }
+    function allItems(property){return checklistFor(property).flatMap(group=>group.items)}
+    function checked(property,itemId){return checklistState[property.id]?.[itemId]===true}
+    function propertyComplete(property){return allItems(property).every(item=>checked(property,item.id))}
+    function updateOverallStats(){
+      el('totalProperties').textContent=String(properties.length);
+      const complete=properties.filter(property=>propertyComplete(property)).length;
+      el('completeProperties').textContent=String(complete);
+      el('incompleteProperties').textContent=String(Math.max(0,properties.length-complete));
+    }
+    function renderPropertyOptions(){
+      const filter=el('statusFilter').value;
+      const visible=properties.filter(property=>filter==='all'||(filter==='current'&&property.publication_status!=='archived')||property.publication_status===filter);
+      const select=el('propertySelect');
+      select.innerHTML='<option value="">Pilih properti...</option>'+visible.map(property=>`<option value="${esc(property.id)}">${esc(property.name)} · ${esc(property.property_code||'Tanpa kode')} · ${esc(statusText[property.publication_status]||'Status tidak diketahui')}</option>`).join('');
+      if(visible.some(property=>property.id===selectedId))select.value=selectedId;else{selectedId='';select.value=''}
+      renderSelectedProperty();
+    }
+    function renderSelectedProperty(){
+      const property=properties.find(item=>item.id===selectedId);
+      el('propertyContent').classList.toggle('hidden',!property);
+      el('emptyState').classList.toggle('hidden',!!property);
+      if(!property)return;
+      const status=property.publication_status||'draft';
+      el('propertyTitle').textContent=property.name||'Properti tanpa nama';
+      el('propertyMeta').textContent=`${property.property_code||'Tanpa kode'} · ${categoryText[property.category]||property.category||'Kategori belum diisi'}`;
+      el('propertyStatus').textContent=statusText[status]||status;
+      el('propertyStatus').className=`badge ${status}`;
+      el('editPropertyLink').href=`admin-properti.html?property=${encodeURIComponent(property.id)}`;
+      const current=checklistState[property.id]||{};
+      el('checklistGroups').innerHTML=checklistFor(property).map((group,groupIndex)=>`<section class="group"><h3>${esc(group.title)}</h3>${group.items.map(item=>`<label class="check-row"><input type="checkbox" data-item="${esc(item.id)}" ${current[item.id]===true?'checked':''} aria-label="${esc(item.label)}"><span class="check-copy"><span class="check-text">${esc(item.label)}</span><span class="check-detail">${esc(item.detail)}</span></span><span class="field-state">${current[item.id]===true?'Sudah dicek':'Belum dicek'}</span></label>`).join('')}</section>`).join('');
+      el('checklistGroups').querySelectorAll('[data-item]').forEach(input=>input.addEventListener('change',()=>{
+        if(!checklistState[property.id])checklistState[property.id]={};
+        checklistState[property.id][input.dataset.item]=input.checked;
+        const stored=saveChecklist();
+        const statusLabel=input.parentElement.querySelector('.field-state');
+        statusLabel.textContent=input.checked?'Sudah dicek':'Belum dicek';
+        if(!stored)showToast('Penyimpanan browser penuh; progres mungkin tidak bertahan setelah ditutup.');
+        renderSelectedProgress();updateOverallStats();
+      }));
+      renderSelectedProgress();
+    }
+    function renderSelectedProgress(){
+      const property=properties.find(item=>item.id===selectedId);if(!property)return;
+      const items=allItems(property),done=items.filter(item=>checked(property,item.id)).length;
+      el('selectedProgress').max=items.length||1;el('selectedProgress').value=done;
+      el('selectedProgressText').textContent=`${done} dari ${items.length} selesai`;
+      el('propertyProgressBadge').textContent=propertyComplete(property)?'Semua selesai':'Belum lengkap';
+      el('propertyProgressBadge').className=`badge ${propertyComplete(property)?'active':'progress'}`;
+    }
+    async function loadProperties(){
+      el('loadNotice').textContent='Memuat properti dari server...';
+      try{
+        await api('/admin/properties/sync-dashboard',{method:'POST',body:'{}'});
+        const result=await api('/admin/properties');
+        properties=Array.isArray(result.data)?result.data:[];
+        properties.sort((a,b)=>String(a.name||'').localeCompare(String(b.name||''),'id'));
+        el('loadNotice').textContent=properties.length?`${properties.length} properti berhasil dimuat. Centang setelah kolom diperiksa di Admin Website.`:'Server belum mengembalikan data properti.';
+        renderPropertyOptions();updateOverallStats();showApp();
+      }catch(error){
+        if(/Sesi berakhir|Login admin diperlukan/i.test(error.message)){showLogin(error.message);return}
+        el('loadNotice').textContent=error.message||'Daftar properti gagal dimuat.';showApp();
+      }
+    }
+    function showToast(message){const toast=el('toast');toast.textContent=message;toast.classList.add('show');clearTimeout(showToast.timer);showToast.timer=setTimeout(()=>toast.classList.remove('show'),3500)}
+    el('loginForm').addEventListener('submit',async event=>{
+      event.preventDefault();const button=el('loginButton');button.disabled=true;el('loginNotice').textContent='Memverifikasi akun...';
+      try{
+        const response=await fetch(`${API_BASE}/dashboard/login`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({account_id:el('staffId').value,password:el('password').value}),cache:'no-store'});
+        const result=await response.json().catch(()=>({}));
+        if(!response.ok||result.ok===false)throw new Error(result.error||'Login gagal.');
+        if(result.data?.role==='IT')throw new Error('Akun IT tidak memiliki akses ke Tugas Admin.');
+        sessionStorage.setItem(TOKEN_KEY,result.token);userLabel=result.data?.display_name||loginLabel(result.data?.account_id);el('password').value='';el('userChip').textContent=userLabel;await loadProperties();
+      }catch(error){el('loginNotice').textContent=error.message||'Login gagal.'}
+      finally{button.disabled=false}
+    });
+    el('togglePassword').addEventListener('click',()=>{const input=el('password');const visible=input.type==='password';input.type=visible?'text':'password';el('togglePassword').setAttribute('aria-label',visible?'Sembunyikan password':'Tampilkan password');el('togglePassword').title=visible?'Sembunyikan password':'Tampilkan password'});
+    el('propertySelect').addEventListener('change',()=>{selectedId=el('propertySelect').value;renderSelectedProperty()});
+    el('statusFilter').addEventListener('change',renderPropertyOptions);
+    el('refreshButton').addEventListener('click',loadProperties);
+    el('logoutButton').addEventListener('click',()=>{sessionStorage.removeItem(TOKEN_KEY);selectedId='';properties=[];showLogin();});
+    window.addEventListener('storage',event=>{if(event.key===STORAGE_KEY){readChecklist();updateOverallStats();renderSelectedProperty()}});
+    readChecklist();loadLoginOptions();
+    const requestedPropertyId=new URLSearchParams(location.search).get('property');
+    if(requestedPropertyId)selectedId=requestedPropertyId;
+    if(sessionStorage.getItem(TOKEN_KEY))loadProperties();else showLogin();
+  </script>
+</body>
+</html>

@@ -992,6 +992,7 @@ async function normalizeArticleInput(body, existing) {
   const excerpt = String(body.excerpt || '').trim();
   const metaTitle = String(body.meta_title || '').trim();
   const metaDescription = String(body.meta_description || '').trim();
+  const author = String(body.author ?? existing?.author ?? 'Admin YOUR HOME').trim().slice(0, 120) || 'Admin YOUR HOME';
   const coverAlt = String(body.cover_alt || '').trim();
   if (excerpt.length > 300) return { error:'Ringkasan maksimal 300 karakter.' };
   if (metaTitle.length > 90) return { error:'Judul SEO maksimal 90 karakter.' };
@@ -1023,7 +1024,7 @@ async function normalizeArticleInput(body, existing) {
     publishedAt = parsed.toISOString();
   }
 
-  return { value:{ slug, title, excerpt, content, category, tags:JSON.stringify(tags), cover_url:coverUrl, cover_alt:coverAlt, status, published_at:publishedAt, meta_title:metaTitle, meta_description:metaDescription } };
+  return { value:{ slug, title, excerpt, content, category, tags:JSON.stringify(tags), cover_url:coverUrl, cover_alt:coverAlt, status, published_at:publishedAt, meta_title:metaTitle, meta_description:metaDescription, author } };
 }
 
 const escapeLike = value => String(value).replace(/[\\%_]/g, char => `\\${char}`);
@@ -1144,17 +1145,12 @@ async function handleArticleRoutes({ request, env, url, path, json, bad }) {
       const a = result.value;
       const taken = await env.DB.prepare('SELECT id FROM articles WHERE slug = ?').bind(a.slug).first();
       if (taken) return bad('Slug sudah dipakai artikel lain. Ubah slug.', 409);
-      let authorName = tokenData.account_id || 'Admin';
-      try {
-        const user = await env.DB.prepare('SELECT display_name FROM dashboard_users WHERE account_id = ?').bind(tokenData.account_id || '').first();
-        if (user?.display_name) authorName = user.display_name;
-      } catch { /* tabel akun belum ada: pakai account_id */ }
       const id = crypto.randomUUID();
       const now = new Date().toISOString();
       await env.DB.prepare(`
         INSERT INTO articles (id, slug, title, excerpt, content, category, tags, cover_url, cover_alt, status, published_at, meta_title, meta_description, author, author_account_id, created_at, updated_at)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-      `).bind(id, a.slug, a.title, a.excerpt, a.content, a.category, a.tags, a.cover_url, a.cover_alt, a.status, a.published_at, a.meta_title, a.meta_description, authorName, tokenData.account_id || '', now, now).run();
+      `).bind(id, a.slug, a.title, a.excerpt, a.content, a.category, a.tags, a.cover_url, a.cover_alt, a.status, a.published_at, a.meta_title, a.meta_description, a.author, tokenData.account_id || '', now, now).run();
       const created = await env.DB.prepare('SELECT * FROM articles WHERE id = ?').bind(id).first();
       if (a.status === 'published') await triggerArticlesDeploy(env);
       return json({ ok:true, data:articleRow(created) }, 201);
@@ -1176,9 +1172,9 @@ async function handleArticleRoutes({ request, env, url, path, json, bad }) {
         if (taken) return bad('Slug sudah dipakai artikel lain. Ubah slug.', 409);
         await env.DB.prepare(`
           UPDATE articles SET slug = ?, title = ?, excerpt = ?, content = ?, category = ?, tags = ?, cover_url = ?, cover_alt = ?,
-            status = ?, published_at = ?, meta_title = ?, meta_description = ?, updated_at = ?
+            status = ?, published_at = ?, meta_title = ?, meta_description = ?, author = ?, updated_at = ?
           WHERE id = ?
-        `).bind(a.slug, a.title, a.excerpt, a.content, a.category, a.tags, a.cover_url, a.cover_alt, a.status, a.published_at, a.meta_title, a.meta_description, new Date().toISOString(), id).run();
+        `).bind(a.slug, a.title, a.excerpt, a.content, a.category, a.tags, a.cover_url, a.cover_alt, a.status, a.published_at, a.meta_title, a.meta_description, a.author, new Date().toISOString(), id).run();
         const updated = await env.DB.prepare('SELECT * FROM articles WHERE id = ?').bind(id).first();
         if (a.status === 'published' || existing.status === 'published') await triggerArticlesDeploy(env);
         return json({ ok:true, data:articleRow(updated) });
@@ -1647,12 +1643,21 @@ export default {
         const workDate = String(
           body.work_date || body.workDate || ''
         ).trim();
+        const manualPhotoDataUrl = String(body.work_photo_base64 || body.work_photo || '').trim();
         const pin = String(body.pin || '').trim();
 
         if (!crew || !unit || !jobType || !workDate) {
           return bad(
             'crew, unit, job_type, work_date wajib diisi'
           );
+        }
+        let manualPhoto = null;
+        if (manualPhotoDataUrl) {
+          if (manualPhotoDataUrl.length > 100 * 1024) return bad('Foto manual terlalu besar. Maksimal 60 KB setelah kompresi.', 413);
+          try { manualPhoto = parseDataUrl(manualPhotoDataUrl); }
+          catch { return bad('Format foto manual tidak valid.'); }
+          if (!['image/jpeg', 'image/png', 'image/webp'].includes(manualPhoto.contentType)) return bad('Foto manual harus JPG, PNG, atau WebP.');
+          if (manualPhoto.bytes.byteLength >= 60 * 1024) return bad('Foto manual harus di bawah 60 KB setelah kompresi.', 413);
         }
         if (!/^\d{4}$/.test(pin)) return bad('Masukkan PIN Master tepat 4 digit.', 400);
         const master = await env.DB.prepare(`
@@ -1665,6 +1670,15 @@ export default {
 
         const id = crypto.randomUUID();
         const createdAt = new Date().toISOString();
+        const workPhotoUrls = [];
+        if (manualPhoto) {
+          const extension = { 'image/jpeg':'jpg', 'image/png':'png', 'image/webp':'webp' }[manualPhoto.contentType];
+          const key = `admin-manual/${slug(crew)}/${slug(workDate)}/${id}/work_1.${extension}`;
+          await env.PHOTOS.put(key, manualPhoto.bytes, {
+            httpMetadata:{ contentType:manualPhoto.contentType, cacheControl:'public, max-age=31536000, immutable' },
+          });
+          workPhotoUrls.push(publicFileUrl(url.origin, key));
+        }
 
         await env.DB
           .prepare(`
@@ -1692,7 +1706,7 @@ export default {
             0,
             0,
             '',
-            JSON.stringify([]),
+            JSON.stringify(workPhotoUrls),
             createdAt,
             workDate
           )
@@ -1711,11 +1725,113 @@ export default {
             lng: null,
             accuracy: null,
             selfie_url: '',
-            work_photo_urls: [],
+            work_photo_urls: workPhotoUrls,
             created_at: createdAt,
             work_date: workDate,
           },
         });
+      }
+
+      const workPhotoRoute = path.match(/^\/checkins\/([^/]+)\/work-photos$/);
+      if (workPhotoRoute) {
+        if (request.method !== 'PATCH') return bad('Metode tidak didukung', 405);
+        const adminSecret = String(env.ADMIN_DASHBOARD_SECRET || '').trim();
+        const crewSession = await getCrewTokenPayload(request, adminSecret);
+        if (!crewSession) return bad('Login crew diperlukan untuk mengubah foto laporan.', 401);
+
+        const id = decodeURIComponent(workPhotoRoute[1]);
+        const record = await env.DB.prepare('SELECT id, crew, work_date, work_photo_urls FROM checkins WHERE id = ?').bind(id).first();
+        if (!record) return bad('Laporan kerja tidak ditemukan.', 404);
+        if (record.crew !== crewSession.crew) return bad('Laporan ini bukan milik akun Crew Anda.', 403);
+
+        const todayParts = Object.fromEntries(new Intl.DateTimeFormat('en-CA', {
+          timeZone:'Asia/Jakarta', year:'numeric', month:'2-digit', day:'2-digit',
+        }).formatToParts(new Date()).filter(part => part.type !== 'literal').map(part => [part.type, part.value]));
+        const todayWib = `${todayParts.year}-${todayParts.month}-${todayParts.day}`;
+        if (record.work_date !== todayWib) return bad('Foto laporan hanya bisa diubah pada hari yang sama (WIB).', 403);
+
+        const workPhotoUrls = safeParseJsonArray(record.work_photo_urls);
+        const body = await request.json();
+        const action = String(body.action || '').trim();
+
+        if (action === 'add') {
+          const photos = Array.isArray(body.photos) ? body.photos : [];
+          if (!photos.length) return bad('Pilih minimal satu foto untuk ditambahkan.');
+          const parsedPhotos = [];
+          for (const value of photos) {
+            const dataUrl = String(value || '');
+            if (dataUrl.length > 90 * 1024) return bad('Setiap foto harus di bawah 60 KB setelah kompresi.', 413);
+            let parsed;
+            try { parsed = parseDataUrl(dataUrl); }
+            catch { return bad('Format salah satu foto tidak valid.'); }
+            if (!['image/jpeg', 'image/png', 'image/webp'].includes(parsed.contentType)) return bad('Foto harus JPG, PNG, atau WebP.');
+            if (parsed.bytes.byteLength >= 60 * 1024) return bad('Setiap foto harus di bawah 60 KB setelah kompresi.', 413);
+            const extension = { 'image/jpeg':'jpg', 'image/png':'png', 'image/webp':'webp' }[parsed.contentType];
+            parsedPhotos.push({ ...parsed, extension });
+          }
+
+          const addedUrls = [];
+          const uploadedKeys = [];
+          try {
+            for (const photo of parsedPhotos) {
+              const key = `${slug(crewSession.crew)}/${record.work_date}/${id}/manual_${crypto.randomUUID()}.${photo.extension}`;
+              await env.PHOTOS.put(key, photo.bytes, {
+                httpMetadata:{ contentType:photo.contentType, cacheControl:'public, max-age=31536000, immutable' },
+              });
+              uploadedKeys.push(key);
+              addedUrls.push(publicFileUrl(url.origin, key));
+            }
+            const updatedUrls = [...workPhotoUrls, ...addedUrls];
+            await env.DB.prepare('UPDATE checkins SET work_photo_urls = ? WHERE id = ? AND crew = ? AND work_date = ?')
+              .bind(JSON.stringify(updatedUrls), id, crewSession.crew, todayWib).run();
+            return json({ ok:true, data:{ id, work_photo_urls:updatedUrls, added_count:addedUrls.length } });
+          } catch (error) {
+            await Promise.all(uploadedKeys.map(key => env.PHOTOS.delete(key).catch(() => {})));
+            throw error;
+          }
+        }
+
+        if (action === 'delete') {
+          const photoIndex = Number(body.photo_index);
+          if (!Number.isInteger(photoIndex) || photoIndex < 0 || photoIndex >= workPhotoUrls.length) return bad('Foto yang dipilih tidak ditemukan.');
+          const [removedUrl] = workPhotoUrls.splice(photoIndex, 1);
+          await env.DB.prepare('UPDATE checkins SET work_photo_urls = ? WHERE id = ? AND crew = ? AND work_date = ?')
+            .bind(JSON.stringify(workPhotoUrls), id, crewSession.crew, todayWib).run();
+          try {
+            const parsedUrl = new URL(String(removedUrl));
+            if (parsedUrl.origin === url.origin && parsedUrl.pathname.startsWith('/files/')) {
+              const objectKey = decodeURIComponent(parsedUrl.pathname.slice('/files/'.length));
+              if (objectKey) await env.PHOTOS.delete(objectKey);
+            }
+          } catch (error) {
+            console.warn('Foto laporan dihapus dari daftar, tetapi objek R2 gagal dihapus:', error?.message || error);
+          }
+          return json({ ok:true, data:{ id, work_photo_urls:workPhotoUrls } });
+        }
+
+        return bad('Aksi foto tidak dikenal.');
+      }
+
+      const arrivalDeleteMatch = path.match(/^\/checkins\/([^/]+)\/arrival$/);
+      if (arrivalDeleteMatch) {
+        if (request.method !== 'DELETE') return bad('Metode tidak didukung', 405);
+        const adminSecret = String(env.ADMIN_DASHBOARD_SECRET || '').trim();
+        if (!(await isAdminRequest(request, adminSecret))) return bad('Login admin diperlukan', 401);
+
+        const id = decodeURIComponent(arrivalDeleteMatch[1]);
+        const existing = await env.DB.prepare('SELECT id, crew, work_date, unit, job_type FROM checkins WHERE id = ?').bind(id).first();
+        if (!existing) return bad('Check-in lokasi tidak ditemukan.', 404);
+        if (String(existing.unit || '').trim() || String(existing.job_type || '') !== 'Check-in Lokasi') {
+          return bad('Aksi ini hanya dapat menghapus check-in lokasi.', 400);
+        }
+
+        const body = await request.json();
+        const pinError = await checkMasterDeletePin(env, body.pin);
+        if (pinError) return bad(pinError.error, pinError.status);
+
+        await env.DB.prepare('DELETE FROM checkins WHERE id = ?').bind(id).run();
+        await safelySyncCheckinPayrollExpenses(env, [{ crew:existing.crew, workDate:existing.work_date }]);
+        return json({ ok:true, deleted_id:id });
       }
 
       /**
@@ -1919,10 +2035,6 @@ export default {
 
         if (!arrivalOnly && (!Array.isArray(workPhotos) || workPhotos.length === 0)) {
           return bad('minimal 1 foto hasil kerja');
-        }
-
-        if (workPhotos.length > 30) {
-          return bad('maksimal 30 foto hasil kerja');
         }
 
         const id = crypto.randomUUID();

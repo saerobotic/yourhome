@@ -1,0 +1,19 @@
+Ini prompt siap salin untuk chat baru. Sepuluh judulnya baru dan diarahkan ke sewa properti/akomodasi Bandung:
+
+> Gunakan tab `admin-artikel.html` yang sudah login sebagai Master. Buat **10 artikel baru langsung di admin asli** sebagai Draft—bukan demo, localStorage, atau file pengganti.
+>
+> Sebelum membuat, periksa daftar admin dan jangan duplikasi judul yang sudah ada. Untuk setiap artikel, buat isi minimal 300 kata dengan subjudul H2, ringkasan, slug, judul dan deskripsi SEO, serta tag. Kategori: Properti & Akomodasi. Foto kosong. **Simpan sebagai Draft; jangan terbitkan atau jadwalkan.**
+>
+> Judul:
+> 1. Penginapan Bandung untuk Rombongan: Cara Memilih Kapasitas dan Fasilitas yang Tepat
+> 2. Long Stay di Bandung: Panduan Memilih Hunian untuk Tinggal Sebulan atau Lebih
+> 3. Penginapan Dekat Stasiun Bandung: Tips Memilih Akomodasi Sesuai Rute
+> 4. Sewa Properti Mingguan atau Bulanan di Bandung: Mana yang Cocok untuk Anda?
+> 5. Biaya Sewa Properti di Bandung: Komponen yang Perlu Dihitung Sebelum Memesan
+> 6. Checklist Memilih Guest House di Bandung Sebelum Melakukan Pemesanan
+> 7. Hunian di Bandung untuk Pekerja Remote: Lokasi, Internet, dan Ruang Kerja
+> 8. Penginapan Bandung untuk Keluarga dengan Anak: Fasilitas yang Perlu Diperiksa
+> 9. Booking Penginapan Bandung di Akhir Pekan: Cara Merencanakan Lebih Awal
+> 10. Sewa Apartemen Furnished di Bandung: Hal yang Perlu Dicek Sebelum Tinggal
+>
+> Setelah selesai, buka filter Draft dan pastikan 10 judul baru tampil. Laporkan jumlah draft sebelum dan sesudah, serta judul yang berhasil disimpan. Jangan minta atau menuliskan password. Jika tab admin asli tidak bisa diakses, berhenti dan beri tahu saya—jangan beralih ke demo.

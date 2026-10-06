@@ -256,7 +256,7 @@
   <main id="app" class="page hidden">
     <header class="topbar">
       <div><h1>Kelola Properti</h1><p class="subtitle">Edit data publik tanpa mengubah kode <code>index.html</code>.</p></div>
-      <div class="actions"><a class="button" href="https://admin.yourhome.id/">Dashboard</a><button class="button danger" id="logoutBtn" type="button">Logout</button></div>
+      <div class="actions"><a class="button" href="tugas-admin.html">Tugas Admin · Ceklis Properti</a><a class="button" href="https://admin.yourhome.id/">Dashboard</a><button class="button danger" id="logoutBtn" type="button">Logout</button></div>
     </header>
 
     <section class="panel" id="propertyListPanel">
@@ -735,6 +735,9 @@
         state.properties = Array.isArray(response.data) ? response.data : [];
         el('listMessage').textContent = '';
         renderList();
+        const requestedPropertyId = new URLSearchParams(location.search).get('property');
+        const requestedProperty = state.properties.find(property => property.id === requestedPropertyId);
+        if (requestedProperty) propertyFormValue(requestedProperty);
       } catch (error) {
         if (/Login admin diperlukan|401/.test(error.message)) { state.token = ''; sessionStorage.removeItem('dashboard_admin_token'); showLogin(error.message); return; }
         const missingCatalogMigration = /no such column: (dashboard_id|property_code|publication_status)/i.test(error.message);
@@ -783,6 +786,7 @@
         showApp();
         el('adminPassword').value = '';
         await loadSettings();
+        loadLinktreeForm();
         await loadProperties();
         loadFeedbackCount();
       } catch (error) { showLogin(error.message); } finally { button.disabled = false; }
