@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
+  <link rel="icon" type="image/png" href="https://ik.imagekit.io/5bnhlcghq/faivcon.png" />
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>YOUR HOME — Comfort in Every Corner of Bandung</title>
@@ -197,6 +198,7 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
 .featured.is-hidden{display:none}
 .feat-card.is-hidden{display:none}
 .featured-grid{display:grid;grid-template-columns:1.4fr 1fr 1fr;grid-template-rows:340px 340px;gap:20px}
+.featured-grid.has-four-cards .feat-card.is-last-visible{grid-column:span 2}
 .feat-card{
   position:relative;border-radius:var(--radius);overflow:hidden;
   cursor:pointer;transition:var(--trans);
@@ -477,7 +479,9 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
   .nav-links{display:none}
   .logo-mark{width:144px;height:44px}
   .menu-toggle{display:block}
-  .nav-cta .btn-primary{padding:9px 15px;font-size:.8rem;white-space:nowrap}
+  .btn,.filter-btn,.prop-share,.modal-share{min-height:40px;padding:9px 14px;font-size:.8rem;line-height:1.25}
+  .bw-submit,.modal-booking-submit{min-height:40px;height:40px;padding:8px 16px}
+  .nav-cta .btn-primary{white-space:nowrap}
   .nav-links.open{
     display:flex;flex-direction:column;
     position:absolute;top:100%;left:0;right:0;
@@ -492,6 +496,7 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
   .hero-scroll{display:none}
   .featured-grid{grid-template-columns:1fr}
   .feat-card{height:240px}
+  .featured-grid.has-four-cards .feat-card.is-last-visible{grid-column:auto}
   .props-grid{grid-template-columns:1fr;gap:18px}
   .exp-grid{grid-template-columns:1fr}
   .booking-widget{grid-template-columns:1fr}
@@ -1007,9 +1012,12 @@ async function loadRemoteProperties(){
 }
 function updateFeaturedProperties(remoteProperties){
   const featured = document.querySelector('.featured');
+  const featuredGrid = document.querySelector('.featured-grid');
   const cards = [...document.querySelectorAll('.feat-card')];
+  const visibleCardsList = [];
   let visibleCards = 0;
   cards.forEach(card => {
+    card.classList.remove('is-last-visible');
     const property = remoteProperties.find(item => item.id === card.dataset.id);
     const image = property?.img || property?.imageUrls?.[0] || '';
     if(!image){
@@ -1048,7 +1056,10 @@ function updateFeaturedProperties(remoteProperties){
     const price = card.querySelector('.feat-price');
     if(price) price.textContent = `${formatPrice(getNightlyPrice(property, new Date().toISOString().slice(0, 10)))} / malam`;
     visibleCards += 1;
+    visibleCardsList.push(card);
   });
+  featuredGrid?.classList.toggle('has-four-cards', visibleCards === 4);
+  if(visibleCards === 4) visibleCardsList[visibleCardsList.length - 1].classList.add('is-last-visible');
   if(featured && visibleCards) featured.classList.remove('is-hidden');
 }
 
