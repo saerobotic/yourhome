@@ -5789,6 +5789,27 @@ export default {
 
       // ================= GUEST FEEDBACK (form-kritik-saran.html) =================
       // Butuh migrations/migration-guest-feedback.sql dijalankan di D1 sebelum endpoint ini dipakai.
+      if (request.method === 'POST' && path === '/guest-criticism') {
+        const rate = await reserveLoginAttempt(env, request, 'guest-criticism');
+        if (rate.limited) return bad('Terlalu banyak pengiriman dari perangkat ini. Coba lagi dalam 15 menit.', 429);
+        const body = await request.json();
+        const guestName = String(body.guest_name || '').trim();
+        const guestPhone = String(body.guest_phone || '').trim();
+        const criticism = String(body.criticism || '').trim();
+        const propertyName = String(body.property_name || '').trim();
+        if (!guestName || guestName.length > 120) return bad('Nama wajib diisi (maksimal 120 karakter).');
+        if (!guestPhone || guestPhone.length < 8 || guestPhone.length > 30) return bad('No. HP tidak valid.');
+        if (!criticism || criticism.length > 2000) return bad('Kritik wajib diisi (maksimal 2000 karakter).');
+        if (propertyName.length > 160) return bad('Nama properti terlalu panjang.');
+
+        const id = crypto.randomUUID();
+        await env.DB.prepare(`
+          INSERT INTO guest_criticisms (id, property_name, guest_name, guest_phone, criticism, created_at)
+          VALUES (?, ?, ?, ?, ?, ?)
+        `).bind(id, propertyName, guestName, guestPhone, criticism, new Date().toISOString()).run();
+        return json({ ok:true, data:{ id } }, 201);
+      }
+
       if (request.method === 'POST' && path === '/guest-feedback') {
         const rate = await reserveLoginAttempt(env, request, 'guest-feedback');
         if (rate.limited) return bad('Terlalu banyak pengiriman dari perangkat ini. Coba lagi dalam 15 menit.', 429);
@@ -5858,13 +5879,32 @@ export default {
         const offset = Math.max(Number(url.searchParams.get('offset')) || 0, 0);
         try {
           const [result, totalRow] = await Promise.all([
-            env.DB.prepare('SELECT * FROM guest_feedback ORDER BY created_at DESC LIMIT ? OFFSET ?').bind(limit, offset).all(),
-            env.DB.prepare('SELECT COUNT(*) AS total FROM guest_feedback').first(),
+            env.DB.prepare(`
+              SELECT * FROM (
+                SELECT id, property_type, property_name, checkin_date, stay_duration, booking_source,
+                  guest_name, guest_phone, guest_email, guest_city, purpose,
+                  rating_cleanliness, rating_comfort, rating_facilities, rating_location, rating_service, rating_value,
+                  avg_rating, liked, improve, suggestion, nps_score, follow_up_consent, testimonial_consent,
+                  created_at, status, 'rating' AS feedback_type
+                FROM guest_feedback
+                UNION ALL
+                SELECT 'criticism:' || id AS id, '' AS property_type, property_name, '' AS checkin_date,
+                  '' AS stay_duration, '' AS booking_source, guest_name, guest_phone, '' AS guest_email,
+                  '' AS guest_city, '' AS purpose, NULL AS rating_cleanliness, NULL AS rating_comfort,
+                  NULL AS rating_facilities, NULL AS rating_location, NULL AS rating_service, NULL AS rating_value,
+                  NULL AS avg_rating, criticism AS liked, '' AS improve, '' AS suggestion, NULL AS nps_score,
+                  0 AS follow_up_consent, 0 AS testimonial_consent, created_at, status, 'criticism' AS feedback_type
+                FROM guest_criticisms
+              ) ORDER BY created_at DESC LIMIT ? OFFSET ?
+            `).bind(limit, offset).all(),
+            env.DB.prepare(`
+              SELECT (SELECT COUNT(*) FROM guest_feedback) + (SELECT COUNT(*) FROM guest_criticisms) AS total
+            `).first(),
           ]);
           return json({ ok:true, data:result.results || [], pagination:{ limit, offset, total:Number(totalRow?.total || 0) } });
         } catch (error) {
-          if (/no such table: guest_feedback/i.test(String(error?.message || error))) {
-            return bad('Tabel masukan tamu belum tersedia. Jalankan migration-guest-feedback.sql di D1.', 503);
+          if (/no such table: guest_feedback|no such table: guest_criticisms/i.test(String(error?.message || error))) {
+            return bad('Tabel masukan tamu belum tersedia. Jalankan migration-guest-feedback.sql dan migration-guest-criticism.sql di D1.', 503);
           }
           throw error;
         }
@@ -5876,10 +5916,13 @@ export default {
         const tokenData = await getAdminTokenPayload(request, adminSecret);
         if (!hasDashboardRole(tokenData)) return bad('Login dashboard diperlukan.', 401);
         try {
-          const row = await env.DB.prepare(`SELECT COUNT(*) AS count FROM guest_feedback WHERE status = 'unread'`).first();
-          return json({ ok:true, data:{ count:Number(row?.count || 0) } });
+          const [feedbackRow, criticismRow] = await Promise.all([
+            env.DB.prepare(`SELECT COUNT(*) AS count FROM guest_feedback WHERE status = 'unread'`).first(),
+            env.DB.prepare(`SELECT COUNT(*) AS count FROM guest_criticisms WHERE status = 'unread'`).first(),
+          ]);
+          return json({ ok:true, data:{ count:Number(feedbackRow?.count || 0) + Number(criticismRow?.count || 0) } });
         } catch (error) {
-          if (/no such table: guest_feedback|no such column: status/i.test(String(error?.message || error))) {
+          if (/no such table: guest_feedback|no such table: guest_criticisms|no such column: status/i.test(String(error?.message || error))) {
             return json({ ok:true, data:{ count:0 } });
           }
           throw error;
@@ -5887,6 +5930,19 @@ export default {
       }
 
       const guestFeedbackStatusMatch = path.match(/^\/admin\/guest-feedback\/([^/]+)$/);
+      if (request.method === 'DELETE' && guestFeedbackStatusMatch) {
+        const adminSecret = String(env.ADMIN_DASHBOARD_SECRET || '').trim();
+        const tokenData = await getAdminTokenPayload(request, adminSecret);
+        if (!hasManagementRole(tokenData)) return bad('Hanya Master atau Admin yang dapat menghapus masukan tamu.', 403);
+        const id = decodeURIComponent(guestFeedbackStatusMatch[1]);
+        const criticismId = id.startsWith('criticism:') ? id.slice('criticism:'.length) : null;
+        const result = criticismId
+          ? await env.DB.prepare('DELETE FROM guest_criticisms WHERE id = ?').bind(criticismId).run()
+          : await env.DB.prepare('DELETE FROM guest_feedback WHERE id = ?').bind(id).run();
+        if (!result.meta?.changes) return bad('Masukan tamu tidak ditemukan.', 404);
+        return json({ ok:true, data:{ id, deleted:true } });
+      }
+
       if (request.method === 'PATCH' && guestFeedbackStatusMatch) {
         const adminSecret = String(env.ADMIN_DASHBOARD_SECRET || '').trim();
         const tokenData = await getAdminTokenPayload(request, adminSecret);
@@ -5895,7 +5951,10 @@ export default {
         const body = await request.json();
         const status = String(body.status || '').trim();
         if (!['read', 'unread'].includes(status)) return bad('Status tidak valid.');
-        const result = await env.DB.prepare('UPDATE guest_feedback SET status = ? WHERE id = ?').bind(status, id).run();
+        const criticismId = id.startsWith('criticism:') ? id.slice('criticism:'.length) : null;
+        const result = criticismId
+          ? await env.DB.prepare('UPDATE guest_criticisms SET status = ? WHERE id = ?').bind(status, criticismId).run()
+          : await env.DB.prepare('UPDATE guest_feedback SET status = ? WHERE id = ?').bind(status, id).run();
         if (!result.meta?.changes) return bad('Masukan tamu tidak ditemukan.', 404);
         return json({ ok:true, data:{ id, status } });
       }

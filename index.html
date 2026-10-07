@@ -265,6 +265,18 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
 .prop-price small{font-family:'Poppins',sans-serif;font-size:.72rem;color:var(--grey);font-weight:400;display:block;margin-top:-2px}
 .prop-detail{font-size:.82rem;font-weight:600;color:var(--coffee-d);display:flex;align-items:center;gap:5px;transition:var(--trans)}
 .prop-detail:hover{color:var(--terracotta);gap:9px}
+.prop-actions{display:flex;align-items:center;gap:12px}
+.prop-share{font-size:.8rem;font-weight:600;color:var(--terracotta);display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
+.prop-share:hover{color:var(--coffee-d)}
+.prop-share svg{width:16px;height:16px;fill:currentColor}
+.feat-share{position:absolute;top:18px;left:18px;z-index:3;width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.94);color:var(--coffee-d);box-shadow:var(--shadow)}
+.feat-share:hover{background:var(--terracotta);color:var(--white)}
+.feat-share svg{width:18px;height:18px;fill:currentColor}
+.modal-share{display:inline-flex;align-items:center;gap:7px;margin:-8px 0 18px;padding:8px 13px;border:1px solid var(--grey-l);border-radius:999px;color:var(--coffee-d);font-size:.8rem;font-weight:600}
+.modal-share:hover{border-color:var(--terracotta);color:var(--terracotta)}
+.modal-share svg{width:16px;height:16px;fill:currentColor}
+.share-status{position:fixed;left:50%;bottom:24px;z-index:300;transform:translate(-50%,16px);padding:10px 16px;border-radius:999px;background:var(--coffee-d);color:var(--white);font-size:.85rem;box-shadow:var(--shadow-lg);opacity:0;pointer-events:none;transition:var(--trans)}
+.share-status.visible{opacity:1;transform:translate(-50%,0)}
 .no-results{grid-column:1/-1;text-align:center;padding:60px;color:var(--grey)}
 
 /* ============== ABOUT ============== */
@@ -915,6 +927,7 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}
     <div class="modal-body" id="modalBody"></div>
   </div>
 </div>
+<div class="share-status" id="shareStatus" role="status" aria-live="polite"></div>
 
 <script>
 /* ============================================================
@@ -982,6 +995,8 @@ async function loadRemoteProperties(){
     configurePriceControls();
     renderProperties('all', lowestPrice, highestPrice);
     updateFeaturedProperties(remoteProperties);
+    const requestedPropertyId = new URLSearchParams(window.location.search).get('property');
+    if(requestedPropertyId) openModal(requestedPropertyId, { fromUrl:true });
   }catch(error){
     console.warn('Gagal memuat katalog properti dari D1:', error);
     properties.splice(0, properties.length);
@@ -1015,6 +1030,19 @@ function updateFeaturedProperties(remoteProperties){
       }
     }
     if(img){ img.src = image; img.alt = property.name; }
+    let shareButton = card.querySelector('.feat-share');
+    if(!shareButton){
+      shareButton = document.createElement('button');
+      shareButton.type = 'button';
+      shareButton.className = 'feat-share';
+      shareButton.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7a3.2 3.2 0 0 0 0-1.39l7.05-4.11A3 3 0 1 0 15 5c0 .23.03.46.08.68L8.03 9.79a3 3 0 1 0 0 4.42l7.12 4.16c-.05.2-.07.41-.07.63a2.92 2.92 0 1 0 2.92-2.92Z"/></svg>';
+      shareButton.addEventListener('click', event => {
+        event.stopPropagation();
+        shareProperty(card.dataset.id);
+      });
+      card.appendChild(shareButton);
+    }
+    shareButton.setAttribute('aria-label', `Bagikan ${property.name}`);
     const title = card.querySelector('h3');
     if(title) title.textContent = property.name;
     const price = card.querySelector('.feat-price');
@@ -1122,7 +1150,13 @@ function renderProperties(filter='all', minimumPrice=lowestPrice, maximumPrice=h
         </div>
         <div class="prop-foot">
           <div class="prop-price">${formatPrice(getNightlyPrice(p, new Date().toISOString().slice(0, 10)))}<small>per malam</small></div>
-          <a href="#" class="prop-detail" data-id="${p.id}">Lihat Detail →</a>
+          <div class="prop-actions">
+            <button class="prop-share" type="button" data-share-id="${encodeURIComponent(p.id)}" aria-label="Bagikan properti">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7a3.2 3.2 0 0 0 0-1.39l7.05-4.11A3 3 0 1 0 15 5c0 .23.03.46.08.68L8.03 9.79a3 3 0 1 0 0 4.42l7.12 4.16c-.05.2-.07.41-.07.63a2.92 2.92 0 1 0 2.92-2.92Z"/></svg>
+              Bagikan
+            </button>
+            <a href="${propertyShareUrl(p.id)}" class="prop-detail" data-id="${p.id}">Lihat Detail →</a>
+          </div>
         </div>
       </div>
     </article>
@@ -1130,7 +1164,7 @@ function renderProperties(filter='all', minimumPrice=lowestPrice, maximumPrice=h
 
   propsGrid.querySelectorAll('.prop-card').forEach(card => {
     card.addEventListener('click', event => {
-      if(event.target.closest('.prop-fav')) return;
+      if(event.target.closest('.prop-fav, .prop-share')) return;
       openModal(card.dataset.id);
     });
   });
@@ -1139,6 +1173,13 @@ function renderProperties(filter='all', minimumPrice=lowestPrice, maximumPrice=h
       event.preventDefault();
       event.stopPropagation();
       openModal(link.dataset.id);
+    });
+  });
+  propsGrid.querySelectorAll('.prop-share').forEach(button => {
+    button.addEventListener('click', event => {
+      event.preventDefault();
+      event.stopPropagation();
+      shareProperty(decodeURIComponent(button.dataset.shareId));
     });
   });
 }
@@ -1165,6 +1206,59 @@ const modalGalleryNext = document.getElementById('modalGalleryNext');
 const modalGalleryCount = document.getElementById('modalGalleryCount');
 let modalImageUrls = [];
 let modalImageIndex = 0;
+let activeModalPropertyId = '';
+let shareStatusTimer;
+
+function propertyShareUrl(id){
+  const url = new URL(window.location.pathname, window.location.origin);
+  url.searchParams.set('property', String(id));
+  url.hash = 'properties';
+  return url.href;
+}
+
+function showShareStatus(message){
+  const status = document.getElementById('shareStatus');
+  status.textContent = message;
+  status.classList.add('visible');
+  clearTimeout(shareStatusTimer);
+  shareStatusTimer = setTimeout(() => status.classList.remove('visible'), 2600);
+}
+
+async function shareProperty(id){
+  const property = properties.find(item => String(item.id) === String(id));
+  if(!property) return;
+  const url = propertyShareUrl(property.id);
+  if(navigator.share){
+    try{
+      await navigator.share({ title:property.name, text:`Lihat properti ${property.name} di YOUR HOME`, url });
+      return;
+    }catch(error){
+      if(error.name === 'AbortError') return;
+    }
+  }
+  try{
+    await navigator.clipboard.writeText(url);
+    showShareStatus('Link properti berhasil disalin.');
+  }catch(error){
+    window.prompt('Salin link properti ini:', url);
+  }
+}
+
+function updatePropertyUrl(id, { push = false } = {}){
+  const currentId = new URL(window.location.href).searchParams.get('property');
+  if(currentId === String(id)) return;
+  const url = new URL(propertyShareUrl(id));
+  const nextState = { ...window.history.state, propertyModalId:String(id) };
+  if(push) window.history.pushState(nextState, '', url);
+  else window.history.replaceState(nextState, '', url);
+}
+
+function clearPropertyUrl(){
+  const url = new URL(window.location.href);
+  url.searchParams.delete('property');
+  if(url.hash === '#properties') url.hash = '';
+  window.history.replaceState({ ...window.history.state, propertyModalId:null }, '', url);
+}
 
 function updateModalGallery(){
   const imageUrl = modalImageUrls[modalImageIndex] || '';
@@ -1177,9 +1271,11 @@ function updateModalGallery(){
   modalGalleryCount.textContent = `${modalImageIndex + 1} / ${modalImageUrls.length || 1}`;
 }
 
-function openModal(id){
+function openModal(id, { fromUrl = false } = {}){
   const p = properties.find(x => String(x.id) === String(id));
   if(!p) return;
+  if(!fromUrl && activeModalPropertyId !== String(p.id)) updatePropertyUrl(p.id, { push:true });
+  activeModalPropertyId = String(p.id);
   modalImageUrls = Array.isArray(p.imageUrls) && p.imageUrls.length ? p.imageUrls : (p.img ? [p.img] : []);
   modalImageIndex = 0;
   updateModalGallery();
@@ -1207,6 +1303,10 @@ function openModal(id){
       <svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:var(--terracotta)"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
       ${p.loc}
     </div>
+    <button class="modal-share" id="modalShareButton" type="button">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7a3.2 3.2 0 0 0 0-1.39l7.05-4.11A3 3 0 1 0 15 5c0 .23.03.46.08.68L8.03 9.79a3 3 0 1 0 0 4.42l7.12 4.16c-.05.2-.07.41-.07.63a2.92 2.92 0 1 0 2.92-2.92Z"/></svg>
+      Bagikan properti
+    </button>
     <div class="modal-features">
       <span><svg viewBox="0 0 24 24"><path d="M7 14h10v-3H7m10-1h2a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2h-2v3a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-3H3a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h2V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v4z"/></svg>${p.beds} Kamar Tidur</span>
       <span><svg viewBox="0 0 24 24"><path d="M9 2v6H7v2h2v10h2V10h2V8h-2V2m4 0v10h2v6h2v-6h2V2z"/></svg>${p.baths} Kamar Mandi</span>
@@ -1241,6 +1341,7 @@ function openModal(id){
     </form>
     </div>
   `;
+  document.getElementById('modalShareButton').addEventListener('click', () => shareProperty(p.id));
   const roomSelect = document.getElementById('modalRoomSelect');
   if(roomSelect){
     const updateRoomSelection = () => {
@@ -1341,7 +1442,21 @@ modalGalleryNext.addEventListener('click', () => {
 function closeModal(){
   modalOverlay.classList.remove('active');
   document.body.style.overflow = '';
+  const hasModalHistoryEntry = window.history.state?.propertyModalId === activeModalPropertyId;
+  activeModalPropertyId = '';
+  if(hasModalHistoryEntry) window.history.back();
+  else clearPropertyUrl();
 }
+window.addEventListener('popstate', () => {
+  const requestedId = new URLSearchParams(window.location.search).get('property');
+  if(requestedId){
+    openModal(requestedId, { fromUrl:true });
+  }else if(modalOverlay.classList.contains('active')){
+    modalOverlay.classList.remove('active');
+    document.body.style.overflow = '';
+    activeModalPropertyId = '';
+  }
+});
 document.getElementById('modalClose').addEventListener('click', closeModal);
 modalOverlay.addEventListener('click', (e) => { if(e.target === modalOverlay) closeModal(); });
 document.addEventListener('keydown', (e) => { if(e.key === 'Escape') closeModal(); });
