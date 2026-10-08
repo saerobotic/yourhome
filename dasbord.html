@@ -1486,7 +1486,7 @@
             <div><h2 id="settingsGroupAccounts">Akun &amp; Akses</h2><p>Akun staf yang dapat masuk ke Dasbord beserta peran dan statusnya.</p></div>
           </div>
           <div class="settings-row">
-            <div id="userManagementPanel" class="settings-section settings-full bg-white rounded-2xl border border-slate-100 overflow-hidden">
+            <div id="userManagementPanel" class="settings-section bg-white rounded-2xl border border-slate-100 overflow-hidden">
               <div class="p-5 pb-3 flex flex-wrap items-center justify-between gap-3">
                 <div>
                   <h3 class="font-bold text-slate-900">Manajemen Pengguna</h3>
@@ -1500,7 +1500,6 @@
                       <th class="text-left font-semibold px-5 py-3">Nama</th>
                       <th class="text-left font-semibold px-3 py-3 hidden sm:table-cell">Email</th>
                       <th class="text-left font-semibold px-3 py-3">Role</th>
-                      <th class="text-left font-semibold px-3 py-3 hidden md:table-cell">Akses</th>
                       <th class="text-center font-semibold px-5 py-3">Status</th>
                       <th id="userActionsHeader" class="text-right font-semibold px-5 py-3" hidden>Aksi</th>
                     </tr>
@@ -1510,6 +1509,24 @@
               </div>
               <p class="mt-auto border-t border-slate-100 px-5 py-3 text-xs text-slate-500">Role: Master dan Admin</p>
             </div>
+            <section id="dashboardNotesPanel" class="settings-section bg-white rounded-2xl border border-slate-100 overflow-hidden">
+              <div class="p-5 pb-3">
+                <h3 class="font-bold text-slate-900">Catatan</h3>
+                <p class="mt-1 text-xs text-slate-500">Catatan ini hanya tersedia dan tersimpan di akun Master.</p>
+              </div>
+              <div class="px-5 pb-4">
+                <label class="block">
+                  <span class="block text-xs font-semibold text-slate-600 mb-1">Tulis catatan</span>
+                  <textarea id="dashboardNoteInput" maxlength="500" rows="3" placeholder="Tulis catatan apa saja..." class="w-full resize-y border border-slate-200 rounded-lg px-3 py-2 text-sm"></textarea>
+                </label>
+                <div class="flex gap-2 mt-2">
+                  <button id="dashboardNoteSaveButton" type="button" class="bg-brand-600 hover:bg-brand-700 disabled:opacity-60 text-white text-sm font-semibold px-3 py-2 rounded-lg">Simpan Catatan</button>
+                  <button id="dashboardNoteCancelButton" type="button" class="hidden border border-slate-200 text-sm font-semibold px-3 py-2 rounded-lg">Batal Edit</button>
+                </div>
+                <p id="dashboardNoteStatus" class="min-h-5 mt-2 text-xs" role="status" aria-live="polite"></p>
+                <ul id="dashboardNoteList" class="space-y-2 max-h-[360px] overflow-y-auto" aria-live="polite"></ul>
+              </div>
+            </section>
           </div>
         </section>
 
@@ -2490,6 +2507,7 @@ function showDashboardApp(account){
   updateAccountDisplay(account);
   updateStaffChatClearAccess();
   document.getElementById('userManagementPanel').hidden = account.role === 'IT' || isRestrictedAdmin(account);
+  document.getElementById('dashboardNotesPanel').hidden = account.account_id !== 'master' || account.role !== 'Master';
   document.getElementById('createAdminButton').classList.toggle('hidden', account.account_id !== 'master');
   document.getElementById('userActionsHeader').hidden = account.account_id !== 'master';
   document.getElementById('crewManagementPanel').hidden = account.role === 'IT';
@@ -3484,6 +3502,7 @@ function switchView(name){
     renderUsers();
     loadExtraBedStock();
     if(!document.getElementById('propertyCodeSettingsCard').hidden) loadPropertyCodes();
+    if(currentDashboardAccount?.account_id === 'master' && currentDashboardAccount?.role === 'Master') loadDashboardNotes();
   }
   /* Close mobile sidebar */
   if(window.innerWidth < 1024){
@@ -8644,6 +8663,9 @@ function sendNotaWhatsApp(){
 }
 
 /* ============== USERS ============== */
+let dashboardNotes = [];
+let dashboardNoteEditingId = '';
+
 function mapDashboardAccount(account){
   const name = String(account.display_name || account.account_id || '?');
   return {
@@ -8651,7 +8673,6 @@ function mapDashboardAccount(account){
     name,
     email:account.email || '-',
     role:account.role,
-    access:'Dashboard operasional',
     status:Number(account.active) === 1 ? 'active' : 'inactive',
     initial:name.split(/\s+/).filter(Boolean).slice(0, 2).map(part => part[0]).join('').toUpperCase(),
     color:account.role === 'Master' ? 'from-amber-400 to-orange-500' : account.role === 'IT' ? 'from-blue-400 to-cyan-500' : 'from-emerald-400 to-teal-500',
@@ -8687,17 +8708,122 @@ function renderUsers(){
           <div class="w-9 h-9 rounded-full bg-gradient-to-br ${u.color} flex items-center justify-center text-white text-xs font-bold">${escapeHtml(u.initial)}</div>
           <div>
             <div class="font-semibold text-slate-900 text-sm">${escapeHtml(u.name)}</div>
-            <div class="text-[11px] text-slate-400">${escapeHtml(u.account_id)}</div>
+            <div class="text-[11px] text-slate-400">${escapeHtml(u.account_id === 'admin-1' ? 'Operasional' : u.account_id)}</div>
             <div class="text-xs text-slate-400 sm:hidden">${escapeHtml(u.email)}</div>
           </div>
         </div>
       </td>
       <td class="px-3 py-3 hidden sm:table-cell text-sm text-slate-600">${escapeHtml(u.email)}</td>
       <td class="px-3 py-3"><span class="badge ${roleStyles[u.role] || 'bg-slate-100 text-slate-700'}">${escapeHtml(u.role)}</span></td>
-      <td class="px-3 py-3 hidden md:table-cell text-xs text-slate-500">${escapeHtml(u.access)}</td>
       <td class="px-5 py-3 text-center">${statusBadge(u.status)}</td>
       ${isMaster ? `<td class="px-5 py-3 text-right whitespace-nowrap">${accountActionCell(u)}</td>` : ''}
     </tr>`).join('');
+}
+
+function setDashboardNoteStatus(message='', isError=false){
+  const status = document.getElementById('dashboardNoteStatus');
+  status.className = `min-h-5 mt-2 text-xs ${isError ? 'text-rose-600' : 'text-slate-500'}`;
+  status.textContent = message;
+}
+
+function renderDashboardNotes(){
+  const list = document.getElementById('dashboardNoteList');
+  if(!list) return;
+  const notes = [...dashboardNotes].sort((a,b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
+  if(!notes.length){
+    list.innerHTML = '<li class="rounded-lg border border-dashed border-slate-200 bg-slate-50 px-3 py-4 text-center text-sm text-slate-500">Belum ada catatan. Tulis catatan lalu simpan.</li>';
+    return;
+  }
+  list.innerHTML = notes.map(note => `
+    <li class="flex items-start justify-between gap-3 rounded-lg border border-slate-100 bg-slate-50 p-3">
+      <div class="min-w-0 flex-1">
+        <div class="mb-1 text-[11px] font-semibold text-slate-500">${escapeHtml(new Date(note.created_at || Date.now()).toLocaleString('id-ID', { dateStyle:'medium', timeStyle:'short' }))}</div>
+        <div class="whitespace-pre-wrap break-words text-sm leading-relaxed text-slate-800">${escapeHtml(note.text || '')}</div>
+      </div>
+      <div class="flex shrink-0 gap-1">
+        <button type="button" data-dashboard-note-action="edit" data-dashboard-note-id="${escapeHtml(note.id)}" class="rounded-md border border-slate-200 bg-white px-2 py-1 text-xs font-semibold text-slate-600 hover:bg-slate-100">Edit</button>
+        <button type="button" data-dashboard-note-action="delete" data-dashboard-note-id="${escapeHtml(note.id)}" class="rounded-md border border-rose-200 bg-white px-2 py-1 text-xs font-semibold text-rose-600 hover:bg-rose-50">Hapus</button>
+      </div>
+    </li>
+  `).join('');
+}
+
+async function loadDashboardNotes(){
+  setDashboardNoteStatus('Memuat catatan...');
+  try {
+    const result = await dashboardApi(`/dashboard/notes?_=${Date.now()}`);
+    dashboardNotes = Array.isArray(result.data) ? result.data : [];
+    renderDashboardNotes();
+    setDashboardNoteStatus('');
+  } catch(error) {
+    setDashboardNoteStatus(`Catatan gagal dimuat: ${error.message}`, true);
+  }
+}
+
+function startDashboardNoteEdit(id){
+  const note = dashboardNotes.find(item => item.id === id);
+  if(!note) return;
+  dashboardNoteEditingId = id;
+  document.getElementById('dashboardNoteInput').value = note.text || '';
+  document.getElementById('dashboardNoteSaveButton').textContent = 'Simpan Perubahan';
+  document.getElementById('dashboardNoteCancelButton').classList.remove('hidden');
+  document.getElementById('dashboardNoteInput').focus();
+}
+
+function cancelDashboardNoteEdit(){
+  dashboardNoteEditingId = '';
+  document.getElementById('dashboardNoteInput').value = '';
+  document.getElementById('dashboardNoteSaveButton').textContent = 'Simpan Catatan';
+  document.getElementById('dashboardNoteCancelButton').classList.add('hidden');
+}
+
+async function saveDashboardNote(){
+  const input = document.getElementById('dashboardNoteInput');
+  const saveButton = document.getElementById('dashboardNoteSaveButton');
+  const text = input.value.trim();
+  if(!text){
+    setDashboardNoteStatus('Isi catatan terlebih dahulu.', true);
+    input.focus();
+    return;
+  }
+  saveButton.disabled = true;
+  setDashboardNoteStatus('Menyimpan catatan...');
+  try {
+    if(dashboardNoteEditingId){
+      const result = await dashboardApi(`/dashboard/notes/${encodeURIComponent(dashboardNoteEditingId)}`, {
+        method:'PATCH',
+        body:JSON.stringify({ text }),
+      });
+      dashboardNotes = dashboardNotes.map(note => note.id === result.data.id ? result.data : note);
+    } else {
+      const result = await dashboardApi('/dashboard/notes', {
+        method:'POST',
+        body:JSON.stringify({ text }),
+      });
+      dashboardNotes.unshift(result.data);
+    }
+    cancelDashboardNoteEdit();
+    renderDashboardNotes();
+    setDashboardNoteStatus('Catatan tersimpan.');
+  } catch(error) {
+    setDashboardNoteStatus(`Catatan gagal disimpan: ${error.message}`, true);
+  } finally {
+    saveButton.disabled = false;
+  }
+}
+
+async function deleteDashboardNote(id){
+  if(!id || window.prompt('Ketik HAPUS untuk menghapus catatan ini:') !== 'HAPUS') return;
+  setDashboardNoteStatus('Menghapus catatan...');
+  try {
+    await dashboardApi(`/dashboard/notes/${encodeURIComponent(id)}`, { method:'DELETE' });
+    dashboardNotes = dashboardNotes.filter(note => note.id !== id);
+    if(dashboardNoteEditingId === id) cancelDashboardNoteEdit();
+    renderDashboardNotes();
+    setDashboardNoteStatus('Catatan dihapus.');
+  } catch(error) {
+    setDashboardNoteStatus(`Catatan gagal dihapus: ${error.message}`, true);
+  }
 }
 
 let extraBedPropertySettings = {};
@@ -10465,6 +10591,18 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('profileForm').addEventListener('submit', saveDashboardProfile);
   document.getElementById('passwordForm').addEventListener('submit', changeDashboardPassword);
   document.getElementById('deletePinForm').addEventListener('submit', changeDashboardDeletePin);
+  document.getElementById('dashboardNoteSaveButton').addEventListener('click', saveDashboardNote);
+  document.getElementById('dashboardNoteCancelButton').addEventListener('click', cancelDashboardNoteEdit);
+  document.getElementById('dashboardNoteInput').addEventListener('keydown', event => {
+    if((event.ctrlKey || event.metaKey) && event.key === 'Enter') saveDashboardNote();
+  });
+  document.getElementById('dashboardNoteList').addEventListener('click', event => {
+    const button = event.target.closest('[data-dashboard-note-action]');
+    if(!button) return;
+    const { dashboardNoteAction:action, dashboardNoteId:id } = button.dataset;
+    if(action === 'edit') startDashboardNoteEdit(id);
+    if(action === 'delete') deleteDashboardNote(id);
+  });
   document.getElementById('crewForm').addEventListener('submit', submitCrewForm);
   document.getElementById('officeEmployeeForm').addEventListener('submit', submitOfficeEmployeeForm);
   document.getElementById('inventoryItemForm').addEventListener('submit', submitInventoryItem);

@@ -2431,6 +2431,324 @@ export default {
         return json({ ok: true, data: { account_id: accountId, deleted: true } });
       }
 
+      if (path === '/dashboard/crew-extra-pay') {
+        const adminSecret = String(env.ADMIN_DASHBOARD_SECRET || '').trim();
+        const tokenData = await getAdminTokenPayload(request, adminSecret);
+        if (!hasManagementRole(tokenData)) return bad('Hanya Master atau Admin yang dapat mengelola gaji tambahan.', 403);
+        const month = String(url.searchParams.get('month') || '').trim();
+        const crew = String(url.searchParams.get('crew') || '').trim();
+        if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(month)) return bad('Bulan tidak valid.');
+        const fields = ['tunjangan', 'bonus', 'bensin', 'reimburse', 'pulsa'];
+        const toData = row => {
+          if (!row) return null;
+          return { crew:row.crew, month:row.period_month, ...Object.fromEntries(fields.map(field => [field, Number(row[field]) || 0])) };
+        };
+        try {
+          if (request.method === 'GET' && crew) {
+            const row = await env.DB.prepare(`
+              SELECT crew, period_month, tunjangan, bonus, bensin, reimburse, pulsa
+              FROM dashboard_crew_extra_pay WHERE crew = ? AND period_month = ?
+            `).bind(crew, month).first();
+            return json({ ok:true, data:toData(row) });
+          }
+          if (request.method === 'GET') {
+            const result = await env.DB.prepare(`
+              SELECT crew, period_month, tunjangan, bonus, bensin, reimburse, pulsa
+              FROM dashboard_crew_extra_pay WHERE period_month = ?
+            `).bind(month).all();
+            return json({ ok:true, data:(result.results || []).map(toData) });
+          }
+          if (request.method === 'PUT') {
+            const body = await request.json();
+            if (Array.isArray(body.entries)) {
+              if (body.entries.length > 1000) return bad('Maksimal 1.000 data gaji tambahan per penyimpanan.');
+              const statements = [];
+              const now = new Date().toISOString();
+              for (const entry of body.entries) {
+                const inputCrew = String(entry.crew || '').trim();
+                const inputMonth = String(entry.month || '').trim();
+                const values = fields.map(field => {
+                  const number = Number(entry[field] ?? 0);
+                  return Number.isSafeInteger(number) && number >= 0 && number <= 1_000_000_000 ? number : null;
+                });
+                if (inputCrew.length < 2 || inputCrew.length > 80 || !/^\d{4}-(0[1-9]|1[0-2])$/.test(inputMonth) || values.some(value => value === null)) {
+                  return bad('Data gaji tambahan tidak valid.');
+                }
+                statements.push(env.DB.prepare(`
+                  INSERT INTO dashboard_crew_extra_pay (
+                    crew, period_month, tunjangan, bonus, bensin, reimburse, pulsa, updated_at
+                  ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                  ON CONFLICT(crew, period_month) DO UPDATE SET
+                    tunjangan = excluded.tunjangan, bonus = excluded.bonus, bensin = excluded.bensin,
+                    reimburse = excluded.reimburse, pulsa = excluded.pulsa, updated_at = excluded.updated_at
+                `).bind(inputCrew, inputMonth, ...values, now));
+              }
+              if (statements.length) await env.DB.batch(statements);
+              return json({ ok:true, data:{ saved:statements.length } });
+            }
+            const inputCrew = String(body.crew || '').trim();
+            const inputMonth = String(body.month || '').trim();
+            if (inputCrew.length < 2 || inputCrew.length > 80 || !/^\d{4}-(0[1-9]|1[0-2])$/.test(inputMonth)) return bad('Crew atau bulan tidak valid.');
+            const values = fields.map(field => {
+              const number = Number(body[field] ?? 0);
+              return Number.isSafeInteger(number) && number >= 0 && number <= 1_000_000_000 ? number : null;
+            });
+            if (values.some(value => value === null)) return bad('Nominal gaji tambahan tidak valid.');
+            await env.DB.prepare(`
+              INSERT INTO dashboard_crew_extra_pay (
+                crew, period_month, tunjangan, bonus, bensin, reimburse, pulsa, updated_at
+              ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+              ON CONFLICT(crew, period_month) DO UPDATE SET
+                tunjangan = excluded.tunjangan, bonus = excluded.bonus, bensin = excluded.bensin,
+                reimburse = excluded.reimburse, pulsa = excluded.pulsa, updated_at = excluded.updated_at
+            `).bind(inputCrew, inputMonth, ...values, new Date().toISOString()).run();
+            return json({ ok:true, data:{ crew:inputCrew, month:inputMonth, ...Object.fromEntries(fields.map((field, index) => [field, values[index]])) } });
+          }
+          return bad('Metode gaji tambahan tidak didukung.', 405);
+        } catch (error) {
+          if (/no such table: dashboard_crew_extra_pay/i.test(String(error?.message || error))) {
+            return bad('Gaji tambahan belum disiapkan. Jalankan migration-dashboard-extra-pay.sql di D1.', 503);
+          }
+          throw error;
+        }
+      }
+
+      if (path === '/dashboard/field-tasks' || path.startsWith('/dashboard/field-tasks/')) {
+        const adminSecret = String(env.ADMIN_DASHBOARD_SECRET || '').trim();
+        const tokenData = await getAdminTokenPayload(request, adminSecret);
+        if (!hasManagementRole(tokenData)) return bad('Hanya Master atau Admin yang dapat mengelola tugas crew.', 403);
+        const taskId = path === '/dashboard/field-tasks' ? '' : decodeURIComponent(path.slice('/dashboard/field-tasks/'.length));
+        if (taskId && !/^task-[A-Za-z0-9_-]{1,100}$/.test(taskId)) return bad('ID tugas tidak valid.');
+        const toTask = row => row ? ({
+          id:row.id, date:row.work_date, crew:row.crew, property:row.property, type:row.type,
+          time:row.time, note:row.note, status:row.status, createdAt:row.created_at,
+          updatedAt:row.updated_at, ...(row.completion_requested_at ? { completionRequestedAt:row.completion_requested_at } : {}),
+          ...(row.completed_at ? { completedAt:row.completed_at } : {}),
+        }) : null;
+        try {
+          if (request.method === 'GET' && !taskId) {
+            const result = await env.DB.prepare(`
+              SELECT * FROM dashboard_field_tasks ORDER BY work_date DESC, time DESC, created_at DESC LIMIT 5000
+            `).all();
+            return json({ ok:true, data:(result.results || []).map(toTask) });
+          }
+          if (request.method === 'POST' && !taskId) {
+            const body = await request.json();
+            const id = String(body.id || '');
+            const date = String(body.date || '');
+            const crew = String(body.crew || '').trim();
+            const property = String(body.property || '').trim();
+            const type = String(body.type || '').trim();
+            const time = String(body.time || '').trim();
+            const note = String(body.note || '').trim();
+            const status = body.status === 'completed' ? 'completed' : 'assigned';
+            const createdAt = body.createdAt == null ? new Date().toISOString() : String(body.createdAt);
+            const updatedAt = String(body.updatedAt || createdAt);
+            const requestedAt = body.completionRequestedAt ? String(body.completionRequestedAt) : null;
+            const completedAt = body.completedAt ? String(body.completedAt) : null;
+            if (!/^task-[A-Za-z0-9_-]{1,100}$/.test(id) || !/^\d{4}-\d{2}-\d{2}$/.test(date) ||
+                crew.length < 2 || crew.length > 80 || !property || property.length > 180 ||
+                !type || type.length > 100 || time.length > 20 || note.length > 500 ||
+                !Number.isFinite(Date.parse(createdAt)) || !Number.isFinite(Date.parse(updatedAt))) return bad('Data tugas tidak valid.');
+            await env.DB.prepare(`
+              INSERT OR IGNORE INTO dashboard_field_tasks (
+                id, work_date, crew, property, type, time, note, status,
+                completion_requested_at, completed_at, created_at, updated_at
+              ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            `).bind(id, date, crew, property, type, time, note, status, requestedAt, completedAt, createdAt, updatedAt).run();
+            const row = await env.DB.prepare('SELECT * FROM dashboard_field_tasks WHERE id = ?').bind(id).first();
+            if (!row) return bad('ID tugas sudah digunakan.', 409);
+            return json({ ok:true, data:toTask(row) }, 201);
+          }
+          if (request.method === 'PATCH' && taskId) {
+            const body = await request.json();
+            const current = await env.DB.prepare('SELECT * FROM dashboard_field_tasks WHERE id = ?').bind(taskId).first();
+            if (!current) return bad('Tugas tidak ditemukan.', 404);
+            const date = String(body.date ?? current.work_date);
+            const crew = String(body.crew ?? current.crew).trim();
+            const property = String(body.property ?? current.property).trim();
+            const type = String(body.type ?? current.type).trim();
+            const time = String(body.time ?? current.time).trim();
+            const note = String(body.note ?? current.note).trim();
+            if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || crew.length < 2 || crew.length > 80 ||
+                !property || property.length > 180 || !type || type.length > 100 || time.length > 20 || note.length > 500) return bad('Data tugas tidak valid.');
+            const now = new Date().toISOString();
+            await env.DB.prepare(`
+              UPDATE dashboard_field_tasks SET work_date=?, crew=?, property=?, type=?, time=?, note=?, updated_at=?
+              WHERE id=?
+            `).bind(date, crew, property, type, time, note, now, taskId).run();
+            const row = await env.DB.prepare('SELECT * FROM dashboard_field_tasks WHERE id = ?').bind(taskId).first();
+            return json({ ok:true, data:toTask(row) });
+          }
+          if (request.method === 'DELETE' && taskId) {
+            const result = await env.DB.prepare('DELETE FROM dashboard_field_tasks WHERE id = ?').bind(taskId).run();
+            if (!Number(result.meta?.changes || 0)) return bad('Tugas tidak ditemukan.', 404);
+            return json({ ok:true, data:{ id:taskId, deleted:true } });
+          }
+          return bad('Metode tugas tidak didukung.', 405);
+        } catch (error) {
+          if (/no such table: dashboard_field_tasks/i.test(String(error?.message || error))) {
+            return bad('Tugas crew belum disiapkan. Jalankan migration-dashboard-field-tasks.sql di D1.', 503);
+          }
+          throw error;
+        }
+      }
+
+      if (path === '/crew/tasks') {
+        const adminSecret = String(env.ADMIN_DASHBOARD_SECRET || '').trim();
+        const crewSession = await getCrewTokenPayload(request, adminSecret);
+        if (!crewSession) return bad('Login Crew diperlukan.', 401);
+        const todayParts = new Intl.DateTimeFormat('en-CA', {
+          timeZone:'Asia/Jakarta', year:'numeric', month:'2-digit', day:'2-digit',
+        }).formatToParts(new Date()).reduce((parts, item) => ({ ...parts, [item.type]:item.value }), {});
+        const today = `${todayParts.year}-${todayParts.month}-${todayParts.day}`;
+        try {
+          if (request.method === 'GET') {
+            const date = String(url.searchParams.get('date') || '');
+            if (date !== today) return bad('Tanggal tugas tidak valid.', 400);
+            const result = await env.DB.prepare(`
+              SELECT * FROM dashboard_field_tasks WHERE crew = ? AND work_date = ? ORDER BY time, created_at
+            `).bind(crewSession.crew, today).all();
+            return json({ ok:true, data:(result.results || []).map(row => ({
+              id:row.id, date:row.work_date, crew:row.crew, property:row.property, type:row.type,
+              time:row.time, note:row.note, status:row.status, createdAt:row.created_at,
+              updatedAt:row.updated_at, ...(row.completion_requested_at ? { completionRequestedAt:row.completion_requested_at } : {}),
+              ...(row.completed_at ? { completedAt:row.completed_at } : {}),
+            })) });
+          }
+          if (request.method === 'PATCH') {
+            const body = await request.json();
+            const action = String(body.action || '');
+            if (action === 'complete-property') {
+              const property = String(body.property || '').trim();
+              const date = String(body.date || '');
+              if (!property || property.length > 180 || date !== today) return bad('Data penyelesaian tugas tidak valid.');
+              await env.DB.prepare(`
+                UPDATE dashboard_field_tasks SET status='completed', completed_at=?, completion_requested_at=NULL, updated_at=?
+                WHERE crew=? AND work_date=? AND lower(trim(property))=lower(trim(?))
+                  AND completion_requested_at IS NOT NULL AND status <> 'completed'
+              `).bind(new Date().toISOString(), new Date().toISOString(), crewSession.crew, today, property).run();
+              return json({ ok:true, data:{ completed:true } });
+            }
+            const id = String(body.id || '');
+            if (!/^task-[A-Za-z0-9_-]{1,100}$/.test(id) || !['request-completion', 'cancel-completion'].includes(action)) return bad('Aksi tugas tidak valid.');
+            const task = await env.DB.prepare(`
+              SELECT status FROM dashboard_field_tasks WHERE id=? AND crew=? AND work_date=?
+            `).bind(id, crewSession.crew, today).first();
+            if (!task) return bad('Tugas hari ini tidak ditemukan.', 404);
+            const now = new Date().toISOString();
+            if (action === 'request-completion') {
+              await env.DB.prepare(`
+                UPDATE dashboard_field_tasks SET completion_requested_at=?, updated_at=?
+                WHERE id=? AND crew=? AND work_date=? AND status <> 'completed'
+              `).bind(now, now, id, crewSession.crew, today).run();
+            } else {
+              await env.DB.prepare(`
+                UPDATE dashboard_field_tasks SET status='assigned', completion_requested_at=NULL, completed_at=NULL, updated_at=?
+                WHERE id=? AND crew=? AND work_date=?
+              `).bind(now, id, crewSession.crew, today).run();
+            }
+            const row = await env.DB.prepare('SELECT * FROM dashboard_field_tasks WHERE id=?').bind(id).first();
+            return json({ ok:true, data:row ? {
+              id:row.id, date:row.work_date, crew:row.crew, property:row.property, type:row.type,
+              time:row.time, note:row.note, status:row.status, createdAt:row.created_at,
+              updatedAt:row.updated_at, ...(row.completion_requested_at ? { completionRequestedAt:row.completion_requested_at } : {}),
+              ...(row.completed_at ? { completedAt:row.completed_at } : {}),
+            } : null });
+          }
+          return bad('Metode tugas Crew tidak didukung.', 405);
+        } catch (error) {
+          if (/no such table: dashboard_field_tasks/i.test(String(error?.message || error))) {
+            return bad('Tugas crew belum disiapkan. Jalankan migration-dashboard-field-tasks.sql di D1.', 503);
+          }
+          throw error;
+        }
+      }
+
+      const dashboardNotePath = path.match(/^\/dashboard\/notes(?:\/([^/]+))?$/);
+      if (dashboardNotePath) {
+        const adminSecret = String(env.ADMIN_DASHBOARD_SECRET || '').trim();
+        const tokenData = await getAdminTokenPayload(request, adminSecret);
+        if (!tokenData?.account_id || !hasDashboardRole(tokenData)) {
+          return bad('Login Dashboard diperlukan.', 401);
+        }
+        const account = await env.DB.prepare(`
+          SELECT account_id FROM dashboard_users
+          WHERE account_id = ? AND active = 1
+        `).bind(tokenData.account_id).first();
+        if (!account) return bad('Akun Dashboard tidak aktif.', 401);
+
+        const noteId = dashboardNotePath[1] ? decodeURIComponent(dashboardNotePath[1]) : '';
+        if (noteId && !/^[A-Za-z0-9_-]{1,100}$/.test(noteId)) return bad('ID catatan tidak valid.');
+        const missingTable = error => {
+          if (!/no such table: dashboard_notes/i.test(String(error?.message || error))) return null;
+          return bad('Catatan belum disiapkan. Jalankan migration-dashboard-notes.sql di D1.', 503);
+        };
+
+        try {
+          if (request.method === 'GET' && !noteId) {
+            const result = await env.DB.prepare(`
+              SELECT id, text, created_at, updated_at FROM dashboard_notes
+              WHERE account_id = ?
+              ORDER BY created_at DESC, id DESC
+            `).bind(account.account_id).all();
+            return json({ ok:true, data:result.results || [] });
+          }
+
+          if (request.method === 'POST' && !noteId) {
+            const body = await request.json();
+            const text = String(body.text || '').trim();
+            if (!text || text.length > 500) return bad('Catatan wajib diisi dan maksimal 500 karakter.');
+            const id = body.id == null ? crypto.randomUUID() : String(body.id);
+            if (!/^[A-Za-z0-9_-]{1,100}$/.test(id)) return bad('ID catatan tidak valid.');
+            const createdAt = body.created_at == null ? new Date().toISOString() : String(body.created_at);
+            if (!Number.isFinite(Date.parse(createdAt))) return bad('Waktu catatan tidak valid.');
+            const updatedAt = new Date().toISOString();
+            await env.DB.prepare(`
+              INSERT OR IGNORE INTO dashboard_notes (id, account_id, text, created_at, updated_at)
+              VALUES (?, ?, ?, ?, ?)
+            `).bind(id, account.account_id, text, createdAt, updatedAt).run();
+            const note = await env.DB.prepare(`
+              SELECT id, text, created_at, updated_at FROM dashboard_notes
+              WHERE id = ? AND account_id = ?
+            `).bind(id, account.account_id).first();
+            if (!note) return bad('ID catatan sudah digunakan.', 409);
+            return json({ ok:true, data:note }, 201);
+          }
+
+          if (request.method === 'PATCH' && noteId) {
+            const body = await request.json();
+            const text = String(body.text || '').trim();
+            if (!text || text.length > 500) return bad('Catatan wajib diisi dan maksimal 500 karakter.');
+            const updatedAt = new Date().toISOString();
+            const result = await env.DB.prepare(`
+              UPDATE dashboard_notes SET text = ?, updated_at = ?
+              WHERE id = ? AND account_id = ?
+            `).bind(text, updatedAt, noteId, account.account_id).run();
+            if (!Number(result.meta?.changes || 0)) return bad('Catatan tidak ditemukan.', 404);
+            const note = await env.DB.prepare(`
+              SELECT id, text, created_at, updated_at FROM dashboard_notes
+              WHERE id = ? AND account_id = ?
+            `).bind(noteId, account.account_id).first();
+            return json({ ok:true, data:note });
+          }
+
+          if (request.method === 'DELETE' && noteId) {
+            const result = await env.DB.prepare(`
+              DELETE FROM dashboard_notes WHERE id = ? AND account_id = ?
+            `).bind(noteId, account.account_id).run();
+            if (!Number(result.meta?.changes || 0)) return bad('Catatan tidak ditemukan.', 404);
+            return json({ ok:true, data:{ id:noteId, deleted:true } });
+          }
+
+          return bad('Metode Catatan tidak didukung.', 405);
+        } catch (error) {
+          const response = missingTable(error);
+          if (response) return response;
+          throw error;
+        }
+      }
+
       if (path === '/dashboard/staff-chat') {
         const adminSecret = String(env.ADMIN_DASHBOARD_SECRET || '').trim();
         const tokenData = await getAdminTokenPayload(request, adminSecret);

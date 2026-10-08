@@ -358,6 +358,15 @@
     .task-notice:not(:empty){padding:10px 14px;border-radius:var(--r);background:var(--warn-soft)}
     .task-notice.success{background:var(--success-soft)}
     .task-notice.error{background:var(--danger-soft)}
+    .dashboard-note-compose{display:grid;gap:10px;margin-top:8px}
+    .dashboard-note-compose textarea{width:100%;min-height:92px;resize:vertical;border:1px solid var(--line);border-radius:12px;padding:12px 14px;font:inherit;color:var(--ink);background:var(--paper);box-sizing:border-box}
+    .dashboard-note-compose textarea:focus{outline:2px solid rgba(47,91,211,.18);border-color:var(--accent)}
+    .dashboard-note-list{list-style:none;margin:12px 0 0;padding:0;display:grid;gap:10px}
+    .dashboard-note-item{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:var(--sunken)}
+    .dashboard-note-item strong{display:block;margin-bottom:4px;font-size:.8rem;color:var(--ink)}
+    .dashboard-note-text{white-space:pre-wrap;word-break:break-word;color:var(--ink);font-size:.9rem;line-height:1.5}
+    .dashboard-note-meta{font-size:.72rem;color:var(--muted)}
+    .dashboard-note-empty{padding:12px 14px;border:1px dashed var(--line);border-radius:12px;color:var(--muted);background:var(--sunken)}
 
     /* ===== Footer ===== */
     .site-footer{border-top:1px solid var(--line);margin-top:28px;padding:18px 4px 0;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;color:var(--muted);font-size:.78rem}
@@ -601,6 +610,7 @@
       <button class="view-btn" data-dash-view="rekap" type="button"><span>Rekap Bulanan</span></button>
       <button class="view-btn" data-dash-view="crew" type="button"><span>Data Crew</span></button>
       <button class="view-btn" data-dash-view="gaji" type="button"><span>Gaji Pokok</span></button>
+      <button class="view-btn" data-dash-view="notes" type="button"><span>Catatan</span></button>
     </nav>
 
     <div class="dash-main">
@@ -776,6 +786,7 @@
         </table>
         <div class="empty" id="arrivalEmpty"><strong>Belum ada check-in lokasi</strong><span>Check-in lokasi dari crew (GPS dan selfie) akan muncul di sini.</span></div>
       </div>
+      <div class="pagination" id="arrivalPagination" aria-label="Navigasi riwayat check-in lokasi"></div>
     </section>
     </div><!-- /viewCheckin -->
 
@@ -796,6 +807,23 @@
       <div class="pagination" id="historyPagination" aria-label="Navigasi riwayat pekerjaan"></div>
     </section>
     </div><!-- /viewRiwayat -->
+
+    <div class="dashboard-view hidden" id="viewNotes">
+      <section class="panel">
+        <div class="records-head"><h2>Catatan</h2></div>
+        <div class="pin-panel-body">
+          <div class="dashboard-note-compose">
+            <label class="field" for="dashboardNoteInput" style="margin:0"><span class="meta-label">Tulis catatan</span><textarea id="dashboardNoteInput" maxlength="500" placeholder="Tulis catatan apa saja..."></textarea></label>
+            <div class="admin-actions">
+              <button class="button primary" id="dashboardNoteSaveBtn" type="button">Simpan catatan</button>
+              <button class="button" id="dashboardNoteCancelBtn" type="button" hidden>Batal edit</button>
+            </div>
+          </div>
+          <p id="dashboardNoteStatus" class="pin-message" role="status" aria-live="polite"></p>
+          <ul id="dashboardNoteList" class="dashboard-note-list" aria-live="polite"></ul>
+        </div>
+      </section>
+    </div><!-- /viewNotes -->
 
     <div class="dashboard-view hidden" id="viewPenugasan">
     <div class="dashboard-column">
@@ -854,7 +882,7 @@
         <div class="filters filters-assign">
           <div class="field"><label for="assignFilterDate">Tanggal</label><input id="assignFilterDate" type="date" /></div>
           <div class="field"><label for="assignFilterCrew">Crew</label><select id="assignFilterCrew"><option value="">Semua crew</option></select></div>
-          <div class="field"><label for="assignFilterStatus">Status</label><select id="assignFilterStatus"><option value="">Semua status</option><option value="assigned">Belum dikerjakan</option><option value="completed">Sudah dikerjakan</option></select></div>
+          <div class="field"><label for="assignFilterStatus">Status</label><select id="assignFilterStatus"><option value="">Semua status</option><option value="assigned">Belum selesai</option><option value="completed">Selesai</option></select></div>
           <div class="filter-actions"><button class="button" id="assignResetFilterBtn" type="button">Reset</button></div>
         </div>
         <div class="table-wrap">
@@ -1036,7 +1064,7 @@
       sessionStorage.removeItem('dashboard_admin_token');
       sessionStorage.removeItem('dashboard_admin_login_date');
     }
-    const state = { records: [], filtered: [], salaryMap: {}, honorMap: {}, historyPage: 1, adminToken: sessionStorage.getItem('dashboard_admin_token') || '', slipReviews: { month: '', byCrew: {} } };
+    const state = { records: [], filtered: [], salaryMap: {}, honorMap: {}, historyPage: 1, arrivalPage: 1, adminToken: sessionStorage.getItem('dashboard_admin_token') || '', slipReviews: { month: '', byCrew: {} } };
     let refreshInProgress = false;
     let detailRecord = null;
     let currentSlip = null;
@@ -1047,18 +1075,37 @@
     let manualWorkPhotoBusy = false;
     const el = id => document.getElementById(id);
     const FIELD_TASKS_KEY = 'yourhome_field_tasks_draft_v1';
+    const LEGACY_DASHBOARD_NOTES_KEY = 'yourhome_dashboard_notes_v1';
+    let dashboardNotes = [];
     const EXTRA_PAY_KEY = 'yourhome_extra_pay_v1';
     const EXTRA_PAY_FIELDS = ['tunjangan', 'bonus', 'bensin', 'reimburse', 'pulsa'];
+    let extraPayStore = {};
+    let extraPayLegacyMigrated = false;
+    let fieldTasks = [];
 
-    function loadExtraPayStore() {
-      try { return JSON.parse(localStorage.getItem(EXTRA_PAY_KEY) || '{}'); } catch { return {}; }
-    }
-    function saveExtraPayStore(store) {
-      try { localStorage.setItem(EXTRA_PAY_KEY, JSON.stringify(store)); } catch {}
+    async function migrateLegacyExtraPay() {
+      if (extraPayLegacyMigrated) return;
+      const legacy = JSON.parse(localStorage.getItem(EXTRA_PAY_KEY) || '{}');
+      const entries = Object.entries(legacy).flatMap(([key, value]) => {
+        const separator = key.lastIndexOf('|');
+        if (separator < 1) return [];
+        const crew = key.slice(0, separator).trim();
+        const month = key.slice(separator + 1);
+        if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(month)) return [];
+        return [{ crew, month, ...Object.fromEntries(EXTRA_PAY_FIELDS.map(field => [field, Number(value?.[field]) || 0])) }];
+      });
+      if (entries.length) {
+        await workerRequest(`${API_BASE}/dashboard/crew-extra-pay`, {
+          method: 'PUT',
+          body: JSON.stringify({ entries })
+        });
+      }
+      localStorage.removeItem(EXTRA_PAY_KEY);
+      extraPayLegacyMigrated = true;
     }
     function extraPayStoreKey(crew, month) { return `${crew}|${month}`; }
     function getExtraPay(crew, month) {
-      const stored = loadExtraPayStore()[extraPayStoreKey(crew, month)];
+      const stored = extraPayStore[extraPayStoreKey(crew, month)];
       const item = stored || {};
       const values = {};
       EXTRA_PAY_FIELDS.forEach(field => { values[field] = Number(item[field]) || 0; });
@@ -1068,9 +1115,20 @@
       return values;
     }
     function setExtraPay(crew, month, values) {
-      const store = loadExtraPayStore();
-      store[extraPayStoreKey(crew, month)] = values;
-      saveExtraPayStore(store);
+      extraPayStore[extraPayStoreKey(crew, month)] = values;
+    }
+    async function loadExtraPay(crew, month) {
+      await migrateLegacyExtraPay();
+      const response = await workerRequest(`${API_BASE}/dashboard/crew-extra-pay?crew=${encodeURIComponent(crew)}&month=${encodeURIComponent(month)}&_=${Date.now()}`);
+      if (response.data) setExtraPay(crew, month, response.data);
+      return getExtraPay(crew, month);
+    }
+    async function persistExtraPay(crew, month, values) {
+      const response = await workerRequest(`${API_BASE}/dashboard/crew-extra-pay`, {
+        method: 'PUT',
+        body: JSON.stringify({ crew, month, ...values })
+      });
+      setExtraPay(crew, month, response.data);
     }
     function sumExtraPay(values) {
       return EXTRA_PAY_FIELDS.reduce((total, field) => total + (Number(values[field]) || 0), 0);
@@ -1080,14 +1138,170 @@
       return EXTRA_PAY_FIELDS.filter(field => values[field] > 0).map(field => [EXTRA_PAY_LABELS[field], formatRupiah(values[field])]);
     }
 
-    function readFieldTasks() {
+    function readLegacyFieldTasks() {
       try {
         const tasks = JSON.parse(localStorage.getItem(FIELD_TASKS_KEY) || '[]');
         return Array.isArray(tasks) ? tasks : [];
-      } catch { return []; }
+      } catch (error) {
+        console.error('Data tugas lama tidak dapat dibaca dari browser.', error);
+        return [];
+      }
     }
-    function writeFieldTasks(tasks) {
-      localStorage.setItem(FIELD_TASKS_KEY, JSON.stringify(tasks));
+    function readFieldTasks() {
+      return fieldTasks;
+    }
+    async function loadDashboardFieldTasks() {
+      const response = await workerRequest(`${API_BASE}/dashboard/field-tasks?_=${Date.now()}`);
+      const legacyTasks = readLegacyFieldTasks();
+      if (legacyTasks.length) {
+        for (const task of legacyTasks) {
+          await workerRequest(`${API_BASE}/dashboard/field-tasks`, {
+            method: 'POST',
+            body: JSON.stringify(task)
+          });
+        }
+        localStorage.removeItem(FIELD_TASKS_KEY);
+        const refreshed = await workerRequest(`${API_BASE}/dashboard/field-tasks?_=${Date.now()}`);
+        fieldTasks = Array.isArray(refreshed.data) ? refreshed.data : [];
+      } else {
+        fieldTasks = Array.isArray(response.data) ? response.data : [];
+      }
+    }
+    async function saveDashboardFieldTask(task) {
+      const url = `${API_BASE}/dashboard/field-tasks${task.id ? `/${encodeURIComponent(task.id)}` : ''}`;
+      const response = await workerRequest(url, {
+        method: task.id ? 'PATCH' : 'POST',
+        body: JSON.stringify(task)
+      });
+      const savedTask = response.data;
+      const index = fieldTasks.findIndex(item => item.id === savedTask.id);
+      if (index < 0) fieldTasks.push(savedTask);
+      else fieldTasks[index] = savedTask;
+      return savedTask;
+    }
+    async function removeDashboardFieldTask(id) {
+      await workerRequest(`${API_BASE}/dashboard/field-tasks/${encodeURIComponent(id)}`, { method: 'DELETE' });
+      fieldTasks = fieldTasks.filter(task => task.id !== id);
+    }
+    function readLegacyDashboardNotes() {
+      try {
+        const notes = JSON.parse(localStorage.getItem(LEGACY_DASHBOARD_NOTES_KEY) || '[]');
+        return Array.isArray(notes) ? notes : [];
+      } catch (error) {
+        console.error('Catatan lama tidak dapat dibaca dari browser.', error);
+        return [];
+      }
+    }
+    function setDashboardNoteStatus(message = '') {
+      const status = document.getElementById('dashboardNoteStatus');
+      if (status) status.textContent = message;
+    }
+    async function loadDashboardNotes() {
+      const response = await workerRequest(`${API_BASE}/dashboard/notes?_=${Date.now()}`);
+      const legacyNotes = readLegacyDashboardNotes();
+      if (legacyNotes.length) {
+        for (const note of legacyNotes) {
+          await workerRequest(`${API_BASE}/dashboard/notes`, {
+            method: 'POST',
+            body: JSON.stringify({
+              id: note.id,
+              text: note.text,
+              created_at: note.createdAt
+            })
+          });
+        }
+        localStorage.removeItem(LEGACY_DASHBOARD_NOTES_KEY);
+        const refreshed = await workerRequest(`${API_BASE}/dashboard/notes?_=${Date.now()}`);
+        dashboardNotes = Array.isArray(refreshed.data) ? refreshed.data : [];
+      } else {
+        dashboardNotes = Array.isArray(response.data) ? response.data : [];
+      }
+      renderDashboardNotes();
+      setDashboardNoteStatus('');
+    }
+    function renderDashboardNotes() {
+      const list = document.getElementById('dashboardNoteList');
+      const input = document.getElementById('dashboardNoteInput');
+      if (!list || !input) return;
+      const notes = [...dashboardNotes].sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
+      if (!notes.length) {
+        list.innerHTML = '<li class="dashboard-note-empty">Belum ada catatan. Tulis catatan lalu simpan.</li>';
+        return;
+      }
+      list.innerHTML = notes.map(note => `
+        <li class="dashboard-note-item">
+          <div style="flex:1;min-width:0;">
+            <strong>${escapeHtml(new Date(note.created_at || Date.now()).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' }))}</strong>
+            <div class="dashboard-note-text">${escapeHtml(note.text || '')}</div>
+          </div>
+          <div class="admin-actions">
+            <button class="button" type="button" data-dashboard-note-action="edit" data-dashboard-note-id="${escapeHtml(note.id)}">Edit</button>
+            <button class="button danger" type="button" data-dashboard-note-action="delete" data-dashboard-note-id="${escapeHtml(note.id)}">Hapus</button>
+          </div>
+        </li>
+      `).join('');
+    }
+    function startDashboardNoteEdit(id) {
+      const note = dashboardNotes.find(item => item.id === id);
+      if (!note) return;
+      dashboardNoteEditingId = id;
+      document.getElementById('dashboardNoteInput').value = note.text || '';
+      document.getElementById('dashboardNoteSaveBtn').textContent = 'Simpan perubahan';
+      document.getElementById('dashboardNoteCancelBtn').hidden = false;
+      document.getElementById('dashboardNoteInput').focus();
+    }
+    function cancelDashboardNoteEdit() {
+      dashboardNoteEditingId = '';
+      document.getElementById('dashboardNoteInput').value = '';
+      document.getElementById('dashboardNoteSaveBtn').textContent = 'Simpan catatan';
+      document.getElementById('dashboardNoteCancelBtn').hidden = true;
+    }
+    async function saveDashboardNote() {
+      const input = document.getElementById('dashboardNoteInput');
+      if (!input) return;
+      const text = input.value.trim();
+      if (!text) {
+        input.focus();
+        return;
+      }
+      const saveButton = document.getElementById('dashboardNoteSaveBtn');
+      saveButton.disabled = true;
+      setDashboardNoteStatus('');
+      try {
+        if (dashboardNoteEditingId) {
+          const note = await workerRequest(`${API_BASE}/dashboard/notes/${encodeURIComponent(dashboardNoteEditingId)}`, {
+            method: 'PATCH',
+            body: JSON.stringify({ text })
+          });
+          dashboardNotes = dashboardNotes.map(item => item.id === note.data.id ? note.data : item);
+        } else {
+          const note = await workerRequest(`${API_BASE}/dashboard/notes`, {
+            method: 'POST',
+            body: JSON.stringify({ text })
+          });
+          dashboardNotes.unshift(note.data);
+        }
+        cancelDashboardNoteEdit();
+        renderDashboardNotes();
+      } catch (error) {
+        setDashboardNoteStatus(`Catatan gagal disimpan: ${error.message}`);
+      } finally {
+        saveButton.disabled = false;
+      }
+    }
+    async function deleteDashboardNote(id) {
+      if (!id) return;
+      const confirmation = window.prompt('Ketik HAPUS untuk menghapus catatan ini:');
+      if (confirmation !== 'HAPUS') return;
+      setDashboardNoteStatus('');
+      try {
+        await workerRequest(`${API_BASE}/dashboard/notes/${encodeURIComponent(id)}`, { method: 'DELETE' });
+        dashboardNotes = dashboardNotes.filter(note => note.id !== id);
+        if (dashboardNoteEditingId === id) cancelDashboardNoteEdit();
+        renderDashboardNotes();
+      } catch (error) {
+        setDashboardNoteStatus(`Catatan gagal dihapus: ${error.message}`);
+      }
     }
     function escapeHtml(value) {
       return String(value ?? '').replace(/[&<>'"]/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[char]));
@@ -1337,6 +1551,7 @@
       ).sort((a,b) => new Date(b.timestamp || `${b.date}T00:00:00`) - new Date(a.timestamp || `${a.date}T00:00:00`));
       renderSummary();
       state.historyPage = 1;
+      state.arrivalPage = 1;
       renderRows();
       renderArrivals();
       renderSlipGaji();
@@ -1358,15 +1573,19 @@
     // Riwayat check-in lokasi (GPS + selfie) per crew, terpisah dari laporan pekerjaan.
     function renderArrivals() {
       const body = el('arrivalBody');
+      const pagination = el('arrivalPagination');
       if (!body) return;
       const crewPick = el('crewFilter').value;
       const arrivals = state.records
         .filter(record => record.jobType === 'Check-in Lokasi' && (!crewPick || record.crew === crewPick))
-        .sort((a, b) => String(b.date).localeCompare(String(a.date)) || String(b.created_at || '').localeCompare(String(a.created_at || '')))
-        .slice(0, 200);
+        .sort((a, b) => String(b.date).localeCompare(String(a.date)) || String(b.created_at || '').localeCompare(String(a.created_at || '')));
+      const totalPages = Math.ceil(arrivals.length / PAGE_SIZE) || 1;
+      state.arrivalPage = Math.max(1, Math.min(state.arrivalPage, totalPages));
+      const pageStart = (state.arrivalPage - 1) * PAGE_SIZE;
+      const pageArrivals = arrivals.slice(pageStart, pageStart + PAGE_SIZE);
       el('arrivalCount').textContent = `${arrivals.length} data`;
       el('arrivalEmpty').style.display = arrivals.length ? 'none' : 'block';
-      body.innerHTML = arrivals.map(record => {
+      body.innerHTML = pageArrivals.map(record => {
         const hasCoords = record.lat != null && record.lng != null && Number.isFinite(Number(record.lat)) && Number.isFinite(Number(record.lng)) && !(Number(record.lat) === 0 && Number(record.lng) === 0);
         const gps = hasCoords ? `<a class="gps-link" href="https://www.google.com/maps?q=${Number(record.lat)},${Number(record.lng)}" target="_blank" rel="noopener">${Number(record.lat).toFixed(4)}, ${Number(record.lng).toFixed(4)} ↗</a> <span class="muted" data-geo-key="${geoKey(record.lat, record.lng)}" data-geo-lat="${Number(record.lat)}" data-geo-lng="${Number(record.lng)}">· memuat wilayah…</span>` : '-';
         const selfie = record.photo ? `<button type="button" data-arrival-photo="${escapeHtml(record.photo)}" data-arrival-title="${escapeHtml(`${record.crew || '-'} · ${formatDate(record.date)} ${formatTime(record)}`)}" title="Klik untuk memperbesar" aria-label="Perbesar selfie ${escapeHtml(record.crew || '')}" style="border:0;padding:0;background:none;cursor:zoom-in"><img src="${escapeHtml(record.photo)}" alt="Selfie" loading="lazy" style="width:36px;height:36px;object-fit:cover;border-radius:8px;display:block" /></button>` : '<span class="muted">Tanpa selfie</span>';
@@ -1378,6 +1597,13 @@
       body.querySelectorAll('[data-delete-arrival]').forEach(button => button.addEventListener('click', () => {
         deleteArrivalRecord(button.dataset.deleteArrival, button.dataset.deleteArrivalCrew, button.dataset.deleteArrivalDate);
       }));
+      if (totalPages > 1) {
+        pagination.innerHTML = `<button type="button" data-arrival-page="prev" ${state.arrivalPage === 1 ? 'disabled' : ''}>Sebelumnya</button><span>Halaman ${state.arrivalPage} dari ${totalPages}</span><button type="button" data-arrival-page="next" ${state.arrivalPage === totalPages ? 'disabled' : ''}>Berikutnya</button>`;
+        pagination.querySelector('[data-arrival-page="prev"]').addEventListener('click', () => { state.arrivalPage -= 1; renderArrivals(); });
+        pagination.querySelector('[data-arrival-page="next"]').addEventListener('click', () => { state.arrivalPage += 1; renderArrivals(); });
+      } else {
+        pagination.innerHTML = '';
+      }
       resolveArrivalDistricts();
     }
 
@@ -1592,7 +1818,13 @@
           : escapeHtml(crew);
         return `<tr><td data-label="Crew" class="crew">${crewCell}</td><td data-label="Hari di Bulan">${totalDays} hari</td><td data-label="Hari Check In"><span class="hadir">${checkInDays} hari</span></td><td data-label="Tidak Check In"><span class="absen">${tidakCheckIn} hari</span></td><td data-label="Potongan" class="potongan">- ${formatRupiah(potongan)}</td><td data-label="Gaji Dibayar" class="bayar">${formatRupiah(dibayar)}</td><td data-label="Uang Bensin">${formatRupiah(crewFuelAllowance(crew) * checkInDays)}</td><td data-label="Properti Dikerjakan">${propertiInfo}</td><td data-label="Aksi"><button class="detail-btn" type="button" data-slip="${escapeHtml(crew)}">Lihat slip</button></td></tr>`;
       }).join('');
-      body.querySelectorAll('[data-slip]').forEach(btn => btn.addEventListener('click', () => openSlip(btn.dataset.slip, month)));
+      body.querySelectorAll('[data-slip]').forEach(btn => btn.addEventListener('click', () => {
+        openSlip(btn.dataset.slip, month).catch(error => {
+          console.error('Gagal memuat data gaji tambahan:', error);
+          el('slipActionMessage').className = 'pin-message error';
+          el('slipActionMessage').textContent = `Data gaji tambahan gagal dimuat: ${error.message}`;
+        });
+      }));
       body.querySelectorAll('[data-dismiss-slip]').forEach(btn => btn.addEventListener('click', () => dismissSlipRejection(btn.dataset.dismissSlip, month)));
       const rejectedCount = crews.filter(crew => activeSlipRejection(crew, month)).length;
       const badge = el('slipRejectBadge');
@@ -1634,7 +1866,13 @@
         console.warn('Status review slip gagal dimuat.', error);
       }
     }
-    function openSlip(crew, month) {
+    async function openSlip(crew, month) {
+      let extraPay;
+      try {
+        extraPay = await loadExtraPay(crew, month);
+      } catch (error) {
+        throw new Error(`Gaji tambahan gagal dimuat dari database: ${error.message}`);
+      }
       const totalDays = daysInMonth(month);
       const today = new Date().getDate();
       const activeYearMonth = formatLocalDateKey().slice(0,7);
@@ -1703,7 +1941,6 @@
 
       el('slipModal').classList.add('open');
       // Simpan data slip aktif agar tombol Simpan PDF dan Kirim WhatsApp bisa memakainya.
-      const extraPay = getExtraPay(crew, month);
       currentSlip = { crew, month, totalDays, checkInDays, tidakCheckIn, potongan, dibayar, recap, extraPay, totalGaji: dibayar + sumExtraPay(extraPay) };
       EXTRA_PAY_FIELDS.forEach(field => {
         const input = el(`extra${field[0].toUpperCase()}${field.slice(1)}`);
@@ -1758,7 +1995,7 @@
       }
       try { input.setSelectionRange(position, position); } catch (error) { /* tipe input tidak mendukung kursor */ }
     }
-    // Baca input Gaji Tambahan yang sedang tampil, simpan ke localStorage, dan perbarui total slip aktif.
+    // Baca input Gaji Tambahan yang sedang tampil dan perbarui total slip aktif.
     function refreshSlipExtraPay() {
       if (!currentSlip) return;
       const values = {};
@@ -1770,6 +2007,17 @@
       currentSlip.extraPay = values;
       currentSlip.totalGaji = currentSlip.dibayar + sumExtraPay(values);
       el('slipTotalGaji').textContent = formatRupiah(currentSlip.totalGaji);
+    }
+    async function saveSlipExtraPay() {
+      if (!currentSlip) return;
+      try {
+        await persistExtraPay(currentSlip.crew, currentSlip.month, currentSlip.extraPay);
+        el('slipActionMessage').className = 'pin-message success';
+        el('slipActionMessage').textContent = 'Gaji tambahan tersimpan di database.';
+      } catch (error) {
+        el('slipActionMessage').className = 'pin-message error';
+        el('slipActionMessage').textContent = `Gaji tambahan gagal disimpan: ${error.message}`;
+      }
     }
     // Ubah nomor apa pun menjadi format internasional Indonesia tanpa tanda baca.
     function normalizeWhatsappNumber(value) {
@@ -2612,7 +2860,10 @@
       el('slipSendAdminBtn').addEventListener('click', sendSlipToAdmin);
       EXTRA_PAY_FIELDS.forEach(field => {
         const input = el(`extra${field[0].toUpperCase()}${field.slice(1)}`);
-        if (input) input.addEventListener('input', () => { formatMoneyInput(input); refreshSlipExtraPay(); });
+        if (input) {
+          input.addEventListener('input', () => { formatMoneyInput(input); refreshSlipExtraPay(); });
+          input.addEventListener('change', saveSlipExtraPay);
+        }
       });
       document.getElementById('detailEditBtn').addEventListener('click', () => {
         closeModal('detailModal');
@@ -2636,6 +2887,7 @@
         });
       });
       await loadCrewManagement();
+      await loadDashboardFieldTasks();
       initAssignmentModule();
       applyFilters();
       loadSlipLogo();
@@ -2668,7 +2920,10 @@
       try {
         const response = await fetch(`${API_BASE}/dashboard/login-accounts`, { cache: 'no-store' });
         const result = await response.json().catch(() => ({}));
-        const accounts = Array.isArray(result.data) ? result.data : [];
+        const allowedAccountIds = new Set(['master', 'it', 'admin-1']);
+        const accounts = Array.isArray(result.data)
+          ? result.data.filter(account => allowedAccountIds.has(account.account_id))
+          : [];
         if (!accounts.length) return;
         const previous = select.value;
         select.replaceChildren(
@@ -2774,6 +3029,7 @@
   let assignBookings = [];
   let assignNoticeTimer = null;
   let assignEditingTaskId = '';
+  let dashboardNoteEditingId = '';
 
   const assignEl = id => document.getElementById(id);
   const DASHBOARD_VIEW_KEY = 'yourhome_dashboard_view';
@@ -2787,6 +3043,7 @@
     rekap: 'viewRekap',
     crew: 'viewDataCrew',
     gaji: 'viewGaji',
+    notes: 'viewNotes',
   };
   const DASHBOARD_VIEWS = Object.keys(DASHBOARD_VIEW_ELEMENTS);
   const DASHBOARD_VIEW_LABELS = {
@@ -2798,6 +3055,7 @@
     rekap: 'Rekap Bulanan',
     crew: 'Data Crew',
     gaji: 'Gaji Pokok',
+    notes: 'Catatan',
   };
   function closeViewSwitchMenu() {
     const nav = assignEl('dashViewSwitch');
@@ -3109,7 +3367,7 @@
     }
     assignCheckBookingWarning();
   }
-  function submitAssignmentTask(event) {
+  async function submitAssignmentTask(event) {
     event.preventDefault();
     const date = assignEl('taskDate').value;
     const crews = selectedAssignmentCrews();
@@ -3121,55 +3379,68 @@
       return;
     }
     const original = assignEditingTaskId ? readFieldTasks().find(item => item.id === assignEditingTaskId) : null;
-    const tasks = readFieldTasks();
     const waktu = assignEl('taskTime').value;
     const catatan = assignEl('taskNote').value.trim();
+    const submitButton = assignEl('submitTaskBtn');
+    submitButton.disabled = true;
     if (original) {
-      const index = tasks.findIndex(item => item.id === original.id);
-      if (index < 0) {
+      try {
+        const crew = crews[0];
+        const saved = await saveDashboardFieldTask({ id:original.id, date, crew, property, type, time:waktu, note:catatan });
+        assignMonth = date.slice(0, 7);
+        assignSelectedDate = date;
+        assignEl('assignFilterDate').value = date;
+        refreshAssignCrewFilter();
+        renderAssignmentTable();
+        closeTaskModal();
+        assignNotify(`Perubahan tugas ${type} untuk ${crew} (${property} · ${formatDate(date)}) disimpan.`, 'success');
+      } catch (error) {
         assignEl('taskMessage').className = 'task-message error';
-        assignEl('taskMessage').textContent = 'Tugas ini sudah tidak ada. Muat ulang halaman.';
-        return;
+        assignEl('taskMessage').textContent = `Perubahan tugas gagal disimpan: ${error.message}`;
+      } finally {
+        submitButton.disabled = false;
       }
-      const crew = crews[0];
-      tasks[index] = { ...tasks[index], date, crew, property, type, time:waktu, note:catatan, updatedAt:new Date().toISOString() };
-      writeFieldTasks(tasks);
+      return;
+    }
+    const createdAt = new Date().toISOString();
+    let savedCount = 0;
+    try {
+      for (const crew of crews) {
+        await saveDashboardFieldTask({
+          id:`task-${crypto.randomUUID()}`, date, crew, property, type,
+          time:waktu, note:catatan, status:'assigned', createdAt
+        });
+        savedCount += 1;
+      }
+      assignEl('taskNote').value = '';
       assignMonth = date.slice(0, 7);
       assignSelectedDate = date;
       assignEl('assignFilterDate').value = date;
       refreshAssignCrewFilter();
       renderAssignmentTable();
       closeTaskModal();
-      assignNotify(`Perubahan tugas ${type} untuk ${crew} (${property} \u00b7 ${formatDate(date)}) disimpan.`, 'success');
-      return;
+      assignNotify(`${savedCount} tugas ${type} berhasil disimpan di database. Crew melihatnya di tab Tugas Hari Ini.`, 'success');
+    } catch (error) {
+      assignEl('taskMessage').className = 'task-message error';
+      assignEl('taskMessage').textContent = `${savedCount} tugas tersimpan; tugas berikutnya gagal: ${error.message}`;
+      refreshAssignCrewFilter();
+      renderAssignmentTable();
+    } finally {
+      submitButton.disabled = false;
     }
-    const createdAt = new Date().toISOString();
-    crews.forEach(crew => tasks.push({
-      id: `task-${crypto.randomUUID()}`,
-      date, crew, property, type,
-      time: waktu,
-      note: catatan,
-      status: 'assigned',
-      createdAt,
-    }));
-    writeFieldTasks(tasks);
-    assignEl('taskNote').value = '';
-    assignMonth = date.slice(0, 7);
-    assignSelectedDate = date;
-    assignEl('assignFilterDate').value = date;
-    refreshAssignCrewFilter();
-    renderAssignmentTable();
-    closeTaskModal();
-    assignNotify(`${crews.length} tugas ${type} untuk ${crews.length === 1 ? crews[0] : `${crews.length} crew`} (${property} \u00b7 ${formatDate(date)}) tersimpan. Crew melihatnya di tab Tugas Hari Ini.`, 'success');
   }
-  function deleteAssignmentTask(id) {
+  async function deleteAssignmentTask(id) {
     const task = readFieldTasks().find(item => item.id === id);
     if (!task) return;
     if (!confirm(`Hapus tugas ${task.type} untuk ${task.crew} (${formatDate(task.date)})?`)) return;
-    writeFieldTasks(readFieldTasks().filter(item => item.id !== id));
-    refreshAssignCrewFilter();
-    renderAssignmentTable();
-    assignNotify('Tugas dihapus.', 'success');
+    try {
+      await removeDashboardFieldTask(id);
+      refreshAssignCrewFilter();
+      renderAssignmentTable();
+      assignNotify('Tugas dihapus dari database.', 'success');
+    } catch (error) {
+      assignNotify(`Tugas gagal dihapus: ${error.message}`, 'error');
+    }
   }
   async function loadAssignmentProperties() {
     try {
@@ -3281,19 +3552,34 @@
     });
     assignEl('taskForm').addEventListener('submit', submitAssignmentTask);
     assignEl('taskDate').addEventListener('change', assignCheckBookingWarning);
-    window.addEventListener('storage', event => {
-      if (event.key !== FIELD_TASKS_KEY) return;
-      refreshAssignCrewFilter();
-      renderAssignmentTable();
-    });
     document.addEventListener('visibilitychange', () => {
       if (!document.hidden && state.adminToken) {
         refreshAssignCrewFilter();
         renderAssignmentTable();
         loadAssignmentBookings();
+        loadDashboardFieldTasks().then(() => {
+          refreshAssignCrewFilter();
+          renderAssignmentTable();
+        }).catch(error => assignNotify(`Tugas gagal dimuat: ${error.message}`, 'error'));
       }
     });
     assignEl('taskDate').value = formatLocalDateKey();
+    document.getElementById('dashboardNoteSaveBtn')?.addEventListener('click', () => { saveDashboardNote(); });
+    document.getElementById('dashboardNoteInput')?.addEventListener('keydown', event => {
+      if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') saveDashboardNote();
+    });
+    document.getElementById('dashboardNoteCancelBtn')?.addEventListener('click', cancelDashboardNoteEdit);
+    document.getElementById('dashboardNoteList')?.addEventListener('click', event => {
+      const button = event.target.closest('[data-dashboard-note-action]');
+      if (!button) return;
+      const id = button.dataset.dashboardNoteId;
+      if (button.dataset.dashboardNoteAction === 'edit') startDashboardNoteEdit(id);
+      if (button.dataset.dashboardNoteAction === 'delete') deleteDashboardNote(id);
+    });
+    loadDashboardNotes().catch(error => {
+      setDashboardNoteStatus(`Catatan gagal dimuat: ${error.message}`);
+      renderDashboardNotes();
+    });
     document.querySelectorAll('[data-dash-view]').forEach(btn => {
       btn.addEventListener('click', () => switchDashboardView(btn.dataset.dashView));
     });

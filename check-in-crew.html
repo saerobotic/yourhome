@@ -609,7 +609,6 @@
     PHOTO_MAX_BYTES: 60 * 1024,
   };
   const PENDING_KEY = 'pending_checkins_v1';
-  const FIELD_TASKS_KEY = 'yourhome_field_tasks_draft_v1';
 
   function formatLocalDateKey(date = new Date()) {
     return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
@@ -631,6 +630,7 @@
   let crewDocumentationLoading = false;
   let crewDocumentationRequestId = 0;
   let crewTasks = [];
+  let crewTaskRecords = [];
   const CREW_DOCUMENTATION_PAGE_SIZE = 10;
 
   /* ============================================================
@@ -773,13 +773,19 @@
     }
   }
 
-  function readCrewTasks() {
+  async function loadCrewTasks() {
+    if (!state.currentCrew) {
+      crewTaskRecords = [];
+      renderCrewTasks();
+      return;
+    }
     try {
-      const tasks = JSON.parse(localStorage.getItem(FIELD_TASKS_KEY) || '[]');
-      return Array.isArray(tasks) ? tasks : [];
+      const response = await api(`/crew/tasks?date=${encodeURIComponent(formatLocalDateKey())}`);
+      crewTaskRecords = Array.isArray(response.data) ? response.data : [];
+      renderCrewTasks();
     } catch (error) {
-      console.error('Gagal membaca daftar tugas crew:', error);
-      return [];
+      console.error('Gagal memuat tugas crew dari database:', error);
+      document.getElementById('crewTasksStatus').textContent = `Tugas gagal dimuat: ${error.message}`;
     }
   }
 
@@ -788,7 +794,7 @@
     const status = document.getElementById('crewTasksStatus');
     const today = formatLocalDateKey();
     crewTasks = state.currentCrew
-      ? readCrewTasks()
+      ? crewTaskRecords
         .filter(task => task.date === today && task.crew === state.currentCrew)
         .sort((left, right) => String(left.time || '').localeCompare(String(right.time || '')))
       : [];
@@ -820,45 +826,43 @@
     }).join('');
   }
 
-  function handleCrewTaskAction(event) {
+  async function handleCrewTaskAction(event) {
     const button = event.target.closest('[data-crew-task-id]');
     if (!button || !state.currentCrew) return;
-    const tasks = readCrewTasks();
-    const task = tasks.find(item => String(item.id) === button.dataset.crewTaskId
+    const task = crewTaskRecords.find(item => String(item.id) === button.dataset.crewTaskId
       && item.date === formatLocalDateKey() && item.crew === state.currentCrew);
     if (!task) {
-      renderCrewTasks();
+      await loadCrewTasks();
       return;
     }
-    if (task.status === 'completed' || task.completionRequestedAt) {
-      task.status = 'assigned';
-      delete task.completedAt;
-      delete task.completionRequestedAt;
-    } else {
-      task.completionRequestedAt = new Date().toISOString();
+    button.disabled = true;
+    try {
+      const action = task.status === 'completed' || task.completionRequestedAt
+        ? 'cancel-completion'
+        : 'request-completion';
+      const response = await api('/crew/tasks', {
+        method:'PATCH',
+        body:JSON.stringify({ id:task.id, action })
+      });
+      crewTaskRecords = crewTaskRecords.map(item => item.id === task.id ? response.data : item);
+      renderCrewTasks();
+    } catch (error) {
+      showToast(`Status tugas gagal diperbarui: ${error.message}`, 'error');
+      await loadCrewTasks();
     }
-    localStorage.setItem(FIELD_TASKS_KEY, JSON.stringify(tasks));
-    renderCrewTasks();
   }
 
-  function completeRequestedCrewTasks(property) {
-    const normalizedProperty = String(property || '').trim().toLocaleLowerCase('id');
-    if (!normalizedProperty || !state.currentCrew) return;
-    const tasks = readCrewTasks();
-    let changed = false;
-    tasks.forEach(task => {
-      if (task.crew === state.currentCrew && task.date === formatLocalDateKey()
-        && String(task.property || '').trim().toLocaleLowerCase('id') === normalizedProperty
-        && task.completionRequestedAt && task.status !== 'completed') {
-        task.status = 'completed';
-        task.completedAt = new Date().toISOString();
-        delete task.completionRequestedAt;
-        changed = true;
-      }
-    });
-    if (changed) {
-      localStorage.setItem(FIELD_TASKS_KEY, JSON.stringify(tasks));
-      renderCrewTasks();
+  async function completeRequestedCrewTasks(property) {
+    if (!String(property || '').trim() || !state.currentCrew) return;
+    try {
+      await api('/crew/tasks', {
+        method:'PATCH',
+        body:JSON.stringify({ action:'complete-property', property, date:formatLocalDateKey() })
+      });
+      await loadCrewTasks();
+    } catch (error) {
+      console.error('Gagal mengonfirmasi tugas setelah check-in:', error);
+      showToast(`Check-in berhasil, tetapi status tugas belum diperbarui: ${error.message}`, 'warning');
     }
   }
 
@@ -1111,7 +1115,7 @@
       tab.className = `min-h-12 rounded-xl px-2 py-3 text-xs sm:text-sm font-semibold leading-tight ${active[key] ? 'bg-brand-600 text-white' : 'bg-white border border-gray-200 text-gray-700'}`;
     });
     if (showDocumentation) loadCrewDocumentation();
-    if (showTasks) renderCrewTasks();
+    if (showTasks) loadCrewTasks();
     if (showInventory) populateInventoryPropertyOptions();
     if (showExpense) initCrewExpenseView();
     if (showLaporan) validateForm();
@@ -1549,7 +1553,7 @@
     document.getElementById('mainApp').classList.add('screen');
     document.getElementById('greetingCrew').textContent = state.currentCrew;
     switchCrewView('checkin');
-    renderCrewTasks();
+    await loadCrewTasks();
     await loadCheckinProperties({ silent:true });
     await checkLocationAvailability();
     updatePendingBadge();
@@ -1659,6 +1663,7 @@
       crewDocumentationRequestId += 1;
       crewDocumentationLoading = false;
       switchCrewView('checkin');
+      crewTaskRecords = [];
       renderCrewTasks();
       document.getElementById('crewDocumentationList').replaceChildren();
       document.getElementById('crewDocumentationStatus').textContent = '';
@@ -1697,17 +1702,17 @@
     document.addEventListener('visibilitychange', () => {
       if (!document.hidden && state.currentCrew) {
         loadCheckinProperties({ silent:true });
-        renderCrewTasks();
+        loadCrewTasks();
       }
-    });
-    window.addEventListener('storage', event => {
-      if (event.key === FIELD_TASKS_KEY) renderCrewTasks();
     });
     window.addEventListener('focus', () => {
       if (state.currentCrew) {
-        renderCrewTasks();
+        loadCrewTasks();
       }
     });
+    setInterval(() => {
+      if (!document.hidden && state.currentCrew && navigator.onLine) loadCrewTasks();
+    }, 30000);
     window.addEventListener('online', updateNetworkStatus);
     window.addEventListener('offline', updateNetworkStatus);
 
@@ -2156,7 +2161,7 @@
       if (!res.ok || data.ok === false) {
         throw new Error(data.error || data.message || text || ('HTTP ' + res.status));
       }
-      completeRequestedCrewTasks(unit);
+      await completeRequestedCrewTasks(unit);
       showToast('Check-in berhasil disimpan! ✅', 'success');
       // Laporan terkirim: alur kembali ke tahap 1, crew harus check-in lagi untuk laporan berikutnya.
       finishReportCycle();
@@ -2273,7 +2278,7 @@
     button.classList.add('animate-spin');
     try {
       await flushQueue();
-      renderCrewTasks();
+      await loadCrewTasks();
       await loadCheckinProperties({ silent:true });
       await renderHistory();
       await updateStats();
@@ -2328,7 +2333,7 @@
           if (!response.ok || data.ok === false) {
             throw new Error(data.error || data.message || text || `HTTP ${response.status}`);
           }
-          completeRequestedCrewTasks(item.payload.unit);
+          await completeRequestedCrewTasks(item.payload.unit);
           sent += 1;
         } catch (error) {
           console.error('Gagal mengirim check-in tertunda:', item.id, error);
