@@ -743,7 +743,28 @@
     state.today = today;
     const params = new URLSearchParams({ month:today.slice(0, 7), limit:'50', offset:'0' });
     const response = await api(`/crew/checkins?${params.toString()}`, { cache:'no-store' });
-    return recordsFromResponse(response).filter(record => record.crew === crew && record.work_date === today);
+    const records = recordsFromResponse(response).filter(record => record.crew === crew && record.work_date === today);
+    syncArrivalFromServer(records);
+    return records;
+  }
+
+  // Status "sudah check-in" hanya tersimpan di sessionStorage, jadi hilang kalau tab ditutup, di-reload,
+  // atau crew login ulang (sering terjadi di iPhone). Pulihkan dari server: kalau check-in lokasi hari ini
+  // lebih banyak daripada laporan yang sudah terkirim (atau masih antre offline), berarti masih ada check-in yang belum dipakai.
+  function syncArrivalFromServer(records) {
+    if (!state.currentCrew || isArrivalSent()) return;
+    const arrivals = records.filter(isArrivalRecord);
+    const reports = records.length - arrivals.length;
+    const queuedReports = loadPending().filter(item => item.payload?.crew === state.currentCrew && !item.payload?.arrival).length;
+    if (arrivals.length <= reports + queuedReports) return;
+    const latest = arrivals[0];
+    const hasGps = latest.lat != null && latest.lng != null && Number.isFinite(Number(latest.lat)) && Number.isFinite(Number(latest.lng));
+    state.arrival = {
+      gpsData: hasGps ? { lat: Number(latest.lat), lng: Number(latest.lng), accuracy: Number(latest.accuracy) || 0 } : null,
+      photoData: null
+    };
+    markArrivalSent();
+    validateForm();
   }
 
   async function loadCrewDocumentation({ offset = 0 } = {}) {
