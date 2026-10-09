@@ -2041,6 +2041,24 @@ export default {
         const today = workDate ||
           new Date().toISOString().slice(0, 10);
         const createdAt = clientCreatedAt || new Date().toISOString();
+
+        // Urutan wajib per crew per hari: check-in lokasi -> laporan kerja -> check-in lokasi -> ...
+        // Dijaga di server supaya sama untuk semua crew, apa pun perangkat dan status sesi di HP-nya.
+        const lastRecord = await env.DB
+          .prepare('SELECT unit FROM checkins WHERE crew = ? AND work_date = ? ORDER BY created_at DESC, id DESC LIMIT 1')
+          .bind(crew, today)
+          .first();
+        const lastIsArrival = Boolean(lastRecord) && String(lastRecord.unit || '').trim() === '';
+        if (arrivalOnly && lastIsArrival) {
+          return bad('Check-in lokasi sudah tercatat. Kirim laporan pekerjaan dulu sebelum check-in lagi.', 409, { code: 'arrival_pending_report' });
+        }
+        if (!arrivalOnly && !lastRecord) {
+          return bad('Check-in lokasi dulu sebelum mengirim laporan.', 409, { code: 'arrival_required' });
+        }
+        if (!arrivalOnly && !lastIsArrival) {
+          return bad('Laporan sebelumnya sudah terkirim. Check-in lokasi lagi untuk laporan berikutnya.', 409, { code: 'arrival_already_used' });
+        }
+
         const base = `${slug(crew)}/${today}/${id}`;
         const origin = url.origin;
 
@@ -5751,13 +5769,17 @@ export default {
           existing.forEach((row, periodKey) => {
             if (periodKey > KOSAN_CURRENT_PERIOD) periodKeys.add(periodKey);
           });
+          // Bulan tanpa catatan hanya dianggap "belum bayar" mulai dari bulan pertama yang tercatat
+          // (awal sewa) sampai bulan berjalan; bulan sebelum penyewa masuk tetap "none".
+          const recordedPeriods = [...existing.entries()].filter(([, row]) => row.status !== 'none').map(([key]) => key).sort();
+          const billingStart = recordedPeriods[0] && recordedPeriods[0] < KOSAN_CURRENT_PERIOD ? recordedPeriods[0] : KOSAN_CURRENT_PERIOD;
           const payments = [...periodKeys].sort().map(periodKey => {
             const period = getKosanPeriod(periodKey);
             const row = existing.get(period.key);
             const batch = batchesByRoomPeriod.get(`${room.id}\u0000${period.key}`);
             return {
               period:period.key, label:period.label,
-              status:row?.status || (room.status === 'occupied' ? 'unpaid' : 'none'),
+              status:row?.status || (room.status === 'occupied' && period.key >= billingStart && period.key <= KOSAN_CURRENT_PERIOD ? 'unpaid' : 'none'),
               recorded:Boolean(row), date:row?.date || null,
               amount:batch ? Math.round(Number(batch.total_amount) / Number(batch.months_paid)) : null,
               method:batch?.method || '', notes:batch?.notes || '', batch_id:batch?.id || '',
@@ -5841,9 +5863,9 @@ export default {
           return bad('Tarif sewa kamar tidak valid.');
         }
         const periods = Array.from({ length:monthsPaid }, (_, index) => shiftKosanPeriod(startPeriod, index));
-        const maximumPeriod = shiftKosanPeriod(KOSAN_CURRENT_PERIOD, 12).key;
+        const maximumPeriod = shiftKosanPeriod(KOSAN_CURRENT_PERIOD, 60).key;
         if (periods[0].key < KOSAN_PERIODS[0].key || periods.at(-1).key > maximumPeriod) {
-          return bad('Periode pembayaran harus berada dalam rentang riwayat kos dan maksimal 12 bulan ke depan.');
+          return bad('Periode pembayaran harus berada dalam rentang riwayat kos dan maksimal 5 tahun (60 bulan) ke depan.');
         }
         const placeholders = periods.map(() => '?').join(', ');
         const existingPayments = await env.DB.prepare(`

@@ -1396,7 +1396,7 @@
       el('manualPhotoMessage').textContent = '';
     }
     function formatLocalDateKey(date = new Date()) {
-      return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+      return date.toLocaleDateString('en-CA', { timeZone:'Asia/Jakarta' });
     }
     function mapApiRecord(row) {
       const createdAt = row.created_at || '';
@@ -1446,10 +1446,10 @@
     function formatTimeWib(value) {
       const date = new Date(value);
       if (Number.isNaN(date.getTime())) return '-';
-      return `${date.toLocaleTimeString('id-ID', { hour:'2-digit', minute:'2-digit', second:'2-digit' })} WIB`;
+      return `${date.toLocaleTimeString('id-ID', { timeZone:'Asia/Jakarta', hour:'2-digit', minute:'2-digit', second:'2-digit', hourCycle:'h23' })} WIB`;
     }
     function formatLocalDateTimeWib(value = new Date()) {
-      return `${value.toLocaleString('id-ID', { dateStyle:'medium', timeStyle:'short' })} WIB`;
+      return `${value.toLocaleString('id-ID', { timeZone:'Asia/Jakarta', dateStyle:'medium', timeStyle:'short', hourCycle:'h23' })} WIB`;
     }
     function formatTime(record) {
       if (record.created_at || record.timestamp) return formatTimeWib(record.created_at || record.timestamp);

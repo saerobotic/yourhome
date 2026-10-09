@@ -610,8 +610,9 @@
   };
   const PENDING_KEY = 'pending_checkins_v1';
 
+  // Tanggal kerja selalu menurut WIB, bukan zona waktu HP, supaya sama dengan dashboard.
   function formatLocalDateKey(date = new Date()) {
-    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+    return date.toLocaleDateString('en-CA', { timeZone: 'Asia/Jakarta' });
   }
 
   /* ============================================================
@@ -638,7 +639,7 @@
      ============================================================ */
   async function api(path, options = {}) {
     const crewToken = sessionStorage.getItem('crew_token');
-    const res = await fetch(CONFIG.API_BASE + path, {
+    const res = await fetchWithTimeout(CONFIG.API_BASE + path, {
       ...options,
       headers: {
         'Content-Type': 'application/json',
@@ -698,7 +699,32 @@
   }
 
   function isNetworkError(error) {
-    return !navigator.onLine || error instanceof TypeError || /failed to fetch|networkerror|load failed/i.test(error?.message || '');
+    return !navigator.onLine || error?.name === 'TimeoutError' || error instanceof TypeError || /failed to fetch|networkerror|load failed/i.test(error?.message || '');
+  }
+
+  // fetch dengan batas waktu: tanpa ini upload di sinyal lemah bisa menggantung berpuluh menit.
+  async function fetchWithTimeout(url, options = {}, timeoutMs = 60000) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
+    try {
+      return await fetch(url, { ...options, signal: controller.signal });
+    } catch (error) {
+      if (error?.name === 'AbortError') {
+        const timeoutError = new Error('Koneksi terlalu lambat (timeout). Coba lagi saat sinyal lebih baik.');
+        timeoutError.name = 'TimeoutError';
+        throw timeoutError;
+      }
+      throw error;
+    } finally {
+      clearTimeout(timer);
+    }
+  }
+
+  // Error dari balasan server; code (mis. arrival_required) dipakai untuk aturan urutan check-in -> laporan.
+  function serverError(data, text, status) {
+    const error = new Error(data.error || data.message || text || ('HTTP ' + status));
+    error.code = data.code || '';
+    return error;
   }
 
   function fileUrl(value) {
@@ -725,7 +751,31 @@
     state.today = today;
     const params = new URLSearchParams({ month:today.slice(0, 7), limit:'50', offset:'0' });
     const response = await api(`/crew/checkins?${params.toString()}`, { cache:'no-store' });
-    return recordsFromResponse(response).filter(record => record.crew === crew && record.work_date === today);
+    const records = recordsFromResponse(response).filter(record => record.crew === crew && record.work_date === today);
+    syncArrivalFromServer(records);
+    return records;
+  }
+
+  // Status "sudah check-in" hanya tersimpan di sessionStorage, jadi hilang kalau tab ditutup, di-reload,
+  // atau crew login ulang (sering terjadi di iPhone). Pulihkan dari server berdasarkan urutan: kalau catatan terbaru
+  // hari ini adalah check-in lokasi (belum ada laporan sesudahnya, termasuk yang masih antre offline), check-in itu belum dipakai.
+  // Records dari server urut terbaru dulu.
+  function syncArrivalFromServer(records) {
+    if (!state.currentCrew || isArrivalSent()) return;
+    const latest = records[0];
+    if (!latest || !isArrivalRecord(latest)) return;
+    const latestTime = Date.parse(latest.created_at) || 0;
+    const queuedReportAfter = loadPending().some(item => item.payload?.crew === state.currentCrew
+      && !item.payload?.arrival
+      && (Date.parse(item.payload?.created_at || item.savedAt) || 0) >= latestTime);
+    if (queuedReportAfter) return;
+    const hasGps = latest.lat != null && latest.lng != null && Number.isFinite(Number(latest.lat)) && Number.isFinite(Number(latest.lng));
+    state.arrival = {
+      gpsData: hasGps ? { lat: Number(latest.lat), lng: Number(latest.lng), accuracy: Number(latest.accuracy) || 0 } : null,
+      photoData: null
+    };
+    markArrivalSent();
+    validateForm();
   }
 
   async function loadCrewDocumentation({ offset = 0 } = {}) {
@@ -1323,9 +1373,10 @@
       showToast('Maksimal 10 foto dokumentasi.', 'error');
       return;
     }
-    const compressed = await Promise.all(files.map(file => new Promise(resolve => compressImage(file, resolve))));
+    const { photos: compressed, failed } = await compressImages(files);
     inventoryPhotos.push(...compressed);
     renderInventoryPhotoPreview();
+    if (failed) showToast('Ada foto yang belum masuk, silakan pilih ulang.', 'warning');
   }
 
   async function submitInventoryCheck() {
@@ -1371,7 +1422,14 @@
     const file = event.target.files?.[0];
     event.target.value = '';
     if (!file) return;
-    newInventoryItemPhoto = await new Promise(resolve => compressImage(file, resolve));
+    try {
+      newInventoryItemPhoto = await compressImage(file);
+    } catch (error) {
+      console.error('Foto barang baru gagal diproses:', error);
+      reportPhotoFailures([{ name: file.name, type: file.type, size: file.size, message: error?.message || String(error) }]);
+      showToast('Foto belum masuk, silakan pilih ulang.', 'warning');
+      return;
+    }
     renderNewInventoryItemPhotoPreview();
   }
 
@@ -1445,7 +1503,7 @@
   function formatTime(iso) {
     const d = new Date(iso);
     if (Number.isNaN(d.getTime())) return '-';
-    return `${d.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' })} WIB`;
+    return `${d.toLocaleTimeString('id-ID', { timeZone: 'Asia/Jakarta', hour: '2-digit', minute: '2-digit', second: '2-digit', hourCycle: 'h23' })} WIB`;
   }
   function formatWorkDate(value) {
     if (!value) return '-';
@@ -1457,14 +1515,16 @@
   }
   function formatToday() {
     const d = new Date();
-    return d.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+    return d.toLocaleDateString('id-ID', { timeZone: 'Asia/Jakarta', weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
   }
   function formatCurrentWib() {
     const d = new Date();
     return d.toLocaleTimeString('id-ID', {
+      timeZone: 'Asia/Jakarta',
       hour: '2-digit',
       minute: '2-digit',
-      second: '2-digit'
+      second: '2-digit',
+      hourCycle: 'h23'
     }) + ' WIB';
   }
   function renderTodayDateTime() {
@@ -1474,47 +1534,105 @@
   /* ============================================================
      UTIL: Compress foto ke base64 (atur ukuran)
      ============================================================ */
-  function compressImage(file, callback) {
-    const reader = new FileReader();
-    reader.onload = function (e) {
-      const img = new Image();
-      img.onload = function () {
-        // Hitung ulang dimensi
-        let { width, height } = img;
-        if (width > CONFIG.PHOTO_MAX_WIDTH) {
-          height = (height * CONFIG.PHOTO_MAX_WIDTH) / width;
-          width = CONFIG.PHOTO_MAX_WIDTH;
-        }
-        const canvas = document.createElement('canvas');
+  // Decode foto galeri (bisa 12-48 MP di iPhone) dengan memori sehemat mungkin.
+  // createImageBitmap + resizeWidth mengecilkan saat decode; kalau tidak didukung, jatuh ke <img>.
+  async function decodePhotoForCompression(file) {
+    if (window.createImageBitmap) {
+      try {
+        const bitmap = await createImageBitmap(file, { resizeWidth: CONFIG.PHOTO_MAX_WIDTH, resizeQuality: 'medium' });
+        return { source: bitmap, width: bitmap.width, height: bitmap.height, release: () => bitmap.close?.() };
+      } catch (error) {
+        console.warn('createImageBitmap gagal, memakai <img>:', error);
+      }
+    }
+    const objectUrl = URL.createObjectURL(file);
+    try {
+      const img = await new Promise((resolve, reject) => {
+        const image = new Image();
+        image.onload = () => resolve(image);
+        image.onerror = () => reject(new Error('Foto tidak bisa dibaca (format tidak didukung).'));
+        image.src = objectUrl;
+      });
+      return { source: img, width: img.naturalWidth || img.width, height: img.naturalHeight || img.height, release: () => {} };
+    } finally {
+      URL.revokeObjectURL(objectUrl);
+    }
+  }
+
+  async function compressImageUnbounded(file) {
+    const decoded = await decodePhotoForCompression(file);
+    try {
+      let { width, height } = decoded;
+      if (!width || !height) throw new Error('Foto tidak valid.');
+      if (width > CONFIG.PHOTO_MAX_WIDTH) {
+        height = (height * CONFIG.PHOTO_MAX_WIDTH) / width;
+        width = CONFIG.PHOTO_MAX_WIDTH;
+      }
+      width = Math.max(1, Math.round(width));
+      height = Math.max(1, Math.round(height));
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(decoded.source, 0, 0, width, height);
+      let quality = 0.72;
+      let compressed = canvas.toDataURL('image/jpeg', quality);
+      while (dataUrlSizeBytes(compressed) >= CONFIG.PHOTO_MAX_BYTES && quality > 0.1) {
+        quality -= 0.08;
+        compressed = canvas.toDataURL('image/jpeg', quality);
+      }
+      while (dataUrlSizeBytes(compressed) >= CONFIG.PHOTO_MAX_BYTES && width > 1) {
+        width = Math.max(1, Math.round(width * 0.85));
+        height = Math.max(1, Math.round(height * 0.85));
         canvas.width = width;
         canvas.height = height;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(img, 0, 0, width, height);
-        let quality = 0.72;
-        let compressed = canvas.toDataURL('image/jpeg', quality);
-        while (dataUrlSizeBytes(compressed) >= CONFIG.PHOTO_MAX_BYTES && quality > 0.1) {
-          quality -= 0.08;
-          compressed = canvas.toDataURL('image/jpeg', quality);
-        }
-        while (dataUrlSizeBytes(compressed) >= CONFIG.PHOTO_MAX_BYTES && width > 1) {
-          width = Math.round(width * 0.85);
-          height = Math.max(1, Math.round(height * 0.85));
-          canvas.width = width;
-          canvas.height = height;
-          ctx.drawImage(img, 0, 0, width, height);
-          compressed = canvas.toDataURL('image/jpeg', quality);
-        }
-        if (dataUrlSizeBytes(compressed) >= CONFIG.PHOTO_MAX_BYTES) {
-          canvas.width = 1;
-          canvas.height = 1;
-          ctx.drawImage(img, 0, 0, 1, 1);
-          compressed = canvas.toDataURL('image/jpeg', 0.1);
-        }
-        callback(compressed);
-      };
-      img.src = e.target.result;
-    };
-    reader.readAsDataURL(file);
+        ctx.drawImage(decoded.source, 0, 0, width, height);
+        compressed = canvas.toDataURL('image/jpeg', quality);
+      }
+      if (!compressed.startsWith('data:image/jpeg')) throw new Error('Foto gagal dikompres.');
+      if (dataUrlSizeBytes(compressed) >= CONFIG.PHOTO_MAX_BYTES) {
+        canvas.width = 1;
+        canvas.height = 1;
+        ctx.drawImage(decoded.source, 0, 0, 1, 1);
+        compressed = canvas.toDataURL('image/jpeg', 0.1);
+      }
+      return compressed;
+    } finally {
+      decoded.release();
+    }
+  }
+
+  // Mengembalikan Promise<string dataURL>; menolak (reject) bila foto gagal atau lebih dari timeoutMs.
+  function compressImage(file, timeoutMs = 15000) {
+    return new Promise((resolve, reject) => {
+      const timer = setTimeout(() => reject(new Error('Foto terlalu lama diproses.')), timeoutMs);
+      compressImageUnbounded(file).then(resolve, reject).finally(() => clearTimeout(timer));
+    });
+  }
+
+  // Proses foto satu per satu (hemat memori di iPhone); foto yang gagal dilewati dan dihitung.
+  async function compressImages(files, onProgress) {
+    const photos = [];
+    const failures = [];
+    for (let index = 0; index < files.length; index++) {
+      onProgress?.(index + 1, files.length);
+      try {
+        photos.push(await compressImage(files[index]));
+      } catch (error) {
+        const file = files[index] || {};
+        failures.push({ name: file.name, type: file.type, size: file.size, message: error?.message || String(error) });
+        console.error('Foto dilewati:', file.name, error);
+      }
+    }
+    reportPhotoFailures(failures);
+    return { photos, failed: failures.length };
+  }
+
+  // Detail teknis kegagalan foto hanya ditampilkan untuk debugging (buka halaman dengan ?debug=1), tidak ke crew.
+  function reportPhotoFailures(failures) {
+    if (!failures.length || !new URLSearchParams(location.search).has('debug')) return;
+    const lines = failures.map(f => `${f.name || '(tanpa nama)'}\ntipe: ${f.type || '-'}, ukuran: ${Math.round((f.size || 0) / 1024)} KB\nerror: ${f.message}`);
+    alert(`DEBUG: ${failures.length} foto gagal\n\n${lines.join('\n\n')}\n\n${navigator.userAgent}`);
   }
 
   /* ============================================================
@@ -1953,13 +2071,17 @@
     if (!selectedFiles.length) return;
     showLoading(`Memproses ${selectedFiles.length} foto hasil kerja…`);
     try {
-      const compressedPhotos = await Promise.all(selectedFiles.map(file => new Promise(resolve => {
-        compressImage(file, resolve);
-      })));
+      const { photos: compressedPhotos, failed } = await compressImages(selectedFiles, (current, total) => {
+        showLoading(`Memproses foto ${current} dari ${total}…`);
+      });
       state.workPhotos.push(...compressedPhotos);
       renderWorkPhotoPreview();
       validateForm();
-      showToast(`${compressedPhotos.length} foto hasil kerja siap.`, 'success');
+      if (failed) {
+        showToast(compressedPhotos.length ? `${compressedPhotos.length} foto siap. Ada ${failed} foto belum masuk, silakan pilih ulang.` : 'Foto belum masuk, silakan pilih ulang.', 'warning');
+      } else {
+        showToast(`${compressedPhotos.length} foto hasil kerja siap.`, 'success');
+      }
     } finally {
       hideLoading();
       e.target.value = '';
@@ -2122,11 +2244,7 @@
       lng: state.gpsData ? state.gpsData.lng : null,
       accuracy: state.gpsData ? state.gpsData.accuracy : null,
       selfie: state.photoData,
-      selfie_base64: state.photoData,
-      selfieBase64: state.photoData,
       work_photos: state.workPhotos,
-      work_photos_base64: state.workPhotos,
-      workPhotosBase64: state.workPhotos,
       work_date: state.today || formatLocalDateKey(),
       workDate: state.today || formatLocalDateKey(),
       created_at: createdAt,
@@ -2143,14 +2261,14 @@
         hasSelfie: typeof state.photoData === 'string' && state.photoData.startsWith('data:image/'),
         workCount: state.workPhotos.length
       });
-      const res = await fetch(url, {
+      const res = await fetchWithTimeout(url, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${sessionStorage.getItem('crew_token') || ''}`
         },
         body: JSON.stringify(payload)
-      });
+      }, 90000);
       const text = await res.text();
       let data = {};
       try {
@@ -2159,19 +2277,26 @@
         data = {};
       }
       if (!res.ok || data.ok === false) {
-        throw new Error(data.error || data.message || text || ('HTTP ' + res.status));
+        throw serverError(data, text, res.status);
       }
-      await completeRequestedCrewTasks(unit);
       showToast('Check-in berhasil disimpan! ✅', 'success');
       // Laporan terkirim: alur kembali ke tahap 1, crew harus check-in lagi untuk laporan berikutnya.
       finishReportCycle();
       resetForm();
       switchCrewView('checkin');
+      // Laporan sudah masuk; refresh sisanya tidak boleh menahan overlay loading.
+      hideLoading();
+      await completeRequestedCrewTasks(unit);
       await renderHistory();
       await updateStats();
     } catch (err) {
       console.error('saveCheckin error', err);
-      if (!isNetworkError(err)) {
+      if (err.code === 'arrival_required' || err.code === 'arrival_already_used') {
+        // Server tidak punya check-in yang belum dipakai: kunci laporan lagi, tapi foto & isian tetap dipertahankan.
+        finishReportCycle();
+        showToast(err.message, 'warning');
+        switchCrewView('checkin');
+      } else if (!isNetworkError(err)) {
         showToast('Gagal menyimpan: ' + (err.message || 'coba lagi'), 'error');
       } else {
         const pending = loadPending();
@@ -2211,6 +2336,15 @@
       showToast('Ambil GPS dan selfie terlebih dahulu.', 'error');
       return;
     }
+    // Laporan yang masih antre offline harus terkirim dulu, kalau tidak urutan di server jadi salah.
+    const hasQueuedReport = () => loadPending().some(item => item.payload?.crew === state.currentCrew && !item.payload?.arrival);
+    if (hasQueuedReport()) {
+      await flushQueue();
+      if (hasQueuedReport()) {
+        showToast('Masih ada laporan tertunda. Kirim dulu dengan tombol ↻ saat ada sinyal, baru check-in lagi.', 'warning');
+        return;
+      }
+    }
     const createdAt = new Date().toISOString();
     const payload = {
       crew: state.currentCrew,
@@ -2232,19 +2366,19 @@
     validateForm();
     try {
       showLoading('Mengirim check-in lokasi…');
-      const res = await fetch(CONFIG.API_BASE + '/checkin', {
+      const res = await fetchWithTimeout(CONFIG.API_BASE + '/checkin', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${sessionStorage.getItem('crew_token') || ''}`
         },
         body: JSON.stringify(payload)
-      });
+      }, 60000);
       const text = await res.text();
       let data = {};
       try { data = text ? JSON.parse(text) : {}; } catch { data = {}; }
       if (!res.ok || data.ok === false) {
-        throw new Error(data.error || data.message || text || ('HTTP ' + res.status));
+        throw serverError(data, text, res.status);
       }
       // GPS dan selfie tetap dipakai untuk Kirim Laporan di tab Laporan Pekerjaan.
       state.arrival = { gpsData: state.gpsData, photoData: state.photoData };
@@ -2255,7 +2389,14 @@
       await updateStats();
     } catch (err) {
       console.error('submitArrival error', err);
-      showToast('Gagal mengirim check-in lokasi: ' + (err.message || 'coba lagi'), 'error');
+      if (err.code === 'arrival_pending_report') {
+        // Server sudah punya check-in yang belum dipakai (mis. status di HP hilang): pulihkan dan arahkan ke laporan.
+        showToast(err.message, 'warning');
+        await renderHistory();
+        switchCrewView('laporan');
+      } else {
+        showToast('Gagal mengirim check-in lokasi: ' + (err.message || 'coba lagi'), 'error');
+      }
     } finally {
       isSavingCheckin = false;
       hideLoading();
@@ -2311,6 +2452,7 @@
     showLoading('Mengirim data tertunda…');
     const remaining = [];
     let sent = 0;
+    let alreadyRecorded = 0;
     try {
       for (const item of pending) {
         if (item.payload?.crew !== state.currentCrew) {
@@ -2319,32 +2461,38 @@
         }
         try {
           console.log('Mengirim check-in tertunda:', item.id);
-          const response = await fetch(CONFIG.API_BASE + '/checkin', {
+          const response = await fetchWithTimeout(CONFIG.API_BASE + '/checkin', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
               Authorization: `Bearer ${sessionStorage.getItem('crew_token') || ''}`
             },
             body: JSON.stringify(item.payload)
-          });
+          }, 90000);
           const text = await response.text();
           let data = {};
           try { data = text ? JSON.parse(text) : {}; } catch { data = {}; }
           if (!response.ok || data.ok === false) {
-            throw new Error(data.error || data.message || text || `HTTP ${response.status}`);
+            throw serverError(data, text, response.status);
           }
           await completeRequestedCrewTasks(item.payload.unit);
           sent += 1;
         } catch (error) {
-          console.error('Gagal mengirim check-in tertunda:', item.id, error);
-          remaining.push(item);
+          if (error.code === 'arrival_already_used') {
+            // Catatan terakhir di server sudah laporan, jadi laporan antre ini kemungkinan sudah masuk (mis. balasan server lambat lalu timeout).
+            console.warn('Laporan tertunda dianggap sudah tercatat di server:', item.id);
+            alreadyRecorded += 1;
+          } else {
+            console.error('Gagal mengirim check-in tertunda:', item.id, error);
+            remaining.push(item);
+          }
         }
       }
 
       savePending(remaining);
       updatePendingBadge();
-      if (sent > 0) {
-        showToast(`${sent} check-in tertunda berhasil dikirim${remaining.length ? `, ${remaining.length} masih tertunda` : ''}.`, 'success');
+      if (sent > 0 || alreadyRecorded > 0) {
+        showToast(`${sent + alreadyRecorded} data tertunda selesai${remaining.length ? `, ${remaining.length} masih tertunda` : ''}.`, 'success');
         await renderHistory();
         await updateStats();
       } else if (remaining.length) {

@@ -1023,6 +1023,7 @@ table tbody tr:last-child td { border-bottom: none; }
                 <th>Kamar</th>
                 <th>Depo</th>
                 <th class="text-right">Harga / Bulan</th>
+                <th>Riwayat Lunas</th>
                 <th id="penyewa-paystatus-head">Status Bayar (Juli 2026)</th>
                 <th></th>
               </tr>
@@ -1044,6 +1045,7 @@ table tbody tr:last-child td { border-bottom: none; }
           <option value="">Semua Gedung</option>
         </select>
         <select id="pay-period"></select>
+        <select id="pay-year" title="Tahun matriks pembayaran"></select>
         <div class="tabs" id="pay-view-mode">
           <button data-mode="matrix" class="active">Matriks</button>
           <button data-mode="list">Daftar</button>
@@ -1581,15 +1583,12 @@ table tbody tr:last-child td { border-bottom: none; }
           </h3>
         </div>
         <div class="mou-action-bar">
-          <button class="btn btn-ghost" onclick="mouLoadDraft()">📂 Muat Draft</button>
-          <button class="btn btn-ghost" onclick="mouSaveDraft()">💾 Simpan Draft</button>
           <span class="spacer"></span>
           <button class="btn btn-ghost" onclick="mouGeneratePreview()">👁 Preview Dokumen</button>
           <button class="btn" onclick="mouDownloadPDF()">⬇ Download PDF</button>
           <button class="btn btn-ghost" id="mou-save-record-btn" onclick="mouSaveRecord()">Simpan MOU ke Database</button>
         </div>
         <div class="mou-hint" id="mou-record-save-status" role="status" style="margin-top:10px">MOU belum disimpan ke database.</div>
-        <div class="mou-hint" id="mou-draft-status" role="status" style="margin-top:10px">Draft disimpan di penyimpanan browser pada perangkat ini, bukan ke D1/server.</div>
         <div id="mou-preview-wrapper" style="margin-top:18px">
           <div id="mou-preview-empty" style="padding:40px;text-align:center;color:var(--ink-500);font-size:13px">
             Klik "Preview Dokumen" untuk melihat hasil MOU sebelum diunduh.
@@ -4971,12 +4970,22 @@ const CURRENT_PERIOD_LABEL = (() => {
   return `${KOSAN_MONTHS_ID[month - 1]} ${year}`;
 })();
 const PERIODS = buildKosanPeriods(CURRENT_PERIOD);
-const PAYMENT_ENTRY_PERIODS = buildKosanPeriods(shiftBillingPeriod(CURRENT_PERIOD, 12).key);
-let PAYMENT_PERIODS = [...PERIODS];
-const PAYMENT_MATRIX_PERIODS_2026 = KOSAN_MONTHS_ID.map((label, index) => ({
-  key:`2026-${String(index + 1).padStart(2, '0')}`,
-  label,
-}));
+const FUTURE_PERIOD_MONTHS = 60;
+const PAYMENT_ENTRY_PERIODS = buildKosanPeriods(shiftBillingPeriod(CURRENT_PERIOD, FUTURE_PERIOD_MONTHS).key);
+const PAYMENT_LAST_PERIOD = PAYMENT_ENTRY_PERIODS[PAYMENT_ENTRY_PERIODS.length - 1];
+let PAYMENT_PERIODS = [...PAYMENT_ENTRY_PERIODS];
+const PAYMENT_YEARS = (() => {
+  const first = Number(PERIODS[0].key.slice(0, 4));
+  const last = Number(PAYMENT_LAST_PERIOD.key.slice(0, 4));
+  return Array.from({ length:last - first + 1 }, (_, index) => first + index);
+})();
+let payYear = Number(CURRENT_PERIOD.slice(0, 4));
+function payMatrixPeriods() {
+  return KOSAN_MONTHS_ID.map((label, index) => ({
+    key:`${payYear}-${String(index + 1).padStart(2, '0')}`,
+    label,
+  }));
+}
 const PERIOD_RANGE_LABEL = `${PERIODS[0].label} - ${CURRENT_PERIOD_LABEL}`;
 const YEAR_START_PERIOD = shiftBillingPeriod(CURRENT_PERIOD, -11);
 const YEAR_PERIOD_RANGE_LABEL = `${YEAR_START_PERIOD.label} - ${CURRENT_PERIOD_LABEL}`;
@@ -5551,7 +5560,7 @@ function renderPenyewa() {
 
   const tbody = document.getElementById('penyewa-tbody');
   if (!rooms.length) {
-    tbody.innerHTML = `<tr><td colspan="7"><div class="empty">Tidak ada penyewa yang cocok.</div></td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="8"><div class="empty">Tidak ada penyewa yang cocok.</div></td></tr>`;
     return;
   }
   tbody.innerHTML = rooms.map(r => {
@@ -5570,6 +5579,7 @@ function renderPenyewa() {
         <td>Kamar ${r.room_number}</td>
         <td>${formatDepoCell(r.depo)}</td>
         <td class="cell-num">${fmtIDR(r.price)}</td>
+        <td>${penyewaPaidHistoryCell(r)}</td>
         <td><span class="badge ${curStatus}">${payStatusLabel(curStatus)}</span></td>
         <td style="white-space:nowrap">
           ${curStatus !== 'paid' ? `<button class="btn-ghost btn" onclick="openPaymentCellModal('${r.building}','${r.room_number}','${CURRENT_PERIOD}')">Tagih / Catat Bayar</button>` : ''}
@@ -5579,6 +5589,15 @@ function renderPenyewa() {
       </tr>
     `;
   }).join('');
+}
+
+// Ringkasan riwayat lunas per penyewa: bulan lunas terakhir (termasuk bayar di muka) dan jumlah bulan lunas.
+function penyewaPaidHistoryCell(room) {
+  const paid = room.payments.filter(payment => payment.status === 'paid').sort((a, b) => a.period.localeCompare(b.period));
+  if (!paid.length) return '<span class="muted">Belum ada</span>';
+  const last = paid[paid.length - 1];
+  const advance = paid.filter(payment => payment.period > CURRENT_PERIOD).length;
+  return `<div class="cell-strong" style="color:var(--green-600);">s/d ${escapePaymentHtml(last.label)}</div><div class="cell-sub">${paid.length} bulan lunas${advance ? ` &middot; ${advance} di muka` : ''}</div>`;
 }
 
 // Status MOU per penyewa. kosanMouRooms = Map "gedung|kamar" -> Set nama di MOU; null selama
@@ -5725,7 +5744,7 @@ function isKosanRoomOccupied(room) {
 
 function renderPembayaran() {
   document.getElementById('pay-matrix-period-label').textContent = payMode === 'matrix'
-    ? '— 2026'
+    ? '— ' + payYear
     : '— ' + (PAYMENT_PERIODS.find(p => p.key === payPeriod)?.label || '');
 
   const building = document.getElementById('pay-building').value;
@@ -5761,12 +5780,12 @@ function renderPayMatrix(rooms) {
     <tr>
       <th class="room-col">Gedung / Kamar</th>
       <th>Penyewa</th>
-      ${PAYMENT_MATRIX_PERIODS_2026.map(period => `<th title="${period.label}">${period.label}</th>`).join('')}
+      ${payMatrixPeriods().map(period => `<th title="${period.label}">${period.label}</th>`).join('')}
     </tr>
   `;
   const body = document.getElementById('pay-matrix-body');
   if (!rooms.length) {
-    body.innerHTML = `<tr><td colspan="${PAYMENT_MATRIX_PERIODS_2026.length + 2}"><div class="empty">Tidak ada kamar yang cocok.</div></td></tr>`;
+    body.innerHTML = `<tr><td colspan="${payMatrixPeriods().length + 2}"><div class="empty">Tidak ada kamar yang cocok.</div></td></tr>`;
     return;
   }
   body.innerHTML = rooms.map(r => {
@@ -5779,7 +5798,7 @@ function renderPayMatrix(rooms) {
         <span class="room-occupancy ${occupied ? 'occupied' : 'vacant'}">${occupied ? 'Terisi' : 'Kosong'}</span>
       </td>
       <td>${occupied ? `<div class="cell-strong">${escapePaymentHtml(r.tenant_name.trim())}</div><div class="cell-sub">${fmtIDR(r.price)}</div>` : '<span class="muted">&mdash;</span>'}</td>
-      ${PAYMENT_MATRIX_PERIODS_2026.map(period => {
+      ${payMatrixPeriods().map(period => {
         if (!occupied) {
           return `<td><div class="payment-cell vacant" title="Kamar kosong ${period.label}">—</div></td>`;
         }
@@ -6140,7 +6159,7 @@ async function saveKosanOtherIncome() {
       method:'POST',
       body:JSON.stringify({
         kind:'income', category_id:category.id,
-        property_id:kdoProperty.id, property_name:kdoProperty.name,
+        property_id:kdoProperty.id, property_name:room?.building || 'De Orange',
         entry_date:entryDate, amount, description,
         payee:(room?.tenant_name || document.getElementById('kinc-payee').value.trim()).slice(0, 120),
         recurrence:'once',
@@ -6300,6 +6319,7 @@ function updateRentPaymentPreview() {
   const conflictingPeriod = room && coveredPeriods.find(period =>
     room.payments.some(payment => payment.period === period.key && ['paid', 'checkout'].includes(payment.status))
   );
+  const beyondLimit = endPeriod && endPeriod.key > PAYMENT_LAST_PERIOD.key;
   document.getElementById('rent-payment-range').textContent = endPeriod
     ? (startPeriod === endPeriod.key ? endPeriod.label : `${coveredPeriods[0].label} - ${endPeriod.label}`)
     : 'Isi jumlah bulan 1 sampai 12.';
@@ -6308,12 +6328,14 @@ function updateRentPaymentPreview() {
     : '—';
   const message = document.getElementById('rent-payment-message');
   const submit = document.getElementById('rent-payment-submit');
-  if (conflictingPeriod) {
+  if (beyondLimit) {
+    message.textContent = `Pembayaran maksimal sampai ${PAYMENT_LAST_PERIOD.label} (5 tahun ke depan); kurangi jumlah bulan atau pilih bulan mulai lebih awal.`;
+  } else if (conflictingPeriod) {
     message.textContent = `${conflictingPeriod.label} sudah lunas atau berstatus check-out; pilih periode lain agar tidak tercatat ganda.`;
   } else {
     message.textContent = 'Satu transaksi kas akan dibuat; setiap bulan dalam periode akan ditandai lunas.';
   }
-  submit.disabled = !room || !validCount || Boolean(conflictingPeriod);
+  submit.disabled = !room || !validCount || Boolean(conflictingPeriod) || Boolean(beyondLimit);
 }
 
 async function saveRentPayment() {
@@ -6428,7 +6450,7 @@ function openPaymentCellModal(building, roomNumber, periodKey) {
   // Pakai keberadaan tenant_name sebagai syarat (bukan room.status) -- beberapa kamar
   // datanya tidak sinkron (sudah ada penyewa tapi status belum/tidak "occupied"), dan
   // daftar Penyewa/Belum Bayar sendiri menyaring berdasarkan tenant_name, bukan status.
-  const canMarkPaid = isKosanRoomOccupied(room) && room.price > 0 && !['paid', 'checkout'].includes(payment.status);
+  const canMarkPaid = isKosanRoomOccupied(room) && room.price > 0 && !['paid', 'checkout'].includes(payment.status) && periodKey <= PAYMENT_LAST_PERIOD.key;
   const today = getBillingDateKey();
 
   document.getElementById('modal-title').textContent = `${payment.label} — Kamar ${room.room_number} · ${room.building}`;
@@ -6536,6 +6558,15 @@ function sendPaymentCellNotif() {
 
 document.getElementById('pay-search').addEventListener('input', renderPembayaran);
 document.getElementById('pay-building').addEventListener('change', renderPembayaran);
+(function initPayYearSelect() {
+  const yearSelect = document.getElementById('pay-year');
+  yearSelect.innerHTML = PAYMENT_YEARS.map(year => `<option value="${year}">Tahun ${year}</option>`).join('');
+  yearSelect.value = String(payYear);
+  yearSelect.addEventListener('change', () => {
+    payYear = Number(yearSelect.value);
+    renderPembayaran();
+  });
+})();
 document.getElementById('pay-period').addEventListener('change', (e) => {
   payPeriod = e.target.value;
   renderPembayaran();
@@ -6701,6 +6732,7 @@ function showRoomDetail(building, roomNum) {
   const paidPayments = r.payments.filter(p => p.status === 'paid' && p.period <= CURRENT_PERIOD);
   const paidCount = paidPayments.length;
   const totalPaid = paidPayments.reduce((total, payment) => total + (payment.amount || r.price), 0);
+  const prepaidPayments = r.payments.filter(p => p.status === 'paid' && p.period > CURRENT_PERIOD);
   const historyPayments = [...r.payments]
     .filter(p => p.status === 'paid' || (r.status !== 'vacant' && (
       p.status === 'checkout' || (p.recorded && p.status === 'unpaid') ||
@@ -6715,7 +6747,7 @@ function showRoomDetail(building, roomNum) {
     <div class="kv"><div class="k">Depo</div><div class="v">${r.depo && typeof r.depo === 'object' ? fmtIDR(r.depo.amount) + (r.depo.refundable ? ' (refundable)' : '') : (r.depo ? r.depo : 'Tanpa depo')}</div></div>
     <div class="kv"><div class="k">Status</div><div class="v"><span class="badge ${r.status}">${statusLabel(r.status)}</span></div></div>
     <div class="kv"><div class="k">Pembayaran ${CURRENT_PERIOD_LABEL}</div><div class="v">${cur ? `<span class="badge ${currentPaymentStatus.className}">${currentPaymentStatus.label}</span> ${cur.date ? ' &middot; ' + fmtDateID(cur.date) : ''}` : '<span class="muted">&mdash;</span>'}</div></div>
-    ${paidCount > 0 ? `<div class="kv"><div class="k">Statistik</div><div class="v">${paidCount} dari ${ROOM_HISTORY_PERIODS.length} bulan lunas &middot; Total ${fmtIDR(totalPaid)}</div></div>` : ''}
+    ${paidCount > 0 || prepaidPayments.length ? `<div class="kv"><div class="k">Statistik</div><div class="v">${paidCount} dari ${ROOM_HISTORY_PERIODS.length} bulan lunas &middot; Total ${fmtIDR(totalPaid)}${prepaidPayments.length ? ` &middot; ${prepaidPayments.length} bulan dibayar di muka (${fmtIDR(prepaidPayments.reduce((total, payment) => total + (payment.amount || r.price), 0))})` : ''}</div></div>` : ''}
     <h4>Riwayat Pembayaran</h4>
     <div class="table-wrap room-payment-history">
       <table>
@@ -7036,7 +7068,9 @@ async function loadKosanIncomeData(){
     entry.category_id === 'income-kosan-rent' ||
     entry.property_id === kdoProperty.id ||
     normalizeNameForMatch(entry.property_name) === kdoName
-  ));
+  )).map(entry => normalizeNameForMatch(entry.property_name) === kdoName
+    ? { ...entry, property_name:'De Orange' }
+    : entry);
 }
 
 async function initPemasukanView(){
@@ -7603,6 +7637,10 @@ const mouCanvases = {};
 const mouSignatures = { penghuni: { data: null, date: null }, management: { data: null, date: null } };
 
 function initMouView() {
+  // Matikan isian otomatis Chrome (nama/alamat/telepon profil browser) di form MOU & invoice;
+  // nilai invalid dipakai karena Chrome sering mengabaikan autocomplete="off" untuk kolom alamat.
+  document.querySelectorAll('#view-mou input, #view-mou textarea, #view-mou select, #view-invoice input, #view-invoice textarea')
+    .forEach(field => field.setAttribute('autocomplete', field.type === 'checkbox' || field.type === 'file' ? 'off' : 'nope'));
   mouUpdateSaveButton();
   if (!mouTenantSelectReady) { populateMouTenantSelect(); mouTenantSelectReady = true; }
   if (!mouPolicyRendered) { renderMouPolicyBox(); mouPolicyRendered = true; }
@@ -7633,21 +7671,55 @@ function mouComputeDeposit(depo) {
   return 500000;
 }
 
-function onMouTenantSelect() {
-  const val = document.getElementById('mou-tenant-select').value;
+async function onMouTenantSelect() {
+  const select = document.getElementById('mou-tenant-select');
+  const val = select.value;
   if (!val) return;
   const [building, roomNumber] = val.split('||');
   const room = ALL_ROOMS.find(r => r.building === building && r.room_number === roomNumber);
   if (!room) return;
+  // Sedang mengedit MOU tersimpan: kamar yang sama tetap mode edit (simpan = memperbarui record itu,
+  // bukan membuat duplikat). Pindah ke kamar lain baru memulai form bersih.
+  let keepEditing = false;
+  if (mouEditingId) {
+    const sameRoom = kosanMouRoomKey(document.getElementById('mou-gedung').value, document.getElementById('mou-kamar').value)
+      === kosanMouRoomKey(room.building, room.room_number);
+    if (sameRoom) keepEditing = true;
+    else { mouStartNew(); select.value = val; }
+  }
   document.getElementById('mou-gedung').value = room.building;
   document.getElementById('mou-kamar').value = room.room_number;
   document.getElementById('mou-harga').value = room.price || '';
   document.getElementById('mou-deposit').value = mouComputeDeposit(room.depo);
-  if (room.tenant_name) document.getElementById('mou-bio-nama').value = room.tenant_name;
+  if (room.tenant_name) {
+    document.getElementById('mou-bio-nama').value = room.tenant_name;
+    // Jaga-jaga jika browser menimpa nama dengan isian otomatis tepat setelah dropdown dipilih.
+    setTimeout(() => { if (select.value === val) document.getElementById('mou-bio-nama').value = room.tenant_name; }, 400);
+  }
   const nomorField = document.getElementById('mou-nomor');
   if (!nomorField.value.trim()) {
     const year = new Date().getFullYear();
     nomorField.value = `MOU-${(room.buildingCode || room.building).toString().toUpperCase().replace(/\s+/g,'')}-${room.room_number}-${year}`;
+  }
+  // Jika MOU penyewa ini sudah tersimpan di database, muat seluruh biodatanya (mode edit).
+  const status = document.getElementById('mou-record-save-status');
+  if (!room.tenant_name || keepEditing) return;
+  try {
+    const list = await kosanApi('/kosan/mous');
+    if (select.value !== val) return;
+    const existing = (Array.isArray(list.data) ? list.data : []).find(record =>
+      kosanMouRoomKey(record.building, record.room_number) === kosanMouRoomKey(room.building, room.room_number) &&
+      normalizeNameForMatch(record.tenant_name) === normalizeNameForMatch(room.tenant_name));
+    if (!existing) return;
+    const detail = await kosanApi(`/kosan/mous/${encodeURIComponent(existing.id)}`);
+    if (select.value !== val) return;
+    mouEditingId = detail.data.id;
+    mouApplyStoredRecord(detail.data.record);
+    status.textContent = `Data MOU ${detail.data.mou_number} milik ${detail.data.tenant_name} sudah ada dan dimuat. Simpan perubahan untuk memperbarui.`;
+    mouUpdateSaveButton();
+    showToast('Data MOU yang sudah tersimpan dimuat otomatis.');
+  } catch (error) {
+    console.warn('Data MOU tersimpan tidak dapat dimuat otomatis.', error);
   }
 }
 
@@ -8274,77 +8346,6 @@ function mouBuildAndDownloadPDF() {
   showToast('PDF MOU berhasil diunduh');
 }
 
-// --- Draft (localStorage) ---
-function mouSaveDraft() {
-  const ids = ['mou-nomor','mou-tanggal','mou-gedung','mou-kamar','mou-harga','mou-deposit',
-    'mou-bio-nama','mou-bio-gender','mou-bio-alamat-asal','mou-bio-ttl','mou-bio-status-kawin',
-    'mou-bio-hp','mou-bio-email','mou-bio-pekerjaan','mou-bio-alamat-kerja','mou-bio-kampus',
-    'mou-bio-ayah','mou-bio-ibu','mou-bio-kendaraan','mou-bio-platnomor','mou-bio-kontak-darurat',
-    'mou-bio-hp-darurat','mou-bio-ikatan','mou-management-nama'];
-  const fields = {};
-  ids.forEach(id => { fields[id] = document.getElementById(id).value; });
-  const draft = {
-    fields,
-    agree: document.getElementById('mou-agree-checkbox').checked,
-    signatures: mouSignatures,
-    photos: mouPhotos,
-    saved_at: new Date().toISOString(),
-  };
-  try {
-    localStorage.setItem('mou_draft', JSON.stringify(draft));
-    const savedAt = new Date(draft.saved_at).toLocaleString('id-ID', { dateStyle:'medium', timeStyle:'short' });
-    document.getElementById('mou-draft-status').textContent = `Draft tersimpan di browser/perangkat ini · ${savedAt}`;
-    showToast('Draft MOU disimpan ke browser');
-  } catch(e) {
-    document.getElementById('mou-draft-status').textContent = `Draft gagal disimpan: ${e.message || 'penyimpanan browser tidak tersedia.'}`;
-    showToast('Gagal menyimpan draft');
-  }
-}
-
-function mouLoadDraft() {
-  try {
-    const raw = localStorage.getItem('mou_draft');
-    if (!raw) { showToast('Tidak ada draft MOU tersimpan'); return; }
-    const draft = JSON.parse(raw);
-    Object.entries(draft.fields || {}).forEach(([id, val]) => {
-      const el = document.getElementById(id);
-      if (el) el.value = val;
-    });
-    document.getElementById('mou-agree-checkbox').checked = !!draft.agree;
-    ['ktp', 'selfie'].forEach(kind => {
-      const photo = (draft.photos || {})[kind];
-      mouPhotos[kind] = photo && photo.data ? photo : null;
-      mouRenderPhoto(kind);
-    });
-    ['penghuni','management'].forEach(id => {
-      const sig = (draft.signatures || {})[id];
-      if (sig && sig.data) {
-        mouSignatures[id] = sig;
-        const wrap = document.getElementById(`mou-wrap-${id}`);
-        wrap.classList.remove('active'); wrap.classList.add('signed');
-        const status = document.getElementById(`mou-sigstatus-${id}`);
-        if (status) { status.textContent = '✓ Tersimpan'; status.className = 'mou-sig-status done'; }
-        const saved = document.getElementById(`mou-saved-${id}`);
-        if (saved) saved.innerHTML = `<img src="${sig.data}" class="mou-saved-sig-preview">`;
-        const c = mouCanvases[id];
-        if (c) {
-          const img = new Image();
-          img.onload = () => c.ctx.drawImage(img, 0, 0, c.canvas.width, c.canvas.height);
-          img.src = sig.data;
-        }
-      }
-    });
-    const savedAt = draft.saved_at ? new Date(draft.saved_at).toLocaleString('id-ID', { dateStyle:'medium', timeStyle:'short' }) : '';
-    document.getElementById('mou-draft-status').textContent = savedAt
-      ? `Draft dimuat dari browser/perangkat ini · disimpan ${savedAt}`
-      : 'Draft dimuat dari penyimpanan browser pada perangkat ini.';
-    showToast('Draft MOU berhasil dimuat');
-  } catch(e) {
-    document.getElementById('mou-draft-status').textContent = `Draft gagal dimuat: ${e.message || 'data draft tidak dapat dibaca.'}`;
-    showToast('Gagal memuat draft');
-  }
-}
-
 function mouUpdateSaveButton(){
   const button = document.getElementById('mou-save-record-btn');
   if (button) button.textContent = mouEditingId ? 'Simpan Perubahan' : 'Simpan MOU ke Database';
@@ -8454,7 +8455,12 @@ async function initKosanMouRecordsView(){
           <td class="cell-strong">${escapePaymentHtml(record.mou_number)}</td>
           <td>${fmtDateID(record.agreement_date)}</td>
           <td>${escapePaymentHtml(record.building)} · Kamar ${escapePaymentHtml(record.room_number)}</td>
-          <td>${escapePaymentHtml(kosanRoomTenantName(record.building, record.room_number) || record.tenant_name)}</td>
+          <td>${escapePaymentHtml(record.tenant_name)}${(() => {
+            const roomTenant = kosanRoomTenantName(record.building, record.room_number);
+            return roomTenant && normalizeNameForMatch(roomTenant) !== normalizeNameForMatch(record.tenant_name)
+              ? `<div class="cell-sub"><span class="badge" style="background:var(--amber-100);color:var(--amber-600)">Nama berbeda</span> penyewa kamar sekarang: ${escapePaymentHtml(roomTenant)}</div>`
+              : '';
+          })()}</td>
           <td class="text-right">${fmtIDR(Number(record.price || 0))}</td>
           <td style="white-space:nowrap">
             <button type="button" class="btn btn-ghost" onclick="mouEditRecord('${escapePaymentHtml(record.id)}')">Edit</button>
@@ -8589,7 +8595,7 @@ function applyKosanRoomsFromApi(apiRooms) {
   });
   BUILDINGS = [...grouped.values()];
   ALL_ROOMS = BUILDINGS.flatMap(b => b.rooms.map(r => ({ ...r, building: b.name, buildingCode: b.code })));
-  const periodByKey = new Map(PERIODS.map(period => [period.key, period]));
+  const periodByKey = new Map(PAYMENT_ENTRY_PERIODS.map(period => [period.key, period]));
   ALL_ROOMS.forEach(room => room.payments.forEach(payment => {
     if (payment.period > CURRENT_PERIOD && !periodByKey.has(payment.period)) {
       periodByKey.set(payment.period, { key:payment.period, label:payment.label || shiftBillingPeriod(payment.period, 0).label });
@@ -8903,6 +8909,7 @@ async function tkDecide(id, action) {
 let invTenantSelectReady = false;
 
 function initInvoiceView() {
+  document.querySelectorAll('#view-invoice input, #view-invoice textarea').forEach(field => field.setAttribute('autocomplete', 'nope'));
   const previousTenant = document.getElementById('inv-tenant-select').value;
   populateInvoiceTenantSelect();
   invTenantSelectReady = true;
