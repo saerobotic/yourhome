@@ -229,7 +229,7 @@
       <!-- Statistik ringkas -->
       <div class="mt-5 grid grid-cols-2 gap-3">
         <div class="bg-white/15 backdrop-blur rounded-2xl p-3.5">
-          <p class="text-xs text-brand-100">Total Check-in Hari Ini</p>
+          <p class="text-xs text-brand-100">Total Laporan Hari Ini</p>
           <p id="statTotal" class="text-2xl font-bold">0</p>
         </div>
         <div class="bg-white/15 backdrop-blur rounded-2xl p-3.5">
@@ -322,7 +322,7 @@
                 class="w-full mt-5 bg-gray-800 hover:bg-gray-900 active:scale-[0.98] text-white font-bold py-4 rounded-xl text-base shadow-lg transition disabled:opacity-50 disabled:cursor-not-allowed">
           Kirim Check-in Lokasi (GPS + Selfie)
         </button>
-        <p class="text-xs text-gray-400 mt-2">Kirim saat sudah sampai di lokasi. Foto hasil kerja dan properti diisi di tab Laporan Pekerjaan.</p>
+        <p class="text-xs text-gray-400 mt-2">Kirim saat sudah sampai di lokasi. Laporan pekerjaan dikirim terpisah di tab Laporan Pekerjaan.</p>
 
         <div id="selfieCameraPanel" class="hidden fixed inset-0 z-40 bg-black/80 p-5 flex items-center justify-center">
           <div class="w-full max-w-md bg-white rounded-2xl p-4">
@@ -363,12 +363,6 @@
     </div>
 
     <section id="crewLaporanView" role="tabpanel" aria-labelledby="crewLaporanTab" class="hidden px-5 pt-5">
-      <!-- Pengingat: laporan hanya bisa dikirim setelah check-in lokasi -->
-      <div id="laporanCheckinBanner" class="hidden mt-4 rounded-2xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900">
-        <p class="font-bold">Belum check-in lokasi</p>
-        <p class="text-xs mt-1">Ambil GPS dan selfie di tab Check-in dulu, baru bisa mengirim laporan.</p>
-        <button type="button" id="goToCheckinBtn" class="mt-3 rounded-lg bg-brand-600 px-4 py-2 text-xs font-semibold text-white hover:bg-brand-700">Buka tab Check-in</button>
-      </div>
       <!-- Laporan pekerjaan: foto hasil kerja, properti, jenis pekerjaan -->
       <div class="bg-white rounded-2xl shadow-md border border-gray-100 p-5 mt-4">
         <h3 class="font-bold text-gray-800 mb-4 flex items-center gap-2">
@@ -439,7 +433,7 @@
         <div id="laporanHistoryList" class="space-y-3"></div>
         <div id="laporanHistoryEmpty" class="hidden text-center py-10 text-gray-400">
           <p class="text-sm">Belum ada laporan hari ini</p>
-          <p class="text-xs">Laporan muncul di sini setelah check-in lokasi dan laporan terkirim</p>
+          <p class="text-xs">Laporan muncul di sini setelah laporan terkirim</p>
         </div>
       </div>
 
@@ -574,7 +568,7 @@
     <div class="p-5 sm:p-6">
       <div class="flex items-start gap-3">
         <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-amber-50 text-amber-700" aria-hidden="true">!</div>
-        <div><h2 class="text-lg font-bold text-gray-800">Periksa sebelum mengirim</h2><p class="mt-1 text-sm text-gray-600">Check-in yang sudah terkirim tidak dapat dibatalkan oleh Crew. Perubahan harus dibantu admin.</p></div>
+        <div><h2 class="text-lg font-bold text-gray-800">Periksa sebelum mengirim</h2><p class="mt-1 text-sm text-gray-600">Laporan yang sudah terkirim tidak dapat dibatalkan oleh Crew. Perubahan harus dibantu admin.</p></div>
       </div>
       <dl class="mt-4 space-y-2 rounded-xl bg-gray-50 p-4 text-sm">
         <div class="flex justify-between gap-3"><dt class="text-gray-500">Crew</dt><dd id="confirmCrewName" class="text-right font-semibold text-gray-800"></dd></div>
@@ -583,10 +577,10 @@
         <div class="flex justify-between gap-3"><dt class="text-gray-500">Tanggal</dt><dd id="confirmWorkDate" class="text-right font-semibold text-gray-800"></dd></div>
         <div class="flex justify-between gap-3"><dt class="text-gray-500">Dokumentasi</dt><dd id="confirmPhotoCount" class="text-right font-semibold text-gray-800"></dd></div>
       </dl>
-      <p class="mt-3 text-xs leading-relaxed text-amber-800">Jika jaringan terputus, check-in dapat masuk antrean dan terkirim otomatis saat koneksi kembali.</p>
+      <p class="mt-3 text-xs leading-relaxed text-amber-800">Jika jaringan terputus, laporan dapat masuk antrean dan terkirim otomatis saat koneksi kembali.</p>
       <div class="mt-5 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
         <button id="cancelCheckinConfirmBtn" type="button" class="rounded-lg border border-gray-200 px-4 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50">Batal, Periksa Lagi</button>
-        <button id="confirmSaveCheckinBtn" type="button" class="rounded-lg bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-700 disabled:cursor-wait disabled:opacity-60">Ya, Kirim Check-in</button>
+        <button id="confirmSaveCheckinBtn" type="button" class="rounded-lg bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-700 disabled:cursor-wait disabled:opacity-60">Ya, Kirim Laporan</button>
       </div>
     </div>
   </dialog>
@@ -610,8 +604,14 @@
   };
   const PENDING_KEY = 'pending_checkins_v1';
 
+  // Selisih jam HP terhadap jam server (ms). Diperbarui dari balasan server; 0 sampai data pertama termuat.
+  let serverClockOffsetMs = 0;
+  function serverNow() {
+    return new Date(Date.now() + serverClockOffsetMs);
+  }
+
   // Tanggal kerja selalu menurut WIB, bukan zona waktu HP, supaya sama dengan dashboard.
-  function formatLocalDateKey(date = new Date()) {
+  function formatLocalDateKey(date = serverNow()) {
     return date.toLocaleDateString('en-CA', { timeZone: 'Asia/Jakarta' });
   }
 
@@ -720,7 +720,7 @@
     }
   }
 
-  // Error dari balasan server; code (mis. arrival_required) dipakai untuk aturan urutan check-in -> laporan.
+  // Error dari balasan server (membawa kode error bila server mengirimnya).
   function serverError(data, text, status) {
     const error = new Error(data.error || data.message || text || ('HTTP ' + status));
     error.code = data.code || '';
@@ -751,31 +751,13 @@
     state.today = today;
     const params = new URLSearchParams({ month:today.slice(0, 7), limit:'50', offset:'0' });
     const response = await api(`/crew/checkins?${params.toString()}`, { cache:'no-store' });
+    const serverTimeMs = Date.parse(response.server_time || '');
+    if (Number.isFinite(serverTimeMs)) {
+      serverClockOffsetMs = serverTimeMs - Date.now();
+      renderTodayDateTime();
+    }
     const records = recordsFromResponse(response).filter(record => record.crew === crew && record.work_date === today);
-    syncArrivalFromServer(records);
     return records;
-  }
-
-  // Status "sudah check-in" hanya tersimpan di sessionStorage, jadi hilang kalau tab ditutup, di-reload,
-  // atau crew login ulang (sering terjadi di iPhone). Pulihkan dari server berdasarkan urutan: kalau catatan terbaru
-  // hari ini adalah check-in lokasi (belum ada laporan sesudahnya, termasuk yang masih antre offline), check-in itu belum dipakai.
-  // Records dari server urut terbaru dulu.
-  function syncArrivalFromServer(records) {
-    if (!state.currentCrew || isArrivalSent()) return;
-    const latest = records[0];
-    if (!latest || !isArrivalRecord(latest)) return;
-    const latestTime = Date.parse(latest.created_at) || 0;
-    const queuedReportAfter = loadPending().some(item => item.payload?.crew === state.currentCrew
-      && !item.payload?.arrival
-      && (Date.parse(item.payload?.created_at || item.savedAt) || 0) >= latestTime);
-    if (queuedReportAfter) return;
-    const hasGps = latest.lat != null && latest.lng != null && Number.isFinite(Number(latest.lat)) && Number.isFinite(Number(latest.lng));
-    state.arrival = {
-      gpsData: hasGps ? { lat: Number(latest.lat), lng: Number(latest.lng), accuracy: Number(latest.accuracy) || 0 } : null,
-      photoData: null
-    };
-    markArrivalSent();
-    validateForm();
   }
 
   async function loadCrewDocumentation({ offset = 0 } = {}) {
@@ -1514,11 +1496,11 @@
     });
   }
   function formatToday() {
-    const d = new Date();
+    const d = serverNow();
     return d.toLocaleDateString('id-ID', { timeZone: 'Asia/Jakarta', weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
   }
   function formatCurrentWib() {
-    const d = new Date();
+    const d = serverNow();
     return d.toLocaleTimeString('id-ID', {
       timeZone: 'Asia/Jakarta',
       hour: '2-digit',
@@ -1644,6 +1626,9 @@
     setInterval(renderTodayDateTime, 1000);
     updatePendingBadge();
     updateNetworkStatus();
+    // Pasang semua tombol lebih dulu. Memuat data dari server bisa lama di sinyal lemah,
+    // dan selama itu tombol tidak boleh mati.
+    bindEvents();
     // Auto-login hanya jika nama crew dan token sesi tersedia.
     const savedCrew = sessionStorage.getItem('current_crew');
     const savedToken = sessionStorage.getItem('crew_token');
@@ -1653,9 +1638,6 @@
     } else {
       showLogin();
     }
-
-    bindEvents();
-    await renderHistory();
   }
 
   /* ============================================================
@@ -1793,6 +1775,7 @@
       updateLoginButton();
       // Reset form
       resetForm();
+      resetArrivalForm();
       showLogin();
       showToast('Berhasil keluar.', 'info');
     });
@@ -1860,7 +1843,6 @@
     // --- CHECK-IN: simpan ---
     document.getElementById('saveCheckinBtn').addEventListener('click', openCheckinConfirmation);
     document.getElementById('sendArrivalBtn').addEventListener('click', submitArrival);
-    document.getElementById('goToCheckinBtn').addEventListener('click', () => switchCrewView('checkin'));
     // --- Pop-up foto (delegasi klik untuk semua elemen [data-photo-src]) ---
     const photoDialog = document.getElementById('photoDialog');
     document.addEventListener('click', event => {
@@ -1878,8 +1860,9 @@
 
     // --- Refresh riwayat ---
     const reportHistoryList = document.getElementById('laporanHistoryList');
-    reportHistoryList.addEventListener('change', handleReportPhotoChange);
-    reportHistoryList.addEventListener('click', handleReportPhotoClick);
+    // Edit foto dari riwayat belum selesai dibuat (fungsinya belum ada); jangan sampai error menghentikan pemasangan tombol lain.
+    if (typeof handleReportPhotoChange === 'function') reportHistoryList.addEventListener('change', handleReportPhotoChange);
+    if (typeof handleReportPhotoClick === 'function') reportHistoryList.addEventListener('click', handleReportPhotoClick);
     const refreshHistoryButtons = ['refreshHistoryBtn', 'refreshLaporanHistoryBtn'].map(id => document.getElementById(id));
     refreshHistoryButtons.forEach(button => button.addEventListener('click', async () => {
       if (!state.currentCrew || button.disabled) return;
@@ -2122,76 +2105,21 @@
     });
   }
 
-  // GPS dan selfie dari Check-in Lokasi disimpan di sesi browser, supaya tidak hilang saat halaman di-refresh.
-  const CHECKIN_SESSION_KEY = 'crew_checkin_session';
-  function restoreCheckinSession() {
-    if (!state.gpsData && !state.arrival) {
-      try {
-        const saved = JSON.parse(sessionStorage.getItem(CHECKIN_SESSION_KEY) || 'null');
-        if (saved?.gpsData) state.arrival = saved;
-      } catch {}
-    }
-    if (!state.gpsData && state.arrival) {
-      state.gpsData = state.arrival.gpsData;
-      state.photoData = state.arrival.photoData;
-    }
-    if (state.gpsData) {
-      try {
-        sessionStorage.setItem(CHECKIN_SESSION_KEY, JSON.stringify({ gpsData: state.gpsData, photoData: state.photoData }));
-      } catch {}
-    }
-  }
-
-  // Alur dua tahap: Check-in lokasi (tahap 1) membuka Laporan Pekerjaan (tahap 2).
-  // Setelah laporan terkirim, kunci ditutup lagi sehingga crew harus check-in lagi untuk laporan berikutnya.
-  const ARRIVAL_SENT_KEY = 'crew_arrival_sent';
-  function arrivalSentKey() {
-    return state.currentCrew ? `${state.currentCrew}|${formatLocalDateKey()}` : '';
-  }
-  function isArrivalSent() {
-    const key = arrivalSentKey();
-    if (!key) return false;
-    if (state.arrivalSentKey === key) return true;
-    try { return sessionStorage.getItem(ARRIVAL_SENT_KEY) === key; } catch { return false; }
-  }
-  function markArrivalSent() {
-    const key = arrivalSentKey();
-    state.arrivalSentKey = key;
-    try { sessionStorage.setItem(ARRIVAL_SENT_KEY, key); } catch {}
-  }
-  function finishReportCycle() {
-    state.arrivalSentKey = null;
-    state.arrival = null;
-    try { sessionStorage.removeItem(ARRIVAL_SENT_KEY); } catch {}
-    try { sessionStorage.removeItem(CHECKIN_SESSION_KEY); } catch {}
-  }
-
+  // Check-in lokasi dan laporan pekerjaan berdiri sendiri: tombol masing-masing aktif sesuai isiannya sendiri.
   function validateForm() {
-    restoreCheckinSession();
-    const arrivalSent = isArrivalSent();
     const hasGps = !!state.gpsData;
     const hasPhoto = !!state.photoData;
     const hasWorkPhotos = state.workPhotos.length > 0;
-    const selectedUnit = document.getElementById('unitInput').value;
-    const hasUnit = selectedUnit !== '';
+    const hasUnit = document.getElementById('unitInput').value !== '';
     const hasJob = getSelectedJobTypes().length > 0 && (!isLainnyaChecked() || document.getElementById('jobTypeOtherNote').value.trim() !== '');
-    // Laporan hanya bisa dikirim setelah Check-in Lokasi berhasil; check-in hanya sekali per laporan.
-    document.getElementById('saveCheckinBtn').disabled = isSavingCheckin || !arrivalSent || !(hasWorkPhotos && hasUnit && hasJob);
-    const arrivalButton = document.getElementById('sendArrivalBtn');
-    arrivalButton.disabled = isSavingCheckin || arrivalSent || !(hasGps && hasPhoto);
-    arrivalButton.textContent = arrivalSent ? 'Check-in Terkirim ✓ — Lanjut ke Laporan Pekerjaan' : 'Kirim Check-in Lokasi (GPS + Selfie)';
-    document.getElementById('laporanCheckinBanner')?.classList.toggle('hidden', arrivalSent);
+    document.getElementById('saveCheckinBtn').disabled = isSavingCheckin || !(hasWorkPhotos && hasUnit && hasJob);
+    document.getElementById('sendArrivalBtn').disabled = isSavingCheckin || !(hasGps && hasPhoto);
   }
 
   function openCheckinConfirmation() {
     validateForm();
-    if (!isArrivalSent()) {
-      showToast('Check-in lokasi dulu sebelum mengirim laporan.', 'error');
-      switchCrewView('checkin');
-      return;
-    }
     if (document.getElementById('saveCheckinBtn').disabled) {
-      showToast('Lengkapi lokasi, foto, properti, dan pekerjaan sebelum mengirim.', 'error');
+      showToast('Lengkapi foto hasil kerja, properti, dan jenis pekerjaan sebelum mengirim.', 'error');
       return;
     }
     const selectedUnit = document.getElementById('unitInput').value;
@@ -2199,7 +2127,7 @@
     document.getElementById('confirmPropertyName').textContent = selectedUnit;
     document.getElementById('confirmJobType').textContent = getSelectedJobTypes().join(', ') || '-';
     document.getElementById('confirmWorkDate').textContent = formatWorkDate(state.today);
-    document.getElementById('confirmPhotoCount').textContent = `1 selfie · ${state.workPhotos.length} foto hasil kerja · GPS ±${Math.round(state.gpsData?.accuracy || 0)} m`;
+    document.getElementById('confirmPhotoCount').textContent = `${state.workPhotos.length} foto hasil kerja`;
     document.getElementById('checkinConfirmDialog').showModal();
   }
 
@@ -2223,10 +2151,6 @@
      SIMPAN CHECK-IN
      ============================================================ */
   async function saveCheckin() {
-    if (!isArrivalSent()) {
-      showToast('Check-in lokasi dulu sebelum mengirim laporan.', 'error');
-      return;
-    }
     const selectedUnit = document.getElementById('unitInput').value;
     const unit = selectedUnit;
     const jobType = getSelectedJobTypes().join(', ');
@@ -2240,10 +2164,6 @@
       unit,
       job_type: jobType,
       jobType,
-      lat: state.gpsData ? state.gpsData.lat : null,
-      lng: state.gpsData ? state.gpsData.lng : null,
-      accuracy: state.gpsData ? state.gpsData.accuracy : null,
-      selfie: state.photoData,
       work_photos: state.workPhotos,
       work_date: state.today || formatLocalDateKey(),
       workDate: state.today || formatLocalDateKey(),
@@ -2251,14 +2171,13 @@
       createdAt
     };
     try {
-      showLoading('Menyimpan check-in…');
+      showLoading('Mengirim laporan…');
       const url = CONFIG.API_BASE + '/checkin';
       console.log('POST', url, {
         crew: state.currentCrew,
         unit,
         jobType,
         created_at: createdAt,
-        hasSelfie: typeof state.photoData === 'string' && state.photoData.startsWith('data:image/'),
         workCount: state.workPhotos.length
       });
       const res = await fetchWithTimeout(url, {
@@ -2267,7 +2186,7 @@
           'Content-Type': 'application/json',
           Authorization: `Bearer ${sessionStorage.getItem('crew_token') || ''}`
         },
-        body: JSON.stringify(payload)
+        body: JSON.stringify({ ...payload, client_sent_at: new Date().toISOString() })
       }, 90000);
       const text = await res.text();
       let data = {};
@@ -2279,11 +2198,8 @@
       if (!res.ok || data.ok === false) {
         throw serverError(data, text, res.status);
       }
-      showToast('Check-in berhasil disimpan! ✅', 'success');
-      // Laporan terkirim: alur kembali ke tahap 1, crew harus check-in lagi untuk laporan berikutnya.
-      finishReportCycle();
+      showToast('Laporan berhasil dikirim! ✅', 'success');
       resetForm();
-      switchCrewView('checkin');
       // Laporan sudah masuk; refresh sisanya tidak boleh menahan overlay loading.
       hideLoading();
       await completeRequestedCrewTasks(unit);
@@ -2291,12 +2207,7 @@
       await updateStats();
     } catch (err) {
       console.error('saveCheckin error', err);
-      if (err.code === 'arrival_required' || err.code === 'arrival_already_used') {
-        // Server tidak punya check-in yang belum dipakai: kunci laporan lagi, tapi foto & isian tetap dipertahankan.
-        finishReportCycle();
-        showToast(err.message, 'warning');
-        switchCrewView('checkin');
-      } else if (!isNetworkError(err)) {
+      if (!isNetworkError(err)) {
         showToast('Gagal menyimpan: ' + (err.message || 'coba lagi'), 'error');
       } else {
         const pending = loadPending();
@@ -2311,11 +2222,9 @@
           pending.push(item);
           savePending(pending);
           updatePendingBadge();
-          console.log('Check-in disimpan ke antrian offline:', item.id);
-          showToast('Tidak ada sinyal. Check-in disimpan offline, akan dikirim nanti.', 'warning');
-          finishReportCycle();
+          console.log('Laporan disimpan ke antrian offline:', item.id);
+          showToast('Tidak ada sinyal. Laporan disimpan offline, akan dikirim nanti.', 'warning');
           resetForm();
-          switchCrewView('checkin');
         }
       }
     } finally {
@@ -2327,23 +2236,9 @@
   // Check-in lokasi: kirim GPS + selfie saja, supaya crew tercatat sudah di lokasi.
   async function submitArrival() {
     if (isSavingCheckin) return;
-    if (isArrivalSent()) {
-      showToast('Check-in sudah terkirim. Buat laporan pekerjaan dulu sebelum check-in lagi.', 'warning');
-      switchCrewView('laporan');
-      return;
-    }
     if (!state.gpsData || !state.photoData) {
       showToast('Ambil GPS dan selfie terlebih dahulu.', 'error');
       return;
-    }
-    // Laporan yang masih antre offline harus terkirim dulu, kalau tidak urutan di server jadi salah.
-    const hasQueuedReport = () => loadPending().some(item => item.payload?.crew === state.currentCrew && !item.payload?.arrival);
-    if (hasQueuedReport()) {
-      await flushQueue();
-      if (hasQueuedReport()) {
-        showToast('Masih ada laporan tertunda. Kirim dulu dengan tombol ↻ saat ada sinyal, baru check-in lagi.', 'warning');
-        return;
-      }
     }
     const createdAt = new Date().toISOString();
     const payload = {
@@ -2372,7 +2267,7 @@
           'Content-Type': 'application/json',
           Authorization: `Bearer ${sessionStorage.getItem('crew_token') || ''}`
         },
-        body: JSON.stringify(payload)
+        body: JSON.stringify({ ...payload, client_sent_at: new Date().toISOString() })
       }, 60000);
       const text = await res.text();
       let data = {};
@@ -2380,23 +2275,14 @@
       if (!res.ok || data.ok === false) {
         throw serverError(data, text, res.status);
       }
-      // GPS dan selfie tetap dipakai untuk Kirim Laporan di tab Laporan Pekerjaan.
-      state.arrival = { gpsData: state.gpsData, photoData: state.photoData };
-      markArrivalSent();
-      showToast('Check-in lokasi berhasil dikirim! Lanjut isi Laporan Pekerjaan. ✅', 'success');
-      switchCrewView('laporan');
+      showToast('Check-in lokasi berhasil dikirim! ✅', 'success');
+      // Kosongkan GPS dan selfie supaya check-in berikutnya memakai yang baru.
+      resetArrivalForm();
       await renderHistory();
       await updateStats();
     } catch (err) {
       console.error('submitArrival error', err);
-      if (err.code === 'arrival_pending_report') {
-        // Server sudah punya check-in yang belum dipakai (mis. status di HP hilang): pulihkan dan arahkan ke laporan.
-        showToast(err.message, 'warning');
-        await renderHistory();
-        switchCrewView('laporan');
-      } else {
-        showToast('Gagal mengirim check-in lokasi: ' + (err.message || 'coba lagi'), 'error');
-      }
+      showToast('Gagal mengirim check-in lokasi: ' + (err.message || 'coba lagi'), 'error');
     } finally {
       isSavingCheckin = false;
       hideLoading();
@@ -2452,7 +2338,6 @@
     showLoading('Mengirim data tertunda…');
     const remaining = [];
     let sent = 0;
-    let alreadyRecorded = 0;
     try {
       for (const item of pending) {
         if (item.payload?.crew !== state.currentCrew) {
@@ -2467,7 +2352,7 @@
               'Content-Type': 'application/json',
               Authorization: `Bearer ${sessionStorage.getItem('crew_token') || ''}`
             },
-            body: JSON.stringify(item.payload)
+            body: JSON.stringify({ ...item.payload, client_sent_at: new Date().toISOString() })
           }, 90000);
           const text = await response.text();
           let data = {};
@@ -2478,21 +2363,15 @@
           await completeRequestedCrewTasks(item.payload.unit);
           sent += 1;
         } catch (error) {
-          if (error.code === 'arrival_already_used') {
-            // Catatan terakhir di server sudah laporan, jadi laporan antre ini kemungkinan sudah masuk (mis. balasan server lambat lalu timeout).
-            console.warn('Laporan tertunda dianggap sudah tercatat di server:', item.id);
-            alreadyRecorded += 1;
-          } else {
-            console.error('Gagal mengirim check-in tertunda:', item.id, error);
-            remaining.push(item);
-          }
+          console.error('Gagal mengirim check-in tertunda:', item.id, error);
+          remaining.push(item);
         }
       }
 
       savePending(remaining);
       updatePendingBadge();
-      if (sent > 0 || alreadyRecorded > 0) {
-        showToast(`${sent + alreadyRecorded} data tertunda selesai${remaining.length ? `, ${remaining.length} masih tertunda` : ''}.`, 'success');
+      if (sent > 0) {
+        showToast(`${sent} data tertunda berhasil dikirim${remaining.length ? `, ${remaining.length} masih tertunda` : ''}.`, 'success');
         await renderHistory();
         await updateStats();
       } else if (remaining.length) {
@@ -2506,17 +2385,24 @@
   /* ============================================================
      RESET FORM setelah simpan
      ============================================================ */
-  function resetForm() {
+  // Kosongkan form check-in lokasi (GPS + selfie).
+  function resetArrivalForm() {
     state.gpsData = null;
     state.photoData = null;
-    state.workPhotos = [];
     document.getElementById('gpsInfo').classList.add('hidden');
     document.getElementById('gpsWarning').classList.add('hidden');
-    document.getElementById('workPhotoInput').value = '';
+    setGpsStatus('Status GPS: belum diambil — wajib dinyalakan');
     const preview = document.getElementById('photoPreview');
     preview.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" /></svg>`;
     preview.classList.add('border-dashed', 'border-gray-300', 'bg-gray-100');
     preview.classList.remove('border-solid', 'border-brand-500');
+    document.getElementById('sendArrivalBtn').disabled = true;
+  }
+
+  // Kosongkan form laporan pekerjaan (foto hasil kerja, properti, jenis pekerjaan).
+  function resetForm() {
+    state.workPhotos = [];
+    document.getElementById('workPhotoInput').value = '';
     renderWorkPhotoPreview();
     document.getElementById('unitInput').value = '';
     document.querySelectorAll('#jobTypeChecks input').forEach(input => { input.checked = false; });

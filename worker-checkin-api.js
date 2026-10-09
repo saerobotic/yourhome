@@ -1333,6 +1333,7 @@ export default {
         return json({
           ok:true,
           data,
+          server_time:new Date().toISOString(),
           pagination:{ limit, offset, next_offset:hasMore ? offset + data.length : null, has_more:hasMore },
         });
       }
@@ -2038,27 +2039,25 @@ export default {
         }
 
         const id = crypto.randomUUID();
-        const today = workDate ||
-          new Date().toISOString().slice(0, 10);
-        const createdAt = clientCreatedAt || new Date().toISOString();
 
-        // Urutan wajib per crew per hari: check-in lokasi -> laporan kerja -> check-in lokasi -> ...
-        // Dijaga di server supaya sama untuk semua crew, apa pun perangkat dan status sesi di HP-nya.
-        const lastRecord = await env.DB
-          .prepare('SELECT unit FROM checkins WHERE crew = ? AND work_date = ? ORDER BY created_at DESC, id DESC LIMIT 1')
-          .bind(crew, today)
-          .first();
-        const lastIsArrival = Boolean(lastRecord) && String(lastRecord.unit || '').trim() === '';
-        if (arrivalOnly && lastIsArrival) {
-          return bad('Check-in lokasi sudah tercatat. Kirim laporan pekerjaan dulu sebelum check-in lagi.', 409, { code: 'arrival_pending_report' });
+        // Jam HP crew tidak dipercaya begitu saja: koreksi dengan selisih jam HP terhadap jam server saat data dikirim.
+        // Laporan dari antrean offline tetap membawa waktu kerjanya, hanya digeser sebesar selisih jam HP.
+        const serverNowMs = Date.now();
+        const clientSentMs = Date.parse(String(body.client_sent_at || ''));
+        const clientCreatedMs = Date.parse(String(clientCreatedAt || ''));
+        let createdAtMs;
+        if (Number.isFinite(clientSentMs) && Number.isFinite(clientCreatedMs)) {
+          createdAtMs = Math.min(clientCreatedMs + (serverNowMs - clientSentMs), serverNowMs);
+        } else if (Number.isFinite(clientCreatedMs) && Math.abs(clientCreatedMs - serverNowMs) <= 10 * 60 * 1000) {
+          createdAtMs = Math.min(clientCreatedMs, serverNowMs);
+        } else {
+          createdAtMs = serverNowMs;
         }
-        if (!arrivalOnly && !lastRecord) {
-          return bad('Check-in lokasi dulu sebelum mengirim laporan.', 409, { code: 'arrival_required' });
-        }
-        if (!arrivalOnly && !lastIsArrival) {
-          return bad('Laporan sebelumnya sudah terkirim. Check-in lokasi lagi untuk laporan berikutnya.', 409, { code: 'arrival_already_used' });
-        }
+        const createdAt = new Date(createdAtMs).toISOString();
+        const wibDate = new Date(createdAtMs).toLocaleDateString('en-CA', { timeZone: 'Asia/Jakarta' });
+        const today = Number.isFinite(clientSentMs) ? wibDate : (workDate || wibDate);
 
+        // Check-in lokasi dan laporan pekerjaan berdiri sendiri: tidak ada urutan wajib, boleh dikirim berapa kali pun.
         const base = `${slug(crew)}/${today}/${id}`;
         const origin = url.origin;
 
