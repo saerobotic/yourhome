@@ -719,6 +719,13 @@
     }
   }
 
+  // Error dari balasan server; code (mis. arrival_required) dipakai untuk aturan urutan check-in -> laporan.
+  function serverError(data, text, status) {
+    const error = new Error(data.error || data.message || text || ('HTTP ' + status));
+    error.code = data.code || '';
+    return error;
+  }
+
   function fileUrl(value) {
     if (!value) return '';
     return value.startsWith('/') ? CONFIG.API_BASE + value : value;
@@ -749,15 +756,18 @@
   }
 
   // Status "sudah check-in" hanya tersimpan di sessionStorage, jadi hilang kalau tab ditutup, di-reload,
-  // atau crew login ulang (sering terjadi di iPhone). Pulihkan dari server: kalau check-in lokasi hari ini
-  // lebih banyak daripada laporan yang sudah terkirim (atau masih antre offline), berarti masih ada check-in yang belum dipakai.
+  // atau crew login ulang (sering terjadi di iPhone). Pulihkan dari server berdasarkan urutan: kalau catatan terbaru
+  // hari ini adalah check-in lokasi (belum ada laporan sesudahnya, termasuk yang masih antre offline), check-in itu belum dipakai.
+  // Records dari server urut terbaru dulu.
   function syncArrivalFromServer(records) {
     if (!state.currentCrew || isArrivalSent()) return;
-    const arrivals = records.filter(isArrivalRecord);
-    const reports = records.length - arrivals.length;
-    const queuedReports = loadPending().filter(item => item.payload?.crew === state.currentCrew && !item.payload?.arrival).length;
-    if (arrivals.length <= reports + queuedReports) return;
-    const latest = arrivals[0];
+    const latest = records[0];
+    if (!latest || !isArrivalRecord(latest)) return;
+    const latestTime = Date.parse(latest.created_at) || 0;
+    const queuedReportAfter = loadPending().some(item => item.payload?.crew === state.currentCrew
+      && !item.payload?.arrival
+      && (Date.parse(item.payload?.created_at || item.savedAt) || 0) >= latestTime);
+    if (queuedReportAfter) return;
     const hasGps = latest.lat != null && latest.lng != null && Number.isFinite(Number(latest.lat)) && Number.isFinite(Number(latest.lng));
     state.arrival = {
       gpsData: hasGps ? { lat: Number(latest.lat), lng: Number(latest.lng), accuracy: Number(latest.accuracy) || 0 } : null,
@@ -2264,7 +2274,7 @@
         data = {};
       }
       if (!res.ok || data.ok === false) {
-        throw new Error(data.error || data.message || text || ('HTTP ' + res.status));
+        throw serverError(data, text, res.status);
       }
       showToast('Check-in berhasil disimpan! ✅', 'success');
       // Laporan terkirim: alur kembali ke tahap 1, crew harus check-in lagi untuk laporan berikutnya.
@@ -2278,7 +2288,12 @@
       await updateStats();
     } catch (err) {
       console.error('saveCheckin error', err);
-      if (!isNetworkError(err)) {
+      if (err.code === 'arrival_required' || err.code === 'arrival_already_used') {
+        // Server tidak punya check-in yang belum dipakai: kunci laporan lagi, tapi foto & isian tetap dipertahankan.
+        finishReportCycle();
+        showToast(err.message, 'warning');
+        switchCrewView('checkin');
+      } else if (!isNetworkError(err)) {
         showToast('Gagal menyimpan: ' + (err.message || 'coba lagi'), 'error');
       } else {
         const pending = loadPending();
@@ -2318,6 +2333,15 @@
       showToast('Ambil GPS dan selfie terlebih dahulu.', 'error');
       return;
     }
+    // Laporan yang masih antre offline harus terkirim dulu, kalau tidak urutan di server jadi salah.
+    const hasQueuedReport = () => loadPending().some(item => item.payload?.crew === state.currentCrew && !item.payload?.arrival);
+    if (hasQueuedReport()) {
+      await flushQueue();
+      if (hasQueuedReport()) {
+        showToast('Masih ada laporan tertunda. Kirim dulu dengan tombol ↻ saat ada sinyal, baru check-in lagi.', 'warning');
+        return;
+      }
+    }
     const createdAt = new Date().toISOString();
     const payload = {
       crew: state.currentCrew,
@@ -2351,7 +2375,7 @@
       let data = {};
       try { data = text ? JSON.parse(text) : {}; } catch { data = {}; }
       if (!res.ok || data.ok === false) {
-        throw new Error(data.error || data.message || text || ('HTTP ' + res.status));
+        throw serverError(data, text, res.status);
       }
       // GPS dan selfie tetap dipakai untuk Kirim Laporan di tab Laporan Pekerjaan.
       state.arrival = { gpsData: state.gpsData, photoData: state.photoData };
@@ -2362,7 +2386,14 @@
       await updateStats();
     } catch (err) {
       console.error('submitArrival error', err);
-      showToast('Gagal mengirim check-in lokasi: ' + (err.message || 'coba lagi'), 'error');
+      if (err.code === 'arrival_pending_report') {
+        // Server sudah punya check-in yang belum dipakai (mis. status di HP hilang): pulihkan dan arahkan ke laporan.
+        showToast(err.message, 'warning');
+        await renderHistory();
+        switchCrewView('laporan');
+      } else {
+        showToast('Gagal mengirim check-in lokasi: ' + (err.message || 'coba lagi'), 'error');
+      }
     } finally {
       isSavingCheckin = false;
       hideLoading();
@@ -2418,6 +2449,7 @@
     showLoading('Mengirim data tertunda…');
     const remaining = [];
     let sent = 0;
+    let alreadyRecorded = 0;
     try {
       for (const item of pending) {
         if (item.payload?.crew !== state.currentCrew) {
@@ -2438,20 +2470,26 @@
           let data = {};
           try { data = text ? JSON.parse(text) : {}; } catch { data = {}; }
           if (!response.ok || data.ok === false) {
-            throw new Error(data.error || data.message || text || `HTTP ${response.status}`);
+            throw serverError(data, text, response.status);
           }
           await completeRequestedCrewTasks(item.payload.unit);
           sent += 1;
         } catch (error) {
-          console.error('Gagal mengirim check-in tertunda:', item.id, error);
-          remaining.push(item);
+          if (error.code === 'arrival_already_used') {
+            // Catatan terakhir di server sudah laporan, jadi laporan antre ini kemungkinan sudah masuk (mis. balasan server lambat lalu timeout).
+            console.warn('Laporan tertunda dianggap sudah tercatat di server:', item.id);
+            alreadyRecorded += 1;
+          } else {
+            console.error('Gagal mengirim check-in tertunda:', item.id, error);
+            remaining.push(item);
+          }
         }
       }
 
       savePending(remaining);
       updatePendingBadge();
-      if (sent > 0) {
-        showToast(`${sent} check-in tertunda berhasil dikirim${remaining.length ? `, ${remaining.length} masih tertunda` : ''}.`, 'success');
+      if (sent > 0 || alreadyRecorded > 0) {
+        showToast(`${sent + alreadyRecorded} data tertunda selesai${remaining.length ? `, ${remaining.length} masih tertunda` : ''}.`, 'success');
         await renderHistory();
         await updateStats();
       } else if (remaining.length) {
