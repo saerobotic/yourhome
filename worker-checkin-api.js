@@ -2144,19 +2144,27 @@ export default {
         const telegramToken = String(env.TELEGRAM_BOT_TOKEN || '').trim();
         const telegramChatId = String(env.TELEGRAM_CHAT_ID || '').trim();
         if (telegramToken && telegramChatId) {
-          const locationUrl = `https://maps.google.com/?q=${numericLat},${numericLng}`;
-          const telegramMessage = [
+          const timeWib = new Date(createdAtMs).toLocaleTimeString('id-ID', {
+            timeZone: 'Asia/Jakarta', hour: '2-digit', minute: '2-digit', second: '2-digit', hourCycle: 'h23',
+          }) + ' WIB';
+          // Check-in lokasi dan laporan pekerjaan dikirim terpisah: GPS dan selfie hanya ada di check-in lokasi.
+          const telegramMessage = (arrivalOnly ? [
             'CHECK-IN CREW BERHASIL',
+            `Crew: ${crew}`,
+            `Tanggal: ${today}`,
+            `Waktu: ${timeWib}`,
+            `GPS: ${numericLat}, ${numericLng}${numericAccuracy == null ? '' : ` (akurasi ${numericAccuracy} m)`}`,
+            'Foto selfie: diterima',
+            `Lokasi: https://maps.google.com/?q=${numericLat},${numericLng}`,
+          ] : [
+            'LAPORAN KERJA CREW BERHASIL',
             `Crew: ${crew}`,
             `Properti: ${unit}`,
             `Pekerjaan: ${jobType}`,
             `Tanggal: ${today}`,
-            `Waktu: ${createdAt}`,
-            `GPS: ${numericLat}, ${numericLng}${numericAccuracy == null ? '' : ` (akurasi ${numericAccuracy} m)`}`,
-            'Foto selfie: diterima',
+            `Waktu: ${timeWib}`,
             `Foto hasil kerja: ${workPhotos.length}`,
-            `Lokasi: ${locationUrl}`,
-          ].join('\n');
+          ]).join('\n');
 
           try {
             const telegramResponse = await fetch(`https://api.telegram.org/bot${telegramToken}/sendMessage`, {
