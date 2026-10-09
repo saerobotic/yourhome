@@ -227,7 +227,11 @@
       </div>
 
       <!-- Statistik ringkas -->
-      <div class="mt-5 grid grid-cols-2 gap-3">
+      <div class="mt-5 grid grid-cols-3 gap-3">
+        <div class="bg-white/15 backdrop-blur rounded-2xl p-3.5">
+          <p class="text-xs text-brand-100">Total Check-in Hari Ini</p>
+          <p id="statCheckins" class="text-2xl font-bold">0</p>
+        </div>
         <div class="bg-white/15 backdrop-blur rounded-2xl p-3.5">
           <p class="text-xs text-brand-100">Total Laporan Hari Ini</p>
           <p id="statTotal" class="text-2xl font-bold">0</p>
@@ -236,7 +240,7 @@
           <p class="text-xs text-brand-100">Total Unit Dikunjungi</p>
           <p id="statUnits" class="text-2xl font-bold">0</p>
         </div>
-        <div class="col-span-2 bg-white/15 backdrop-blur rounded-2xl p-3.5">
+        <div class="col-span-3 bg-white/15 backdrop-blur rounded-2xl p-3.5">
           <p class="text-xs text-brand-100">Total Pengeluaran Hari Ini</p>
           <p id="statExpenseTotal" class="text-2xl font-bold">Rp 0</p>
         </div>
@@ -2276,6 +2280,9 @@
         throw serverError(data, text, res.status);
       }
       showToast('Check-in lokasi berhasil dikirim! ✅', 'success');
+      // Langsung naikkan hitungan; angka sebenarnya dari server menyusul lewat renderHistory di bawah.
+      const checkinCounter = document.getElementById('statCheckins');
+      checkinCounter.textContent = (Number(checkinCounter.textContent) || 0) + 1;
       // Kosongkan GPS dan selfie supaya check-in berikutnya memakai yang baru.
       resetArrivalForm();
       await renderHistory();
@@ -2508,8 +2515,9 @@
   }
 
   function updateStatsFromRecords(records) {
-    // Check-in Lokasi (tanpa properti) tidak dihitung; hanya laporan yang punya properti.
-    const reports = records.filter(r => String(r.unit || '').trim() !== '');
+    // Check-in lokasi (tanpa properti) dan laporan pekerjaan (punya properti) dihitung terpisah.
+    const reports = records.filter(r => !isArrivalRecord(r));
+    document.getElementById('statCheckins').textContent = records.length - reports.length;
     document.getElementById('statTotal').textContent = reports.length;
     // Total unit unik (case-insensitive, trimmed)
     const uniqueUnits = new Set(reports.map(r => String(r.unit).trim().toLowerCase()));
