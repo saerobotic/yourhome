@@ -1344,7 +1344,7 @@
     const { photos: compressed, failed } = await compressImages(files);
     inventoryPhotos.push(...compressed);
     renderInventoryPhotoPreview();
-    if (failed) showToast(`${failed} foto gagal diproses, coba pilih ulang.`, 'warning');
+    if (failed) showToast('Ada foto yang belum masuk, silakan pilih ulang.', 'warning');
   }
 
   async function submitInventoryCheck() {
@@ -1394,7 +1394,8 @@
       newInventoryItemPhoto = await compressImage(file);
     } catch (error) {
       console.error('Foto barang baru gagal diproses:', error);
-      showToast('Foto gagal diproses, coba pilih ulang.', 'warning');
+      reportPhotoFailures([{ name: file.name, type: file.type, size: file.size, message: error?.message || String(error) }]);
+      showToast('Foto belum masuk, silakan pilih ulang.', 'warning');
       return;
     }
     renderNewInventoryItemPhotoPreview();
@@ -1578,17 +1579,26 @@
   // Proses foto satu per satu (hemat memori di iPhone); foto yang gagal dilewati dan dihitung.
   async function compressImages(files, onProgress) {
     const photos = [];
-    let failed = 0;
+    const failures = [];
     for (let index = 0; index < files.length; index++) {
       onProgress?.(index + 1, files.length);
       try {
         photos.push(await compressImage(files[index]));
       } catch (error) {
-        failed += 1;
-        console.error('Foto dilewati:', files[index]?.name, error);
+        const file = files[index] || {};
+        failures.push({ name: file.name, type: file.type, size: file.size, message: error?.message || String(error) });
+        console.error('Foto dilewati:', file.name, error);
       }
     }
-    return { photos, failed };
+    reportPhotoFailures(failures);
+    return { photos, failed: failures.length };
+  }
+
+  // Detail teknis kegagalan foto hanya ditampilkan untuk debugging (buka halaman dengan ?debug=1), tidak ke crew.
+  function reportPhotoFailures(failures) {
+    if (!failures.length || !new URLSearchParams(location.search).has('debug')) return;
+    const lines = failures.map(f => `${f.name || '(tanpa nama)'}\ntipe: ${f.type || '-'}, ukuran: ${Math.round((f.size || 0) / 1024)} KB\nerror: ${f.message}`);
+    alert(`DEBUG: ${failures.length} foto gagal\n\n${lines.join('\n\n')}\n\n${navigator.userAgent}`);
   }
 
   /* ============================================================
@@ -2034,7 +2044,7 @@
       renderWorkPhotoPreview();
       validateForm();
       if (failed) {
-        showToast(`${compressedPhotos.length} foto siap, ${failed} foto gagal diproses. Pilih ulang foto yang gagal (coba pilih lebih sedikit sekaligus).`, 'warning');
+        showToast(compressedPhotos.length ? `${compressedPhotos.length} foto siap. Ada ${failed} foto belum masuk, silakan pilih ulang.` : 'Foto belum masuk, silakan pilih ulang.', 'warning');
       } else {
         showToast(`${compressedPhotos.length} foto hasil kerja siap.`, 'success');
       }
